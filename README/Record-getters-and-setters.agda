@@ -147,9 +147,9 @@ module Dependent where
   lemma : {A : Set} → Lens _ (R₁ A) (λ r → ∀ y → R₁.f r y ≡ y)
   lemma = Lens₃-to-Lens Dependent₃.lemma
 
-  -- Note that the type of lemma-lens is now more satisfactory: the
-  -- type of the lens /does/ guarantee that the lemma applies to the
-  -- input's f field.
+  -- Note that the type of lemma is now more satisfactory: the type of
+  -- the lens /does/ guarantee that the lemma applies to the input's f
+  -- field.
 
   -- A lens for the r₁ field of R₂.
 
