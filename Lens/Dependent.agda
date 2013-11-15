@@ -7,7 +7,7 @@ module Lens.Dependent where
 open import Algebra
 open import Data.Bool
 open import Data.Product
-open import Data.Unit
+open import Data.Unit hiding (Unit)
 open import Function hiding (id) renaming (_∘_ to _⊚_)
 open import Function.Equality using (_⟨$⟩_)
 open import Function.Inverse as Inv using (_↔_; module Inverse)

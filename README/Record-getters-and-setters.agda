@@ -198,9 +198,9 @@ module Non-dependent where
                   , r · "f")
                   , x)
                   , r · "lemma")
-    ; get-set = λ _ _   → P.refl
-    ; set-get = λ _     → P.refl
-    ; set-set = λ _ _ _ → P.refl
+    ; get-set = λ _ _                           → P.refl
+    ; set-get = λ { (rec (rec (rec _ , _) , _)) → P.refl }
+    ; set-set = λ _ _ _                         → P.refl
     }
 
   -- The lemma field depends on the f field, so whenever the f field
@@ -211,13 +211,14 @@ module Non-dependent where
            (Record (∅ , "f"     ∶ (λ _ → A → A)
                       , "lemma" ∶ (λ r → ∀ x → (r · "f") x ≡ x)))
   f = record
-    { set     = λ r f-lemma → rec (rec (rec (_
+    { set     = λ r f-lemma → rec (rec (rec (rec _
                   , f-lemma · "f")
                   , r · "x")
                   , f-lemma · "lemma")
-    ; get-set = λ _ _   → P.refl
-    ; set-get = λ _     → P.refl
-    ; set-set = λ _ _ _ → P.refl
+    ; get-set = λ { (rec (rec (_ , _) , _)) (rec (rec (_ , _) , _))
+                                                          → P.refl }
+    ; set-get = λ { (rec (rec (rec (rec _ , _) , _) , _)) → P.refl }
+    ; set-set = λ _ _ _                                   → P.refl
     }
 
   -- The lemma field can be updated independently. Note the use of a
@@ -231,9 +232,9 @@ module Non-dependent where
     { set     = λ r lemma → rec (rec (_
                   , r · "x")
                   , lemma)
-    ; get-set = λ _ _   → P.refl
-    ; set-get = λ _     → P.refl
-    ; set-set = λ _ _ _ → P.refl
+    ; get-set = λ _ _                 → P.refl
+    ; set-get = λ { (rec (rec _ , _)) → P.refl }
+    ; set-set = λ _ _ _               → P.refl
     }
 
   -- The use of a manifest field is problematic, because the domain of
@@ -244,7 +245,7 @@ module Non-dependent where
   convert : {A : Set} (r : Record (R₁ A)) →
             Record (R₁ A With "f" ≔ (λ _ → r · "f"))
   convert (rec (rec (rec (_ , f) , x) , lemma)) =
-    rec (rec (rec (_ ,) , x) , lemma)
+    rec (rec (rec (rec _ ,) , x) , lemma)
 
   -- Let us now try to construct lenses for the same fields, but now
   -- accessed through an R₂ record.
@@ -255,9 +256,9 @@ module Non-dependent where
        Lens (Record (R₂ With "A" ≔ λ _ → A)) (Record (R₁ A))
   r₁ = record
     { set     = λ _ r → rec (_ , lift r)
-    ; get-set = λ _ _   → P.refl
-    ; set-get = λ _     → P.refl
-    ; set-set = λ _ _ _ → P.refl
+    ; get-set = λ _ _             → P.refl
+    ; set-get = λ { (rec (_ , _)) → P.refl }
+    ; set-set = λ _ _ _           → P.refl
     }
 
   -- It is now easy to construct lenses for the embedded x and f
