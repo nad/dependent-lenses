@@ -58,7 +58,7 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
   remainder-set : ∀ a b → remainder (set a b) ≡ remainder a
   remainder-set a b = begin
     proj₁ (to ⟨$⟩ (from ⟨$⟩ (remainder a , b)))  ≡⟨ P.cong proj₁ (right-inverse-of _) ⟩
-    proj₁ {B = B} (remainder a , b)              ≡⟨ P.refl ⟩
+    proj₁ {B = B} (remainder a , b)              ≡⟨⟩
     remainder a                                  ∎
     where open P.≡-Reasoning
 
@@ -66,7 +66,7 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
 
   set-get : ∀ a → set a (get a) ≡ a
   set-get a = begin
-    from ⟨$⟩ (proj₁ (to ⟨$⟩ a) , proj₂ (to ⟨$⟩ a))  ≡⟨ P.refl ⟩
+    from ⟨$⟩ (proj₁ (to ⟨$⟩ a) , proj₂ (to ⟨$⟩ a))  ≡⟨⟩
     from ⟨$⟩ (to ⟨$⟩ a)                             ≡⟨ left-inverse-of _ ⟩
     a                                               ∎
     where open P.≡-Reasoning
@@ -74,7 +74,7 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
   get-set-≅ : ∀ a b → get (set a b) ≅ b
   get-set-≅ a b = begin
     proj₂ (to ⟨$⟩ (from ⟨$⟩ (remainder a , b)))  ≅⟨ proj₂-cong (right-inverse-of _) ⟩
-    proj₂ {B = B} (remainder a , b)              ≡⟨ P.refl ⟩
+    proj₂ {B = B} (remainder a , b)              ≡⟨⟩
     b                                            ∎
     where
     open H.≅-Reasoning
