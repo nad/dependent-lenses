@@ -3,6 +3,8 @@
 -- Nils Anders Danielsson
 ------------------------------------------------------------------------
 
+{-# OPTIONS --without-K #-}
+
 module README where
 
 -- Non-dependent lenses (for comparison).

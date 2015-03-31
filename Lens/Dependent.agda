@@ -2,22 +2,22 @@
 -- Dependent lenses
 ------------------------------------------------------------------------
 
+{-# OPTIONS --without-K #-}
+
 module Lens.Dependent where
 
-open import Algebra
-open import Data.Bool
-open import Data.Product
-open import Data.Unit
-open import Function hiding (id) renaming (_∘_ to _⊚_)
-open import Function.Equality using (_⟨$⟩_)
-open import Function.Inverse as Inv using (_↔_; module Inverse)
-open import Function.Related as Related
-open import Function.Related.TypeIsomorphisms
-open import Level
-open import Relation.Binary.HeterogeneousEquality as H using (_≅_)
-open import Relation.Binary.PropositionalEquality as P using (_≡_; _≢_)
-import Relation.Binary.Sigma.Pointwise as Σ
-open import Relation.Nullary
+open import Bool
+open import Equality.Propositional
+open import Logical-equivalence using (module _⇔_)
+open import Prelude hiding (id) renaming (_∘_ to _⊚_)
+
+open import Bijection equality-with-J using (_↔_; module _↔_; ↑↔)
+open import Equality.Decision-procedures equality-with-J
+open import Equivalence equality-with-J using (_≃_)
+open import Function-universe equality-with-J as F hiding (id; _∘_)
+open import H-level equality-with-J
+open import H-level.Closure equality-with-J
+open import Univalence-axiom equality-with-J
 
 ------------------------------------------------------------------------
 -- Dependent lenses with "remainder types" visible in the type
@@ -31,22 +31,22 @@ Lens₃ A R B = A ↔ Σ R B
 module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
              (lens : Lens₃ A R B) where
 
-  open Inverse lens
+  open _↔_ lens
 
   -- The remainder.
 
   remainder : A → R
-  remainder a = proj₁ (to ⟨$⟩ a)
+  remainder a = proj₁ (to a)
 
   -- Getter.
 
   get : (a : A) → B (remainder a)
-  get a = proj₂ (to ⟨$⟩ a)
+  get a = proj₂ (to a)
 
   -- Setter.
 
   set : (a : A) → B (remainder a) → A
-  set a b = from ⟨$⟩ (remainder a , b)
+  set a b = from (remainder a , b)
 
   -- Modifier.
 
@@ -56,65 +56,45 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
   -- Setting leaves the remainder unchanged.
 
   remainder-set : ∀ a b → remainder (set a b) ≡ remainder a
-  remainder-set a b = begin
-    proj₁ (to ⟨$⟩ (from ⟨$⟩ (remainder a , b)))  ≡⟨ P.cong proj₁ (right-inverse-of _) ⟩
-    proj₁ {B = B} (remainder a , b)              ≡⟨⟩
-    remainder a                                  ∎
-    where open P.≡-Reasoning
+  remainder-set a b =
+    proj₁ (to (from (remainder a , b)))  ≡⟨ cong proj₁ (right-inverse-of _) ⟩∎
+    remainder a                          ∎
 
   -- Some lens laws.
 
   set-get : ∀ a → set a (get a) ≡ a
-  set-get a = begin
-    from ⟨$⟩ (proj₁ (to ⟨$⟩ a) , proj₂ (to ⟨$⟩ a))  ≡⟨⟩
-    from ⟨$⟩ (to ⟨$⟩ a)                             ≡⟨ left-inverse-of _ ⟩
-    a                                               ∎
-    where open P.≡-Reasoning
-
-  get-set-≅ : ∀ a b → get (set a b) ≅ b
-  get-set-≅ a b = begin
-    proj₂ (to ⟨$⟩ (from ⟨$⟩ (remainder a , b)))  ≅⟨ proj₂-cong (right-inverse-of _) ⟩
-    proj₂ {B = B} (remainder a , b)              ≡⟨⟩
-    b                                            ∎
-    where
-    open H.≅-Reasoning
-
-    proj₂-cong : ∀ {a b} {A : Set a} {B : A → Set b} {p₁ p₂ : Σ A B} →
-                 p₁ ≡ p₂ → proj₂ p₁ ≅ proj₂ p₂
-    proj₂-cong P.refl = H.refl
+  set-get a =
+    from (proj₁ (to a) , proj₂ (to a))  ≡⟨⟩
+    from (to a)                         ≡⟨ left-inverse-of _ ⟩∎
+    a                                   ∎
 
   get-set : ∀ a b → get (set a b) ≡
-                    P.subst B (P.sym $ remainder-set a b) b
-  get-set a b = H.≅-to-≡ (begin
-    proj₂ (to ⟨$⟩ (from ⟨$⟩ (remainder a , b)))  ≅⟨ get-set-≅ a b ⟩
-    b                                            ≅⟨ H.sym $ H.≡-subst-removable B (P.sym $ remainder-set a b) _ ⟩
-    P.subst B (P.sym $ remainder-set a b) b      ∎)
-    where open H.≅-Reasoning
-
-  set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡
-                        set a (P.subst B (remainder-set a b₁) b₂)
-  set-set a b₁ b₂ = begin
-    from ⟨$⟩ (proj₁ (to ⟨$⟩ (from ⟨$⟩ (proj₁ (to ⟨$⟩ a) , b₁))) , b₂)  ≡⟨ P.cong (_⟨$⟩_ from)
-                                                                            (,-cong (P.cong proj₁ $ right-inverse-of _)
-                                                                                    (H.sym $
-                                                                                       H.≡-subst-removable B (remainder-set a b₁) _)) ⟩
-    from ⟨$⟩ (proj₁ (to ⟨$⟩ a) , P.subst B (remainder-set a b₁) b₂)    ∎
+                    subst B (sym $ remainder-set a b) b
+  get-set a b =
+    proj₂ (to (from (remainder a , b)))  ≡⟨ sym $ subst-application proj₂ (sym lemma) ⟩
+    subst (B ⊚ proj₁) (sym lemma) b      ≡⟨ subst-∘ _ _ (sym lemma) ⟩
+    subst B (cong proj₁ (sym lemma)) b   ≡⟨ cong (λ x → subst B x b) (cong-sym _ lemma) ⟩∎
+    subst B (sym (cong proj₁ lemma)) b   ∎
     where
-    open P.≡-Reasoning
+    lemma = right-inverse-of _
 
-    ,-cong : ∀ {a b} {A : Set a} {B : A → Set b} {x₁ y₁ x₂ y₂} →
-             x₁ ≡ x₂ → y₁ ≅ y₂ → _≡_ {A = Σ A B} (x₁ , y₁) (x₂ , y₂)
-    ,-cong P.refl H.refl = P.refl
+  set-set : ∀ a b₁ b₂ →
+            set (set a b₁) b₂ ≡
+            set a (subst B (remainder-set a b₁) b₂)
+  set-set a b₁ b₂ =
+    from (proj₁ (to (from (remainder a , b₁))) , b₂)      ≡⟨ cong from (Σ-≡,≡→≡ (remainder-set a b₁) refl) ⟩∎
+    from (remainder a , subst B (remainder-set a b₁) b₂)  ∎
 
 ------------------------------------------------------------------------
 -- Lens₃ combinators
 
 -- Identity lens.
 
-id₃ : ∀ {a} {A : Set a} → Lens₃ A (Lift ⊤) (λ _ → A)
-id₃ {A = A} = Inv.sym $ proj₁ CM.identity A
-  where
-  module CM = CommutativeMonoid (×-CommutativeMonoid bijection _)
+id₃ : ∀ {a} {A : Set a} → Lens₃ A (↑ a ⊤) (λ _ → A)
+id₃ {A = A} =
+  A          ↔⟨ inverse ×-left-identity ⟩
+  ⊤     × A  ↔⟨ inverse ↑↔ ×-cong F.id ⟩□
+  ↑ _ ⊤ × A  □
 
 -- Composition of lenses.
 
@@ -126,10 +106,9 @@ _₃∘₃_ : ∀ {a r₁ b₁ r₂ b₂} {A : Set a} {R₁ : Set r₁} {B₁ : 
         Lens₃ A (Σ R₁ R₂) (uncurry B₂)
 _₃∘₃_ {A = A} {R₁} {B₁} {R₂} {B₂} l₁ l₂ =
   A                             ↔⟨ l₂ ⟩
-  Σ R₁ B₁                       ↔⟨ Σ.cong Inv.id l₁ ⟩
-  Σ R₁ (λ r → Σ (R₂ r) (B₂ r))  ↔⟨ Inv.sym Σ-assoc ⟩
-  Σ (Σ R₁ R₂) (uncurry B₂)      ∎
-  where open Related.EquationalReasoning
+  Σ R₁ B₁                       ↔⟨ ∃-cong (λ _ → l₁) ⟩
+  Σ R₁ (λ r → Σ (R₂ r) (B₂ r))  ↔⟨ Σ-assoc ⟩□
+  Σ (Σ R₁ R₂) (uncurry B₂)      □
 
 ------------------------------------------------------------------------
 -- Dependent lenses without "remainder types" visible in the type
@@ -137,7 +116,7 @@ _₃∘₃_ {A = A} {R₁} {B₁} {R₂} {B₂} l₁ l₂ =
 -- The remainder /level/ is still visible in the type.
 
 record Lens {a b} r
-            (A : Set a) (B : A → Set b) : Set (a ⊔ suc (b ⊔ r)) where
+            (A : Set a) (B : A → Set b) : Set (a ⊔ lsuc (b ⊔ r)) where
   field
     -- The remainder type: what remains of A when B is removed
     -- (roughly).
@@ -165,17 +144,17 @@ record Lens {a b} r
 
     variant : ∀ {a} → B′ (remainder a) ↔ B a
 
-  open Inverse
+  open _↔_
 
   -- Getter.
 
   get : (a : A) → B a
-  get a = to variant ⟨$⟩ L.get a
+  get a = to variant (L.get a)
 
   -- Setter.
 
   set : (a : A) → B a → A
-  set a b = L.set a (from variant ⟨$⟩ b)
+  set a b = L.set a (from variant b)
 
   -- Modifier.
 
@@ -185,62 +164,48 @@ record Lens {a b} r
   -- Setting leaves the remainder unchanged.
 
   remainder-set : ∀ a b → remainder (set a b) ≡ remainder a
-  remainder-set a b = L.remainder-set a (from variant ⟨$⟩ b)
+  remainder-set a b = L.remainder-set a (from variant b)
 
   -- Hence the type of the gettable part stays unchanged (up to
   -- isomorphism) after a set.
 
   B-set : ∀ {a b} → B (set a b) ↔ B a
   B-set {a} {b} =
-    B (set a b)               ↔⟨ Inv.sym variant ⟩
-    B′ (remainder (set a b))  ≡⟨ P.cong B′ (remainder-set a b) ⟩
+    B (set a b)               ↔⟨ inverse variant ⟩
+    B′ (remainder (set a b))  ↔⟨ ≡⇒↝ bijection (cong B′ (remainder-set a b)) ⟩
     B′ (remainder a)          ↔⟨ variant ⟩
-    B a                       ∎
-    where open Related.EquationalReasoning
+    B a                       □
 
   -- Some lens laws.
 
   set-get : ∀ a → set a (get a) ≡ a
-  set-get a = begin
-    L.set a (from variant ⟨$⟩ (to variant ⟨$⟩ L.get a))  ≡⟨ P.cong (L.set a) (left-inverse-of variant _) ⟩
-    L.set a (L.get a)                                    ≡⟨ L.set-get a ⟩
-    a                                                    ∎
-    where open P.≡-Reasoning
+  set-get a =
+    L.set a (from variant (to variant (L.get a)))  ≡⟨ cong (L.set a) (left-inverse-of variant _) ⟩
+    L.set a (L.get a)                              ≡⟨ L.set-get a ⟩∎
+    a                                              ∎
 
-  get-set : ∀ a b → get (set a b) ≡ from B-set ⟨$⟩ b
-  get-set a b = P.cong (_⟨$⟩_ (to variant)) (H.≅-to-≡ (begin
-    L.get (L.set a (from variant ⟨$⟩ b))   ≅⟨ L.get-set-≅ a (from variant ⟨$⟩ b) ⟩
-    from variant ⟨$⟩ b                     ≅⟨ lemma eq ⟩
-    from (≡⇒ eq) ⟨$⟩ (from variant ⟨$⟩ b)  ∎))
+  get-set : ∀ a b → get (set a b) ≡ from B-set b
+  get-set a b = cong (to variant) (
+    L.get (L.set a b′)            ≡⟨ L.get-set _ _ ⟩
+    subst B′ (sym eq) b′          ≡⟨ subst-in-terms-of-inverse∘≡⇒↝ bijection eq _ _ ⟩∎
+    from (≡⇒↝ _ (cong B′ eq)) b′  ∎)
     where
-    open H.≅-Reasoning
+    b′ = from variant b
+    eq = remainder-set a b
 
-    eq = P.cong B′ (remainder-set a b)
-
-    lemma : ∀ {ℓ} {A B : Set ℓ} {x : B} (eq : A ≡ B) →
-            x ≅ from (≡⇒ eq) ⟨$⟩ x
-    lemma P.refl = H.refl
-
-  set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a (to B-set ⟨$⟩ b₂)
-  set-set a b₁ b₂ = begin
-    L.set (L.set a (from variant ⟨$⟩ b₁)) (from variant ⟨$⟩ b₂)      ≡⟨ L.set-set a (from variant ⟨$⟩ b₁) (from variant ⟨$⟩ b₂) ⟩
-    L.set a (P.subst B′ (remainder-set a b₁) (from variant ⟨$⟩ b₂))  ≡⟨ P.cong (L.set a) lemma ⟩
-    L.set a (from variant ⟨$⟩ (to B-set ⟨$⟩ b₂))                     ∎
+  set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a (to B-set b₂)
+  set-set a b₁ b₂ =
+    L.set (L.set a (from variant b₁)) (from variant b₂)        ≡⟨ L.set-set a (from variant b₁) (from variant b₂) ⟩
+    L.set a (subst B′ (remainder-set a b₁) (from variant b₂))  ≡⟨ cong (L.set a) lemma ⟩∎
+    L.set a (from variant (to B-set b₂))                       ∎
     where
-    open P.≡-Reasoning
-
     eq = remainder-set a b₁
 
-    lemma₂ : ∀ {a p} {A : Set a} (P : A → Set p)
-               {x y : A} {p : P x} (eq : x ≡ y) →
-             P.subst P eq p ≡ to (≡⇒ (P.cong P eq)) ⟨$⟩ p
-    lemma₂ _ P.refl = P.refl
-
-    lemma = begin
-      P.subst B′ eq (from variant ⟨$⟩ b₂)                    ≡⟨ lemma₂ B′ eq ⟩
-      to (≡⇒ (P.cong B′ eq)) ⟨$⟩ (from variant ⟨$⟩ b₂)       ≡⟨ P.sym $ left-inverse-of variant _ ⟩
-      from variant ⟨$⟩ (to variant ⟨$⟩
-        (to (≡⇒ (P.cong B′ eq)) ⟨$⟩ (from variant ⟨$⟩ b₂)))  ∎
+    lemma =
+      subst B′ eq (from variant b₂)                           ≡⟨ subst-in-terms-of-≡⇒↝ bijection eq _ _ ⟩
+      to (≡⇒↝ bijection (cong B′ eq)) (from variant b₂)       ≡⟨ sym $ left-inverse-of variant _ ⟩∎
+      from variant (to variant
+        (to (≡⇒↝ bijection (cong B′ eq)) (from variant b₂)))  ∎
 
 ------------------------------------------------------------------------
 -- Lens combinators
@@ -251,7 +216,7 @@ Lens₃-to-Lens : ∀ {a r b} {A : Set a} {R : Set r} {B : R → Set b} →
                 (l : Lens₃ A R B) → Lens r A (B ⊚ Lens₃.remainder l)
 Lens₃-to-Lens l = record
   { lens    = l
-  ; variant = Inv.id
+  ; variant = F.id
   }
 
 -- Identity lens.
@@ -270,9 +235,10 @@ _∘₃_ : ∀ {a r₁ r₂ b c} {A : Set a} {R : Set r₂} {B : R → Set b}
        (∀ {r} → Lens r₁ (B r) C) → (l₂ : Lens₃ A R B) →
        Lens _ A (C ⊚ Lens₃.get l₂)
 l₁ ∘₃ l₂ = record
-  { lens    = Lens.lens l₁ ₃∘₃ l₂
-  ; variant = Lens.variant l₁
+  { lens    = lens l₁ ₃∘₃ l₂
+  ; variant = variant l₁
   }
+  where open Lens
 
 -- /Forward/ composition of lenses.
 --
@@ -284,20 +250,19 @@ infixr 9 _∘_
 
 _∘_ : ∀ {a b c r₁ r₂} {A : Set a} {B : A → Set b} {C : A → Set c} →
       (l₁ : Lens r₁ A B) →
-      let open Lens l₁; open Inverse lens in
-      (∀ {r} → Lens r₂ (B′ r) (λ b′ → C (from ⟨$⟩ (r , b′)))) →
+      let open Lens l₁; open _↔_ lens in
+      (∀ {r} → Lens r₂ (B′ r) (λ b′ → C (from (r , b′)))) →
       Lens _ A C
 _∘_ {C = C} l₁ l₂ = record
   { lens    = lens l₂ ₃∘₃ lens l₁
   ; variant = λ {a} →
       B′ l₂ (remainder l₂ (Lens₃.get (lens l₁) a))  ↔⟨ variant l₂ ⟩
-      C (from (lens l₁) ⟨$⟩ (to (lens l₁) ⟨$⟩ a))   ≡⟨ P.cong C (left-inverse-of (lens l₁) a) ⟩
-      C a                                           ∎
+      C (from (lens l₁) (to (lens l₁) a))           ↝⟨ ≡⇒↝ _ (cong C (left-inverse-of (lens l₁) a)) ⟩□
+      C a                                           □
   }
   where
-  open Inverse
+  open _↔_
   open Lens
-  open Related.EquationalReasoning
 
 -- Lenses respect (certain) isomorphisms.
 --
@@ -309,36 +274,31 @@ cast : ∀ {r b}
          {a₁} {A₁ : Set a₁} {B₁ : A₁ → Set b}
          {a₂} {A₂ : Set a₂} {B₂ : A₂ → Set b}
        (A₁↔A₂ : A₁ ↔ A₂) →
-       (∀ a → B₁ (Inverse.from A₁↔A₂ ⟨$⟩ a) ↔ B₂ a) →
+       (∀ a → B₁ (_↔_.from A₁↔A₂ a) ↔ B₂ a) →
        Lens r A₁ B₁ → Lens _ A₂ B₂
 cast {A₁ = A₁} {B₁} {A₂ = A₂} {B₂} A₁↔A₂ B₁↔B₂ l = record
-  { lens    = A₂      ↔⟨ Inv.sym A₁↔A₂ ⟩
-              A₁      ↔⟨ lens ⟩
-              Σ R B′  ∎
+  { lens    = A₂      ↔⟨ inverse A₁↔A₂ ⟩
+              A₁      ↔⟨ lens ⟩□
+              Σ R B′  □
   ; variant = λ {a} →
-              B′ (remainder (from ⟨$⟩ a))  ↔⟨ variant ⟩
-              B₁ (from ⟨$⟩ a)              ↔⟨ B₁↔B₂ _ ⟩
-              B₂ a                         ∎
+              B′ (remainder (from a))  ↔⟨ variant ⟩
+              B₁ (from a)              ↔⟨ B₁↔B₂ _ ⟩□
+              B₂ a                     □
   }
   where
-  open Inverse A₁↔A₂
+  open _↔_ A₁↔A₂
   open Lens l
-  open Related.EquationalReasoning
 
 ------------------------------------------------------------------------
 -- An observation
 
--- Lenses cannot (easily) be used to replace ordinary projections: one
--- cannot, in general, define lenses with the type of the first
--- projection from a Σ-type.
+-- Lens₃ lenses cannot (easily) be used to replace ordinary
+-- projections: one cannot, in general, define lenses with the type of
+-- the first projection from a Σ-type. For Lens lenses the situation
+-- is more complicated.
 
--- Proof for Lens.
+module Observation where
 
-not-proj₁ : ∀ r →
-            ∃₂ λ (A : Set) (B : A → Set) →
-            ¬ Lens r (Σ A B) (λ _ → A)
-not-proj₁ r = , , empty
-  where
   -- A Σ-type which is isomorphic to the unit type.
 
   Unit = Σ Bool λ b → b ≡ true
@@ -346,52 +306,109 @@ not-proj₁ r = , , empty
   -- All its inhabitants are equal.
 
   equal : (u₁ u₂ : Unit) → u₁ ≡ u₂
-  equal (.true , P.refl) (.true , P.refl) = P.refl
+  equal (.true , refl) (.true , refl) = refl
 
   -- Its only inhabitant.
 
   u : Unit
-  u = (true , P.refl)
+  u = (true , refl)
 
-  -- We cannot construct a lens from Unit to Bool.
+  -- The first projection Lens₃ cannot be defined for Unit.
 
-  empty : ¬ Lens r Unit (λ _ → Bool)
-  empty l = distinct (equal (set u true) (set u false))
+  not-proj₁₃ : ∀ {r} {R : Set r} → ¬ Lens₃ Unit R (λ _ → Bool)
+  not-proj₁₃ l = Bool.true≢false (
+    true                                                    ≡⟨ sym $ subst-const (sym $ remainder-set u true) ⟩
+    subst (λ _ → Bool) (sym $ remainder-set u true) true    ≡⟨ sym $ get-set u true ⟩
+    get (set u true)                                        ≡⟨ cong get (equal (set u true) (set u false)) ⟩
+    get (set u false)                                       ≡⟨ get-set u false ⟩
+    subst (λ _ → Bool) (sym $ remainder-set u false) false  ≡⟨ subst-const (sym $ remainder-set u false) ⟩∎
+    false                                                   ∎)
     where
-    open Inverse
+    open Lens₃ l
+
+  -- The first projection Lens cannot be defined for Unit /if/ we
+  -- assume that the K rule holds.
+
+  not-proj₁ : ∀ {r} → K-rule r r → ¬ Lens r Unit (λ _ → Bool)
+  not-proj₁ {r} k l = contradiction
+    where
+    open _↔_
     open Lens l
-    open P.≡-Reasoning
 
     -- Some lemmas.
 
     helper :
-      {A : Set r} {B C : Set} {b : B} {c₁ c₂ : C}
-      (P : A → Set) (f : C → A) (inv : ∀ {c} → P (f c) ↔ B) →
-      c₁ ≡ c₂ → (eq : f c₁ ≡ f c₂) →
-      to inv ⟨$⟩ (from (≡⇒ (P.cong P eq)) ⟨$⟩ (from inv ⟨$⟩ b)) ≡ b
-    helper f P inv P.refl P.refl = right-inverse-of inv _
+      {A C : Set} {B : Set r} {a₁ a₂ : A} {c : C}
+      (P : B → Set) (f : A → B)
+      (inv : ∀ {a} → P (f a) ↔ C) →
+      Is-set B →
+      a₁ ≡ a₂ → (eq : f a₁ ≡ f a₂) →
+      to inv (from (≡⇒↝ _ (cong P eq)) (from inv c)) ≡ c
+    helper {c = c} P _ inv B-is-set refl eq =
+      to inv (from (≡⇒↝ _ (cong P eq))   (from inv c))  ≡⟨ cong (λ eq → to inv (from (≡⇒↝ _ (cong P eq)) _))
+                                                                (_⇔_.to set⇔UIP B-is-set eq refl) ⟩
+      to inv (from (≡⇒↝ _ (cong P refl)) (from inv c))  ≡⟨⟩
+      to inv (from inv c)                               ≡⟨ right-inverse-of inv _ ⟩∎
+      c                                                 ∎
 
-    from-B-set : ∀ b → from (B-set {b = b}) ⟨$⟩ b ≡ b
+    from-B-set : ∀ b → from (B-set {a = u} {b = b}) b ≡ b
     from-B-set b =
-      helper B′ remainder variant
-             (equal (set u b) u) (remainder-set u b)
+      helper B′
+             remainder
+             variant
+             (_⇔_.from set⇔UIP (_⇔_.to K⇔UIP k))
+             (equal (set u b) u)
+             (remainder-set u b)
 
-    -- set u true and set u false must be distinct.
+    -- A contradiction.
 
-    distinct : set u true ≢ set u false
-    distinct eq with begin
-      true                  ≡⟨ P.sym $ from-B-set true ⟩
-      from B-set ⟨$⟩ true   ≡⟨ P.sym $ get-set u true ⟩
-      get (set u true)      ≡⟨ P.cong get eq ⟩
-      get (set u false)     ≡⟨ get-set u false ⟩
-      from B-set ⟨$⟩ false  ≡⟨ from-B-set false ⟩
-      false                 ∎
-    ... | ()
+    contradiction : ⊥
+    contradiction = Bool.true≢false (
+      true               ≡⟨ sym $ from-B-set true ⟩
+      from B-set true    ≡⟨ sym $ get-set u true ⟩
+      get (set u true)   ≡⟨ cong get (equal (set u true) (set u false)) ⟩
+      get (set u false)  ≡⟨ get-set u false ⟩
+      from B-set false   ≡⟨ from-B-set false ⟩∎
+      false              ∎)
 
--- Proof for Lens₃.
+  -- If we assume univalence and extensionality, then we /can/ define
+  -- two Lenses that have the same type signature as a first
+  -- projection lens for Unit (modulo the presence of a lifting).
 
-not-proj₁₃ : ∀ r →
-             ∃₂ λ (A : Set) (B : A → Set) →
-               ∀ (R : Set r) → ¬ Lens₃ (Σ A B) R (λ _ → A)
-not-proj₁₃ r =
-  , , λ _ l → proj₂ (proj₂ (not-proj₁ r)) (Lens₃-to-Lens l)
+  possible : (Bool ≃ Bool) ↔ Bool →
+             Univalence′ Bool Bool →
+             Lens _ Unit (λ _ → ↑ _ Bool)
+  possible [Bool≃Bool]↔Bool univ = record
+    { R       = Set
+    ; B′      = _≡ Bool
+    ; lens    = Σ Bool (_≡ true)  ↝⟨ inverse $ _⇔_.to contractible⇔⊤↔ (singleton-contractible _) ⟩
+                ⊤                 ↝⟨ _⇔_.to contractible⇔⊤↔ (singleton-contractible _) ⟩□
+                Σ Set  (_≡ Bool)  □
+    ; variant = Bool ≡ Bool  ↔⟨ ≡≃≃ univ ⟩
+                Bool ≃ Bool  ↝⟨ [Bool≃Bool]↔Bool ⟩
+                Bool         ↝⟨ inverse ↑↔ ⟩□
+                ↑ _ Bool     □
+    }
+
+  proj₁₁ : Extensionality lzero lzero →
+           Univalence′ Bool Bool →
+           Lens _ Unit (λ _ → ↑ _ Bool)
+  proj₁₁ ext = possible ([Bool≃Bool]↔Bool₁ ext)
+
+  proj₁₂ : Extensionality lzero lzero →
+           Univalence′ Bool Bool →
+           Lens _ Unit (λ _ → ↑ _ Bool)
+  proj₁₂ ext = possible ([Bool≃Bool]↔Bool₂ ext)
+
+  -- One of the Lenses has a reasonable get function, and is thus a
+  -- first projection lens:
+
+  proj₁₁-get : ∀ {ext : Extensionality _ _} {univ b eq} →
+               Lens.get (proj₁₁ ext univ) (b , eq) ≡ lift true
+  proj₁₁-get = refl
+
+  -- The other Lens doesn't have a reasonable get function:
+
+  proj₁₂-get : ∀ {ext : Extensionality _ _} {univ b eq} →
+               Lens.get (proj₁₂ ext univ) (b , eq) ≡ lift false
+  proj₁₂-get = refl
