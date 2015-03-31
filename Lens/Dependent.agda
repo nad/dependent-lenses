@@ -160,7 +160,7 @@ record Lens {a b} r
   remainder = L.remainder
 
   field
-    -- An isomorphism which specifies in what sense B′ is a variant of
+    -- An isomorphism that specifies in what sense B′ is a variant of
     -- B.
 
     variant : ∀ {a} → B′ (remainder a) ↔ B a
