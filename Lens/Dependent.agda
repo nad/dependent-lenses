@@ -90,11 +90,10 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
 
 -- Identity lens.
 
-id₃ : ∀ {a} {A : Set a} → Lens₃ A (↑ a ⊤) (λ _ → A)
+id₃ : ∀ {a} {A : Set a} → Lens₃ A ⊤ (λ _ → A)
 id₃ {A = A} =
-  A          ↔⟨ inverse ×-left-identity ⟩
-  ⊤     × A  ↔⟨ inverse ↑↔ ×-cong F.id ⟩□
-  ↑ _ ⊤ × A  □
+  A      ↔⟨ inverse ×-left-identity ⟩□
+  ⊤ × A  □
 
 -- Composition of lenses.
 
@@ -221,7 +220,7 @@ Lens₃-to-Lens l = record
 
 -- Identity lens.
 
-id : ∀ {a} {A : Set a} → Lens a A (λ _ → A)
+id : ∀ {a} {A : Set a} → Lens lzero A (λ _ → A)
 id = Lens₃-to-Lens id₃
 
 -- Composition of lenses.

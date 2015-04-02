@@ -107,7 +107,7 @@ module Dependent₃ where
   -- First we define lenses for the fields of R₂ (note that the A lens
   -- does not seem to be very useful):
 
-  A : Lens₃ R₂ (↑ (lsuc lzero) ⊤) (λ _ → R₂)
+  A : Lens₃ R₂ ⊤ (λ _ → R₂)
   A = id₃
 
   r₁ : Lens₃ R₂ Set R₁
