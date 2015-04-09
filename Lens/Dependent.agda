@@ -138,6 +138,56 @@ _₃∘₃_ {A = A} {R₁} {B₁} {R₂} {B₂} l₁ l₂ =
   Σ (Σ R₁ R₂) (uncurry B₂)      □
 
 ------------------------------------------------------------------------
+-- Lens₃ equality and some properties
+
+-- If Lens₃ lenses had been defined using equivalences instead of
+-- bijections, and we had access to extensionality for functions, then
+-- Equal₃ could have been replaced by _≡_.
+
+Equal₃ : ∀ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
+         (l₁ l₂ : Lens₃ A R B) → Set (a ⊔ r ⊔ b)
+Equal₃ l₁ l₂ = ∀ x → to l₁ x ≡ to l₂ x
+  where open _↔_
+
+-- id₃ and _₃∘₃_ form a kind of monoid.
+
+left-identity₃ :
+  ∀ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
+  (l : Lens₃ A R B) →
+  Equal₃
+    (id₃ ₃∘₃ l)
+    (A                      ↝⟨ l ⟩
+     Σ R B                  ↝⟨ Σ-cong (inverse ×-right-identity) (λ _ → F.id) ⟩□
+     Σ (R × ⊤) (B ⊚ proj₁)  □)
+left-identity₃ _ _ = refl
+
+right-identity₃ :
+  ∀ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
+  (l : Lens₃ A R B) →
+  Equal₃
+    (l ₃∘₃ id₃)
+    (A                      ↝⟨ l ⟩
+     Σ R B                  ↝⟨ Σ-cong (inverse ×-left-identity) (λ _ → F.id) ⟩□
+     Σ (⊤ × R) (B ⊚ proj₂)  □)
+right-identity₃ _ _ = refl
+
+associativity₃ :
+  ∀ {a r₁ b₁ r₂ b₂ r₃ b₃}
+    {A : Set a} {R₁ : Set r₁} {B₁ : R₁ → Set b₁}
+    {R₂ : R₁ → Set r₂} {B₂ : (r₁ : R₁) → R₂ r₁ → Set b₂}
+    {R₃ : (r₁ : R₁) → R₂ r₁ → Set r₃}
+    {B₃ : (r₁ : R₁) (r₂ : R₂ r₁) → R₃ r₁ r₂ → Set b₃}
+  (l₁ : ∀ {r₁ r₂} → Lens₃ (B₂ r₁ r₂) (R₃ r₁ r₂) (B₃ r₁ r₂))
+  (l₂ : ∀ {r} → Lens₃ (B₁ r) (R₂ r) (B₂ r))
+  (l₃ : Lens₃ A R₁ B₁) →
+  Equal₃
+    (l₁ ₃∘₃ (l₂ ₃∘₃ l₃))
+    (A                                                             ↝⟨ (l₁ ₃∘₃ l₂) ₃∘₃ l₃ ⟩
+     Σ (Σ R₁ (λ r₁ → Σ (R₂ r₁) (R₃ r₁))) (uncurry (uncurry ⊚ B₃))  ↝⟨ Σ-cong Σ-assoc (λ _ → F.id) ⟩□
+     Σ (Σ (Σ R₁ R₂) (uncurry R₃)) (uncurry (uncurry B₃))           □)
+associativity₃ _ _ _ _ = refl
+
+------------------------------------------------------------------------
 -- Dependent lenses without "remainder types" visible in the type
 
 -- The remainder /level/ is still visible in the type.
