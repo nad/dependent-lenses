@@ -27,12 +27,12 @@ open import Univalence-axiom equality-with-J
 -- into a "remainder" r of type R and a value of type B r.
 
 Lens₃ : ∀ {a r b} → Set a → (R : Set r) → (R → Set b) → Set _
-Lens₃ A R B = A ≃ Σ R B
+Lens₃ A R B = A ↔ Σ R B
 
 module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
              (lens : Lens₃ A R B) where
 
-  open _≃_
+  open _↔_
 
   -- The remainder.
 
@@ -61,10 +61,10 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
     proj₁ (to lens (from lens (remainder a , b)))  ≡⟨ cong proj₁ (right-inverse-of lens _) ⟩∎
     remainder a                                    ∎
 
-  -- A related equivalence.
+  -- A related isomorphism.
 
-  B-set≃ : ∀ {a b} → B (remainder (set a b)) ≃ B (remainder a)
-  B-set≃ = ≡⇒↝ _ (cong B (remainder-set _ _))
+  B-set↔ : ∀ {a b} → B (remainder (set a b)) ↔ B (remainder a)
+  B-set↔ = ≡⇒↝ _ (cong B (remainder-set _ _))
 
   -- Some lens laws.
 
@@ -89,10 +89,10 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
     where
     lemma = right-inverse-of lens _
 
-  get-set₂ : ∀ a b → get (set a b) ≡ from B-set≃ b
+  get-set₂ : ∀ a b → get (set a b) ≡ from B-set↔ b
   get-set₂ a b =
     proj₂ (to lens (from lens (remainder a , b)))  ≡⟨ get-set₁ _ _ ⟩
-    subst B (sym (cong proj₁ lemma)) b             ≡⟨ subst-in-terms-of-inverse∘≡⇒↝ equivalence (cong proj₁ lemma) _ _ ⟩∎
+    subst B (sym (cong proj₁ lemma)) b             ≡⟨ subst-in-terms-of-inverse∘≡⇒↝ bijection (cong proj₁ lemma) _ _ ⟩∎
     from (≡⇒↝ _ (cong B (cong proj₁ lemma))) b     ∎
     where
     lemma = right-inverse-of lens _
@@ -105,10 +105,10 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
     where
     eq = remainder-set a b₁
 
-  set-set₂ : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a (to B-set≃ b₂)
+  set-set₂ : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a (to B-set↔ b₂)
   set-set₂ a b₁ b₂ =
     set (set a b₁) b₂                  ≡⟨ set-set₁ _ _ _ ⟩
-    set a (subst B eq b₂)              ≡⟨ cong (set a) (subst-in-terms-of-≡⇒↝ equivalence eq _ _) ⟩∎
+    set a (subst B eq b₂)              ≡⟨ cong (set a) (subst-in-terms-of-≡⇒↝ bijection eq _ _) ⟩∎
     set a (to (≡⇒↝ _ (cong B eq)) b₂)  ∎
     where
     eq = remainder-set a b₁
@@ -132,8 +132,8 @@ _₃∘₃_ : ∀ {a r₁ b₁ r₂ b₂} {A : Set a} {R₁ : Set r₁} {B₁ : 
         (∀ {r} → Lens₃ (B₁ r) (R₂ r) (B₂ r)) → Lens₃ A R₁ B₁ →
         Lens₃ A (Σ R₁ R₂) (uncurry B₂)
 _₃∘₃_ {A = A} {R₁} {B₁} {R₂} {B₂} l₁ l₂ =
-  A                             ↝⟨ l₂ ⟩
-  Σ R₁ B₁                       ↝⟨ ∃-cong (λ _ → l₁) ⟩
+  A                             ↔⟨ l₂ ⟩
+  Σ R₁ B₁                       ↔⟨ ∃-cong (λ _ → l₁) ⟩
   Σ R₁ (λ r → Σ (R₂ r) (B₂ r))  ↔⟨ Σ-assoc ⟩□
   Σ (Σ R₁ R₂) (uncurry B₂)      □
 
@@ -154,12 +154,12 @@ record Lens {a b} r
 
     B′ : R → Set b
 
-    -- The main lens equivalence.
+    -- The main lens isomorphism.
 
     lens : Lens₃ A R B′
 
   private module L = Lens₃ lens
-  open _≃_
+  open _↔_
 
   -- The non-B part of the A value.
 
@@ -175,20 +175,20 @@ record Lens {a b} r
 
     variant : ∀ {a} → B′ (remainder a) ≡ B a
 
-  -- A corresponding equivalence.
+  -- A corresponding isomorphism.
 
-  variant≃ : ∀ {a} → B′ (remainder a) ≃ B a
-  variant≃ = ≡⇒↝ _ variant
+  variant↔ : ∀ {a} → B′ (remainder a) ↔ B a
+  variant↔ = ≡⇒↝ _ variant
 
   -- Getter.
 
   get : (a : A) → B a
-  get a = to variant≃ (L.get a)
+  get a = to variant↔ (L.get a)
 
   -- Setter.
 
   set : (a : A) → B a → A
-  set a b = L.set a (from variant≃ b)
+  set a b = L.set a (from variant↔ b)
 
   -- Modifier.
 
@@ -198,7 +198,7 @@ record Lens {a b} r
   -- Setting leaves the remainder unchanged.
 
   remainder-set : ∀ a b → remainder (set a b) ≡ remainder a
-  remainder-set a b = L.remainder-set a (from variant≃ b)
+  remainder-set a b = L.remainder-set a (from variant↔ b)
 
   -- Hence the type of the gettable part stays unchanged after a set.
 
@@ -209,43 +209,43 @@ record Lens {a b} r
     B′ (remainder a)          ≡⟨ variant ⟩∎
     B a                       ∎
 
-  -- A corresponding equivalence.
+  -- A corresponding isomorphism.
 
-  B-set≃ : ∀ {a b} → B (set a b) ≃ B a
-  B-set≃ = ≡⇒↝ _ B-set
+  B-set↔ : ∀ {a b} → B (set a b) ↔ B a
+  B-set↔ = ≡⇒↝ _ B-set
 
-  -- Unfolding lemmas for B-set≃.
+  -- Unfolding lemmas for B-set↔.
 
-  to-B-set≃ :
+  to-B-set↔ :
     ∀ {a b} →
-    to (B-set≃ {a = a} {b = b}) ≡
-    to variant≃ ⊚ to L.B-set≃ ⊚ from variant≃
-  to-B-set≃ =
-    to (≡⇒↝ _ (trans (sym variant) (trans eq variant)))       ≡⟨ ≡⇒↝-trans equivalence {B≡C = trans eq variant} ⟩
-    to (≡⇒↝ _ (trans eq variant)) ⊚ to (≡⇒↝ _ (sym variant))  ≡⟨ cong (to (≡⇒↝ _ (trans eq variant)) ⊚_) (≡⇒↝-sym equivalence {eq = variant}) ⟩
-    to (≡⇒↝ _ (trans eq variant)) ⊚ from variant≃             ≡⟨ cong (_⊚ from variant≃) (≡⇒↝-trans equivalence {B≡C = variant}) ⟩∎
-    to variant≃ ⊚ to (≡⇒↝ _ eq) ⊚ from variant≃               ∎
+    to (B-set↔ {a = a} {b = b}) ≡
+    to variant↔ ⊚ to L.B-set↔ ⊚ from variant↔
+  to-B-set↔ =
+    to (≡⇒↝ _ (trans (sym variant) (trans eq variant)))       ≡⟨ ≡⇒↝-trans bijection {B≡C = trans eq variant} ⟩
+    to (≡⇒↝ _ (trans eq variant)) ⊚ to (≡⇒↝ _ (sym variant))  ≡⟨ cong (to (≡⇒↝ _ (trans eq variant)) ⊚_) (≡⇒↝-sym bijection {eq = variant}) ⟩
+    to (≡⇒↝ _ (trans eq variant)) ⊚ from variant↔             ≡⟨ cong (_⊚ from variant↔) (≡⇒↝-trans bijection {B≡C = variant}) ⟩∎
+    to variant↔ ⊚ to (≡⇒↝ _ eq) ⊚ from variant↔               ∎
     where
     eq = cong B′ (remainder-set _ _)
 
-  from-B-set≃ :
+  from-B-set↔ :
     ∀ {a b} →
-    from (B-set≃ {a = a} {b = b}) ≡
-    to variant≃ ⊚ from L.B-set≃ ⊚ from variant≃
-  from-B-set≃ =
-    from (≡⇒↝ _ (trans (sym variant) (trans eq variant)))         ≡⟨ sym $ ≡⇒↝-sym equivalence {eq = trans (sym variant) (trans eq variant)} ⟩
-    to (≡⇒↝ _ (sym (trans (sym variant) (trans eq variant))))     ≡⟨ cong (to ⊚ ≡⇒↝ equivalence)
+    from (B-set↔ {a = a} {b = b}) ≡
+    to variant↔ ⊚ from L.B-set↔ ⊚ from variant↔
+  from-B-set↔ =
+    from (≡⇒↝ _ (trans (sym variant) (trans eq variant)))         ≡⟨ sym $ ≡⇒↝-sym bijection {eq = trans (sym variant) (trans eq variant)} ⟩
+    to (≡⇒↝ _ (sym (trans (sym variant) (trans eq variant))))     ≡⟨ cong (to ⊚ ≡⇒↝ bijection)
                                                                           (Tactic.prove (Sym (Trans (Sym (Lift variant))
                                                                                                     (Trans (Lift eq) (Lift variant))))
                                                                                         (Trans (Trans (Sym (Lift variant)) (Sym (Lift eq)))
                                                                                                (Lift variant))
                                                                                         refl) ⟩
-    to (≡⇒↝ _ (trans (trans (sym variant) (sym eq)) variant))     ≡⟨ ≡⇒↝-trans equivalence {B≡C = variant} ⟩
-    to variant≃ ⊚ to (≡⇒↝ _ (trans (sym variant) (sym eq)))       ≡⟨ cong (to variant≃ ⊚_) (≡⇒↝-trans equivalence {B≡C = sym eq}) ⟩
-    to variant≃ ⊚ to (≡⇒↝ _ (sym eq)) ⊚ to (≡⇒↝ _ (sym variant))  ≡⟨ cong₂ (λ f g → to variant≃ ⊚ f ⊚ g)
-                                                                           (≡⇒↝-sym equivalence {eq = eq})
-                                                                           (≡⇒↝-sym equivalence {eq = variant}) ⟩∎
-    to variant≃ ⊚ from (≡⇒↝ _ eq) ⊚ from variant≃                 ∎
+    to (≡⇒↝ _ (trans (trans (sym variant) (sym eq)) variant))     ≡⟨ ≡⇒↝-trans bijection {B≡C = variant} ⟩
+    to variant↔ ⊚ to (≡⇒↝ _ (trans (sym variant) (sym eq)))       ≡⟨ cong (to variant↔ ⊚_) (≡⇒↝-trans bijection {B≡C = sym eq}) ⟩
+    to variant↔ ⊚ to (≡⇒↝ _ (sym eq)) ⊚ to (≡⇒↝ _ (sym variant))  ≡⟨ cong₂ (λ f g → to variant↔ ⊚ f ⊚ g)
+                                                                           (≡⇒↝-sym bijection {eq = eq})
+                                                                           (≡⇒↝-sym bijection {eq = variant}) ⟩∎
+    to variant↔ ⊚ from (≡⇒↝ _ eq) ⊚ from variant↔                 ∎
     where
     eq = cong B′ (remainder-set _ _)
 
@@ -253,28 +253,28 @@ record Lens {a b} r
 
   set-get : ∀ a → set a (get a) ≡ a
   set-get a =
-    L.set a (from variant≃ (to variant≃ (L.get a)))  ≡⟨ cong (L.set a) (left-inverse-of variant≃ _) ⟩
+    L.set a (from variant↔ (to variant↔ (L.get a)))  ≡⟨ cong (L.set a) (left-inverse-of variant↔ _) ⟩
     L.set a (L.get a)                                ≡⟨ L.set-get a ⟩∎
     a                                                ∎
 
-  get-set : ∀ a b → get (set a b) ≡ from B-set≃ b
+  get-set : ∀ a b → get (set a b) ≡ from B-set↔ b
   get-set a b =
-    to variant≃ (L.get (L.set a (from variant≃ b)))  ≡⟨ cong (to variant≃) $ L.get-set₂ _ _ ⟩
-    to variant≃ (from (≡⇒↝ _ eq) (from variant≃ b))  ≡⟨ cong (_$ b) (sym from-B-set≃) ⟩∎
-    from B-set≃ b                                    ∎
+    to variant↔ (L.get (L.set a (from variant↔ b)))  ≡⟨ cong (to variant↔) $ L.get-set₂ _ _ ⟩
+    to variant↔ (from (≡⇒↝ _ eq) (from variant↔ b))  ≡⟨ cong (_$ b) (sym from-B-set↔) ⟩∎
+    from B-set↔ b                                    ∎
     where
     eq = cong B′ (remainder-set a b)
 
-  set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a (to B-set≃ b₂)
+  set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a (to B-set↔ b₂)
   set-set a b₁ b₂ =
-    L.set (L.set a (from variant≃ b₁)) (from variant≃ b₂)  ≡⟨ L.set-set₂ a (from variant≃ b₁) (from variant≃ b₂) ⟩
-    L.set a (to L.B-set≃ (from variant≃ b₂))               ≡⟨ cong (L.set a) lemma ⟩∎
-    L.set a (from variant≃ (to B-set≃ b₂))                 ∎
+    L.set (L.set a (from variant↔ b₁)) (from variant↔ b₂)  ≡⟨ L.set-set₂ a (from variant↔ b₁) (from variant↔ b₂) ⟩
+    L.set a (to L.B-set↔ (from variant↔ b₂))               ≡⟨ cong (L.set a) lemma ⟩∎
+    L.set a (from variant↔ (to B-set↔ b₂))                 ∎
     where
     lemma =
-      to L.B-set≃ (from variant≃ b₂)                                ≡⟨ sym $ left-inverse-of variant≃ _ ⟩
-      from variant≃ (to variant≃ (to L.B-set≃ (from variant≃ b₂)))  ≡⟨ cong (from variant≃ ⊚ (_$ b₂)) $ sym to-B-set≃ ⟩∎
-      from variant≃ (to B-set≃ b₂)                                  ∎
+      to L.B-set↔ (from variant↔ b₂)                                ≡⟨ sym $ left-inverse-of variant↔ _ ⟩
+      from variant↔ (to variant↔ (to L.B-set↔ (from variant↔ b₂)))  ≡⟨ cong (from variant↔ ⊚ (_$ b₂)) $ sym to-B-set↔ ⟩∎
+      from variant↔ (to B-set↔ b₂)                                  ∎
 
 ------------------------------------------------------------------------
 -- Lens combinators
@@ -319,7 +319,7 @@ infixr 9 _∘_
 
 _∘_ : ∀ {a b c r₁ r₂} {A : Set a} {B : A → Set b} {C : A → Set c} →
       (l₁ : Lens r₁ A B) →
-      let open Lens l₁; open _≃_ lens in
+      let open Lens l₁; open _↔_ lens in
       (∀ {r} → Lens r₂ (B′ r) (λ b′ → C (from (r , b′)))) →
       Lens _ A C
 _∘_ {C = C} l₁ l₂ = record
@@ -330,10 +330,10 @@ _∘_ {C = C} l₁ l₂ = record
       C a                                           ∎
   }
   where
-  open _≃_
+  open _↔_
   open Lens
 
--- Lenses respect (certain) equivalences.
+-- Lenses respect (certain) isomorphisms.
 --
 -- Note that B₁ and B₂ are required to have the same universe level.
 -- One could avoid this restriction by adding another level parameter
@@ -342,12 +342,12 @@ _∘_ {C = C} l₁ l₂ = record
 cast : ∀ {r b}
          {a₁} {A₁ : Set a₁} {B₁ : A₁ → Set b}
          {a₂} {A₂ : Set a₂} {B₂ : A₂ → Set b}
-       (A₁≃A₂ : A₁ ≃ A₂) →
-       (∀ a → B₁ (_≃_.from A₁≃A₂ a) ≡ B₂ a) →
+       (A₁↔A₂ : A₁ ↔ A₂) →
+       (∀ a → B₁ (_↔_.from A₁↔A₂ a) ≡ B₂ a) →
        Lens r A₁ B₁ → Lens _ A₂ B₂
-cast {A₁ = A₁} {B₁} {A₂ = A₂} {B₂} A₁≃A₂ B₁≡B₂ l = record
-  { lens    = A₂      ↝⟨ inverse A₁≃A₂ ⟩
-              A₁      ↝⟨ lens ⟩□
+cast {A₁ = A₁} {B₁} {A₂ = A₂} {B₂} A₁↔A₂ B₁≡B₂ l = record
+  { lens    = A₂      ↔⟨ inverse A₁↔A₂ ⟩
+              A₁      ↔⟨ lens ⟩□
               Σ R B′  □
   ; variant = λ {a} →
               B′ (remainder (from a))  ≡⟨ variant ⟩
@@ -355,7 +355,7 @@ cast {A₁ = A₁} {B₁} {A₂ = A₂} {B₂} A₁≃A₂ B₁≡B₂ l = recor
               B₂ a                     ∎
   }
   where
-  open _≃_ A₁≃A₂
+  open _↔_ A₁↔A₂
   open Lens l
 
 ------------------------------------------------------------------------
@@ -401,7 +401,7 @@ module Observation where
   not-proj₁ : ∀ {r} → K-rule r r → ¬ Lens r Unit (λ _ → Bool)
   not-proj₁ {r} k l = contradiction
     where
-    open _≃_
+    open _↔_
     open Lens l
 
     -- Some lemmas.
@@ -409,7 +409,7 @@ module Observation where
     helper :
       {A C : Set} {B : Set r} {a₁ a₂ : A} {c : C}
       (P : B → Set) (f : A → B)
-      (inv : ∀ {a} → P (f a) ≃ C) →
+      (inv : ∀ {a} → P (f a) ↔ C) →
       Is-set B →
       a₁ ≡ a₂ → (eq : f a₁ ≡ f a₂) →
       to inv (from (≡⇒↝ _ (cong P eq)) (from inv c)) ≡ c
@@ -420,12 +420,12 @@ module Observation where
       to inv (from inv c)                               ≡⟨ right-inverse-of inv _ ⟩∎
       c                                                 ∎
 
-    from-B-set : ∀ b → from (B-set≃ {a = u} {b = b}) b ≡ b
+    from-B-set : ∀ b → from (B-set↔ {a = u} {b = b}) b ≡ b
     from-B-set b =
-      from B-set≃ b                                             ≡⟨ cong (_$ b) from-B-set≃ ⟩
-      to variant≃ (from (Lens₃.B-set≃ lens) (from variant≃ b))  ≡⟨ helper B′
+      from B-set↔ b                                             ≡⟨ cong (_$ b) from-B-set↔ ⟩
+      to variant↔ (from (Lens₃.B-set↔ lens) (from variant↔ b))  ≡⟨ helper B′
                                                                           remainder
-                                                                          variant≃
+                                                                          variant↔
                                                                           (_⇔_.from set⇔UIP (_⇔_.to K⇔UIP k))
                                                                           (equal (set u b) u)
                                                                           (remainder-set u b) ⟩∎
@@ -436,10 +436,10 @@ module Observation where
     contradiction : ⊥
     contradiction = Bool.true≢false (
       true               ≡⟨ sym $ from-B-set true ⟩
-      from B-set≃ true   ≡⟨ sym $ get-set u true ⟩
+      from B-set↔ true   ≡⟨ sym $ get-set u true ⟩
       get (set u true)   ≡⟨ cong get (equal (set u true) (set u false)) ⟩
       get (set u false)  ≡⟨ get-set u false ⟩
-      from B-set≃ false  ≡⟨ from-B-set false ⟩∎
+      from B-set↔ false  ≡⟨ from-B-set false ⟩∎
       false              ∎)
 
   -- If we assume univalence, then we /can/ define two Lenses that
@@ -453,14 +453,14 @@ module Observation where
   possible [Bool≃Bool]↔Bool univ₀ univ₁ = record
     { R       = Set
     ; B′      = _≡ Bool
-    ; lens    = Σ Bool (_≡ true)  ↔⟨ inverse $ _⇔_.to contractible⇔⊤↔ (singleton-contractible _) ⟩
-                ⊤                 ↔⟨ _⇔_.to contractible⇔⊤↔ (singleton-contractible _) ⟩□
+    ; lens    = Σ Bool (_≡ true)  ↝⟨ inverse $ _⇔_.to contractible⇔⊤↔ (singleton-contractible _) ⟩
+                ⊤                 ↝⟨ _⇔_.to contractible⇔⊤↔ (singleton-contractible _) ⟩□
                 Σ Set  (_≡ Bool)  □
-    ; variant = ≃⇒≡ univ₁ (
-                  Bool ≡ Bool  ↝⟨ ≡≃≃ univ₀ ⟩
-                  Bool ≃ Bool  ↔⟨ [Bool≃Bool]↔Bool ⟩
-                  Bool         ↔⟨ inverse ↑↔ ⟩□
-                  ↑ _ Bool     □)
+    ; variant = ≃⇒≡ univ₁ (↔⇒≃ (
+                  Bool ≡ Bool  ↔⟨ ≡≃≃ univ₀ ⟩
+                  Bool ≃ Bool  ↝⟨ [Bool≃Bool]↔Bool ⟩
+                  Bool         ↝⟨ inverse ↑↔ ⟩□
+                  ↑ _ Bool     □))
     }
 
   proj₁₁ : Univalence lzero →
@@ -488,11 +488,13 @@ module Observation where
     Lens.get (possible iso univ₀ univ₁) p ≡
     lift (_↔_.to iso F.id)
   get-possible iso univ₀ univ₁ _ =
-    _≃_.to (≡⇒↝ _ (≃⇒≡ univ₁ iso′)) refl  ≡⟨ cong (_$ refl) (≡⇒→-≃⇒≡ equivalence univ₁) ⟩
-    _≃_.to iso′ refl                      ≡⟨ refl ⟩∎
-    lift (_↔_.to iso F.id)                ∎
+    to (≡⇒↝ _ (≃⇒≡ univ₁ (↔⇒≃ iso′))) refl  ≡⟨ cong (_$ refl) (≡⇒→-≃⇒≡ bijection univ₁) ⟩
+    to iso′ refl                            ≡⟨ refl ⟩∎
+    lift (to iso F.id)                      ∎
     where
-    iso′ = (↔⇒≃ (inverse ↑↔) F.∘ ↔⇒≃ iso) F.∘ ≡≃≃ univ₀
+    open _↔_
+
+    iso′ = (inverse ↑↔ F.∘ iso) F.∘ _≃_.bijection (≡≃≃ univ₀)
 
   proj₁₁-get : ∀ (univ₀ : Univalence _) (univ₁ : Univalence _) p →
                Lens.get (proj₁₁ univ₀ univ₁) p ≡ lift true
