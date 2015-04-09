@@ -18,6 +18,7 @@ open import Prelude hiding (_∘_)
 open import Bijection equality-with-J
   using (_↔_; decidable-equality-respects)
 open import Equality.Decision-procedures equality-with-J
+open import Equivalence equality-with-J using (↔⇒≃)
 open import Function-universe equality-with-J hiding (_∘_)
 
 import Lens.Dependent
@@ -51,7 +52,7 @@ module Dependent₃ where
 
   x : {A : Set} →
       Lens₃ (R₁ A) (∃ λ (f : A → A) → ∀ y → f y ≡ y) (λ _ → A)
-  x = record
+  x = ↔⇒≃ record
     { surjection = record
       { logical-equivalence = record
         { to   = λ r → (R₁.f r , R₁.lemma r) , R₁.x r
@@ -67,7 +68,7 @@ module Dependent₃ where
 
   f : {A : Set} →
       Lens₃ (R₁ A) A (λ _ → ∃ λ (f : A → A) → ∀ y → f y ≡ y)
-  f = record
+  f = ↔⇒≃ record
     { surjection = record
       { logical-equivalence = record
         { to   = λ r → R₁.x r , (R₁.f r , R₁.lemma r)
@@ -82,7 +83,7 @@ module Dependent₃ where
 
   lemma : {A : Set} →
           Lens₃ (R₁ A) (A × (A → A)) (λ r → ∀ y → proj₂ r y ≡ y)
-  lemma = record
+  lemma = ↔⇒≃ record
     { surjection = record
       { logical-equivalence = record
         { to   = λ r → (R₁.x r , R₁.f r) , R₁.lemma r
@@ -111,7 +112,7 @@ module Dependent₃ where
   A = id₃
 
   r₁ : Lens₃ R₂ Set R₁
-  r₁ = record
+  r₁ = ↔⇒≃ record
     { surjection = record
       { logical-equivalence = record
         { to   = λ r → R₂.A r , R₂.r₁ r
