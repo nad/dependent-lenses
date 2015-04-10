@@ -10,7 +10,7 @@ open import Equality.Propositional
 open import Logical-equivalence using (_⇔_; module _⇔_)
 open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 
-open import Bijection equality-with-J using (_↔_)
+open import Bijection equality-with-J as Bij using (_↔_)
 open import Equivalence equality-with-J as Eq using (_≃_; module _≃_)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J
@@ -90,11 +90,30 @@ l₁ ∘ l₂ = record
 ------------------------------------------------------------------------
 -- Alternative formulation of lenses
 
--- TODO: Find a definition which works (is isomorphic to the other
--- one, under certain assumptions) when B is empty.
+-- What is the point of the last part of the definition of Iso-lens,
+-- ¬ B → Contractible R? If this part is omitted and B is empty, then
+-- R can be anything. The inclusion of this part makes it possible to
+-- prove isomorphic below.
+
+-- TODO: Try to find a way to drop the "Dec B" assumption from
+-- isomorphic, perhaps by changing the last part of Iso-lens.
 
 Iso-lens : ∀ {a b} → Set a → Set b → Set (lsuc (a ⊔ b))
-Iso-lens {a} {b} A B = ∃ λ (R : Set (a ⊔ b)) → A ≃ (R × B)
+Iso-lens {a} {b} A B =
+  ∃ λ (R : Set (a ⊔ b)) → A ≃ (R × B) × (¬ B → Contractible R)
+
+private
+
+  -- A lemma.
+
+  empty-domains⇒contractible :
+    ∀ {x y z} {X : Set x} {Y : Set y} {Z : (X → Y) → X → Set z} →
+    Extensionality x (y ⊔ z) →
+    ¬ X → Contractible (∃ λ (f : X → Y) → ∀ x → Z f x)
+  empty-domains⇒contractible {y = y} {z} ext empty =
+    (⊥-elim ⊚ empty , ⊥-elim ⊚ empty) ,
+     (λ _ → Σ-≡,≡→≡ (lower-extensionality lzero z ext (⊥-elim ⊚ empty))
+                    (lower-extensionality lzero y ext (⊥-elim ⊚ empty)))
 
 -- If the domain is a set, then Lens and Iso-lens are logically
 -- equivalent (assuming extensionality).
@@ -144,10 +163,11 @@ logically-equivalent {b = b} {A} {B} ext A-set = record
           set l (set l a (get l a)) (get l a)  ≡⟨ cong (λ x → set l x (get l a)) (set-get l a) ⟩
           set l a (get l a)                    ≡⟨ set-get l a ⟩∎
           a                                    ∎
-      })
+      }) ,
+    empty-domains⇒contractible ext
 
   from : Iso-lens A B → Lens A B
-  from (R , l) = record
+  from (_ , l , _) = record
     { get     = λ a   →             proj₂ (_≃_.to l a)
     ; set     = λ a b → _≃_.from l (proj₁ (_≃_.to l a) , b)
     ; get-set = λ a b →
@@ -167,16 +187,16 @@ logically-equivalent {b = b} {A} {B} ext A-set = record
         _≃_.from l (r , b₂)                                       ∎
     }
 
--- If the domain and codomain are sets, and B is non-empty, then Lens
--- and Iso-lens are isomorphic (assuming extensionality and
+-- If the domain and codomain are sets, and the codomain is "decided",
+-- then Lens and Iso-lens are isomorphic (assuming extensionality and
 -- univalence).
 
 isomorphic : ∀ {a b} {A : Set a} {B : Set b} →
              Extensionality (a ⊔ b) (a ⊔ b) →
              Univalence (a ⊔ b) →
-             Is-set A → Is-set B → B →
+             Is-set A → Is-set B → Dec B →
              Lens A B ↔ Iso-lens A B
-isomorphic {a} {b} {A} {B} ext univ A-set B-set witness = record
+isomorphic {a} {b} {A} {B} ext univ A-set B-set dec = record
   { surjection = record
     { logical-equivalence = equiv
     ; right-inverse-of    = to∘from
@@ -226,36 +246,42 @@ isomorphic {a} {b} {A} {B} ext univ A-set B-set witness = record
          _ _)
 
   to∘from : ∀ l → to (from l) ≡ l
-  to∘from (R , l) =
+  to∘from (R , l , c) =
     Σ-≡,≡→≡
-      (≃⇒≡ univ lemma₁)
-      (Eq.lift-equality ext (lower-extensionality b lzero ext lemma₂))
+      (≃⇒≡ univ (lemma₁ dec))
+      (_↔_.to ≡×≡↔≡
+        ( Eq.lift-equality ext (lower-extensionality b lzero ext lemma₂)
+        , _⇔_.to propositional⇔irrelevant
+            (Π-closure (lower-extensionality a lzero ext) 1 λ _ →
+             Contractible-propositional ext)
+            _ _
+        ))
     where
-    -- Note the use of witness in lemma₀.
-    lemma₀ :
+    lemma₁′ :
+      Dec B →
       (∃ λ (f : B → R × B) → ∀ b b′ → (proj₁ (f b) , b′) ≡ f b′) ↔ R
-    lemma₀ = record
+    lemma₁′ (yes b) = record
       { surjection = record
         { logical-equivalence = record
-          { to   = λ { (f , _) → proj₁ (f witness) }
+          { to   = λ { (f , _) → proj₁ (f b) }
           ; from = λ r → (r ,_) , λ _ _ → refl
           }
         ; right-inverse-of = λ _ → refl
         }
       ; left-inverse-of = λ { (f , h) → Σ-≡,≡→≡
-          ((proj₁ (f witness) ,_)  ≡⟨ lower-extensionality a lzero ext (h witness) ⟩∎
-           f                       ∎)
+          ((proj₁ (f b) ,_)  ≡⟨ lower-extensionality a lzero ext (h b) ⟩∎
+           f                 ∎)
           (_⇔_.to propositional⇔irrelevant
              (Π-closure (lower-extensionality a lzero ext) 1 λ _ →
               Π-closure (lower-extensionality a lzero ext) 1 λ _ →
               respects-surjection (_≃_.surjection l) 2 A-set _ _)
              _ _) }
       }
+    lemma₁′ (no ¬b) = Bij.contractible-isomorphic
+      (empty-domains⇒contractible (lower-extensionality a lzero ext) ¬b)
+      (c ¬b)
 
-    lemma₁ : (∃ λ (f : B → A) → ∀ b b′ →
-                _≃_.from l (proj₁ (_≃_.to l (f b)) , b′) ≡ f b′) ≃
-             R
-    lemma₁ =
+    lemma₁ = λ dec →
       (∃ λ (f : B → A) → ∀ b b′ →
            _≃_.from l (proj₁ (_≃_.to l (f b)) , b′) ≡ f b′)       ↝⟨ Σ-cong (→-cong (lower-extensionality a lzero ext) F.id l) (λ _ →
                                                                             Eq.Π-preserves (lower-extensionality a lzero ext) F.id λ _ →
@@ -267,7 +293,7 @@ isomorphic {a} {b} {A} {B} ext univ A-set B-set witness = record
                                                                        Eq.Π-preserves (lower-extensionality a lzero ext) F.id λ _ →
                                                                        Eq.Π-preserves (lower-extensionality a b     ext) F.id λ _ →
                                                                        Eq.≃-≡ (inverse l)) ⟩
-      (∃ λ (f : B → R × B) → ∀ b b′ → (proj₁ (f b) , b′) ≡ f b′)  ↔⟨ lemma₀ ⟩□
+      (∃ λ (f : B → R × B) → ∀ b b′ → (proj₁ (f b) , b′) ≡ f b′)  ↔⟨ lemma₁′ dec ⟩□
 
       R                                                           □
 
@@ -277,23 +303,33 @@ isomorphic {a} {b} {A} {B} ext univ A-set B-set witness = record
       X × B  ↝⟨ X≃Y ×-cong F.id ⟩□
       Y × B  □
 
-    lemma₂ :
-      ∀ a →
-      _≃_.to (subst (λ R → A ≃ (R × B))
-                    (≃⇒≡ univ lemma₁)
-                    (proj₂ (to (from (R , l))))) a ≡
+    lemma₂′ :
+      ∀ dec a →
+      _≃_.to (resp (lemma₁ dec)
+                   (proj₁ (proj₂ (to (from (R , l , c)))))) a ≡
       _≃_.to l a
-    lemma₂ a =
-      _≃_.to (subst (λ R → A ≃ (R × B)) (≃⇒≡ univ lemma₁)
-                    (proj₂ (to (from (R , l))))) a                     ≡⟨ sym $ cong (λ eq → _≃_.to eq a) $
-                                                                            transport-theorem (λ R → A ≃ (R × B)) resp
-                                                                                              (λ _ → Eq.lift-equality ext refl)
-                                                                                              univ _ _ ⟩
-      _≃_.to (resp lemma₁ (proj₂ (to (from (R , l))))) a               ≡⟨⟩
+    lemma₂′ (yes b) a =
+      (proj₁ (_≃_.to l (_≃_.from l (proj₁ (_≃_.to l a) , b))) ,
+       proj₂ (_≃_.to l a))                                       ≡⟨ cong (λ x → proj₁ x , proj₂ (_≃_.to l a))
+                                                                         (_≃_.right-inverse-of l _) ⟩
+      (proj₁ (proj₁ (_≃_.to l a) , b) , proj₂ (_≃_.to l a))      ≡⟨ refl ⟩∎
 
-      (proj₁ (_≃_.to l (_≃_.from l (proj₁ (_≃_.to l a) , witness))) ,
-       proj₂ (_≃_.to l a))                                             ≡⟨ cong (λ x → proj₁ x , proj₂ (_≃_.to l a))
-                                                                               (_≃_.right-inverse-of l _) ⟩
-      (proj₁ (proj₁ (_≃_.to l a) , witness) , proj₂ (_≃_.to l a))      ≡⟨ refl ⟩∎
+      _≃_.to l a                                                 ∎
 
-      _≃_.to l a                                                       ∎
+    lemma₂′ (no ¬b) a =
+      (proj₁ (c ¬b) , proj₂ (_≃_.to l a))  ≡⟨ ⊥-elim $ ¬b (proj₂ (_≃_.to l a)) ⟩∎
+      _≃_.to l a                           ∎
+
+    lemma₂ = λ a →
+      _≃_.to (proj₁ (subst (λ R → A ≃ (R × B) × (¬ B → Contractible R))
+                           (≃⇒≡ univ (lemma₁ dec))
+                           (proj₂ (to (from (R , l , c)))))) a           ≡⟨ cong (λ eq → _≃_.to (proj₁ eq) a)
+                                                                                 (push-subst-, {y≡z = ≃⇒≡ univ (lemma₁ dec)} _ _) ⟩
+      _≃_.to (subst (λ R → A ≃ (R × B)) (≃⇒≡ univ (lemma₁ dec))
+                    (proj₁ (proj₂ (to (from (R , l , c)))))) a           ≡⟨ sym $ cong (λ eq → _≃_.to eq a) $
+                                                                              transport-theorem (λ R → A ≃ (R × B)) resp
+                                                                                                (λ _ → Eq.lift-equality ext refl)
+                                                                                                univ _ _ ⟩
+      _≃_.to (resp (lemma₁ dec)
+                   (proj₁ (proj₂ (to (from (R , l , c)))))) a            ≡⟨ lemma₂′ dec a ⟩∎
+      _≃_.to l a                                                         ∎
