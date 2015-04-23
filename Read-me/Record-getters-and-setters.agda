@@ -10,7 +10,7 @@
 -- two kinds of dependent lenses, in order to illustrate a minor
 -- problem with one of them.
 
-module README.Record-getters-and-setters where
+module Read-me.Record-getters-and-setters where
 
 open import Equality.Propositional
 open import Prelude hiding (_∘_)

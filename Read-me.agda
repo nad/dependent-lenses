@@ -5,7 +5,7 @@
 
 {-# OPTIONS --without-K #-}
 
-module README where
+module Read-me where
 
 -- Non-dependent lenses (for comparison).
 
@@ -18,4 +18,4 @@ import Lens.Dependent
 -- Comparisons of different kinds of lenses, focusing on the
 -- definition of composable record getters and setters.
 
-import README.Record-getters-and-setters
+import Read-me.Record-getters-and-setters
