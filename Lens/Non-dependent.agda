@@ -12,13 +12,14 @@ open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 
 open import Bijection equality-with-J as Bij using (_↔_)
 open import Equality.Decidable-UIP equality-with-J
+open import Equality.Decision-procedures equality-with-J
 open import Equivalence equality-with-J as Eq using (_≃_; module _≃_)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
 open import H-level.Truncation equality-with-J
 open import Preimage equality-with-J
-open import Surjection equality-with-J using (module _↠_)
+open import Surjection equality-with-J using (_↠_; module _↠_)
 open import Univalence-axiom equality-with-J
 
 ------------------------------------------------------------------------
@@ -647,3 +648,64 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
       _≃_.from l (proj₁ (_≃_.to l (_≃_.from l p)) , proj₂ p)              ≡⟨ cong (λ p′ → _≃_.from l (proj₁ p′ , proj₂ p))
                                                                                   (_≃_.right-inverse-of l _) ⟩∎
       _≃_.from l p                                                        ∎
+
+------------------------------------------------------------------------
+-- Some existence results
+
+-- Iso-lenses with contractible domains have contractible codomains.
+
+contractible-to-contractible :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Iso-lens A B → Contractible A → Contractible B
+contractible-to-contractible {A = A} {B} l c =
+                              $⟨ c ⟩
+  Contractible A              ↝⟨ respects-surjection (_≃_.surjection eq) 0 ⟩
+  Contractible (proj₁ l × B)  ↝⟨ proj₂-closure (proj₁ $ _≃_.to eq (proj₁ c)) 0 ⟩□
+  Contractible B              □
+  where
+  eq = proj₁ $ proj₂ l
+
+-- There is an Iso-lens with a proposition as its domain and a non-set
+-- as its codomain (assuming univalence).
+
+lens-from-proposition-to-non-set :
+  Univalence lzero →
+  ∀ {a b} →
+  ∃ λ (A : Set a) → ∃ λ (B : Set (lsuc lzero ⊔ b)) →
+  Iso-lens A B × Is-proposition A × ¬ Is-set B
+lens-from-proposition-to-non-set univ {b = b} =
+  ⊥ ,
+  ↑ b Set ,
+  (⊥ ,
+   (⊥            ↔⟨ inverse ×-left-zero ⟩□
+    ⊥ × ↑ _ Set  □) ,
+   ⊥-elim) ,
+  ⊥-propositional ,
+  ¬-Set-set univ ⊚ respects-surjection (_↔_.surjection Bij.↑↔) 2
+
+-- There is, in general, no Iso-lens for the first projection from a
+-- Σ-type.
+
+no-first-projection-lens :
+  ∀ {a b} →
+  ∃ λ (A : Set a) → ∃ λ (B : A → Set b) →
+    ¬ Iso-lens (Σ A B) A
+no-first-projection-lens =
+  ↑ _ Bool ,
+  (λ b → ↑ _ (lower b ≡ true)) ,
+  λ l →                                           $⟨ singleton-contractible _ ⟩
+     Contractible (Singleton true)                ↝⟨ respects-surjection surj 0 ⟩
+     Contractible (∃ λ b → ↑ _ (lower b ≡ true))  ↝⟨ contractible-to-contractible l ⟩
+     Contractible (↑ _ Bool)                      ↝⟨ respects-surjection (_↔_.surjection Bij.↑↔) 0 ⟩
+     Contractible Bool                            ↝⟨ mono₁ 0 ⟩
+     Is-proposition Bool                          ↝⟨ ¬-Bool-propositional ⟩□
+     ⊥                                            □
+  where
+  surj : Singleton true ↠ ∃ λ b → ↑ _ (lower b ≡ true)
+  surj = record
+    { logical-equivalence = record
+      { to   = λ { (b , b≡true) → lift b , lift b≡true }
+      ; from = λ { (lift b , lift b≡true) → b , b≡true }
+      }
+    ; right-inverse-of = λ _ → refl
+    }
