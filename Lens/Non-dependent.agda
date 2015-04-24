@@ -131,6 +131,9 @@ Iso-lens {a} {b} A B =
 
 -- Higher-lens is pointwise isomorphic to Iso-lens (assuming
 -- extensionality and univalence).
+--
+-- (This proof was simplified following a suggestion by Paolo
+-- Capriotti.)
 
 Higher-lens↔Iso-lens :
   ∀ {a b} {A : Set a} {B : Set b} →
@@ -139,227 +142,103 @@ Higher-lens↔Iso-lens :
   Higher-lens A B ↔ Iso-lens A B
 Higher-lens↔Iso-lens {a} {b} {A} {B} ext univ =
   (∃ λ (g : A → B) → ∃ λ (H : Pow lzero (∥ B ∥ 1 ℓ)) →
-     ↑ _ ⊚ (g ⁻¹_) ≡ H ⊚ ∣_∣)                                             ↔⟨ (∃-cong λ _ → ∃-cong λ _ → inverse $
-                                                                                Eq.extensionality-isomorphism $
-                                                                                  lower-extensionality (lsuc ℓ) lzero ext) ⟩
-  (∃ λ (g : A → B) → ∃ λ (H : Pow lzero (∥ B ∥ 1 ℓ)) →
-     ∀ b → ↑ _ (g ⁻¹ b) ≡ H ∣ b ∣)                                        ↔⟨ (∃-cong λ _ → Σ-cong (Pow↔Fam lzero ext univ) λ H →
-                                                                                Eq.∀-preserves (lower-extensionality _ lzero ext) λ b →
-                                                                                  ≡-preserves-≃ (lower-extensionality lzero _ ext) univ univ F.id (
-          H ∣ b ∣                                                                   ↔⟨ ∃-intro _ _ ⟩
-          (∃ λ ∥b∥ → H ∥b∥ × ∥b∥ ≡ ∣ b ∣)                                           ↔⟨ Σ-assoc ⟩□
-          (∃ λ (p : ∃ H) → proj₁ p ≡ ∣ b ∣)                                         □)) ⟩
+     ↑ _ ⊚ (g ⁻¹_) ≡ H ⊚ ∣_∣)                                      ↔⟨ Σ-cong lemma₂ (λ _ → ∃-cong (lemma₃ _)) ⟩
 
-  (∃ λ (g : A → B) →
-   ∃ λ (H : Fam lzero (∥ B ∥ 1 ℓ)) →
-     ∀ b → ↑ _ (g ⁻¹ b) ≡ proj₂ H ⁻¹ ∣ b ∣)                               ↝⟨ ∃-cong (λ _ → inverse Σ-assoc) ⟩
+  (∃ λ (p : ∃ λ (P : Pow (lsuc ℓ) B) → A ≃ ∃ P) →
+   ∃ λ (H : Pow lzero (∥ B ∥ 1 ℓ)) →
+     proj₁ p ≡ H ⊚ ∣_∣)                                            ↝⟨ ∃-comm ⟩
 
-  (∃ λ (g : A → B) →
-   ∃ λ (R : Set (lsuc ℓ)) →
-   ∃ λ (h : R → ∥ B ∥ 1 ℓ) →
-     ∀ b → ↑ _ (g ⁻¹ b) ≡ h ⁻¹ ∣ b ∣)                                     ↔⟨ (∃-cong λ _ → ∃-cong λ R → ∃-cong λ h →
-                                                                                Eq.∀-preserves (lower-extensionality _ lzero ext) λ b →
-                                                                                  ≡-preserves-≃ (lower-extensionality lzero _ ext) univ univ F.id (
-          (Σ R λ r → h r ≡ ∣ b ∣)                                                   ↔⟨ (∃-cong λ _ → inverse $ _⇔_.to contractible⇔⊤↔ $
-                                                                                          truncation-has-correct-h-level 1
-                                                                                            (lower-extensionality lzero _ ext) _ _) ⟩
-          R × ⊤                                                                     ↔⟨ ×-right-identity ⟩□
-          R                                                                         □)) ⟩
+  (∃ λ (H : Pow lzero (∥ B ∥ 1 ℓ)) →
+   ∃ λ (p : ∃ λ (P : Pow (lsuc ℓ) B) → A ≃ ∃ P) →
+     proj₁ p ≡ H ⊚ ∣_∣)                                            ↝⟨ (∃-cong λ _ → inverse Σ-assoc) ⟩
 
-  (∃ λ (g : A → B) →
-   ∃ λ (R : Set (lsuc ℓ)) →
-     (R → ∥ B ∥ 1 ℓ) ×
-     (∀ b → ↑ _ (g ⁻¹ b) ≡ R))                                            ↔⟨ (∃-cong λ _ → ∃-cong λ _ → F.id ×-cong
-                                                                                Eq.∀-preserves (lower-extensionality _ lzero ext) λ _ →
-                                                                                  ≡≃≃ univ) ⟩
-  (∃ λ (g : A → B) →
-   ∃ λ (R : Set (lsuc ℓ)) →
-     (R → ∥ B ∥ 1 ℓ) ×
-     (∀ b → ↑ _ (g ⁻¹ b) ≃ R))                                            ↔⟨ (∃-cong λ _ → ∃-cong λ _ → F.id ×-cong
-                                                                                Eq.∀-preserves (lower-extensionality _ _ ext) λ _ →
-                                                                                  Eq.≃-preserves (lower-extensionality lzero _ ext)
-                                                                                    (Eq.↔⇒≃ Bij.↑↔) F.id) ⟩
-  (∃ λ (g : A → B) →
-   ∃ λ (R : Set (lsuc ℓ)) →
-     (R → ∥ B ∥ 1 ℓ) ×
-     (∀ b → g ⁻¹ b ≃ R))                                                  ↔⟨ (∃-cong λ _ → ∃-cong λ _ → F.id ×-cong
-                                                                                Eq.∀-preserves (lower-extensionality _ _ ext) λ _ →
-                                                                                  Eq.↔⇒≃ Eq.≃-as-Σ) ⟩
-  (∃ λ (g : A → B) →
-   ∃ λ (R : Set (lsuc ℓ)) →
-     (R → ∥ B ∥ 1 ℓ) ×
-     (∀ b → ∃ λ (f : g ⁻¹ b → R) → Eq.Is-equivalence f))                  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → F.id ×-cong ΠΣ-comm) ⟩
+  (∃ λ (H : Pow lzero (∥ B ∥ 1 ℓ)) →
+   ∃ λ (P : Pow (lsuc ℓ) B) →
+      A ≃ ∃ P × P ≡ H ⊚ ∣_∣)                                       ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ×-comm) ⟩
 
-  (∃ λ (g : A → B) →
-   ∃ λ (R : Set (lsuc ℓ)) →
-     (R → ∥ B ∥ 1 ℓ) ×
-     (∃ λ (f : (b : B) → g ⁻¹ b → R) →
-      ∀ b → Eq.Is-equivalence (f b)))                                     ↔⟨ (∃-cong λ g → ∃-cong λ R → F.id ×-cong
-                                                                                Σ-cong (
-          ((b : B) → (∃ λ (a : A) → g a ≡ b) → R)                                 ↔⟨ Eq.∀-preserves (lower-extensionality _ _ ext) (λ _ →
-                                                                                       Eq.↔⇒≃ currying) ⟩
-          ((b : B) → (a : A) → g a ≡ b → R)                                       ↝⟨ Π-comm ⟩
-          ((a : A) → (b : B) → g a ≡ b → R)                                       ↔⟨ Eq.∀-preserves (lower-extensionality _ _ ext) (λ _ →
-                                                                                       inverse $ Eq.↔⇒≃ currying) ⟩
-          ((a : A) → (∃ λ (b : B) → g a ≡ b) → R)                                 ↔⟨ Eq.∀-preserves (lower-extensionality _ _ ext) (λ _ →
-                                                                                       →-cong (lower-extensionality _ _ ext)
-                                                                                         (Eq.↔⇒≃ $ inverse $ _⇔_.to contractible⇔⊤↔ $
-                                                                                            other-singleton-contractible _)
-                                                                                         F.id) ⟩
-          (A → ⊤ → R)                                                             ↔⟨ Eq.∀-preserves (lower-extensionality _ _ ext) (λ _ →
-                                                                                       Eq.↔⇒≃ Π-left-identity) ⟩□
-          (A → R)                                                                 □)
-                                                                                  (λ f → Eq.∀-preserves (lower-extensionality _ _ ext) λ b →
-          Eq.Is-equivalence (f b)                                                    ↝⟨ Eq.Is-equivalence-preserves
-                                                                                          (lower-extensionality lzero _ ext) (uncurry λ a →
-                                                                                            elim¹
-                                                                                              (λ {b} ga≡b → f b (a , ga≡b) ≡ f (g a) (a , refl))
-                                                                                              refl) ⟩
-          Eq.Is-equivalence (λ { (a , _) → f (g a) (a , refl) })                     □)) ⟩
+  (∃ λ (H : Pow lzero (∥ B ∥ 1 ℓ)) →
+   ∃ λ (P : Pow (lsuc ℓ) B) →
+      P ≡ H ⊚ ∣_∣ × A ≃ ∃ P)                                       ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ eq →
+                                                                       Eq.≃-preserves
+                                                                         (lower-extensionality (lsuc ℓ) _ ext)
+                                                                         F.id
+                                                                         (∃-cong λ x → ≡⇒↝ _ (cong (_$ x) eq))) ⟩
+  (∃ λ (H : Pow lzero (∥ B ∥ 1 ℓ)) →
+   ∃ λ (P : Pow (lsuc ℓ) B) →
+      P ≡ H ⊚ ∣_∣ × A ≃ ∃ (H ⊚ ∣_∣))                               ↝⟨ (∃-cong λ _ → Σ-assoc) ⟩
 
-  (∃ λ (g : A → B) →
-   ∃ λ (R : Set (lsuc ℓ)) →
-     (R → ∥ B ∥ 1 ℓ) ×
-     (∃ λ (f : A → R) →
-      ∀ b → Eq.Is-equivalence {A = g ⁻¹ b} (f ⊚ proj₁)))                  ↝⟨ ∃-comm ⟩
+  (∃ λ (H : Pow lzero (∥ B ∥ 1 ℓ)) →
+   (∃ λ (P : Pow (lsuc ℓ) B) → P ≡ H ⊚ ∣_∣) ×
+   A ≃ ∃ (H ⊚ ∣_∣))                                                ↝⟨ (∃-cong λ _ →
+                                                                       inverse (_⇔_.to contractible⇔⊤↔ (singleton-contractible _))
+                                                                         ×-cong
+                                                                       F.id) ⟩
+  (∃ λ (H : Pow lzero (∥ B ∥ 1 ℓ)) →
+   ⊤ ×
+   A ≃ ∃ (H ⊚ ∣_∣))                                                ↝⟨ (∃-cong λ _ → ×-left-identity) ⟩
+
+  (∃ λ (H : Pow lzero (∥ B ∥ 1 ℓ)) → A ≃ ∃ (H ⊚ ∣_∣))              ↔⟨ inverse $
+                                                                      Σ-cong (inverse $ Pow↔Fam lzero ext univ) (λ _ →
+                                                                      Eq.≃-preserves (lower-extensionality (lsuc ℓ) _ ext) F.id F.id) ⟩
+
+  (∃ λ (H : Fam lzero (∥ B ∥ 1 ℓ)) → A ≃ ∃ ((proj₂ H ⁻¹_) ⊚ ∣_∣))  ↝⟨ inverse Σ-assoc ⟩
 
   (∃ λ (R : Set (lsuc ℓ)) →
-   ∃ λ (g : A → B) →
-     (R → ∥ B ∥ 1 ℓ) ×
-     (∃ λ (f : A → R) →
-      ∀ b → Eq.Is-equivalence {A = g ⁻¹ b} (f ⊚ proj₁)))                  ↝⟨ (∃-cong λ _ → ∃-comm) ⟩
+   ∃ λ (f : R → ∥ B ∥ 1 ℓ) → A ≃ ∃ ((f ⁻¹_) ⊚ ∣_∣))                ↔⟨ (∃-cong λ R → ∃-cong λ f →
+                                                                       Eq.≃-preserves (lower-extensionality (lsuc ℓ) _ ext) F.id
+                                (∃ ((f ⁻¹_) ⊚ ∣_∣)                       ↔⟨ (∃-cong λ b → ∃-cong λ r →
+                                                                               inverse $ _⇔_.to contractible⇔⊤↔ $
+                                                                                 truncation-has-correct-h-level 1
+                                                                                   (lower-extensionality (lsuc ℓ) _ ext) _ _) ⟩
+                                 B × R × ⊤                               ↔⟨ (∃-cong λ _ → ×-right-identity) ⟩
+                                 B × R                                   ↔⟨ ×-comm ⟩□
+                                 R × B                                   □)) ⟩
 
   (∃ λ (R : Set (lsuc ℓ)) →
-     (R → ∥ B ∥ 1 ℓ) ×
-     (∃ λ (g : A → B) →
-        ∃ λ (f : A → R) →
-        ∀ b → Eq.Is-equivalence {A = g ⁻¹ b} (f ⊚ proj₁)))                ↝⟨ (∃-cong λ _ → F.id ×-cong Σ-assoc) ⟩
+   (R → ∥ B ∥ 1 ℓ) × (A ≃ (R × B)))                                ↝⟨ (∃-cong λ _ → ×-comm) ⟩□
 
   (∃ λ (R : Set (lsuc ℓ)) →
-     (R → ∥ B ∥ 1 ℓ) ×
-     (∃ λ (gf : (A → B) × (A → R)) →
-        ∀ b → Eq.Is-equivalence {A = proj₁ gf ⁻¹ b} (proj₂ gf ⊚ proj₁)))  ↝⟨ (∃-cong λ _ → F.id ×-cong Σ-cong (inverse ΠΣ-comm) λ _ → F.id) ⟩
-
-  (∃ λ (R : Set (lsuc ℓ)) →
-     (R → ∥ B ∥ 1 ℓ) ×
-     (∃ λ (f : A → B × R) →
-      ∀ b → Eq.Is-equivalence {A = proj₁ ⊚ f ⁻¹ b} (proj₂ ⊚ f ⊚ proj₁)))  ↔⟨ (∃-cong λ _ → F.id ×-cong ∃-cong λ f →
-                                                                                _↠_.from
-                                                                                  (Eq.≃↠⇔ (Π-closure (lower-extensionality _ _ ext) 1 λ _ →
-                                                                                             Eq.propositional (lower-extensionality lzero _ ext) _)
-                                                                                          (Eq.propositional (lower-extensionality lzero _ ext) _))
-                                                                                  (record { to = lemma₁ f; from = lemma₂ f })) ⟩
-  (∃ λ (R : Set (lsuc ℓ)) →
-     (R → ∥ B ∥ 1 ℓ) ×
-     (∃ λ (f : A → B × R) → Eq.Is-equivalence f))                         ↝⟨ (∃-cong λ _ → F.id ×-cong inverse Eq.≃-as-Σ) ⟩
-
-  (∃ λ (R : Set (lsuc ℓ)) →
-     (R → ∥ B ∥ 1 ℓ) ×
-     (A ≃ (B × R)))                                                       ↝⟨ (∃-cong λ _ → ×-comm) ⟩
-
-  (∃ λ (R : Set (lsuc ℓ)) →
-     (A ≃ (B × R)) ×
-     (R → ∥ B ∥ 1 ℓ))                                                     ↔⟨ (∃-cong λ _ → Eq.≃-preserves (lower-extensionality lzero _ ext)
-                                                                                                          F.id
-                                                                                                          (Eq.↔⇒≃ ×-comm)
-                                                                                             ×-cong
-                                                                                           F.id) ⟩□
-  (∃ λ (R : Set (lsuc ℓ)) →
-     (A ≃ (R × B)) ×
-     (R → ∥ B ∥ 1 ℓ))                                                     □
+   (A ≃ (R × B)) × (R → ∥ B ∥ 1 ℓ))                                □
 
   where
   ℓ = a ⊔ b
 
-  lemma₁ : {R : Set (lsuc ℓ)} (f : A → B × R) →
-           (∀ b → Eq.Is-equivalence
-                    {A = proj₁ ⊚ f ⁻¹ b} (proj₂ ⊚ f ⊚ proj₁)) →
-           Eq.Is-equivalence f
-  lemma₁ f eq′ = _≃_.is-equivalence $ Eq.↔⇒≃ $ record
+  lemma₁ : ∀ (g : A → B) b →
+           ↑ (lsuc ℓ) (g ⁻¹ b) ↔ (g ⊚ lower {ℓ = lsuc ℓ}) ⁻¹ b
+  lemma₁ g b = record
     { surjection = record
       { logical-equivalence = record
-        { from = λ { (b , r) → proj₁ (_≃_.from (eq b) r) }
+        { to   = λ { (lift (a , ga≡b)) → lift a , ga≡b }
+        ; from = λ { (lift a , ga≡b) → lift (a , ga≡b) }
         }
-      ; right-inverse-of = λ { (b , r) →
-          curry (_↔_.to ≡×≡↔≡)
-            (proj₁ (f (proj₁ (_≃_.from (eq b) r)))  ≡⟨ proj₂ (_≃_.from (eq b) r) ⟩∎
-             b                                      ∎)
-            (proj₂ (f (proj₁ (_≃_.from (eq b) r)))  ≡⟨ _≃_.right-inverse-of (eq b) r ⟩∎
-             r                                      ∎) }
+      ; right-inverse-of = λ _ → refl
       }
-    ; left-inverse-of = λ a →
-        proj₁ (uncurry (_≃_.from ⊚ eq) (f a))  ≡⟨ cong proj₁ $ _≃_.left-inverse-of (eq (proj₁ (f a))) (a , refl) ⟩∎
-        a                                      ∎
+    ; left-inverse-of = λ _ → refl
     }
-    where
-    eq = λ b → Eq.⟨ _ , eq′ b ⟩
 
-  lemma₂ : {R : Set (lsuc ℓ)} (f : A → B × R) →
-           Eq.Is-equivalence f →
-           ∀ b → Eq.Is-equivalence
-                   {A = proj₁ ⊚ f ⁻¹ b} (proj₂ ⊚ f ⊚ proj₁)
-  lemma₂ f eq′ b = _≃_.is-equivalence $ Eq.↔⇒≃ $ record
-    { surjection = record
-      { logical-equivalence = record
-        { from = λ r →
-              _≃_.from eq (b , r)
-            , (proj₁ (f (_≃_.from eq (b , r)))  ≡⟨ cong proj₁ (_≃_.right-inverse-of eq (b , r)) ⟩∎
-               b                                ∎)
-        }
-      ; right-inverse-of = λ r →
-          proj₂ (f (_≃_.from eq (b , r)))  ≡⟨ cong proj₂ (_≃_.right-inverse-of eq (b , r)) ⟩∎
-          r                                ∎
-      }
-    ; left-inverse-of = λ { (a , ≡b) →
-        elim¹ (λ {b} ≡b →
-                 ( _≃_.from eq (b , proj₂ (f a))
-                 , cong proj₁
-                     (_≃_.right-inverse-of eq (b , proj₂ (f a)))
-                 ) ≡
-                 (a , ≡b))
+  abstract
 
-              (Σ-≡,≡→≡
+    lemma₂ : (A → B) ↔ ∃ λ (P : Pow (lsuc ℓ) B) → A ≃ ∃ P
+    lemma₂ =
+      →↔Σ≃Σ (lsuc ℓ) (lower-extensionality (lsuc ℓ) (lsuc ℓ) ext) univ
 
-                 (_≃_.from eq (f a)  ≡⟨ _≃_.left-inverse-of eq a ⟩∎
-                  a                  ∎)
-
-                 (subst (λ a′ → proj₁ (f a′) ≡ proj₁ (f a))
-                        (_≃_.left-inverse-of eq a)
-                        (cong proj₁ (_≃_.right-inverse-of eq (f a)))      ≡⟨ subst-∘ (_≡ proj₁ (f a)) (proj₁ ⊚ f) (_≃_.left-inverse-of eq a) ⟩
-
-                  subst (λ a′ → a′ ≡ proj₁ (f a))
-                        (cong (proj₁ ⊚ f) (_≃_.left-inverse-of eq a))
-                        (cong proj₁ (_≃_.right-inverse-of eq (f a)))      ≡⟨ cong (λ p → subst (λ a′ → a′ ≡ proj₁ (f a))
-                                                                                               p
-                                                                                               (cong proj₁ (_≃_.right-inverse-of eq (f a)))) $
-                                                                               sym $ cong-∘ proj₁ f (_≃_.left-inverse-of eq a) ⟩
-                  subst (λ a′ → a′ ≡ proj₁ (f a))
-                        (cong proj₁ (cong f (_≃_.left-inverse-of eq a)))
-                        (cong proj₁ (_≃_.right-inverse-of eq (f a)))      ≡⟨ cong (λ p → subst (λ a′ → a′ ≡ proj₁ (f a))
-                                                                                               (cong proj₁ p)
-                                                                                               (cong proj₁ (_≃_.right-inverse-of eq (f a)))) $
-                                                                               _≃_.left-right-lemma eq _ ⟩
-                  subst (λ a′ → a′ ≡ proj₁ (f a))
-                        (cong proj₁ (_≃_.right-inverse-of eq (f a)))
-                        (cong proj₁ (_≃_.right-inverse-of eq (f a)))      ≡⟨ cong (λ p → subst (λ a′ → a′ ≡ proj₁ (f a))
-                                                                                               p
-                                                                                               (cong proj₁ (_≃_.right-inverse-of eq (f a)))) $
-                                                                                sym $ sym-sym (cong proj₁ (_≃_.right-inverse-of eq (f a))) ⟩
-                  subst (λ a′ → a′ ≡ proj₁ (f a))
-                        (sym $ sym $
-                           cong proj₁ (_≃_.right-inverse-of eq (f a)))
-                        (cong proj₁ (_≃_.right-inverse-of eq (f a)))      ≡⟨ subst-trans (sym $ cong proj₁ (_≃_.right-inverse-of eq (f a))) ⟩
-
-                  trans (sym $
-                           cong proj₁ (_≃_.right-inverse-of eq (f a)))
-                        (cong proj₁ (_≃_.right-inverse-of eq (f a)))      ≡⟨ trans-symˡ (cong proj₁ (_≃_.right-inverse-of eq (f a))) ⟩∎
-
-                  refl                                                    ∎))
-
-              ≡b }
-    }
-    where
-    eq = Eq.⟨ _ , eq′ ⟩
+    lemma₃ :
+      (g : A → B) (H : Pow lzero (∥ B ∥ 1 ℓ)) →
+      (↑ _ ⊚ (g ⁻¹_) ≡ H ⊚ ∣_∣)
+        ≃
+      (proj₁ (_↔_.to lemma₂ g) ≡ H ⊚ ∣_∣)
+    lemma₃ g H =
+      ↑ _ ⊚ (g ⁻¹_) ≡ H ⊚ ∣_∣             ↝⟨ inverse $ Eq.extensionality-isomorphism
+                                                         (lower-extensionality _ (lsuc ℓ) ext) ⟩
+      (∀ b → ↑ _ (g ⁻¹ b) ≡ H ∣ b ∣)      ↝⟨ Eq.∀-preserves
+                                               (lower-extensionality _ (lsuc ℓ) ext) (λ _ →
+                                               ≡-preserves-≃
+                                                 (lower-extensionality (lsuc ℓ) _ ext)
+                                                 univ univ
+                                                 (Eq.↔⇒≃ $ lemma₁ _ _) F.id) ⟩
+      (∀ b → (g ⊚ lower) ⁻¹ b ≡ H ∣ b ∣)  ↝⟨ Eq.extensionality-isomorphism
+                                               (lower-extensionality _ (lsuc ℓ) ext) ⟩□
+      ((g ⊚ lower) ⁻¹_) ≡ H ⊚ ∣_∣         □
 
 -- If the domain is a set, then Lens and Iso-lens are pointwise
 -- logically equivalent (assuming extensionality).
