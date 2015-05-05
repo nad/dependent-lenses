@@ -129,6 +129,61 @@ Iso-lens {a} {b} A B =
     (A ≃ (R × B)) ×
     (R → ∥ B ∥ 1 (a ⊔ b))
 
+-- Some derived definitions.
+
+module Iso-lens {a b} {A : Set a} {B : Set b} (l : Iso-lens A B) where
+
+  -- Remainder type.
+
+  R : Set (lsuc (a ⊔ b))
+  R = proj₁ l
+
+  -- Equivalence.
+
+  equiv : A ≃ (R × B)
+  equiv = proj₁ (proj₂ l)
+
+  -- The proof of (mere) inhabitance.
+
+  inhabited : R → ∥ B ∥ 1 (a ⊔ b)
+  inhabited = proj₂ (proj₂ l)
+
+  -- Remainder.
+
+  remainder : A → R
+  remainder a = proj₁ (_≃_.to equiv a)
+
+  -- Getter.
+
+  get : A → B
+  get a = proj₂ (_≃_.to equiv a)
+
+  -- Setter.
+
+  set : A → B → A
+  set a b = _≃_.from equiv (remainder a , b)
+
+  -- Lens laws.
+
+  get-set : ∀ a b → get (set a b) ≡ b
+  get-set a b =
+    proj₂ (_≃_.to equiv (_≃_.from equiv (remainder a , b)))  ≡⟨ cong proj₂ (_≃_.right-inverse-of equiv _) ⟩∎
+    proj₂ (remainder a , b)                                  ∎
+
+  set-get : ∀ a → set a (get a) ≡ a
+  set-get a =
+    _≃_.from equiv (_≃_.to equiv a)  ≡⟨ _≃_.left-inverse-of equiv _ ⟩∎
+    a                                ∎
+
+  set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂
+  set-set a b₁ b₂ =
+    _≃_.from equiv (remainder (_≃_.from equiv (r , b₁)) , b₂)             ≡⟨⟩
+    _≃_.from equiv (proj₁ (_≃_.to equiv (_≃_.from equiv (r , b₁))) , b₂)  ≡⟨ cong (λ x → _≃_.from equiv (proj₁ x , b₂))
+                                                                                  (_≃_.right-inverse-of equiv _) ⟩∎
+    _≃_.from equiv (r , b₂)                                               ∎
+    where
+    r = remainder a
+
 -- Higher-lens is pointwise isomorphic to Iso-lens (assuming
 -- extensionality and univalence).
 --
@@ -257,6 +312,15 @@ Lens⇔Iso-lens {a} {b} {A} {B} ext A-set = record
 
   ext′ = lower-extensionality _ b ext
 
+  from : Iso-lens A B → Lens A B
+  from l = record
+    { get     = Iso-lens.get l
+    ; set     = Iso-lens.set l
+    ; get-set = Iso-lens.get-set l
+    ; set-get = Iso-lens.set-get l
+    ; set-set = Iso-lens.set-set l
+    }
+
   to : Lens A B → Iso-lens A B
   to l =
     (∥ B ∥ 1 (a ⊔ b) ×
@@ -298,27 +362,6 @@ Lens⇔Iso-lens {a} {b} {A} {B} ext A-set = record
           a                                    ∎
       }) ,
     proj₁
-
-  from : Iso-lens A B → Lens A B
-  from (_ , l , _) = record
-    { get     = λ a   →             proj₂ (_≃_.to l a)
-    ; set     = λ a b → _≃_.from l (proj₁ (_≃_.to l a) , b)
-    ; get-set = λ a b →
-
-        proj₂ (_≃_.to l (_≃_.from l (proj₁ (_≃_.to l a) , b)))  ≡⟨ cong proj₂ (_≃_.right-inverse-of l _) ⟩∎
-        proj₂ (proj₁ (_≃_.to l a) , b)                          ∎
-
-    ; set-get = λ a →
-
-        _≃_.from l (_≃_.to l a)  ≡⟨ _≃_.left-inverse-of l _ ⟩∎
-        a                        ∎
-
-    ; set-set = λ a b₁ b₂ →
-        let r = proj₁ (_≃_.to l a) in
-
-        _≃_.from l (proj₁ (_≃_.to l (_≃_.from l (r , b₁))) , b₂)  ≡⟨ cong (λ x → _≃_.from l (proj₁ x , b₂)) (_≃_.right-inverse-of l _) ⟩∎
-        _≃_.from l (r , b₂)                                       ∎
-    }
 
 -- If the domain is a set, then Lens and Iso-lens are pointwise
 -- isomorphic (assuming extensionality, univalence and a resizing
@@ -512,21 +555,22 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
     lemma₂ = λ p →
       _≃_.from (proj₁ (subst (λ R → A ≃ (R × B) × (R → ∥ B ∥ 1 ℓ))
                              (≃⇒≡ univ lemma₁)
-                             (proj₂ (to (from (R , l , inh)))))) p        ≡⟨ cong (λ eq → _≃_.from (proj₁ eq) p)
-                                                                                  (push-subst-, {y≡z = ≃⇒≡ univ lemma₁} _ _) ⟩
+                             (proj₂ (to (from (R , l , inh)))))) p       ≡⟨ cong (λ eq → _≃_.from (proj₁ eq) p)
+                                                                                 (push-subst-, {y≡z = ≃⇒≡ univ lemma₁} _ _) ⟩
       _≃_.from (subst (λ R → A ≃ (R × B)) (≃⇒≡ univ lemma₁)
-                      (proj₁ (proj₂ (to (from (R , l , inh)))))) p        ≡⟨ sym $ cong (λ eq → _≃_.from eq p) $
-                                                                               transport-theorem
-                                                                                 (λ R → A ≃ (R × B)) resp
-                                                                                 (λ _ → Eq.lift-equality
-                                                                                          (lower-extensionality _ (lsuc ℓ) ext)
-                                                                                          refl)
-                                                                                 univ _ _ ⟩
-      _≃_.from (resp lemma₁ (proj₁ (proj₂ (to (from (R , l , inh)))))) p  ≡⟨⟩
+                      (Iso-lens.equiv (to (from (R , l , inh))))) p      ≡⟨ sym $ cong (λ eq → _≃_.from eq p) $
+                                                                              transport-theorem
+                                                                                (λ R → A ≃ (R × B)) resp
+                                                                                (λ _ → Eq.lift-equality
+                                                                                         (lower-extensionality _ (lsuc ℓ) ext)
+                                                                                         refl)
+                                                                                univ _ _ ⟩
+      _≃_.from (resp lemma₁ (Iso-lens.equiv (to (from (R , l , inh)))))
+               p                                                         ≡⟨⟩
 
-      _≃_.from l (proj₁ (_≃_.to l (_≃_.from l p)) , proj₂ p)              ≡⟨ cong (λ p′ → _≃_.from l (proj₁ p′ , proj₂ p))
-                                                                                  (_≃_.right-inverse-of l _) ⟩∎
-      _≃_.from l p                                                        ∎
+      _≃_.from l (proj₁ (_≃_.to l (_≃_.from l p)) , proj₂ p)             ≡⟨ cong (λ p′ → _≃_.from l (proj₁ p′ , proj₂ p))
+                                                                                 (_≃_.right-inverse-of l _) ⟩∎
+      _≃_.from l p                                                       ∎
 
 ------------------------------------------------------------------------
 -- Some existence results
@@ -537,12 +581,12 @@ contractible-to-contractible :
   ∀ {a b} {A : Set a} {B : Set b} →
   Iso-lens A B → Contractible A → Contractible B
 contractible-to-contractible {A = A} {B} l c =
-                              $⟨ c ⟩
-  Contractible A              ↝⟨ respects-surjection (_≃_.surjection eq) 0 ⟩
-  Contractible (proj₁ l × B)  ↝⟨ proj₂-closure (proj₁ $ _≃_.to eq (proj₁ c)) 0 ⟩□
-  Contractible B              □
+                        $⟨ c ⟩
+  Contractible A        ↝⟨ respects-surjection (_≃_.surjection equiv) 0 ⟩
+  Contractible (R × B)  ↝⟨ proj₂-closure (remainder (proj₁ c)) 0 ⟩□
+  Contractible B        □
   where
-  eq = proj₁ $ proj₂ l
+  open Iso-lens l
 
 -- There is an Iso-lens with a proposition as its domain and a non-set
 -- as its codomain (assuming univalence).
