@@ -575,18 +575,27 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
 ------------------------------------------------------------------------
 -- Some existence results
 
--- Iso-lenses with contractible domains have contractible codomains.
+-- If the domain of an Iso-lens is inhabited and has h-level n, then
+-- the codomain also has h-level n.
+
+h-level-respects-lens-from-inhabited :
+  ∀ {n a b} {A : Set a} {B : Set b} →
+  Iso-lens A B → A → H-level n A → H-level n B
+h-level-respects-lens-from-inhabited {n} {A = A} {B} l a =
+  H-level n A        ↝⟨ respects-surjection (_≃_.surjection equiv) n ⟩
+  H-level n (R × B)  ↝⟨ proj₂-closure (remainder a) n ⟩□
+  H-level n B        □
+  where
+  open Iso-lens l
+
+-- In particular, Iso-lenses with contractible domains have
+-- contractible codomains.
 
 contractible-to-contractible :
   ∀ {a b} {A : Set a} {B : Set b} →
   Iso-lens A B → Contractible A → Contractible B
-contractible-to-contractible {A = A} {B} l c =
-                        $⟨ c ⟩
-  Contractible A        ↝⟨ respects-surjection (_≃_.surjection equiv) 0 ⟩
-  Contractible (R × B)  ↝⟨ proj₂-closure (remainder (proj₁ c)) 0 ⟩□
-  Contractible B        □
-  where
-  open Iso-lens l
+contractible-to-contractible l c =
+  h-level-respects-lens-from-inhabited l (proj₁ c) c
 
 -- There is an Iso-lens with a proposition as its domain and a non-set
 -- as its codomain (assuming univalence).
