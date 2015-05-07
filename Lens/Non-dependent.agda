@@ -184,7 +184,7 @@ module Iso-lens {a b} {A : Set a} {B : Set b} (l : Iso-lens A B) where
     where
     r = remainder a
 
--- Higher-lens is pointwise isomorphic to Iso-lens (assuming
+-- Higher-lens A B is isomorphic to Iso-lens A B (assuming
 -- extensionality and univalence).
 --
 -- (This proof was simplified following a suggestion by Paolo
@@ -295,7 +295,7 @@ Higher-lens↔Iso-lens {a} {b} {A} {B} ext univ =
                                                (lower-extensionality _ (lsuc ℓ) ext) ⟩□
       ((g ⊚ lower) ⁻¹_) ≡ H ⊚ ∣_∣         □
 
--- If the domain is a set, then Lens and Iso-lens are pointwise
+-- If the domain A is a set, then Lens A B and Iso-lens A B are
 -- logically equivalent (assuming extensionality).
 
 Lens⇔Iso-lens :
@@ -363,7 +363,7 @@ Lens⇔Iso-lens {a} {b} {A} {B} ext A-set = record
       }) ,
     proj₁
 
--- If the domain is a set, then Lens and Iso-lens are pointwise
+-- If the domain A is a set, then Lens A B and Iso-lens A B are
 -- isomorphic (assuming extensionality, univalence and a resizing
 -- function for the propositional truncation).
 
