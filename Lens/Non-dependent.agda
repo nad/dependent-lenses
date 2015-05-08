@@ -184,6 +184,149 @@ module Iso-lens {a b} {A : Set a} {B : Set b} (l : Iso-lens A B) where
     where
     r = remainder a
 
+------------------------------------------------------------------------
+-- Equality characterisations for Iso-lenses
+
+private
+
+  -- Equality of Iso-lenses is isomorphic to certain pairs (assuming
+  -- extensionality and univalence).
+
+  equality-characterisation₀ :
+    ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
+    Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+    Univalence (lsuc (a ⊔ b)) →
+    l₁ ≡ l₂
+      ↔
+    ∃ λ (eq : Iso-lens.R l₁ ≃ Iso-lens.R l₂) →
+      (eq ×-cong F.id) F.∘ Iso-lens.equiv l₁ ≡ Iso-lens.equiv l₂
+  equality-characterisation₀ {A = A} {B} {l₁} {l₂} ext univ =
+    l₁ ≡ l₂                                                        ↝⟨ inverse Bij.Σ-≡,≡↔≡ ⟩
+
+    (∃ λ (p : R l₁ ≡ R l₂) →
+       subst (λ R → A ≃ (R × B) × (R → ∥ B ∥ 1 _)) p (proj₂ l₁) ≡
+       proj₂ l₂)                                                   ↝⟨ inverse $ Σ-cong (inverse $ ≡≃≃ univ) (λ _ → F.id) ⟩
+
+    (∃ λ (eq : R l₁ ≃ R l₂) →
+       subst (λ R → A ≃ (R × B) × (R → ∥ B ∥ 1 _))
+             (≃⇒≡ univ eq)
+             (proj₂ l₁) ≡
+       proj₂ l₂)                                                   ↝⟨ (∃-cong λ _ → inverse $
+                                                                         ignore-propositional-component
+                                                                           (Π-closure ext 1 λ _ →
+                                                                            truncation-has-correct-h-level 1 (lower-extensionality lzero _ ext))) ⟩
+    (∃ λ (eq : R l₁ ≃ R l₂) →
+       proj₁ (subst (λ R → A ≃ (R × B) × (R → ∥ B ∥ 1 _))
+                    (≃⇒≡ univ eq)
+                    (proj₂ l₁)) ≡
+       equiv l₂)                                                   ↝⟨ (∃-cong λ eq → ≡⇒↝ _ $ cong (λ p → p ≡ _) (lemma eq)) ⟩□
+
+    (∃ λ (eq : R l₁ ≃ R l₂) → resp eq (equiv l₁) ≡ equiv l₂)       □
+    where
+    open Iso-lens
+
+    resp : ∀ {X Y} → X ≃ Y → A ≃ (X × B) → A ≃ (Y × B)
+    resp {X} {Y} X≃Y A≃X×B =
+      A      ↝⟨ A≃X×B ⟩
+      X × B  ↝⟨ X≃Y ×-cong F.id ⟩□
+      Y × B  □
+
+    lemma = λ eq →
+      proj₁ (subst (λ R → A ≃ (R × B) × (R → ∥ B ∥ 1 _))
+                   (≃⇒≡ univ eq)
+                   (proj₂ l₁))                            ≡⟨ cong proj₁ (push-subst-, {y≡z = ≃⇒≡ univ eq} _ _) ⟩
+
+      subst (λ R → A ≃ (R × B)) (≃⇒≡ univ eq) (equiv l₁)  ≡⟨ sym $ transport-theorem
+                                                                     (λ R → A ≃ (R × B)) resp
+                                                                     (λ _ → Eq.lift-equality ext refl)
+                                                                     univ _ _ ⟩∎
+      resp eq (equiv l₁)                                  ∎
+
+-- Equality of Iso-lenses is isomorphic to certain pairs (assuming
+-- extensionality and univalence).
+
+equality-characterisation₁ :
+  ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  l₁ ≡ l₂
+    ↔
+  ∃ λ (eq : Iso-lens.R l₁ ≃ Iso-lens.R l₂) →
+    ∀ x → (_≃_.to eq (Iso-lens.remainder l₁ x) , Iso-lens.get l₁ x) ≡
+          _≃_.to (Iso-lens.equiv l₂) x
+equality-characterisation₁ {l₁ = l₁} {l₂} ext univ =
+  l₁ ≡ l₂                                             ↝⟨ equality-characterisation₀ ext univ ⟩
+
+  (∃ λ (eq : R l₁ ≃ R l₂) →
+     (eq ×-cong F.id) F.∘ equiv l₁ ≡ equiv l₂)        ↝⟨ (∃-cong λ _ → inverse $ ≃-to-≡↔≡ ext) ⟩□
+
+  (∃ λ (eq : R l₁ ≃ R l₂) →
+     ∀ x → (_≃_.to eq (remainder l₁ x) , get l₁ x) ≡
+           _≃_.to (equiv l₂) x)                       □
+  where
+  open Iso-lens
+
+-- Equality of Iso-lenses is isomorphic to certain triples (assuming
+-- extensionality and univalence).
+
+equality-characterisation₂ :
+  ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  l₁ ≡ l₂
+    ↔
+  ∃ λ (eq : Iso-lens.R l₁ ≃ Iso-lens.R l₂) →
+    (∀ x → _≃_.to eq (Iso-lens.remainder l₁ x) ≡
+           Iso-lens.remainder l₂ x)
+      ×
+    (∀ x → Iso-lens.get l₁ x ≡ Iso-lens.get l₂ x)
+equality-characterisation₂ {l₁ = l₁} {l₂} ext univ =
+  l₁ ≡ l₂                                                 ↝⟨ equality-characterisation₁ ext univ ⟩
+
+  (∃ λ (eq : R l₁ ≃ R l₂) →
+     ∀ x → (_≃_.to eq (remainder l₁ x) , get l₁ x) ≡
+           _≃_.to (equiv l₂) x)                           ↔⟨ (∃-cong λ _ → Eq.∀-preserves (lower-extensionality _ lzero ext) λ _ →
+                                                                Eq.↔⇒≃ $ inverse ≡×≡↔≡) ⟩
+  (∃ λ (eq : R l₁ ≃ R l₂) →
+     ∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x
+             ×
+           get l₁ x ≡ get l₂ x)                           ↝⟨ (∃-cong λ _ → ΠΣ-comm) ⟩□
+
+  (∃ λ (eq : R l₁ ≃ R l₂) →
+     (∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x)
+       ×
+     (∀ x → get l₁ x ≡ get l₂ x))                         □
+  where
+  open Iso-lens
+
+-- Equality of Iso-lenses is isomorphic to certain pairs (assuming
+-- extensionality and univalence).
+
+equality-characterisation₃ :
+  ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  l₁ ≡ l₂
+    ↔
+  ∃ λ (eq : Iso-lens.R l₁ ≃ Iso-lens.R l₂) →
+    ∀ p →
+      _≃_.from (Iso-lens.equiv l₁) (_≃_.from eq (proj₁ p) , proj₂ p) ≡
+      _≃_.from (Iso-lens.equiv l₂) p
+equality-characterisation₃ {l₁ = l₁} {l₂} ext univ =
+  l₁ ≡ l₂                                                           ↝⟨ equality-characterisation₀ ext univ ⟩
+
+  (∃ λ (eq : R l₁ ≃ R l₂) →
+     (eq ×-cong F.id) F.∘ equiv l₁ ≡ equiv l₂)                      ↝⟨ (∃-cong λ _ → inverse $ ≃-from-≡↔≡ ext) ⟩□
+
+  (∃ λ (eq : R l₁ ≃ R l₂) →
+     ∀ p → _≃_.from (equiv l₁) (_≃_.from eq (proj₁ p) , proj₂ p) ≡
+           _≃_.from (equiv l₂) p)                                   □
+  where
+  open Iso-lens
+
+------------------------------------------------------------------------
+-- Isomorphisms between different kinds of lenses
+
 -- Higher-lens A B is isomorphic to Iso-lens A B (assuming
 -- extensionality and univalence).
 --
@@ -432,16 +575,13 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
 
   to∘from : ∀ l → to (from l) ≡ l
   to∘from (R , l , inh) =
-    Σ-≡,≡→≡
-      (≃⇒≡ univ lemma₁)
-      (curry (_↔_.to ≡×≡↔≡)
-         (Eq.lift-equality-inverse (lower-extensionality _ (lsuc ℓ) ext)
-            (lower-extensionality _ _ ext lemma₂))
-         (_⇔_.to propositional⇔irrelevant
-            (Π-closure (lower-extensionality _ (lsuc ℓ) ext) 1 λ _ →
-             truncation-has-correct-h-level 1
-               (lower-extensionality _ _ ext))
-            _ _))
+    _↔_.from (equality-characterisation₃
+                -- The implicit argument is not strictly necessary,
+                -- but seems to speed up type-checking (on the setup
+                -- that I used when I wrote this).
+                {l₁ = to (from (R , l , inh))}
+                (lower-extensionality _ lzero ext) univ)
+             (lemma₁ , lemma₂)
     where
     ℓ = a ⊔ b
 
@@ -546,31 +686,10 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
 
       R                                                           □
 
-    resp : ∀ {X Y} → X ≃ Y → A ≃ (X × B) → A ≃ (Y × B)
-    resp {X} {Y} X≃Y A≃X×B =
-      A      ↝⟨ A≃X×B ⟩
-      X × B  ↝⟨ X≃Y ×-cong F.id ⟩□
-      Y × B  □
-
     lemma₂ = λ p →
-      _≃_.from (proj₁ (subst (λ R → A ≃ (R × B) × (R → ∥ B ∥ 1 ℓ))
-                             (≃⇒≡ univ lemma₁)
-                             (proj₂ (to (from (R , l , inh)))))) p       ≡⟨ cong (λ eq → _≃_.from (proj₁ eq) p)
-                                                                                 (push-subst-, {y≡z = ≃⇒≡ univ lemma₁} _ _) ⟩
-      _≃_.from (subst (λ R → A ≃ (R × B)) (≃⇒≡ univ lemma₁)
-                      (Iso-lens.equiv (to (from (R , l , inh))))) p      ≡⟨ sym $ cong (λ eq → _≃_.from eq p) $
-                                                                              transport-theorem
-                                                                                (λ R → A ≃ (R × B)) resp
-                                                                                (λ _ → Eq.lift-equality
-                                                                                         (lower-extensionality _ (lsuc ℓ) ext)
-                                                                                         refl)
-                                                                                univ _ _ ⟩
-      _≃_.from (resp lemma₁ (Iso-lens.equiv (to (from (R , l , inh)))))
-               p                                                         ≡⟨⟩
-
-      _≃_.from l (proj₁ (_≃_.to l (_≃_.from l p)) , proj₂ p)             ≡⟨ cong (λ p′ → _≃_.from l (proj₁ p′ , proj₂ p))
-                                                                                 (_≃_.right-inverse-of l _) ⟩∎
-      _≃_.from l p                                                       ∎
+      _≃_.from l (proj₁ (_≃_.to l (_≃_.from l p)) , proj₂ p)  ≡⟨ cong (λ p′ → _≃_.from l (proj₁ p′ , proj₂ p))
+                                                                      (_≃_.right-inverse-of l _) ⟩∎
+      _≃_.from l p                                            ∎
 
 ------------------------------------------------------------------------
 -- Some existence results
