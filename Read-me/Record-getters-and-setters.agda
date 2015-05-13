@@ -183,6 +183,7 @@ module Dependent where
 module Non-dependent where
 
   open Lens.Non-dependent
+  open Lens-combinators
 
   -- Labels.
 

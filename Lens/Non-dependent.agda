@@ -42,55 +42,56 @@ record Lens {a b} (A : Set a) (B : Set b) : Set (a ⊔ b) where
 ------------------------------------------------------------------------
 -- Lens combinators
 
--- Identity lens.
+module Lens-combinators where
 
-id : ∀ {a} {A : Set a} → Lens A A
-id = record
-  { get     = P.id
-  ; set     = flip const
-  ; get-set = λ _ _   → refl
-  ; set-get = λ _     → refl
-  ; set-set = λ _ _ _ → refl
-  }
+  -- Identity lens.
 
--- Composition of lenses.
+  id : ∀ {a} {A : Set a} → Lens A A
+  id = record
+    { get     = P.id
+    ; set     = flip const
+    ; get-set = λ _ _   → refl
+    ; set-get = λ _     → refl
+    ; set-set = λ _ _ _ → refl
+    }
 
-infixr 9 _∘_
+  -- Composition of lenses.
 
-_∘_ : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c} →
-      Lens B C → Lens A B → Lens A C
-l₁ ∘ l₂ = record
-  { get     = get l₁ ⊚ get l₂
-  ; set     = λ a c → let b = set l₁ (get l₂ a) c in
-                      set l₂ a b
-  ; get-set = λ a c → let b = set l₁ (get l₂ a) c in
+  infixr 9 _∘_
 
-                get l₁ (get l₂ (set l₂ a b))  ≡⟨ cong (get l₁) $ get-set l₂ a b ⟩
-                get l₁ b                      ≡⟨ refl ⟩
-                get l₁ (set l₁ (get l₂ a) c)  ≡⟨ get-set l₁ (get l₂ a) c ⟩∎
-                c                             ∎
-  ; set-get = λ a →
-                set l₂ a (set l₁ (get l₂ a) (get l₁ (get l₂ a)))  ≡⟨ cong (set l₂ a) $ set-get l₁ (get l₂ a) ⟩
-                set l₂ a (get l₂ a)                               ≡⟨ set-get l₂ a ⟩∎
-                a                                                 ∎
-  ; set-set = λ a c₁ c₂ →
-                let b₁ = set l₁ (get l₂ a) c₁
-                    b₂ = set l₁ (get l₂ a) c₂
+  _∘_ : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c} →
+        Lens B C → Lens A B → Lens A C
+  l₁ ∘ l₂ = record
+    { get     = get l₁ ⊚ get l₂
+    ; set     = λ a c → let b = set l₁ (get l₂ a) c in
+                        set l₂ a b
+    ; get-set = λ a c → let b = set l₁ (get l₂ a) c in
 
-                    lemma =
-                      set l₁ (get l₂ (set l₂ a b₁)) c₂  ≡⟨ cong (λ x → set l₁ x c₂) $ get-set l₂ a b₁ ⟩
-                      set l₁ b₁                     c₂  ≡⟨ refl ⟩
-                      set l₁ (set l₁ (get l₂ a) c₁) c₂  ≡⟨ set-set l₁ (get l₂ a) c₁ c₂ ⟩
-                      set l₁ (get l₂ a)             c₂  ≡⟨ refl ⟩∎
-                      b₂                                ∎
+                  get l₁ (get l₂ (set l₂ a b))  ≡⟨ cong (get l₁) $ get-set l₂ a b ⟩
+                  get l₁ b                      ≡⟨⟩
+                  get l₁ (set l₁ (get l₂ a) c)  ≡⟨ get-set l₁ (get l₂ a) c ⟩∎
+                  c                             ∎
+    ; set-get = λ a →
+                  set l₂ a (set l₁ (get l₂ a) (get l₁ (get l₂ a)))  ≡⟨ cong (set l₂ a) $ set-get l₁ (get l₂ a) ⟩
+                  set l₂ a (get l₂ a)                               ≡⟨ set-get l₂ a ⟩∎
+                  a                                                 ∎
+    ; set-set = λ a c₁ c₂ →
+                  let b₁ = set l₁ (get l₂ a) c₁
+                      b₂ = set l₁ (get l₂ a) c₂
 
-                in
-                set l₂ (set l₂ a b₁) (set l₁ (get l₂ (set l₂ a b₁)) c₂)  ≡⟨ cong (set l₂ (set l₂ a b₁)) lemma ⟩
-                set l₂ (set l₂ a b₁) b₂                                  ≡⟨ set-set l₂ a b₁ b₂ ⟩∎
-                set l₂ a             b₂                                  ∎
-  }
-  where
-  open Lens
+                      lemma =
+                        set l₁ (get l₂ (set l₂ a b₁)) c₂  ≡⟨ cong (λ x → set l₁ x c₂) $ get-set l₂ a b₁ ⟩
+                        set l₁ b₁                     c₂  ≡⟨⟩
+                        set l₁ (set l₁ (get l₂ a) c₁) c₂  ≡⟨ set-set l₁ (get l₂ a) c₁ c₂ ⟩∎
+                        set l₁ (get l₂ a)             c₂  ∎
+
+                  in
+                  set l₂ (set l₂ a b₁) (set l₁ (get l₂ (set l₂ a b₁)) c₂)  ≡⟨ cong (set l₂ (set l₂ a b₁)) lemma ⟩
+                  set l₂ (set l₂ a b₁) b₂                                  ≡⟨ set-set l₂ a b₁ b₂ ⟩∎
+                  set l₂ a             b₂                                  ∎
+    }
+    where
+    open Lens
 
 ------------------------------------------------------------------------
 -- Alternative formulations of lenses
@@ -123,19 +124,26 @@ Higher-lens {a} {b} A B =
 -- Vezzosi suggested that I should look at higher lenses, and that I
 -- could perhaps use R → ∥ B ∥. This worked out nicely.)
 
-Iso-lens : ∀ {a b} → Set a → Set b → Set (lsuc (lsuc (a ⊔ b)))
-Iso-lens {a} {b} A B =
-  ∃ λ (R : Set (lsuc (a ⊔ b))) →
+Iso-lens : ∀ {a b} r t → Set a → Set b → Set (a ⊔ b ⊔ lsuc (r ⊔ t))
+Iso-lens {a} {b} r t A B =
+  ∃ λ (R : Set r) →
     (A ≃ (R × B)) ×
-    (R → ∥ B ∥ 1 (a ⊔ b))
+    (R → ∥ B ∥ 1 t)
+
+Iso-lens′ : ∀ {a b} → Set a → Set b → Set (lsuc (lsuc (a ⊔ b)))
+Iso-lens′ {a} {b} = Iso-lens (lsuc (a ⊔ b)) (a ⊔ b)
+
+------------------------------------------------------------------------
+-- Simple definitions related to Iso-lenses
 
 -- Some derived definitions.
 
-module Iso-lens {a b} {A : Set a} {B : Set b} (l : Iso-lens A B) where
+module Iso-lens {a b r t} {A : Set a} {B : Set b}
+                (l : Iso-lens r t A B) where
 
   -- Remainder type.
 
-  R : Set (lsuc (a ⊔ b))
+  R : Set r
   R = proj₁ l
 
   -- Equivalence.
@@ -145,7 +153,7 @@ module Iso-lens {a b} {A : Set a} {B : Set b} (l : Iso-lens A B) where
 
   -- The proof of (mere) inhabitance.
 
-  inhabited : R → ∥ B ∥ 1 (a ⊔ b)
+  inhabited : R → ∥ B ∥ 1 t
   inhabited = proj₂ (proj₂ l)
 
   -- Remainder.
@@ -177,12 +185,36 @@ module Iso-lens {a b} {A : Set a} {B : Set b} (l : Iso-lens A B) where
 
   set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂
   set-set a b₁ b₂ =
+    let r = remainder a in
+
     _≃_.from equiv (remainder (_≃_.from equiv (r , b₁)) , b₂)             ≡⟨⟩
     _≃_.from equiv (proj₁ (_≃_.to equiv (_≃_.from equiv (r , b₁))) , b₂)  ≡⟨ cong (λ x → _≃_.from equiv (proj₁ x , b₂))
                                                                                   (_≃_.right-inverse-of equiv _) ⟩∎
     _≃_.from equiv (r , b₂)                                               ∎
-    where
-    r = remainder a
+
+-- The remainder type can be lifted.
+
+lift-remainder :
+  ∀ ℓ {a b r t} {A : Set a} {B : Set b} →
+  Iso-lens r t A B → Iso-lens (r ⊔ ℓ) t A B
+lift-remainder ℓ {A = A} {B} (R , equiv , inhabited) =
+  ↑ ℓ R ,
+  (A          ↝⟨ equiv ⟩
+   R × B      ↔⟨ inverse Bij.↑↔ ×-cong F.id ⟩□
+   ↑ ℓ R × B  □) ,
+  inhabited ⊚ lower
+
+-- The inhabitance proof can be resized, assuming that the
+-- propositional truncation can be resized.
+
+resize-truncation :
+  ∀ {a b r t t′} {A : Set a} {B : Set b} →
+  (∥ B ∥ 1 t → ∥ B ∥ 1 t′) →
+  Iso-lens r t A B → Iso-lens r t′ A B
+resize-truncation resize (R , equiv , inhabited) =
+  R ,
+  equiv ,
+  resize ⊚ inhabited
 
 ------------------------------------------------------------------------
 -- Equality characterisations for Iso-lenses
@@ -193,14 +225,16 @@ private
   -- extensionality and univalence).
 
   equality-characterisation₀ :
-    ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
-    Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
-    Univalence (lsuc (a ⊔ b)) →
+    ∀ {a b r t} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens r t A B} →
+    Extensionality (a ⊔ b ⊔ r ⊔ lsuc t) (a ⊔ b ⊔ r ⊔ lsuc t) →
+    Univalence r →
     l₁ ≡ l₂
       ↔
     ∃ λ (eq : Iso-lens.R l₁ ≃ Iso-lens.R l₂) →
       (eq ×-cong F.id) F.∘ Iso-lens.equiv l₁ ≡ Iso-lens.equiv l₂
-  equality-characterisation₀ {A = A} {B} {l₁} {l₂} ext univ =
+  equality-characterisation₀
+    {a} {b} {r} {t} {A} {B} {l₁} {l₂} ext univ =
+
     l₁ ≡ l₂                                                        ↝⟨ inverse Bij.Σ-≡,≡↔≡ ⟩
 
     (∃ λ (p : R l₁ ≡ R l₂) →
@@ -213,8 +247,9 @@ private
              (proj₂ l₁) ≡
        proj₂ l₂)                                                   ↝⟨ (∃-cong λ _ → inverse $
                                                                          ignore-propositional-component
-                                                                           (Π-closure ext 1 λ _ →
-                                                                            truncation-has-correct-h-level 1 (lower-extensionality lzero _ ext))) ⟩
+                                                                           (Π-closure (lower-extensionality (a ⊔ b ⊔ lsuc t) (a ⊔ r) ext) 1 λ _ →
+                                                                            truncation-has-correct-h-level 1
+                                                                              (lower-extensionality (a ⊔ r) (a ⊔ r ⊔ lsuc t) ext))) ⟩
     (∃ λ (eq : R l₁ ≃ R l₂) →
        proj₁ (subst (λ R → A ≃ (R × B) × (R → ∥ B ∥ 1 _))
                     (≃⇒≡ univ eq)
@@ -238,7 +273,7 @@ private
 
       subst (λ R → A ≃ (R × B)) (≃⇒≡ univ eq) (equiv l₁)  ≡⟨ sym $ transport-theorem
                                                                      (λ R → A ≃ (R × B)) resp
-                                                                     (λ _ → Eq.lift-equality ext refl)
+                                                                     (λ _ → Eq.lift-equality (lower-extensionality (lsuc t) (lsuc t) ext) refl)
                                                                      univ _ _ ⟩∎
       resp eq (equiv l₁)                                  ∎
 
@@ -246,19 +281,19 @@ private
 -- extensionality and univalence).
 
 equality-characterisation₁ :
-  ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
-  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
-  Univalence (lsuc (a ⊔ b)) →
+  ∀ {a b r t} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens r t A B} →
+  Extensionality (a ⊔ b ⊔ r ⊔ lsuc t) (a ⊔ b ⊔ r ⊔ lsuc t) →
+  Univalence r →
   l₁ ≡ l₂
     ↔
   ∃ λ (eq : Iso-lens.R l₁ ≃ Iso-lens.R l₂) →
     ∀ x → (_≃_.to eq (Iso-lens.remainder l₁ x) , Iso-lens.get l₁ x) ≡
           _≃_.to (Iso-lens.equiv l₂) x
-equality-characterisation₁ {l₁ = l₁} {l₂} ext univ =
+equality-characterisation₁ {t = t} {l₁ = l₁} {l₂} ext univ =
   l₁ ≡ l₂                                             ↝⟨ equality-characterisation₀ ext univ ⟩
 
   (∃ λ (eq : R l₁ ≃ R l₂) →
-     (eq ×-cong F.id) F.∘ equiv l₁ ≡ equiv l₂)        ↝⟨ (∃-cong λ _ → inverse $ ≃-to-≡↔≡ ext) ⟩□
+     (eq ×-cong F.id) F.∘ equiv l₁ ≡ equiv l₂)        ↝⟨ (∃-cong λ _ → inverse $ ≃-to-≡↔≡ (lower-extensionality (lsuc t) (lsuc t) ext)) ⟩□
 
   (∃ λ (eq : R l₁ ≃ R l₂) →
      ∀ x → (_≃_.to eq (remainder l₁ x) , get l₁ x) ≡
@@ -270,9 +305,9 @@ equality-characterisation₁ {l₁ = l₁} {l₂} ext univ =
 -- extensionality and univalence).
 
 equality-characterisation₂ :
-  ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
-  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
-  Univalence (lsuc (a ⊔ b)) →
+  ∀ {a b r t} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens r t A B} →
+  Extensionality (a ⊔ b ⊔ r ⊔ lsuc t) (a ⊔ b ⊔ r ⊔ lsuc t) →
+  Univalence r →
   l₁ ≡ l₂
     ↔
   ∃ λ (eq : Iso-lens.R l₁ ≃ Iso-lens.R l₂) →
@@ -280,12 +315,13 @@ equality-characterisation₂ :
            Iso-lens.remainder l₂ x)
       ×
     (∀ x → Iso-lens.get l₁ x ≡ Iso-lens.get l₂ x)
-equality-characterisation₂ {l₁ = l₁} {l₂} ext univ =
+equality-characterisation₂ {a} {b} {r} {t} {l₁ = l₁} {l₂} ext univ =
   l₁ ≡ l₂                                                 ↝⟨ equality-characterisation₁ ext univ ⟩
 
   (∃ λ (eq : R l₁ ≃ R l₂) →
      ∀ x → (_≃_.to eq (remainder l₁ x) , get l₁ x) ≡
-           _≃_.to (equiv l₂) x)                           ↔⟨ (∃-cong λ _ → Eq.∀-preserves (lower-extensionality _ lzero ext) λ _ →
+           _≃_.to (equiv l₂) x)                           ↔⟨ (∃-cong λ _ →
+                                                              Eq.∀-preserves (lower-extensionality (b ⊔ r ⊔ lsuc t) (a ⊔ lsuc t) ext) λ _ →
                                                                 Eq.↔⇒≃ $ inverse ≡×≡↔≡) ⟩
   (∃ λ (eq : R l₁ ≃ R l₂) →
      ∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x
@@ -303,21 +339,21 @@ equality-characterisation₂ {l₁ = l₁} {l₂} ext univ =
 -- extensionality and univalence).
 
 equality-characterisation₃ :
-  ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
-  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
-  Univalence (lsuc (a ⊔ b)) →
+  ∀ {a b r t} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens r t A B} →
+  Extensionality (a ⊔ b ⊔ r ⊔ lsuc t) (a ⊔ b ⊔ r ⊔ lsuc t) →
+  Univalence r →
   l₁ ≡ l₂
     ↔
   ∃ λ (eq : Iso-lens.R l₁ ≃ Iso-lens.R l₂) →
     ∀ p →
       _≃_.from (Iso-lens.equiv l₁) (_≃_.from eq (proj₁ p) , proj₂ p) ≡
       _≃_.from (Iso-lens.equiv l₂) p
-equality-characterisation₃ {l₁ = l₁} {l₂} ext univ =
+equality-characterisation₃ {t = t} {l₁ = l₁} {l₂} ext univ =
   l₁ ≡ l₂                                                           ↝⟨ equality-characterisation₀ ext univ ⟩
 
   (∃ λ (eq : R l₁ ≃ R l₂) →
-     (eq ×-cong F.id) F.∘ equiv l₁ ≡ equiv l₂)                      ↝⟨ (∃-cong λ _ → inverse $ ≃-from-≡↔≡ ext) ⟩□
-
+     (eq ×-cong F.id) F.∘ equiv l₁ ≡ equiv l₂)                      ↝⟨ (∃-cong λ _ → inverse $
+                                                                          ≃-from-≡↔≡ (lower-extensionality (lsuc t) (lsuc t) ext)) ⟩□
   (∃ λ (eq : R l₁ ≃ R l₂) →
      ∀ p → _≃_.from (equiv l₁) (_≃_.from eq (proj₁ p) , proj₂ p) ≡
            _≃_.from (equiv l₂) p)                                   □
@@ -327,18 +363,18 @@ equality-characterisation₃ {l₁ = l₁} {l₂} ext univ =
 ------------------------------------------------------------------------
 -- Isomorphisms between different kinds of lenses
 
--- Higher-lens A B is isomorphic to Iso-lens A B (assuming
+-- Higher-lens A B is isomorphic to Iso-lens′ A B (assuming
 -- extensionality and univalence).
 --
 -- (This proof was simplified following a suggestion by Paolo
 -- Capriotti.)
 
-Higher-lens↔Iso-lens :
+Higher-lens↔Iso-lens′ :
   ∀ {a b} {A : Set a} {B : Set b} →
   Extensionality (lsuc (a ⊔ b)) (lsuc (lsuc (a ⊔ b))) →
   Univalence (lsuc (a ⊔ b)) →
-  Higher-lens A B ↔ Iso-lens A B
-Higher-lens↔Iso-lens {a} {b} {A} {B} ext univ =
+  Higher-lens A B ↔ Iso-lens′ A B
+Higher-lens↔Iso-lens′ {a} {b} {A} {B} ext univ =
   (∃ λ (g : A → B) → ∃ λ (H : Pow lzero (∥ B ∥ 1 ℓ)) →
      ↑ _ ⊚ (g ⁻¹_) ≡ H ⊚ ∣_∣)                                      ↔⟨ Σ-cong lemma₂ (λ _ → ∃-cong (lemma₃ _)) ⟩
 
@@ -438,15 +474,15 @@ Higher-lens↔Iso-lens {a} {b} {A} {B} ext univ =
                                                (lower-extensionality _ (lsuc ℓ) ext) ⟩□
       ((g ⊚ lower) ⁻¹_) ≡ H ⊚ ∣_∣         □
 
--- If the domain A is a set, then Lens A B and Iso-lens A B are
+-- If the domain A is a set, then Lens A B and Iso-lens′ A B are
 -- logically equivalent (assuming extensionality).
 
-Lens⇔Iso-lens :
+Lens⇔Iso-lens′ :
   ∀ {a b} {A : Set a} {B : Set b} →
   Extensionality (lsuc (a ⊔ b)) (a ⊔ b) →
   Is-set A →
-  Lens A B ⇔ Iso-lens A B
-Lens⇔Iso-lens {a} {b} {A} {B} ext A-set = record
+  Lens A B ⇔ Iso-lens′ A B
+Lens⇔Iso-lens′ {a} {b} {A} {B} ext A-set = record
   { to   = to
   ; from = from
   }
@@ -455,7 +491,7 @@ Lens⇔Iso-lens {a} {b} {A} {B} ext A-set = record
 
   ext′ = lower-extensionality _ b ext
 
-  from : Iso-lens A B → Lens A B
+  from : ∀ {r t} → Iso-lens r t A B → Lens A B
   from l = record
     { get     = Iso-lens.get l
     ; set     = Iso-lens.set l
@@ -464,7 +500,7 @@ Lens⇔Iso-lens {a} {b} {A} {B} ext A-set = record
     ; set-set = Iso-lens.set-set l
     }
 
-  to : Lens A B → Iso-lens A B
+  to : Lens A B → Iso-lens′ A B
   to l =
     (∥ B ∥ 1 (a ⊔ b) ×
      ∃ λ (f : B → A) → ∀ b b′ → set l (f b) b′ ≡ f b′) ,
@@ -506,18 +542,18 @@ Lens⇔Iso-lens {a} {b} {A} {B} ext A-set = record
       }) ,
     proj₁
 
--- If the domain A is a set, then Lens A B and Iso-lens A B are
+-- If the domain A is a set, then Lens A B and Iso-lens′ A B are
 -- isomorphic (assuming extensionality, univalence and a resizing
 -- function for the propositional truncation).
 
-Lens↔Iso-lens :
+Lens↔Iso-lens′ :
   ∀ {a b} {A : Set a} {B : Set b} →
   Extensionality (lsuc (lsuc (a ⊔ b))) (lsuc (a ⊔ b)) →
   Univalence (lsuc (a ⊔ b)) →
   (∥ B ∥ 1 (a ⊔ b) → ∥ B ∥ 1 (lsuc (a ⊔ b))) →
   Is-set A →
-  Lens A B ↔ Iso-lens A B
-Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
+  Lens A B ↔ Iso-lens′ A B
+Lens↔Iso-lens′ {a} {b} {A} {B} ext univ resize A-set = record
   { surjection = record
     { logical-equivalence = equiv
     ; right-inverse-of    = to∘from
@@ -525,7 +561,7 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
   ; left-inverse-of = from∘to
   }
   where
-  equiv = Lens⇔Iso-lens (lower-extensionality _ _ ext) A-set
+  equiv = Lens⇔Iso-lens′ (lower-extensionality _ _ ext) A-set
 
   open Lens
   open _⇔_ equiv
@@ -698,8 +734,8 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
 -- the codomain also has h-level n.
 
 h-level-respects-lens-from-inhabited :
-  ∀ {n a b} {A : Set a} {B : Set b} →
-  Iso-lens A B → A → H-level n A → H-level n B
+  ∀ {n a b r t} {A : Set a} {B : Set b} →
+  Iso-lens r t A B → A → H-level n A → H-level n B
 h-level-respects-lens-from-inhabited {n} {A = A} {B} l a =
   H-level n A        ↝⟨ respects-surjection (_≃_.surjection equiv) n ⟩
   H-level n (R × B)  ↝⟨ proj₂-closure (remainder a) n ⟩□
@@ -711,8 +747,8 @@ h-level-respects-lens-from-inhabited {n} {A = A} {B} l a =
 -- contractible codomains.
 
 contractible-to-contractible :
-  ∀ {a b} {A : Set a} {B : Set b} →
-  Iso-lens A B → Contractible A → Contractible B
+  ∀ {a b r t} {A : Set a} {B : Set b} →
+  Iso-lens r t A B → Contractible A → Contractible B
 contractible-to-contractible l c =
   h-level-respects-lens-from-inhabited l (proj₁ c) c
 
@@ -721,9 +757,9 @@ contractible-to-contractible l c =
 
 lens-from-proposition-to-non-set :
   Univalence lzero →
-  ∀ {a b} →
+  ∀ {a b r t} →
   ∃ λ (A : Set a) → ∃ λ (B : Set (lsuc lzero ⊔ b)) →
-  Iso-lens A B × Is-proposition A × ¬ Is-set B
+  Iso-lens r t A B × Is-proposition A × ¬ Is-set B
 lens-from-proposition-to-non-set univ {b = b} =
   ⊥ ,
   ↑ b Set ,
@@ -738,9 +774,9 @@ lens-from-proposition-to-non-set univ {b = b} =
 -- Σ-type.
 
 no-first-projection-lens :
-  ∀ {a b} →
+  ∀ {a b r t} →
   ∃ λ (A : Set a) → ∃ λ (B : A → Set b) →
-    ¬ Iso-lens (Σ A B) A
+    ¬ Iso-lens r t (Σ A B) A
 no-first-projection-lens =
   ↑ _ Bool ,
   (λ b → ↑ _ (lower b ≡ true)) ,
@@ -760,3 +796,202 @@ no-first-projection-lens =
       }
     ; right-inverse-of = λ _ → refl
     }
+
+------------------------------------------------------------------------
+-- Iso-lens combinators
+
+module Iso-lens-combinators where
+
+  -- Identity lens (defined using extensionality).
+
+  id : ∀ {a} {A : Set a} →
+       Extensionality (lsuc a) a →
+       Iso-lens′ A A
+  id {a} {A} ext =
+    ∥ A ∥ 1 a ,
+    (A              ↔⟨ inverse (∥∥×↔ ext) ⟩□
+     ∥ A ∥ 1 a × A  □) ,
+    F.id
+
+  -- Composition of lenses.
+
+  infixr 9 _∘_
+
+  _∘_ : ∀ {a b c r₁ r₂ t₁ t₂} {A : Set a} {B : Set b} {C : Set c} →
+        Iso-lens r₁ t₁ B C → Iso-lens r₂ t₂ A B →
+        Iso-lens (r₁ ⊔ r₂) t₁ A C
+  _∘_ {A = A} {B} {C} l₁ l₂ =
+    (R l₂ × R l₁) ,
+    (A                  ↝⟨ equiv l₂ ⟩
+     R l₂ × B           ↝⟨ F.id ×-cong equiv l₁ ⟩
+     R l₂ × (R l₁ × C)  ↔⟨ ×-assoc ⟩
+     (R l₂ × R l₁) × C  □) ,
+    inhabited l₁ ⊚ proj₂
+    where
+    open Iso-lens
+
+  -- An alternative implementation which gives the resulting lens a
+  -- possibly different truncation index.
+
+  infixr 9 _∘′_
+
+  _∘′_ : ∀ {a b c r₁ r₂ t₁ t₂} {A : Set a} {B : Set b} {C : Set c} →
+         Iso-lens r₁ t₁ B C → Iso-lens r₂ t₂ A B →
+         Iso-lens (r₁ ⊔ r₂) t₂ A C
+  _∘′_ {A = A} {B} {C} l₁ l₂ =
+    (R l₂ × R l₁) ,
+    (A                  ↝⟨ equiv l₂ ⟩
+     R l₂ × B           ↝⟨ F.id ×-cong equiv l₁ ⟩
+     R l₂ × (R l₁ × C)  ↔⟨ ×-assoc ⟩
+     (R l₂ × R l₁) × C  □) ,
+    ∥∥-map (get l₁) ⊚ inhabited l₂ ⊚ proj₁
+    where
+    open Iso-lens
+
+  -- Another alternative implementation. This one uses the "correct"
+  -- indices.
+  --
+  -- This implementation requires the domain and codomain to be sets,
+  -- and is defined using extensionality.
+  --
+  -- TODO: Find out if an implementation that uses the "correct"
+  -- indices is possible for arbitrary domains and codomains. (In this
+  -- case the remainder and truncation indices could be removed from
+  -- the Iso-lens type signature.)
+
+  comp : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c} →
+         Extensionality (lsuc (a ⊔ b ⊔ c)) (a ⊔ b ⊔ c) →
+         Is-set A → Is-set B →
+         Iso-lens′ B C → Iso-lens′ A B → Iso-lens′ A C
+  comp {a} {b} {c} {A} {B} {C} ext A-set B-set l₁ l₂ =
+    _⇔_.to (Lens⇔Iso-lens′ (lower-extensionality (lsuc b) b ext) A-set)
+      ((_⇔_.from (Lens⇔Iso-lens′ (lower-extensionality (lsuc a) a ext)
+                                 B-set)
+                 l₁)
+         Lens-combinators.∘
+       (_⇔_.from (Lens⇔Iso-lens′ (lower-extensionality (lsuc c) c ext)
+                                 A-set)
+                 l₂))
+
+  -- Identity and composition form a kind of monoid (assuming
+  -- extensionality, univalence, and the presence of resizing
+  -- functions for the propositional truncation).
+
+  associativity :
+    ∀ {a b c d r₁ r₂ r₃ t₁ t₂ t₃}
+      {A : Set a} {B : Set b} {C : Set c} {D : Set d} →
+    Extensionality (a ⊔ d ⊔ r₁ ⊔ r₂ ⊔ r₃ ⊔ lsuc t₁)
+                   (a ⊔ d ⊔ r₁ ⊔ r₂ ⊔ r₃ ⊔ lsuc t₁) →
+    Univalence (r₁ ⊔ r₂ ⊔ r₃) →
+    (l₁ : Iso-lens r₁ t₁ C D)
+    (l₂ : Iso-lens r₂ t₂ B C)
+    (l₃ : Iso-lens r₃ t₃ A B) →
+    l₁ ∘ (l₂ ∘ l₃) ≡ (l₁ ∘ l₂) ∘ l₃
+  associativity ext univ _ _ _ =
+    _↔_.from (equality-characterisation₁ ext univ)
+             (Eq.↔⇒≃ (inverse ×-assoc) , λ _ → refl)
+
+  left-identity :
+    ∀ {a b r t} {A : Set a} {B : Set b} →
+    (ext : Extensionality (a ⊔ lsuc b ⊔ r) (a ⊔ lsuc b ⊔ r)) →
+    let ext′ = lower-extensionality (a ⊔ r) _ ext in
+    Univalence (lsuc b ⊔ r) →
+    (resize : ∥ B ∥ 1 t → ∥ B ∥ 1 b) →
+    (l : Iso-lens r t A B) →
+    id ext′ ∘ l ≡ resize-truncation resize (lift-remainder (lsuc b) l)
+  left-identity {a} {r = r} {B = B} ext univ resize l =
+    _↔_.from (equality-characterisation₁ ext univ)
+      ( (R × ∥ B ∥ 1 _  ↔⟨ lemma ⟩
+         R              ↔⟨ inverse Bij.↑↔ ⟩□
+         ↑ _ R          □)
+      , λ _ → refl
+      )
+    where
+    open Iso-lens l
+
+    ℓ = a ⊔ r
+
+    lemma : R × ∥ B ∥ 1 _ ↔ R
+    lemma = record
+      { surjection = record
+        { logical-equivalence = record
+          { to   = proj₁
+          ; from = λ r → r , resize (inhabited r)
+          }
+        ; right-inverse-of = λ _ → refl
+        }
+      ; left-inverse-of = λ { (r , _) →
+          cong (λ x → r , x) $
+            _⇔_.to propositional⇔irrelevant
+              (truncation-has-correct-h-level 1
+                 (lower-extensionality ℓ _ ext))
+              _ _ }
+      }
+
+  right-identity :
+    ∀ {a b r t} {A : Set a} {B : Set b} →
+    (ext : Extensionality (lsuc a ⊔ b ⊔ r ⊔ lsuc t)
+                          (lsuc a ⊔ b ⊔ r ⊔ lsuc t)) →
+    let ext′ = lower-extensionality (b ⊔ r ⊔ lsuc t) _ ext in
+    Univalence (lsuc a ⊔ r) →
+    (∥ B ∥ 1 t → ∥ B ∥ 1 a) →
+    (l : Iso-lens r t A B) →
+    l ∘ id ext′ ≡ lift-remainder (lsuc a) l
+  right-identity {b = b} {r} {t} {A} ext univ resize l =
+    _↔_.from (equality-characterisation₁ ext univ)
+      ( (∥ A ∥ 1 _ × R  ↔⟨ lemma ⟩
+         R              ↔⟨ inverse Bij.↑↔ ⟩□
+         ↑ _ R          □)
+      , λ _ → refl
+      )
+    where
+    open Iso-lens l
+
+    ℓ = b ⊔ r ⊔ lsuc t
+
+    lemma : ∥ A ∥ 1 _ × R ↔ R
+    lemma = record
+      { surjection = record
+        { logical-equivalence = record
+          { to   = proj₂
+          ; from = λ r →   ∥∥-map (λ b → _≃_.from equiv (r , b))
+                                  (resize (inhabited r))
+                         , r
+          }
+        ; right-inverse-of = λ _ → refl
+        }
+      ; left-inverse-of = λ { (_ , r) →
+          cong (λ x → x , r) $
+            _⇔_.to propositional⇔irrelevant
+              (truncation-has-correct-h-level 1
+                 (lower-extensionality ℓ _ ext))
+              _ _ }
+      }
+
+  -- If Iso-lens′ is used, then the resizing functions are definable.
+
+  left-identity′ :
+    ∀ {a b} {A : Set a} {B : Set b} →
+    (ext : Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b))) →
+    let ext′ = lower-extensionality (lsuc (a ⊔ b)) _ ext in
+    Univalence (lsuc (a ⊔ b)) →
+    (l : Iso-lens′ A B) →
+    id ext′ ∘ l ≡ resize-truncation (with-lower-level a) l
+  left-identity′ {a} {b} ext univ l =
+    id _ ∘ l                                                     ≡⟨ left-identity ext univ (with-lower-level a) l ⟩
+    resize-truncation (with-lower-level a) (lift-remainder _ l)  ≡⟨ _↔_.from (equality-characterisation₁ ext univ)
+                                                                      (Eq.↔⇒≃ Bij.↑↔ , λ _ → refl) ⟩∎
+    resize-truncation (with-lower-level a) l                     ∎
+
+  right-identity′ :
+    ∀ {a b} {A : Set a} {B : Set b} →
+    (ext : Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b))) →
+    let ext′ = lower-extensionality (lsuc (a ⊔ b)) _ ext in
+    Univalence (lsuc (a ⊔ b)) →
+    (l : Iso-lens′ A B) →
+    l ∘ id ext′ ≡ l
+  right-identity′ {b = b} ext univ l =
+    l ∘ id _            ≡⟨ right-identity ext univ (with-lower-level b) l ⟩
+    lift-remainder _ l  ≡⟨ _↔_.from (equality-characterisation₁ ext univ)
+                             (Eq.↔⇒≃ Bij.↑↔ , λ _ → refl) ⟩∎
+    l                   ∎
