@@ -192,6 +192,24 @@ module Iso-lens {a b r t} {A : Set a} {B : Set b}
                                                                                   (_≃_.right-inverse-of equiv _) ⟩∎
     _≃_.from equiv (r , b₂)                                               ∎
 
+-- Isomorphisms can be converted into lenses (assuming
+-- extensionality).
+
+isomorphism-to-lens :
+  ∀ {a b r t} {A : Set a} {B : Set b} {R : Set r} →
+  Extensionality (b ⊔ lsuc t) (b ⊔ t) →
+  A ↔ R × B → Iso-lens (b ⊔ r ⊔ lsuc t) t A B
+isomorphism-to-lens {t = t} {A} {B} {R} ext iso =
+
+  (R × ∥ B ∥ 1 t) ,
+
+  (A                    ↔⟨ iso ⟩
+   R × B                ↔⟨ F.id ×-cong inverse (∥∥×↔ ext) ⟩
+   R × ∥ B ∥ 1 t × B    ↔⟨ ×-assoc ⟩□
+   (R × ∥ B ∥ 1 t) × B  □) ,
+
+  proj₂
+
 -- The remainder type can be lifted.
 
 lift-remainder :
@@ -501,46 +519,39 @@ Lens⇔Iso-lens′ {a} {b} {A} {B} ext A-set = record
     }
 
   to : Lens A B → Iso-lens′ A B
-  to l =
-    (∥ B ∥ 1 (a ⊔ b) ×
-     ∃ λ (f : B → A) → ∀ b b′ → set l (f b) b′ ≡ f b′) ,
-    Eq.↔⇒≃ (record
-      { surjection = record
-        { logical-equivalence = record
-          { to   = λ a → (∣ get l a ∣ , set l a , set-set l a) , get l a
-          ; from = λ { ((_ , f , _) , b) → set l (f b) b }
-          }
-        ; right-inverse-of = λ { ((∥b∥ , f , h) , b) →
+  to l = isomorphism-to-lens
+    {R = ∃ λ (f : B → A) → ∀ b b′ → set l (f b) b′ ≡ f b′}
+    ext
+    (record
+       { surjection = record
+         { logical-equivalence = record
+           { to   = λ a → (set l a , set-set l a) , get l a
+           ; from = λ { ((f , _) , b) → set l (f b) b }
+           }
+         ; right-inverse-of = λ { ((f , h) , b) →
 
-           let irr = {p q : ∀ b b′ → set l (f b) b′ ≡ f b′} → p ≡ q
-               irr =
-                 _⇔_.to propositional⇔irrelevant
-                   (Π-closure (lower-extensionality _ lzero ext) 1 λ _ →
-                    Π-closure ext′                               1 λ _ →
-                    A-set _ _)
-                   _ _
+            let
+              irr = {p q : ∀ b b′ → set l (f b) b′ ≡ f b′} → p ≡ q
+              irr =
+                _⇔_.to propositional⇔irrelevant
+                  (Π-closure (lower-extensionality _ lzero ext) 1 λ _ →
+                   Π-closure ext′                               1 λ _ →
+                   A-set _ _)
+                  _ _
 
-               lemma =
-                  set l (set l (f b) b)  ≡⟨ ext′ (set-set l (f b) b) ⟩
-                  set l (f b)            ≡⟨ ext′ (h b) ⟩∎
-                  f                      ∎
-           in
-           ( ( ∣ get l (set l (f b) b) ∣
-             , set l (set l (f b) b) , set-set l (set l (f b) b)
-             )
-           , get l (set l (f b) b)
-           )                                                      ≡⟨ cong₂ _,_ (cong₂ _,_ (_⇔_.to propositional⇔irrelevant
-                                                                                             (truncation-has-correct-h-level 1 ext) _ _)
-                                                                                          (Σ-≡,≡→≡ lemma irr))
-                                                                               (get-set l _ _) ⟩∎
-           ((∥b∥ , f , h) , b)                                    ∎ }
-        }
-      ; left-inverse-of = λ a →
-          set l (set l a (get l a)) (get l a)  ≡⟨ cong (λ x → set l x (get l a)) (set-get l a) ⟩
-          set l a (get l a)                    ≡⟨ set-get l a ⟩∎
-          a                                    ∎
-      }) ,
-    proj₁
+              lemma =
+                 set l (set l (f b) b)  ≡⟨ ext′ (set-set l (f b) b) ⟩
+                 set l (f b)            ≡⟨ ext′ (h b) ⟩∎
+                 f                      ∎
+            in
+            ((set l (set l (f b) b) , set-set l (set l (f b) b)) , get l (set l (f b) b))  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma irr) (get-set l _ _) ⟩∎
+            ((f                     , h                        ) , b                    )  ∎ }
+         }
+       ; left-inverse-of = λ a →
+           set l (set l a (get l a)) (get l a)  ≡⟨ cong (λ x → set l x (get l a)) (set-get l a) ⟩
+           set l a (get l a)                    ≡⟨ set-get l a ⟩∎
+           a                                    ∎
+       })
 
 -- If the domain A is a set, then Lens A B and Iso-lens′ A B are
 -- isomorphic (assuming extensionality, univalence and a resizing
@@ -658,6 +669,10 @@ Lens↔Iso-lens′ {a} {b} {A} {B} ext univ resize A-set = record
       }
 
     lemma₁ =
+      (∃ λ (f : B → A) → ∀ b b′ →
+           _≃_.from l (proj₁ (_≃_.to l (f b)) , b′) ≡ f b′) ×
+      ∥ B ∥ 1 ℓ                                                   ↔⟨ ×-comm ⟩
+
       (∥ B ∥ 1 ℓ ×
        ∃ λ (f : B → A) → ∀ b b′ →
            _≃_.from l (proj₁ (_≃_.to l (f b)) , b′) ≡ f b′)       ↝⟨ (∃-cong λ _ →
@@ -807,11 +822,10 @@ module Iso-lens-combinators where
   id : ∀ {a} {A : Set a} →
        Extensionality (lsuc a) a →
        Iso-lens′ A A
-  id {a} {A} ext =
-    ∥ A ∥ 1 a ,
-    (A              ↔⟨ inverse (∥∥×↔ ext) ⟩□
-     ∥ A ∥ 1 a × A  □) ,
-    F.id
+  id {A = A} ext =
+    isomorphism-to-lens ext
+      (A      ↝⟨ inverse ×-left-identity ⟩□
+       ⊤ × A  □)
 
   -- Composition of lenses.
 
@@ -901,9 +915,10 @@ module Iso-lens-combinators where
     id ext′ ∘ l ≡ resize-truncation resize (lift-remainder (lsuc b) l)
   left-identity {a} {r = r} {B = B} ext univ resize l =
     _↔_.from (equality-characterisation₁ ext univ)
-      ( (R × ∥ B ∥ 1 _  ↔⟨ lemma ⟩
-         R              ↔⟨ inverse Bij.↑↔ ⟩□
-         ↑ _ R          □)
+      ( (R × ⊤ × ∥ B ∥ 1 _  ↔⟨ F.id ×-cong ×-left-identity ⟩
+         R × ∥ B ∥ 1 _      ↔⟨ lemma ⟩
+         R                  ↔⟨ inverse Bij.↑↔ ⟩□
+         ↑ _ R              □)
       , λ _ → refl
       )
     where
@@ -939,9 +954,10 @@ module Iso-lens-combinators where
     l ∘ id ext′ ≡ lift-remainder (lsuc a) l
   right-identity {b = b} {r} {t} {A} ext univ resize l =
     _↔_.from (equality-characterisation₁ ext univ)
-      ( (∥ A ∥ 1 _ × R  ↔⟨ lemma ⟩
-         R              ↔⟨ inverse Bij.↑↔ ⟩□
-         ↑ _ R          □)
+      ( ((⊤ × ∥ A ∥ 1 _) × R  ↔⟨ ×-left-identity ×-cong F.id ⟩
+         ∥ A ∥ 1 _ × R        ↔⟨ lemma ⟩
+         R                    ↔⟨ inverse Bij.↑↔ ⟩□
+         ↑ _ R                □)
       , λ _ → refl
       )
     where
