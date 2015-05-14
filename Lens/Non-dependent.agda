@@ -876,15 +876,15 @@ module Iso-lens-combinators where
     open Iso-lens
 
   -- Another alternative implementation. This one uses the "correct"
-  -- indices.
+  -- indices (the ones used in the definition of Iso-lens′).
   --
-  -- This implementation requires the domain and codomain to be sets,
-  -- and is defined using extensionality.
+  -- This implementation requires the domains of the two lenses to be
+  -- sets, and is defined using extensionality.
   --
   -- TODO: Find out if an implementation that uses the "correct"
-  -- indices is possible for arbitrary domains and codomains. (In this
-  -- case the remainder and truncation indices could be removed from
-  -- the Iso-lens type signature.)
+  -- indices is possible for arbitrary domains. (In this case the
+  -- remainder and truncation indices could be removed from the
+  -- Iso-lens type signature.)
 
   comp : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c} →
          Extensionality (lsuc (a ⊔ b ⊔ c)) (a ⊔ b ⊔ c) →
