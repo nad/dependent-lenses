@@ -15,10 +15,9 @@ module Read-me.Record-getters-and-setters where
 open import Equality.Propositional
 open import Prelude hiding (_∘_)
 
-open import Bijection equality-with-J
-  using (_↔_; decidable-equality-respects)
+open import Bijection equality-with-J as Bij using (_↔_; module _↔_)
 open import Equality.Decision-procedures equality-with-J
-open import Function-universe equality-with-J hiding (_∘_)
+open import Function-universe equality-with-J as F hiding (_∘_)
 
 import Lens.Dependent
 import Lens.Non-dependent
@@ -180,10 +179,15 @@ module Dependent where
 ------------------------------------------------------------------------
 -- Non-dependent lenses
 
-module Non-dependent where
+-- The code makes use of extensionality.
+
+module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
+
+  ext₁ : Extensionality (# 1) (# 0)
+  ext₁ = lower-extensionality _ _ ext₂
 
   open Lens.Non-dependent
-  open Lens-combinators
+  open Iso-lens-combinators
 
   -- Labels.
 
@@ -236,7 +240,7 @@ module Non-dependent where
     from∘to ″r₁″    = refl
 
   _≟_ : Decidable-equality Label
-  _≟_ = decidable-equality-respects (inverse Label↔Fin) Fin._≟_
+  _≟_ = Bij.decidable-equality-respects (inverse Label↔Fin) Fin._≟_
 
   -- Records.
 
@@ -257,51 +261,40 @@ module Non-dependent where
   -- Lenses for each of the three fields of R₁.
 
   -- The x field is easiest, because it is independent of the others.
-  -- Note that the get field is inferred.
 
-  x : {A : Set} → Lens (Record (R₁ A)) A
-  x = record
-    { set     = λ r x → rec (rec (rec (_
-                  , r · ″f″)
-                  , x)
-                  , r · ″lemma″)
-    ; get-set = λ _ _   → refl
-    ; set-get = λ _     → refl
-    ; set-set = λ _ _ _ → refl
-    }
+  x : {A : Set} → Iso-lens (Record (R₁ A)) A
+  x {A} = isomorphism-to-lens′ ext₁
+
+    (Record (R₁ A)                                    ↝⟨ Record↔Recʳ ⟩
+     (∃ λ (f : A → A) → ∃ λ (x : A) → ∀ y → f y ≡ y)  ↝⟨ ∃-comm ⟩
+     (A × ∃ λ (f : A → A) → ∀ y → f y ≡ y)            ↝⟨ ×-comm ⟩□
+     (∃ λ (f : A → A) → ∀ y → f y ≡ y) × A            □)
 
   -- The lemma field depends on the f field, so whenever the f field
   -- is set the lemma field needs to be updated as well.
 
   f : {A : Set} →
-      Lens (Record (R₁ A))
-           (Record (∅ , ″f″     ∶ (λ _ → A → A)
-                      , ″lemma″ ∶ (λ r → ∀ x → (r · ″f″) x ≡ x)))
-  f = record
-    { set     = λ r f-lemma → rec (rec (rec (_
-                  , f-lemma · ″f″)
-                  , r · ″x″)
-                  , f-lemma · ″lemma″)
-    ; get-set = λ _ _   → refl
-    ; set-get = λ _     → refl
-    ; set-set = λ _ _ _ → refl
-    }
+      Iso-lens (Record (R₁ A))
+               (Record (∅ , ″f″     ∶ (λ _ → A → A)
+                          , ″lemma″ ∶ (λ r → ∀ x → (r · ″f″) x ≡ x)))
+  f {A} = isomorphism-to-lens′ ext₁
+
+    (Record (R₁ A)                                    ↝⟨ Record↔Recʳ ⟩
+     (∃ λ (f : A → A) → ∃ λ (x : A) → ∀ y → f y ≡ y)  ↝⟨ ∃-comm ⟩
+     A × (∃ λ (f : A → A) → ∀ y → f y ≡ y)            ↝⟨ F.id ×-cong inverse Record↔Recʳ ⟩□
+     A × Record _                                     □)
 
   -- The lemma field can be updated independently. Note the use of a
   -- manifest field in the type of the lens to capture the dependency
   -- between the two lens parameters.
 
   lemma : {A : Set} {f : A → A} →
-          Lens (Record (R₁ A With ″f″ ≔ (λ _ → f)))
-               (∀ x → f x ≡ x)
-  lemma = record
-    { set     = λ r lemma → rec (rec (_
-                  , r · ″x″)
-                  , lemma)
-    ; get-set = λ _ _   → refl
-    ; set-get = λ _     → refl
-    ; set-set = λ _ _ _ → refl
-    }
+          Iso-lens (Record (R₁ A With ″f″ ≔ (λ _ → f)))
+                   (∀ x → f x ≡ x)
+  lemma {A} {f} = isomorphism-to-lens′ ext₁
+
+    (Record (R₁ A With ″f″ ≔ (λ _ → f))  ↝⟨ Record↔Recʳ ⟩□
+     A × (∀ x → f x ≡ x)                 □)
 
   -- The use of a manifest field is problematic, because the domain of
   -- the lens is no longer Record (R₁ A). It is easy to convert
@@ -319,65 +312,91 @@ module Non-dependent where
   -- First we define a lens for the r₁ field.
 
   r₁ : {A : Set} →
-       Lens (Record (R₂ With ″A″ ≔ λ _ → A)) (Record (R₁ A))
-  r₁ = record
-    { set     = λ _ r → rec (_ , lift r)
-    ; get-set = λ _ _   → refl
-    ; set-get = λ _     → refl
-    ; set-set = λ _ _ _ → refl
-    }
+       Iso-lens (Record (R₂ With ″A″ ≔ λ _ → A)) (Record (R₁ A))
+  r₁ {A} = isomorphism-to-lens ext₂
+
+    (Record (R₂ With ″A″ ≔ λ _ → A)  ↝⟨ Record↔Recʳ ⟩
+     ↑ _ (Record (R₁ A))             ↝⟨ Bij.↑↔ ⟩
+     Record (R₁ A)                   ↝⟨ inverse ×-left-identity ⟩
+     ⊤ × Record (R₁ A)               ↝⟨ inverse Bij.↑↔ ×-cong F.id ⟩□
+     ↑ _ ⊤ × Record (R₁ A)           □)
 
   -- It is now easy to construct lenses for the embedded x and f
   -- fields using composition of lenses.
 
-  x₂ : {A : Set} → Lens (Record (R₂ With ″A″ ≔ λ _ → A)) A
+  x₂ : {A : Set} →
+       Iso-lens (Record (R₂ With ″A″ ≔ λ _ → A)) A
   x₂ = x ∘ r₁
 
   f₂ : {A : Set} →
-       Lens (Record (R₂ With ″A″ ≔ λ _ → A))
-            (Record (∅ , ″f″     ∶ (λ _ → A → A)
-                       , ″lemma″ ∶ (λ r → ∀ x → (r · ″f″) x ≡ x)))
+       Iso-lens (Record (R₂ With ″A″ ≔ λ _ → A))
+                (Record (∅ , ″f″     ∶ (λ _ → A → A)
+                           , ″lemma″ ∶ (λ r → ∀ x → (r · ″f″) x ≡ x)))
   f₂ = f ∘ r₁
 
-  {-
+  -- It is less obvious how to construct the corresponding lens for
+  -- the embedded lemma field.
 
-  -- However, it is less obvious how to construct the corresponding
-  -- lens for the embedded lemma field. To start with, what should its
-  -- type be? The type used below is an obvious choice.
+  module Lemma-lens
+    (r₁₂ : {A : Set} {r : Record (R₁ A)} →
+           Iso-lens (Record (R₂ With ″A″  ≔ (λ _ → A)
+                                With ″r₁″ ≔ (λ _ → lift r)))
+                    (Record (R₁ A With ″f″  ≔ (λ _ → r · ″f″)))) where
 
-  lemma₂ : {A : Set} {r : Record (R₁ A)} →
-           Lens (Record (R₂ With ″A″  ≔ (λ _ → A)
-                            With ″r₁″ ≔ (λ _ → lift r)))
-                (∀ x → (r · ″f″) x ≡ x)
+    -- To start with, what should the type of the lemma lens be? The
+    -- type used below is an obvious choice.
 
-  -- Now, in order to define this lens using composition with lemma,
-  -- we need a lens with the following type:
+    lemma₂ : {A : Set} {r : Record (R₁ A)} →
+             Iso-lens (Record (R₂ With ″A″  ≔ (λ _ → A)
+                                  With ″r₁″ ≔ (λ _ → lift r)))
+                      (∀ x → (r · ″f″) x ≡ x)
 
-  r₁₂ : {A : Set} {r : Record (R₁ A)} →
-        Lens (Record (R₂ With ″A″  ≔ (λ _ → A)
-                         With ″r₁″ ≔ (λ _ → lift r)))
-             (Record (R₁ A With ″f″  ≔ (λ _ → r · ″f″)))
+    -- If we can construct a suitable lens r₁₂, with the type
+    -- signature given above, then we can define the lemma lens using
+    -- composition.
 
-  lemma₂ = lemma ∘ r₁₂
+    lemma₂ = lemma ∘ r₁₂
 
-  -- However, we cannot define r₁₂. Its set field is uniquely
-  -- determined (up to extensional equality)—it must return a unique
-  -- value—and the get-set law requires us to prove that an arbitrary
-  -- value of type
-  --
-  --   Record (R₁ A With ″f″ ≔ (λ _ → r · ″f″))
-  --
-  -- is equal to the result of applying get to this unique value.
+    -- However, we cannot define r₁₂.
 
-  r₁₂ = record
-    { get     = λ s → convert (lower (s · ″r₁″))
-    ; get-set = λ _ _   → ?
-    ; set-get = λ _     → refl
-    ; set-set = λ _ _ _ → refl
-    }
+    not-r₁₂ : ⊥
+    not-r₁₂ = no-isomorphism isomorphism
+      where
+      open Iso-lens
 
-  -- Conclusions: The use of manifest fields limits the usefulness of
+      isomorphisms = λ A r →
+        ⊤                                                  ↝⟨ inverse Bij.↑↔ ⟩
+        ↑ _ ⊤                                              ↝⟨ inverse Record↔Recʳ ⟩
+        Record (R₂ With ″A″  ≔ (λ _ → A)
+                   With ″r₁″ ≔ (λ _ → lift r))             ↔⟨ equiv r₁₂ ⟩
+        R r₁₂ × Record (R₁ A With ″f″  ≔ (λ _ → r · ″f″))  ↝⟨ F.id ×-cong Record↔Recʳ ⟩□
+        R r₁₂ × A × (∀ y → (r · ″f″) y ≡ y)                □
+
+      isomorphism : ∃ λ (A : Set₂) → ⊤ ↔ A × Bool
+      isomorphism =
+        _ ,
+        (⊤                               ↝⟨ isomorphisms Bool r ⟩
+         R r₁₂ × Bool × (∀ b → b ≡ b)    ↝⟨ F.id ×-cong ×-comm ⟩
+         R r₁₂ × (∀ b → b ≡ b) × Bool    ↝⟨ ×-assoc ⟩□
+         (R r₁₂ × (∀ b → b ≡ b)) × Bool  □)
+        where
+        r : Record (R₁ Bool)
+        r = rec (rec (rec (_ , F.id) , true) , λ _ → refl)
+
+      no-isomorphism : ¬ ∃ λ (A : Set₂) → ⊤ ↔ A × Bool
+      no-isomorphism (A , iso) = Bool.true≢false (
+        true                           ≡⟨⟩
+        proj₂ (a , true)               ≡⟨ cong proj₂ $ sym $ right-inverse-of (a , true) ⟩
+        proj₂ (to (from (a , true)))   ≡⟨⟩
+        proj₂ (to (from (a , false)))  ≡⟨ cong proj₂ $ right-inverse-of (a , false) ⟩
+        proj₂ (a , false)              ≡⟨ refl ⟩∎
+        false                          ∎)
+        where
+        open _↔_ iso
+
+        a : A
+        a = proj₁ (to _)
+
+  -- Conclusion: The use of manifest fields limits the usefulness of
   -- these lenses, because they do not compose as well as they do for
   -- non-dependent records. Dependent lenses seem to be more useful.
-
-  -}
