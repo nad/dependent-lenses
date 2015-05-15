@@ -206,6 +206,18 @@ isomorphism-to-lens {A = A} {B} {R} ext iso =
 
   proj₂
 
+-- A variant of isomorphism-to-lens.
+
+isomorphism-to-lens′ :
+  ∀ {a b} {A : Set a} {B : Set b} {R : Set (a ⊔ b)} →
+  Extensionality (lsuc (a ⊔ b)) (a ⊔ b) →
+  A ↔ R × B → Iso-lens A B
+isomorphism-to-lens′ {A = A} {B} {R} ext iso =
+  isomorphism-to-lens ext
+    (A          ↝⟨ iso ⟩
+     R × B      ↝⟨ inverse Bij.↑↔ ×-cong F.id ⟩□
+     ↑ _ R × B  □)
+
 ------------------------------------------------------------------------
 -- Equality characterisations for Iso-lenses
 
@@ -504,16 +516,16 @@ Lens⇔Iso-lens {a} {b} {A} {B} ext A-set = record
     open Iso-lens l
 
   to : Lens A B → Iso-lens A B
-  to l = isomorphism-to-lens
-    {R = ↑ _ (∃ λ (f : B → A) → ∀ b b′ → set (f b) b′ ≡ f b′)}
+  to l = isomorphism-to-lens′
+    {R = ∃ λ (f : B → A) → ∀ b b′ → set (f b) b′ ≡ f b′}
     ext
     (record
        { surjection = record
          { logical-equivalence = record
-           { to   = λ a → lift (set a , set-set a) , get a
-           ; from = λ { (lift (f , _) , b) → set (f b) b }
+           { to   = λ a → (set a , set-set a) , get a
+           ; from = λ { ((f , _) , b) → set (f b) b }
            }
-         ; right-inverse-of = λ { (lift (f , h) , b) →
+         ; right-inverse-of = λ { ((f , h) , b) →
 
             let
               irr = {p q : ∀ b b′ → set (f b) b′ ≡ f b′} → p ≡ q
@@ -529,8 +541,8 @@ Lens⇔Iso-lens {a} {b} {A} {B} ext A-set = record
                  set (f b)          ≡⟨ ext′ (h b) ⟩∎
                  f                  ∎
             in
-            lift (set (set (f b) b) , set-set (set (f b) b)) , get (set (f b) b)  ≡⟨ cong₂ _,_ (cong lift (Σ-≡,≡→≡ lemma irr)) (get-set _ _) ⟩∎
-            lift (f                 , h                    ) , b                  ∎ }
+            (set (set (f b) b) , set-set (set (f b) b)) , get (set (f b) b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma irr) (get-set _ _) ⟩∎
+            (f                 , h                    ) , b                  ∎ }
          }
        ; left-inverse-of = λ a →
            set (set a (get a)) (get a)  ≡⟨ cong (λ x → set x (get a)) (set-get a) ⟩
