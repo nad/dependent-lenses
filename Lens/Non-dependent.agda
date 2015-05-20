@@ -496,7 +496,7 @@ Lens⇔Iso-lens :
   Extensionality (lsuc (a ⊔ b)) (a ⊔ b) →
   Is-set A →
   Lens A B ⇔ Iso-lens A B
-Lens⇔Iso-lens {a} {b} {A} {B} ext A-set = record
+Lens⇔Iso-lens {b = b} {A} {B} ext A-set = record
   { to   = to
   ; from = from
   }
@@ -523,7 +523,7 @@ Lens⇔Iso-lens {a} {b} {A} {B} ext A-set = record
        { surjection = record
          { logical-equivalence = record
            { to   = λ a → (set a , set-set a) , get a
-           ; from = λ { ((f , _) , b) → set (f b) b }
+           ; from = λ { ((f , _) , b) → f b }
            }
          ; right-inverse-of = λ { ((f , h) , b) →
 
@@ -537,17 +537,16 @@ Lens⇔Iso-lens {a} {b} {A} {B} ext A-set = record
                   _ _
 
               lemma =
-                 set (set (f b) b)  ≡⟨ ext′ (set-set (f b) b) ⟩
-                 set (f b)          ≡⟨ ext′ (h b) ⟩∎
-                 f                  ∎
+                get (f b)          ≡⟨ cong get (sym (h b b)) ⟩
+                get (set (f b) b)  ≡⟨ get-set (f b) b ⟩∎
+                b                  ∎
             in
-            (set (set (f b) b) , set-set (set (f b) b)) , get (set (f b) b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma irr) (get-set _ _) ⟩∎
-            (f                 , h                    ) , b                  ∎ }
+            (set (f b) , set-set (f b)) , get (f b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ (ext′ (h b)) irr) lemma ⟩∎
+            (f         , h            ) , b          ∎ }
          }
        ; left-inverse-of = λ a →
-           set (set a (get a)) (get a)  ≡⟨ cong (λ x → set x (get a)) (set-get a) ⟩
-           set a (get a)                ≡⟨ set-get a ⟩∎
-           a                            ∎
+           set a (get a)  ≡⟨ set-get a ⟩∎
+           a              ∎
        })
     where
     open Lens l
@@ -577,17 +576,29 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
   open _⇔_ equiv
 
   from∘to : ∀ l → from (to l) ≡ l
-  from∘to l = lemma (λ a b → set-set l a b b)
+  from∘to l = lens-cong
+    (_⇔_.to propositional⇔irrelevant
+       (Π-closure (lower-extensionality _ _ ext) 1 λ a →
+        Π-closure (lower-extensionality _ _ ext) 1 λ _ →
+        B-set a _ _)
+       _ _)
+    (_⇔_.to propositional⇔irrelevant
+       (Π-closure (lower-extensionality _ _ ext)  1 λ _ →
+        A-set _ _)
+       _ _)
+    (_⇔_.to propositional⇔irrelevant
+       (Π-closure (lower-extensionality _ _ ext) 1 λ _ →
+        Π-closure (lower-extensionality _ _ ext) 1 λ _ →
+        Π-closure (lower-extensionality _ _ ext) 1 λ _ →
+        A-set _ _)
+       _ _)
     where
     lens-cong :
-      ∀ {s₁ gs₁ sg₁ ss₁ s₂ gs₂ sg₂ ss₂}
-      (eq : s₁ ≡ s₂) →
-      subst (λ set → ∀ a b → get l (set a b) ≡ b) eq gs₁ ≡ gs₂ →
-      subst (λ set → ∀ a → set a (get l a) ≡ a) eq sg₁ ≡ sg₂ →
-      subst (λ set → ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂) eq ss₁ ≡
-        ss₂ →
-      lens (get l) s₁ gs₁ sg₁ ss₁ ≡ lens (get l) s₂ gs₂ sg₂ ss₂
-    lens-cong refl refl refl refl = refl
+      ∀ {gs₁ sg₁ ss₁ gs₂ sg₂ ss₂} →
+      gs₁ ≡ gs₂ → sg₁ ≡ sg₂ → ss₁ ≡ ss₂ →
+      lens (get l) (set l) gs₁ sg₁ ss₁ ≡
+      lens (get l) (set l) gs₂ sg₂ ss₂
+    lens-cong refl refl refl = refl
 
     B-set : A → Is-set B
     B-set a =
@@ -596,38 +607,11 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
       where
       eq = proj₁ $ proj₂ $ to l
 
-    lemma : ∀ {s₁ gs₁ sg₁ ss₁ s₂ gs₂ sg₂ ss₂}
-            (eq : ∀ a b → s₁ a b ≡ s₂ a b) →
-            lens (get l) s₁ gs₁ sg₁ ss₁ ≡ lens (get l) s₂ gs₂ sg₂ ss₂
-    lemma eq = lens-cong
-      (lower-extensionality _ _ ext λ _ →
-       lower-extensionality _ _ ext λ _ →
-       eq _ _)
-      (_⇔_.to propositional⇔irrelevant
-         (Π-closure (lower-extensionality _ _ ext) 1 λ a →
-          Π-closure (lower-extensionality _ _ ext) 1 λ _ →
-          B-set a _ _)
-         _ _)
-      (_⇔_.to propositional⇔irrelevant
-         (Π-closure (lower-extensionality _ _ ext)  1 λ _ →
-          A-set _ _)
-         _ _)
-      (_⇔_.to propositional⇔irrelevant
-         (Π-closure (lower-extensionality _ _ ext) 1 λ _ →
-          Π-closure (lower-extensionality _ _ ext) 1 λ _ →
-          Π-closure (lower-extensionality _ _ ext) 1 λ _ →
-          A-set _ _)
-         _ _)
-
   to∘from : ∀ l → to (from l) ≡ l
   to∘from (R , l , inh) =
     _↔_.from (equality-characterisation₄
-                -- The implicit argument is not strictly necessary,
-                -- but seems to speed up type-checking (on the setup
-                -- that I used when I wrote this).
-                {l₁ = to (from (R , l , inh))}
                 (lower-extensionality _ lzero ext) univ)
-             (lemma₁ , lemma₂)
+             (lemma , λ _ → refl)
     where
     ℓ = a ⊔ b
 
@@ -645,8 +629,8 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
           (λ b → proj₁-closure (const b) 2 $
                  respects-surjection (_≃_.surjection l) 2 A-set)
 
-    lemma₁′ : (∥ B ∥ 1 ℓ × (∥ B ∥ 1 (lsuc ℓ) → R)) ↔ R
-    lemma₁′ = record
+    lemma′ : (∥ B ∥ 1 ℓ × (∥ B ∥ 1 (lsuc ℓ) → R)) ↔ R
+    lemma′ = record
       { surjection = record
         { logical-equivalence = record
           { to   = λ { (∥b∥ , f) → f (resize ∥b∥) }
@@ -667,7 +651,7 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
                f ∥b∥′          ∎) }
       }
 
-    lemma₁ =
+    lemma =
       ↑ _ (∃ λ (f : B → A) → ∀ b b′ →
                _≃_.from l (proj₁ (_≃_.to l (f b)) , b′) ≡ f b′)
         ×
@@ -737,14 +721,9 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
 
       (∥ B ∥ 1 ℓ × ∃ λ (f : B → R) → Constant f)                  ↝⟨ (∃-cong λ ∥b∥ → constant-function≃∥inhabited∥⇒inhabited
                                                                                        lzero ext (R-set (resize ∥b∥))) ⟩
-      (∥ B ∥ 1 ℓ × (∥ B ∥ 1 (lsuc ℓ) → R))                        ↔⟨ lemma₁′ ⟩
+      (∥ B ∥ 1 ℓ × (∥ B ∥ 1 (lsuc ℓ) → R))                        ↔⟨ lemma′ ⟩
 
       R                                                           □
-
-    lemma₂ = λ p →
-      _≃_.from l (proj₁ (_≃_.to l (_≃_.from l p)) , proj₂ p)  ≡⟨ cong (λ p′ → _≃_.from l (proj₁ p′ , proj₂ p))
-                                                                      (_≃_.right-inverse-of l _) ⟩∎
-      _≃_.from l p                                            ∎
 
 ------------------------------------------------------------------------
 -- Some existence results
