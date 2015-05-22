@@ -15,7 +15,7 @@ open import Equality.Decidable-UIP equality-with-J
 open import Equality.Decision-procedures equality-with-J
 open import Equivalence equality-with-J as Eq using (_≃_; module _≃_)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
-open import H-level equality-with-J
+open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import H-level.Truncation equality-with-J
 open import Preimage equality-with-J
@@ -603,7 +603,7 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
     B-set : A → Is-set B
     B-set a =
       proj₂-closure (proj₁ $ _≃_.to eq a) 2 $
-      respects-surjection (_≃_.surjection eq) 2 A-set
+      H-level.respects-surjection (_≃_.surjection eq) 2 A-set
       where
       eq = proj₁ $ proj₂ $ to l
 
@@ -619,7 +619,7 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
     B-set f =
       rec (H-level-propositional (lower-extensionality _ _ ext) 2)
           (λ b → proj₂-closure (f b) 2 $
-                 respects-surjection (_≃_.surjection l) 2 A-set)
+                 H-level.respects-surjection (_≃_.surjection l) 2 A-set)
 
     R-set : ∥ B ∥ 1 (lsuc ℓ) → Is-set R
     R-set =
@@ -627,7 +627,7 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
              (lower-extensionality _ (lsuc ℓ) ext)
              2)
           (λ b → proj₁-closure (const b) 2 $
-                 respects-surjection (_≃_.surjection l) 2 A-set)
+                 H-level.respects-surjection (_≃_.surjection l) 2 A-set)
 
     lemma′ : (∥ B ∥ 1 ℓ × (∥ B ∥ 1 (lsuc ℓ) → R)) ↔ R
     lemma′ = record
@@ -735,7 +735,7 @@ h-level-respects-lens-from-inhabited :
   ∀ {n a b} {A : Set a} {B : Set b} →
   Iso-lens A B → A → H-level n A → H-level n B
 h-level-respects-lens-from-inhabited {n} {A = A} {B} l x =
-  H-level n A        ↝⟨ respects-surjection (_≃_.surjection equiv) n ⟩
+  H-level n A        ↝⟨ H-level.respects-surjection (_≃_.surjection equiv) n ⟩
   H-level n (R × B)  ↝⟨ proj₂-closure (remainder x) n ⟩□
   H-level n B        □
   where
@@ -766,7 +766,7 @@ lens-from-proposition-to-non-set univ {b = b} =
     ⊥ × ↑ _ Set  □) ,
    ⊥-elim) ,
   ⊥-propositional ,
-  ¬-Set-set univ ⊚ respects-surjection (_↔_.surjection Bij.↑↔) 2
+  ¬-Set-set univ ⊚ H-level.respects-surjection (_↔_.surjection Bij.↑↔) 2
 
 -- There is, in general, no Iso-lens for the first projection from a
 -- Σ-type.
@@ -779,9 +779,9 @@ no-first-projection-lens {b = b} =
   ↑ _ Bool ,
   (λ b → ↑ _ (lower b ≡ true)) ,
   λ l →                                           $⟨ singleton-contractible _ ⟩
-     Contractible (Singleton true)                ↝⟨ respects-surjection surj 0 ⟩
+     Contractible (Singleton true)                ↝⟨ H-level.respects-surjection surj 0 ⟩
      Contractible (∃ λ b → ↑ _ (lower b ≡ true))  ↝⟨ contractible-to-contractible l ⟩
-     Contractible (↑ _ Bool)                      ↝⟨ respects-surjection (_↔_.surjection Bij.↑↔) 0 ⟩
+     Contractible (↑ _ Bool)                      ↝⟨ H-level.respects-surjection (_↔_.surjection Bij.↑↔) 0 ⟩
      Contractible Bool                            ↝⟨ mono₁ 0 ⟩
      Is-proposition Bool                          ↝⟨ ¬-Bool-propositional ⟩□
      ⊥                                            □
