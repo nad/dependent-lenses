@@ -187,6 +187,7 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
   ext₁ = lower-extensionality _ _ ext₂
 
   open Lens.Non-dependent
+    renaming (Iso-lens to Lens; module Iso-lens to Lens)
   open Iso-lens-combinators
 
   -- Labels.
@@ -262,7 +263,7 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
 
   -- The x field is easiest, because it is independent of the others.
 
-  x : {A : Set} → Iso-lens (Record (R₁ A)) A
+  x : {A : Set} → Lens (Record (R₁ A)) A
   x {A} = isomorphism-to-lens′ ext₁
 
     (Record (R₁ A)                                    ↝⟨ Record↔Recʳ ⟩
@@ -274,9 +275,9 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
   -- is set the lemma field needs to be updated as well.
 
   f : {A : Set} →
-      Iso-lens (Record (R₁ A))
-               (Record (∅ , ″f″     ∶ (λ _ → A → A)
-                          , ″lemma″ ∶ (λ r → ∀ x → (r · ″f″) x ≡ x)))
+      Lens (Record (R₁ A))
+           (Record (∅ , ″f″     ∶ (λ _ → A → A)
+                      , ″lemma″ ∶ (λ r → ∀ x → (r · ″f″) x ≡ x)))
   f {A} = isomorphism-to-lens′ ext₁
 
     (Record (R₁ A)                                    ↝⟨ Record↔Recʳ ⟩
@@ -289,8 +290,8 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
   -- between the two lens parameters.
 
   lemma : {A : Set} {f : A → A} →
-          Iso-lens (Record (R₁ A With ″f″ ≔ (λ _ → f)))
-                   (∀ x → f x ≡ x)
+          Lens (Record (R₁ A With ″f″ ≔ (λ _ → f)))
+               (∀ x → f x ≡ x)
   lemma {A} {f} = isomorphism-to-lens′ ext₁
 
     (Record (R₁ A With ″f″ ≔ (λ _ → f))  ↝⟨ Record↔Recʳ ⟩□
@@ -312,7 +313,7 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
   -- First we define a lens for the r₁ field.
 
   r₁ : {A : Set} →
-       Iso-lens (Record (R₂ With ″A″ ≔ λ _ → A)) (Record (R₁ A))
+       Lens (Record (R₂ With ″A″ ≔ λ _ → A)) (Record (R₁ A))
   r₁ {A} = isomorphism-to-lens ext₂
 
     (Record (R₂ With ″A″ ≔ λ _ → A)  ↝⟨ Record↔Recʳ ⟩
@@ -325,13 +326,13 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
   -- fields using composition of lenses.
 
   x₂ : {A : Set} →
-       Iso-lens (Record (R₂ With ″A″ ≔ λ _ → A)) A
+       Lens (Record (R₂ With ″A″ ≔ λ _ → A)) A
   x₂ = x ∘ r₁
 
   f₂ : {A : Set} →
-       Iso-lens (Record (R₂ With ″A″ ≔ λ _ → A))
-                (Record (∅ , ″f″     ∶ (λ _ → A → A)
-                           , ″lemma″ ∶ (λ r → ∀ x → (r · ″f″) x ≡ x)))
+       Lens (Record (R₂ With ″A″ ≔ λ _ → A))
+            (Record (∅ , ″f″     ∶ (λ _ → A → A)
+                       , ″lemma″ ∶ (λ r → ∀ x → (r · ″f″) x ≡ x)))
   f₂ = f ∘ r₁
 
   -- It is less obvious how to construct the corresponding lens for
@@ -339,17 +340,17 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
 
   module Lemma-lens
     (r₁₂ : {A : Set} {r : Record (R₁ A)} →
-           Iso-lens (Record (R₂ With ″A″  ≔ (λ _ → A)
-                                With ″r₁″ ≔ (λ _ → lift r)))
-                    (Record (R₁ A With ″f″  ≔ (λ _ → r · ″f″)))) where
+           Lens (Record (R₂ With ″A″  ≔ (λ _ → A)
+                            With ″r₁″ ≔ (λ _ → lift r)))
+                (Record (R₁ A With ″f″  ≔ (λ _ → r · ″f″)))) where
 
     -- To start with, what should the type of the lemma lens be? The
     -- type used below is an obvious choice.
 
     lemma₂ : {A : Set} {r : Record (R₁ A)} →
-             Iso-lens (Record (R₂ With ″A″  ≔ (λ _ → A)
-                                  With ″r₁″ ≔ (λ _ → lift r)))
-                      (∀ x → (r · ″f″) x ≡ x)
+             Lens (Record (R₂ With ″A″  ≔ (λ _ → A)
+                              With ″r₁″ ≔ (λ _ → lift r)))
+                  (∀ x → (r · ″f″) x ≡ x)
 
     -- If we can construct a suitable lens r₁₂, with the type
     -- signature given above, then we can define the lemma lens using
@@ -362,7 +363,7 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
     not-r₁₂ : ⊥
     not-r₁₂ = no-isomorphism isomorphism
       where
-      open Iso-lens
+      open Lens
 
       isomorphisms = λ A r →
         ⊤                                                  ↝⟨ inverse Bij.↑↔ ⟩

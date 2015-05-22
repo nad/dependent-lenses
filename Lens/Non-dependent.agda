@@ -23,10 +23,11 @@ open import Surjection equality-with-J using (_↠_; module _↠_)
 open import Univalence-axiom equality-with-J
 
 ------------------------------------------------------------------------
--- Lenses
+-- Traditional lenses
 
-record Lens {a b} (A : Set a) (B : Set b) : Set (a ⊔ b) where
-  constructor lens
+record Traditional-lens
+         {a b} (A : Set a) (B : Set b) : Set (a ⊔ b) where
+  constructor traditional-lens
   field
     -- Getter.
     get : A → B
@@ -40,13 +41,13 @@ record Lens {a b} (A : Set a) (B : Set b) : Set (a ⊔ b) where
     set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂
 
 ------------------------------------------------------------------------
--- Lens combinators
+-- Traditional lens combinators
 
-module Lens-combinators where
+module Traditional-lens-combinators where
 
   -- Identity lens.
 
-  id : ∀ {a} {A : Set a} → Lens A A
+  id : ∀ {a} {A : Set a} → Traditional-lens A A
   id = record
     { get     = P.id
     ; set     = flip const
@@ -60,7 +61,8 @@ module Lens-combinators where
   infixr 9 _∘_
 
   _∘_ : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c} →
-        Lens B C → Lens A B → Lens A C
+        Traditional-lens B C → Traditional-lens A B →
+        Traditional-lens A C
   l₁ ∘ l₂ = record
     { get     = get l₁ ⊚ get l₂
     ; set     = λ a c → let b = set l₁ (get l₂ a) c in
@@ -91,7 +93,7 @@ module Lens-combinators where
                   set l₂ a             b₂                                  ∎
     }
     where
-    open Lens
+    open Traditional-lens
 
 ------------------------------------------------------------------------
 -- Alternative formulations of lenses
@@ -488,15 +490,15 @@ Higher-lens↔Iso-lens {a} {b} {A} {B} ext univ =
                                                (lower-extensionality _ (lsuc ℓ) ext) ⟩□
       ((g ⊚ lower) ⁻¹_) ≡ H ⊚ ∣_∣         □
 
--- If the domain A is a set, then Lens A B and Iso-lens A B are
--- logically equivalent (assuming extensionality).
+-- If the domain A is a set, then Traditional-lens A B and
+-- Iso-lens A B are logically equivalent (assuming extensionality).
 
-Lens⇔Iso-lens :
+Traditional-lens⇔Iso-lens :
   ∀ {a b} {A : Set a} {B : Set b} →
   Extensionality (lsuc (a ⊔ b)) (a ⊔ b) →
   Is-set A →
-  Lens A B ⇔ Iso-lens A B
-Lens⇔Iso-lens {b = b} {A} {B} ext A-set = record
+  Traditional-lens A B ⇔ Iso-lens A B
+Traditional-lens⇔Iso-lens {b = b} {A} {B} ext A-set = record
   { to   = to
   ; from = from
   }
@@ -504,7 +506,7 @@ Lens⇔Iso-lens {b = b} {A} {B} ext A-set = record
 
   ext′ = lower-extensionality _ b ext
 
-  from : Iso-lens A B → Lens A B
+  from : Iso-lens A B → Traditional-lens A B
   from l = record
     { get     = get
     ; set     = set
@@ -515,7 +517,7 @@ Lens⇔Iso-lens {b = b} {A} {B} ext A-set = record
     where
     open Iso-lens l
 
-  to : Lens A B → Iso-lens A B
+  to : Traditional-lens A B → Iso-lens A B
   to l = isomorphism-to-lens′
     {R = ∃ λ (f : B → A) → ∀ b b′ → set (f b) b′ ≡ f b′}
     ext
@@ -549,20 +551,20 @@ Lens⇔Iso-lens {b = b} {A} {B} ext A-set = record
            a              ∎
        })
     where
-    open Lens l
+    open Traditional-lens l
 
--- If the domain A is a set, then Lens A B and Iso-lens A B are
--- isomorphic (assuming extensionality, univalence and a resizing
--- function for the propositional truncation).
+-- If the domain A is a set, then Traditional-lens A B and
+-- Iso-lens A B are isomorphic (assuming extensionality, univalence
+-- and a resizing function for the propositional truncation).
 
-Lens↔Iso-lens :
+Traditional-lens↔Iso-lens :
   ∀ {a b} {A : Set a} {B : Set b} →
   Extensionality (lsuc (lsuc (a ⊔ b))) (lsuc (a ⊔ b)) →
   Univalence (lsuc (a ⊔ b)) →
   (∥ B ∥ 1 (a ⊔ b) → ∥ B ∥ 1 (lsuc (a ⊔ b))) →
   Is-set A →
-  Lens A B ↔ Iso-lens A B
-Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
+  Traditional-lens A B ↔ Iso-lens A B
+Traditional-lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
   { surjection = record
     { logical-equivalence = equiv
     ; right-inverse-of    = to∘from
@@ -570,9 +572,9 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
   ; left-inverse-of = from∘to
   }
   where
-  equiv = Lens⇔Iso-lens (lower-extensionality _ _ ext) A-set
+  equiv = Traditional-lens⇔Iso-lens (lower-extensionality _ _ ext) A-set
 
-  open Lens
+  open Traditional-lens
   open _⇔_ equiv
 
   from∘to : ∀ l → from (to l) ≡ l
@@ -596,8 +598,8 @@ Lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
     lens-cong :
       ∀ {gs₁ sg₁ ss₁ gs₂ sg₂ ss₂} →
       gs₁ ≡ gs₂ → sg₁ ≡ sg₂ → ss₁ ≡ ss₂ →
-      lens (get l) (set l) gs₁ sg₁ ss₁ ≡
-      lens (get l) (set l) gs₂ sg₂ ss₂
+      traditional-lens (get l) (set l) gs₁ sg₁ ss₁ ≡
+      traditional-lens (get l) (set l) gs₂ sg₂ ss₂
     lens-cong refl refl refl = refl
 
     B-set : A → Is-set B
