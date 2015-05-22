@@ -25,36 +25,55 @@ open import Univalence-axiom equality-with-J
 ------------------------------------------------------------------------
 -- Traditional lenses
 
-record Traditional-lens
-         {a b} (A : Set a) (B : Set b) : Set (a ⊔ b) where
-  constructor traditional-lens
-  field
-    -- Getter.
-    get : A → B
+-- Lenses.
 
-    -- Setter.
-    set : A → B → A
+Traditional-lens : ∀ {a b} → Set a → Set b → Set (a ⊔ b)
+Traditional-lens A B =
+  ∃ λ (get : A → B) →
+  ∃ λ (set : A → B → A) →
+  (∀ a b → get (set a b) ≡ b) ×
+  (∀ a → set a (get a) ≡ a) ×
+  (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂)
 
-    -- Lens laws.
-    get-set : ∀ a b → get (set a b) ≡ b
-    set-get : ∀ a → set a (get a) ≡ a
-    set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂
+-- Projections.
 
-------------------------------------------------------------------------
--- Traditional lens combinators
+module Traditional-lens {a b} {A : Set a} {B : Set b}
+                        (l : Traditional-lens A B) where
+
+  -- Getter.
+
+  get : A → B
+  get = proj₁ l
+
+  -- Setter.
+
+  set : A → B → A
+  set = proj₁ (proj₂ l)
+
+  -- Lens laws.
+
+  get-set : ∀ a b → get (set a b) ≡ b
+  get-set = proj₁ (proj₂ (proj₂ l))
+
+  set-get : ∀ a → set a (get a) ≡ a
+  set-get = proj₁ (proj₂ (proj₂ (proj₂ l)))
+
+  set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂
+  set-set = proj₂ (proj₂ (proj₂ (proj₂ l)))
+
+-- Combinators.
 
 module Traditional-lens-combinators where
 
   -- Identity lens.
 
   id : ∀ {a} {A : Set a} → Traditional-lens A A
-  id = record
-    { get     = P.id
-    ; set     = flip const
-    ; get-set = λ _ _   → refl
-    ; set-get = λ _     → refl
-    ; set-set = λ _ _ _ → refl
-    }
+  id =
+    P.id ,
+    flip const ,
+    (λ _ _   → refl) ,
+    (λ _     → refl) ,
+    (λ _ _ _ → refl)
 
   -- Composition of lenses.
 
@@ -63,35 +82,34 @@ module Traditional-lens-combinators where
   _∘_ : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c} →
         Traditional-lens B C → Traditional-lens A B →
         Traditional-lens A C
-  l₁ ∘ l₂ = record
-    { get     = get l₁ ⊚ get l₂
-    ; set     = λ a c → let b = set l₁ (get l₂ a) c in
-                        set l₂ a b
-    ; get-set = λ a c → let b = set l₁ (get l₂ a) c in
+  l₁ ∘ l₂ =
+    get l₁ ⊚ get l₂ ,
+    (λ a c → let b = set l₁ (get l₂ a) c in
+             set l₂ a b) ,
+    (λ a c → let b = set l₁ (get l₂ a) c in
 
-                  get l₁ (get l₂ (set l₂ a b))  ≡⟨ cong (get l₁) $ get-set l₂ a b ⟩
-                  get l₁ b                      ≡⟨⟩
-                  get l₁ (set l₁ (get l₂ a) c)  ≡⟨ get-set l₁ (get l₂ a) c ⟩∎
-                  c                             ∎
-    ; set-get = λ a →
-                  set l₂ a (set l₁ (get l₂ a) (get l₁ (get l₂ a)))  ≡⟨ cong (set l₂ a) $ set-get l₁ (get l₂ a) ⟩
-                  set l₂ a (get l₂ a)                               ≡⟨ set-get l₂ a ⟩∎
-                  a                                                 ∎
-    ; set-set = λ a c₁ c₂ →
-                  let b₁ = set l₁ (get l₂ a) c₁
-                      b₂ = set l₁ (get l₂ a) c₂
+       get l₁ (get l₂ (set l₂ a b))  ≡⟨ cong (get l₁) $ get-set l₂ a b ⟩
+       get l₁ b                      ≡⟨⟩
+       get l₁ (set l₁ (get l₂ a) c)  ≡⟨ get-set l₁ (get l₂ a) c ⟩∎
+       c                             ∎) ,
+    (λ a →
+       set l₂ a (set l₁ (get l₂ a) (get l₁ (get l₂ a)))  ≡⟨ cong (set l₂ a) $ set-get l₁ (get l₂ a) ⟩
+       set l₂ a (get l₂ a)                               ≡⟨ set-get l₂ a ⟩∎
+       a                                                 ∎) ,
+    (λ a c₁ c₂ →
+       let b₁ = set l₁ (get l₂ a) c₁
+           b₂ = set l₁ (get l₂ a) c₂
 
-                      lemma =
-                        set l₁ (get l₂ (set l₂ a b₁)) c₂  ≡⟨ cong (λ x → set l₁ x c₂) $ get-set l₂ a b₁ ⟩
-                        set l₁ b₁                     c₂  ≡⟨⟩
-                        set l₁ (set l₁ (get l₂ a) c₁) c₂  ≡⟨ set-set l₁ (get l₂ a) c₁ c₂ ⟩∎
-                        set l₁ (get l₂ a)             c₂  ∎
+           lemma =
+             set l₁ (get l₂ (set l₂ a b₁)) c₂  ≡⟨ cong (λ x → set l₁ x c₂) $ get-set l₂ a b₁ ⟩
+             set l₁ b₁                     c₂  ≡⟨⟩
+             set l₁ (set l₁ (get l₂ a) c₁) c₂  ≡⟨ set-set l₁ (get l₂ a) c₁ c₂ ⟩∎
+             set l₁ (get l₂ a)             c₂  ∎
 
-                  in
-                  set l₂ (set l₂ a b₁) (set l₁ (get l₂ (set l₂ a b₁)) c₂)  ≡⟨ cong (set l₂ (set l₂ a b₁)) lemma ⟩
-                  set l₂ (set l₂ a b₁) b₂                                  ≡⟨ set-set l₂ a b₁ b₂ ⟩∎
-                  set l₂ a             b₂                                  ∎
-    }
+       in
+       set l₂ (set l₂ a b₁) (set l₁ (get l₂ (set l₂ a b₁)) c₂)  ≡⟨ cong (set l₂ (set l₂ a b₁)) lemma ⟩
+       set l₂ (set l₂ a b₁) b₂                                  ≡⟨ set-set l₂ a b₁ b₂ ⟩∎
+       set l₂ a             b₂                                  ∎)
     where
     open Traditional-lens
 
@@ -189,6 +207,11 @@ module Iso-lens {a b} {A : Set a} {B : Set b} (l : Iso-lens A B) where
     _≃_.from equiv (proj₁ (_≃_.to equiv (_≃_.from equiv (r , b₁))) , b₂)  ≡⟨ cong (λ x → _≃_.from equiv (proj₁ x , b₂))
                                                                                   (_≃_.right-inverse-of equiv _) ⟩∎
     _≃_.from equiv (r , b₂)                                               ∎
+
+  -- Traditional lens.
+
+  traditional-lens : Traditional-lens A B
+  traditional-lens = get , set , get-set , set-get , set-set
 
 -- Isomorphisms can be converted into lenses (assuming
 -- extensionality).
@@ -507,15 +530,7 @@ Traditional-lens⇔Iso-lens {b = b} {A} {B} ext A-set = record
   ext′ = lower-extensionality _ b ext
 
   from : Iso-lens A B → Traditional-lens A B
-  from l = record
-    { get     = get
-    ; set     = set
-    ; get-set = get-set
-    ; set-get = set-get
-    ; set-set = set-set
-    }
-    where
-    open Iso-lens l
+  from = Iso-lens.traditional-lens
 
   to : Traditional-lens A B → Iso-lens A B
   to l = isomorphism-to-lens′
@@ -578,30 +593,26 @@ Traditional-lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
   open _⇔_ equiv
 
   from∘to : ∀ l → from (to l) ≡ l
-  from∘to l = lens-cong
-    (_⇔_.to propositional⇔irrelevant
-       (Π-closure (lower-extensionality _ _ ext) 1 λ a →
-        Π-closure (lower-extensionality _ _ ext) 1 λ _ →
-        B-set a _ _)
-       _ _)
-    (_⇔_.to propositional⇔irrelevant
-       (Π-closure (lower-extensionality _ _ ext)  1 λ _ →
-        A-set _ _)
-       _ _)
-    (_⇔_.to propositional⇔irrelevant
-       (Π-closure (lower-extensionality _ _ ext) 1 λ _ →
-        Π-closure (lower-extensionality _ _ ext) 1 λ _ →
-        Π-closure (lower-extensionality _ _ ext) 1 λ _ →
-        A-set _ _)
-       _ _)
+  from∘to l =
+    cong (λ proofs → get l , set l , proofs)
+      (Σ-≡,≡→≡
+         (_⇔_.to propositional⇔irrelevant
+            (Π-closure (lower-extensionality _ _ ext) 1 λ a →
+             Π-closure (lower-extensionality _ _ ext) 1 λ _ →
+             B-set a _ _)
+            _ _)
+         (Σ-≡,≡→≡
+           (_⇔_.to propositional⇔irrelevant
+              (Π-closure (lower-extensionality _ _ ext)  1 λ _ →
+               A-set _ _)
+              _ _)
+           (_⇔_.to propositional⇔irrelevant
+              (Π-closure (lower-extensionality _ _ ext) 1 λ _ →
+               Π-closure (lower-extensionality _ _ ext) 1 λ _ →
+               Π-closure (lower-extensionality _ _ ext) 1 λ _ →
+               A-set _ _)
+              _ _)))
     where
-    lens-cong :
-      ∀ {gs₁ sg₁ ss₁ gs₂ sg₂ ss₂} →
-      gs₁ ≡ gs₂ → sg₁ ≡ sg₂ → ss₁ ≡ ss₂ →
-      traditional-lens (get l) (set l) gs₁ sg₁ ss₁ ≡
-      traditional-lens (get l) (set l) gs₂ sg₂ ss₂
-    lens-cong refl refl refl = refl
-
     B-set : A → Is-set B
     B-set a =
       proj₂-closure (proj₁ $ _≃_.to eq a) 2 $
