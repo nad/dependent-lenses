@@ -400,6 +400,220 @@ equality-characterisation₄ {l₁ = l₁} {l₂} ext univ =
   open Iso-lens
 
 ------------------------------------------------------------------------
+-- Some lens isomorphisms
+
+-- A generalised variant of Iso-lens preserves bijections (assuming
+-- extensionality).
+
+Iso-lens′-cong :
+  ∀ {r t}
+    {a₁ b₁} {A₁ : Set a₁} {B₁ : Set b₁}
+    {a₂ b₂} {A₂ : Set a₂} {B₂ : Set b₂} →
+  Extensionality (a₁ ⊔ a₂ ⊔ b₁ ⊔ b₂ ⊔ r ⊔ lsuc t)
+                 (a₁ ⊔ a₂ ⊔ b₁ ⊔ b₂ ⊔ r ⊔ lsuc t) →
+  A₁ ↔ A₂ → B₁ ↔ B₂ →
+  (∃ λ (R : Set r) → A₁ ≃ (R × B₁) × (R → ∥ B₁ ∥ 1 t)) ↔
+  (∃ λ (R : Set r) → A₂ ≃ (R × B₂) × (R → ∥ B₂ ∥ 1 t))
+Iso-lens′-cong {r} {t} {a₁} {b₁} {A₁} {B₁} {a₂} {b₂} {A₂} {B₂}
+               ext A₁↔A₂ B₁↔B₂ =
+  ∃-cong λ _ →
+  Eq.≃-preserves-bijections (lower-extensionality (lsuc t) (lsuc t) ext)
+                            A₁↔A₂ (F.id ×-cong B₁↔B₂)
+    ×-cong
+  →-cong (lower-extensionality (a₁ ⊔ a₂ ⊔ b₁ ⊔ b₂ ⊔ lsuc t)
+                               (a₁ ⊔ a₂ ⊔ r) ext)
+         F.id
+         (∥∥-cong (lower-extensionality (a₁ ⊔ a₂ ⊔ r ⊔ lsuc t)
+                                        (a₁ ⊔ a₂ ⊔ r ⊔ lsuc t) ext)
+                  B₁↔B₂)
+
+-- Iso-lens preserves level-preserving bijections (assuming
+-- extensionality).
+
+Iso-lens-cong :
+  ∀ {a b} {A₁ A₂ : Set a} {B₁ B₂ : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  A₁ ↔ A₂ → B₁ ↔ B₂ →
+  Iso-lens A₁ B₁ ↔ Iso-lens A₂ B₂
+Iso-lens-cong = Iso-lens′-cong
+
+-- If B is contractible, then Iso-lens A B is isomorphic to ⊤
+-- (assuming extensionality and univalence).
+
+lens-to-contractible↔⊤ :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  Contractible B →
+  Iso-lens A B ↔ ⊤
+lens-to-contractible↔⊤ {A = A} {B} ext univ cB =
+  (∃ λ R → A ≃ (R × B) × (R → ∥ B ∥ 1 _))  ↝⟨ ∃-cong (λ _ →
+                                                Eq.≃-preserves-bijections ext F.id (drop-⊤-right λ _ → B↔⊤)
+                                                  ×-cong
+                                                →-cong ext F.id (∥∥-cong (lower-extensionality lzero _ ext) B↔⊤)) ⟩
+  (∃ λ R → A ≃ R × (R → ∥ ⊤ ∥ 1 _))        ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
+                                                 →-cong ext F.id (∥∥↔ _ (lower-extensionality lzero _ ext)
+                                                                      (mono₁ 0 ⊤-contractible))) ⟩
+  (∃ λ R → A ≃ R × (R → ⊤))                ↝⟨ ∃-cong (λ _ → drop-⊤-right λ _ → →-right-zero) ⟩
+  (∃ λ R → A ≃ R)                          ↝⟨ other-singleton-with-≃-↔-⊤ ext univ ⟩□
+  ⊤                                        □
+  where
+  B↔⊤ = inverse $ _⇔_.to contractible⇔⊤↔ cB
+
+-- Traditional-lens A ⊤ is isomorphic to (a : A) → a ≡ a (assuming
+-- extensionality).
+
+lens-to-⊤↔∀≡ :
+  ∀ {a} {A : Set a} →
+  Extensionality a a →
+  Traditional-lens A ⊤ ↔ ((a : A) → a ≡ a)
+lens-to-⊤↔∀≡ {A = A} ext =
+  ((A → ⊤) ×
+   ∃ λ (set : A → ⊤ → A) →
+     (A → ⊤ → tt ≡ tt) ×
+     (∀ a → set a tt ≡ a) ×
+     (∀ a → ⊤ → ⊤ → set (set a tt) tt ≡ set a tt))  ↝⟨ drop-⊤-left-× (λ _ → →-right-zero) ⟩
+
+  (∃ λ (set : A → ⊤ → A) →
+     (A → ⊤ → tt ≡ tt) ×
+     (∀ a → set a tt ≡ a) ×
+     (∀ a → ⊤ → ⊤ → set (set a tt) tt ≡ set a tt))  ↔⟨ inverse $
+                                                       Σ-cong (→-cong ext F.id (inverse Π-left-identity)) (λ set →
+                                                         Eq.∀-preserves (lower-extensionality lzero _ ext) (λ _ →
+                                                         Eq.∀-preserves (lower-extensionality _     _ ext) (λ _ →
+                                                             _↔_.to (contractible↔⊤≃ (lower-extensionality _ _ ext))
+                                                               (mono₁ 0 ⊤-contractible _ _)))
+                                                           ×-cong
+                                                         (inverse $ Eq.extensionality-isomorphism ext)
+                                                           ×-cong
+                                                         Eq.∀-preserves ext (λ _ → Eq.↔⇒≃ $ inverse Π-left-identity)) ⟩
+  (∃ λ (set : A → A) →
+     (A → ⊤ → ⊤) ×
+     set ≡ P.id ×
+     (∀ a → ⊤ → set (set a) ≡ set a))               ↔⟨ (∃-cong λ _ →
+                                                          Eq.∀-preserves (lower-extensionality lzero _ ext) (λ _ →
+                                                              Eq.↔⇒≃ Π-left-identity)
+                                                            ×-cong
+                                                          F.id
+                                                            ×-cong
+                                                          Eq.∀-preserves ext (λ _ → Eq.↔⇒≃ Π-left-identity)) ⟩
+  (∃ λ (set : A → A) →
+     (A → ⊤) ×
+     set ≡ P.id ×
+     (∀ a → set (set a) ≡ set a))                   ↝⟨ (∃-cong λ _ → drop-⊤-left-× (λ _ → →-right-zero)) ⟩
+
+  (∃ λ (set : A → A) →
+     set ≡ P.id ×
+     (∀ a → set (set a) ≡ set a))                   ↔⟨ (∃-cong λ set → ∃-cong λ set≡id →
+                                                        Eq.∀-preserves ext λ a → ≡⇒↝ _ $
+                                                        cong₂ _≡_
+                                                          (set (set a)  ≡⟨ cong (_$ set a) set≡id ⟩
+                                                           set a        ≡⟨ cong (_$ a) set≡id ⟩∎
+                                                           a            ∎)
+                                                          (set a  ≡⟨ cong (_$ a) set≡id ⟩∎
+                                                           a      ∎)) ⟩
+
+  (∃ λ (set : A → A) →
+     set ≡ P.id ×
+     (∀ a → a ≡ a))                                 ↝⟨ Σ-assoc ⟩
+
+  (∃ λ (set : A → A) → set ≡ P.id) × (∀ a → a ≡ a)  ↝⟨ drop-⊤-left-× (λ _ → inverse $ _⇔_.to contractible⇔⊤↔
+                                                                                        (singleton-contractible _)) ⟩□
+  (∀ a → a ≡ a)                                     □
+
+-- Iso-lens A ⊥ is isomorphic to ¬ A (assuming extensionality and
+-- univalence).
+
+lens-to-⊥↔¬ :
+  ∀ {a b} {A : Set a} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  Iso-lens A (⊥ {ℓ = b}) ↔ ¬ A
+lens-to-⊥↔¬ {a} {A = A} ext univ =
+  (∃ λ R → A ≃ (R × ⊥) × (R → ∥ ⊥ ∥ 1 _))  ↝⟨ ∃-cong (λ _ →
+                                                    Eq.≃-preserves-bijections ext F.id ×-right-zero
+                                                      ×-cong
+                                                    →-cong ext F.id (∥∥↔ a (lower-extensionality lzero _ ext)
+                                                                         ⊥-propositional)) ⟩
+  (∃ λ R → A ≃ ⊥₀ × (R → ⊥))               ↝⟨ ∃-comm ⟩
+  A ≃ ⊥₀ × (∃ λ R → R → ⊥)                 ↝⟨ _≃_.bijection (≃⊥≃¬ (lower-extensionality _ _ ext))
+                                                ×-cong
+                                              ∃-cong (λ _ → →-cong (lower-extensionality lzero _ ext) F.id (⊥↔uninhabited ⊥-elim)) ⟩
+  ¬ A × (∃ λ R → ¬ R)                      ↝⟨ drop-⊤-right (λ _ → ∃¬↔⊤ ext univ) ⟩□
+  ¬ A                                      □
+
+-- If A is contractible, then Iso-lens A B is isomorphic to
+-- Contractible B (assuming extensionality and univalence).
+
+lens-from-contractible↔codomain-contractible :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  Contractible A →
+  Iso-lens A B ↔ Contractible B
+lens-from-contractible↔codomain-contractible {A = A} {B} ext univ cA =
+  (∃ λ R → A ≃ (R × B) × (R → ∥ B ∥ 1 _))                        ↝⟨ inverse $
+                                                                    ∃-cong (λ _ →
+                                                                      Eq.≃-preserves-bijections ext (_⇔_.to contractible⇔⊤↔ cA) F.id
+                                                                        ×-cong
+                                                                      F.id) ⟩
+  (∃ λ R → ⊤ ≃ (R × B) × (R → ∥ B ∥ 1 _))                        ↝⟨ ∃-cong (λ _ → inverse (contractible↔⊤≃ ext) ×-cong F.id) ⟩
+  (∃ λ R → Contractible (R × B) × (R → ∥ B ∥ 1 _))               ↔⟨ ∃-cong (λ _ → Contractible-commutes-with-× ext ×-cong F.id) ⟩
+  (∃ λ R → (Contractible R × Contractible B) × (R → ∥ B ∥ 1 _))  ↝⟨ ∃-cong (λ _ → inverse ×-assoc) ⟩
+  (∃ λ R → Contractible R × Contractible B × (R → ∥ B ∥ 1 _))    ↝⟨ inverse $
+                                                                    ∃-cong (λ _ → ∃-cong λ cR →
+                                                                      F.id
+                                                                        ×-cong
+                                                                      →-cong ext (_⇔_.to contractible⇔⊤↔ cR) F.id) ⟩
+  (∃ λ R → Contractible R × Contractible B × (⊤ → ∥ B ∥ 1 _))    ↝⟨ ∃-cong (λ _ → F.id ×-cong F.id ×-cong Π-left-identity) ⟩
+  (∃ λ R → Contractible R × Contractible B × ∥ B ∥ 1 _)          ↝⟨ ∃-cong (λ _ → ×-comm) ⟩
+  (∃ λ R → (Contractible B × ∥ B ∥ 1 _) × Contractible R)        ↝⟨ ∃-comm ⟩
+  (Contractible B × ∥ B ∥ 1 _) × (∃ λ R → Contractible R)        ↝⟨ drop-⊤-right (λ _ → ∃Contractible↔⊤ ext univ) ⟩
+  Contractible B × ∥ B ∥ 1 _                                     ↝⟨ drop-⊤-right (λ cB →
+                                                                      inhabited⇒∥∥↔⊤ (lower-extensionality lzero _ ext) ∣ proj₁ cB ∣) ⟩□
+  Contractible B                                                 □
+
+-- Iso-lens ⊥ B is isomorphic to the unit type (assuming
+-- extensionality and univalence).
+
+lens-from-⊥↔⊤ :
+  ∀ {a b} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  Iso-lens (⊥ {ℓ = a}) B ↔ ⊤
+lens-from-⊥↔⊤ {B = B} ext univ =
+  inverse $ _⇔_.to contractible⇔⊤↔ $
+    isomorphism-to-lens (lower-extensionality lzero _ ext)
+      (⊥      ↝⟨ inverse ×-left-zero ⟩□
+       ⊥ × B  □) ,
+    λ l → _↔_.from (equality-characterisation₂ ext univ)
+            ( (⊥ × ∥ B ∥ 1 _  ↔⟨ ×-left-zero ⟩
+               ⊥₀             ↔⟨ lemma l ⟩□
+               R l            □)
+            , λ x → ⊥-elim x
+            )
+  where
+  open Iso-lens
+
+  lemma : (l : Iso-lens ⊥ B) → ⊥₀ ↔ R l
+  lemma l = record
+    { surjection = record
+      { logical-equivalence = record
+        { to   = ⊥-elim
+        ; from = whatever
+        }
+      ; right-inverse-of = whatever
+      }
+    ; left-inverse-of = λ x → ⊥-elim x
+    }
+    where
+    whatever : ∀ {ℓ} {Whatever : R l → Set ℓ} → (r : R l) → Whatever r
+    whatever r = ⊥-elim $
+      rec ⊥-propositional
+          (λ b → ⊥-elim (_≃_.from (equiv l) (r , b)))
+          (inhabited l r)
+
+------------------------------------------------------------------------
 -- Isomorphisms between different kinds of lenses
 
 -- Higher-lens A B is isomorphic to Iso-lens A B (assuming
