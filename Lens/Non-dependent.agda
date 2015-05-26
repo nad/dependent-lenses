@@ -657,12 +657,8 @@ Higher-lens↔Iso-lens {a} {b} {A} {B} ext univ =
   (∃ λ (H : Pow lzero (∥ B ∥ 1 ℓ)) →
    (∃ λ (P : Pow (lsuc ℓ) B) → P ≡ H ⊚ ∣_∣) ×
    A ≃ ∃ (H ⊚ ∣_∣))                                                ↝⟨ (∃-cong λ _ →
-                                                                       inverse (_⇔_.to contractible⇔⊤↔ (singleton-contractible _))
-                                                                         ×-cong
-                                                                       F.id) ⟩
-  (∃ λ (H : Pow lzero (∥ B ∥ 1 ℓ)) →
-   ⊤ ×
-   A ≃ ∃ (H ⊚ ∣_∣))                                                ↝⟨ (∃-cong λ _ → ×-left-identity) ⟩
+                                                                       drop-⊤-left-× λ _ →
+                                                                       inverse (_⇔_.to contractible⇔⊤↔ (singleton-contractible _))) ⟩
 
   (∃ λ (H : Pow lzero (∥ B ∥ 1 ℓ)) → A ≃ ∃ (H ⊚ ∣_∣))              ↔⟨ inverse $
                                                                       Σ-cong (inverse $ Pow↔Fam lzero ext univ) (λ _ →
@@ -673,11 +669,10 @@ Higher-lens↔Iso-lens {a} {b} {A} {B} ext univ =
   (∃ λ (R : Set (lsuc ℓ)) →
    ∃ λ (f : R → ∥ B ∥ 1 ℓ) → A ≃ ∃ ((f ⁻¹_) ⊚ ∣_∣))                ↔⟨ (∃-cong λ R → ∃-cong λ f →
                                                                        Eq.≃-preserves (lower-extensionality (lsuc ℓ) _ ext) F.id
-                                (∃ ((f ⁻¹_) ⊚ ∣_∣)                       ↔⟨ (∃-cong λ b → ∃-cong λ r →
+                                (∃ ((f ⁻¹_) ⊚ ∣_∣)                       ↔⟨ (∃-cong λ b → drop-⊤-right λ r →
                                                                                inverse $ _⇔_.to contractible⇔⊤↔ $
                                                                                  truncation-has-correct-h-level 1
                                                                                    (lower-extensionality (lsuc ℓ) _ ext) _ _) ⟩
-                                 B × R × ⊤                               ↔⟨ (∃-cong λ _ → ×-right-identity) ⟩
                                  B × R                                   ↔⟨ ×-comm ⟩□
                                  R × B                                   □)) ⟩
 
@@ -939,13 +934,9 @@ Traditional-lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
                                                                         Eq.extensionality-isomorphism (lower-extensionality _ _ ext)) ⟩
       (∥ B ∥ 1 ℓ ×
        (∃ λ (f : B → R) → Constant f) ×
-       (∃ λ (g : B → B) → F.id ≡ g))                              ↔⟨ (∃-cong λ _ → ∃-cong λ _ →
+       (∃ λ (g : B → B) → F.id ≡ g))                              ↔⟨ (∃-cong λ _ → drop-⊤-right λ _ →
                                                                         inverse $ _⇔_.to contractible⇔⊤↔ $
                                                                         other-singleton-contractible _) ⟩
-      (∥ B ∥ 1 ℓ ×
-       (∃ λ (f : B → R) → Constant f) ×
-       ⊤)                                                         ↔⟨ (∃-cong λ _ → ×-right-identity) ⟩
-
       (∥ B ∥ 1 ℓ × ∃ λ (f : B → R) → Constant f)                  ↝⟨ (∃-cong λ ∥b∥ → constant-function≃∥inhabited∥⇒inhabited
                                                                                        lzero ext (R-set (resize ∥b∥))) ⟩
       (∥ B ∥ 1 ℓ × (∥ B ∥ 1 (lsuc ℓ) → R))                        ↔⟨ lemma′ ⟩
@@ -1034,8 +1025,7 @@ module Iso-lens-combinators where
        Iso-lens A A
   id {A = A} ext =
     isomorphism-to-lens ext
-      (A          ↝⟨ inverse ×-left-identity ⟩
-       ⊤ × A      ↝⟨ inverse Bij.↑↔ ×-cong F.id ⟩□
+      (A          ↝⟨ inverse $ drop-⊤-left-× (λ _ → Bij.↑↔) ⟩□
        ↑ _ ⊤ × A  □)
 
   -- Composition of lenses.
@@ -1096,8 +1086,7 @@ module Iso-lens-combinators where
     ⟨ a , lzero ⟩ id ext′ ∘ l ≡ l
   left-identity a {b} {B = B} ext univ l =
     _↔_.from (equality-characterisation₂ ext univ)
-      ( (R × ↑ _ ⊤ × ∥ B ∥ 1 b  ↔⟨ F.id ×-cong Bij.↑↔ ×-cong F.id ⟩
-         R × ⊤ × ∥ B ∥ 1 b      ↔⟨ F.id ×-cong ×-left-identity ⟩
+      ( (R × ↑ _ ⊤ × ∥ B ∥ 1 b  ↔⟨ F.id ×-cong drop-⊤-left-× (λ _ → Bij.↑↔) ⟩
          R × ∥ B ∥ 1 b          ↔⟨ lemma ⟩□
          R                      □)
       , λ _ → refl
@@ -1131,8 +1120,7 @@ module Iso-lens-combinators where
     ⟨ lzero , a ⟩ l ∘ id ext′ ≡ l
   right-identity a {b} {A} ext univ l =
     _↔_.from (equality-characterisation₂ ext univ)
-      ( ((↑ _ ⊤ × ∥ A ∥ 1 (a ⊔ b)) × R  ↔⟨ (Bij.↑↔ ×-cong F.id) ×-cong F.id ⟩
-         (⊤ × ∥ A ∥ 1 (a ⊔ b)) × R      ↔⟨ ×-left-identity ×-cong F.id ⟩
+      ( ((↑ _ ⊤ × ∥ A ∥ 1 (a ⊔ b)) × R  ↔⟨ drop-⊤-left-× (λ _ → Bij.↑↔) ×-cong F.id ⟩
          ∥ A ∥ 1 (a ⊔ b) × R            ↔⟨ lemma ⟩□
          R                              □)
       , λ _ → refl
