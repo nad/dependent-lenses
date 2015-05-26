@@ -614,7 +614,7 @@ lens-from-⊥↔⊤ {B = B} ext univ =
           (inhabited l r)
 
 ------------------------------------------------------------------------
--- Isomorphisms between different kinds of lenses
+-- Results relating different kinds of lenses
 
 -- Higher-lens A B is isomorphic to Iso-lens A B (assuming
 -- extensionality and univalence).
@@ -722,27 +722,101 @@ Higher-lens↔Iso-lens {a} {b} {A} {B} ext univ =
                                                (lower-extensionality _ (lsuc ℓ) ext) ⟩□
       ((g ⊚ lower) ⁻¹_) ≡ H ⊚ ∣_∣         □
 
--- If the domain A is a set, then Traditional-lens A B and
--- Iso-lens A B are logically equivalent (assuming extensionality).
+-- There is a split surjection from "Iso-lens A B without the
+-- inhabitance proof" to Iso-lens A B (assuming extensionality and
+-- univalence).
 
-Traditional-lens⇔Iso-lens :
+Iso-lens-without-inhabitance↠Iso-lens :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  (∃ λ (R : Set (lsuc (a ⊔ b))) → A ≃ (R × B)) ↠ Iso-lens A B
+Iso-lens-without-inhabitance↠Iso-lens {A = A} {B} ext univ = record
+  { logical-equivalence = record
+    { to   = λ { (R , A≃R×B) → isomorphism-to-lens
+                                 ext′ (_≃_.bijection A≃R×B) }
+    ; from = λ { (R , A≃R×B , _) → R , A≃R×B }
+    }
+  ; right-inverse-of = λ { (R , A≃R×B , inh) →
+      _↔_.from (equality-characterisation₂ ext univ)
+        ( (R × ∥ B ∥ 1 _  ↔⟨ drop-⊤-right (λ r → inhabited⇒∥∥↔⊤ ext′ (inh r)) ⟩□
+           R              □)
+        , λ _ → refl
+        ) }
+  }
+  where
+  ext′ = lower-extensionality lzero _ ext
+
+-- However, there is in general no split surjection in the other
+-- direction (assuming extensionality and univalence).
+
+¬Iso-lens↠Iso-lens-without-inhabitance :
+  ∀ {a b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  ¬ ({A : Set a} {B : Set b} →
+     Iso-lens A B ↠ (∃ λ (R : Set (lsuc (a ⊔ b))) → A ≃ (R × B)))
+¬Iso-lens↠Iso-lens-without-inhabitance ext univ surj =
+  ⊥-elim (subst F.id ⊤≡⊥ _)
+  where
+  ⊤↠Set =
+    ⊤                      ↔⟨ inverse $ lens-from-⊥↔⊤ ext univ ⟩
+    Iso-lens ⊥ ⊥           ↝⟨ surj ⟩
+    (∃ λ R → ⊥ ≃ (R × ⊥))  ↔⟨ (∃-cong λ _ → Eq.≃-preserves-bijections ext F.id ×-right-zero) ⟩
+    (∃ λ R → ⊥ ≃ ⊥₀)       ↔⟨ (∃-cong λ _ → ≃⊥≃¬ (lower-extensionality _ _ ext)) ⟩
+    (∃ λ R → ¬ ⊥)          ↔⟨ drop-⊤-right (λ _ → ¬⊥↔⊤ (lower-extensionality _ _ ext)) ⟩□
+    Set _                  □
+
+  ⊤≡⊥ : ↑ _ ⊤ ≡ ⊥
+  ⊤≡⊥ =
+    ↑ _ ⊤              ≡⟨ sym $ right-inverse-of _ ⟩
+    to (from (↑ _ ⊤))  ≡⟨⟩
+    to (from ⊥)        ≡⟨ right-inverse-of _ ⟩∎
+    ⊥                  ∎
+    where
+    open _↠_ ⊤↠Set
+
+-- In general there is no split surjection from Iso-lens A B to
+-- Traditional-lens A B (assuming extensionality and univalence).
+
+¬Iso-lens↠Traditional-lens :
+  Extensionality (# 2) (# 2) →
+  Univalence (# 2) →
+  Univalence (# 0) →
+  ∃ λ (A : Set₁) →
+    ¬ (Iso-lens A ⊤ ↠ Traditional-lens A ⊤)
+¬Iso-lens↠Traditional-lens ext univ₂ univ₀ =
+  let A = _ in
+
+  A ,
+  (λ surj →                               $⟨ _⇔_.from contractible⇔⊤↔ (inverse $ lens-to-contractible↔⊤
+                                                                                   ext univ₂ ⊤-contractible) ⟩
+     Contractible (Iso-lens A ⊤)          ↝⟨ H-level.respects-surjection surj 0 ⟩
+     Contractible (Traditional-lens A ⊤)  ↝⟨ H-level.respects-surjection
+                                               (_↔_.surjection $ lens-to-⊤↔∀≡ (lower-extensionality _ _ ext))
+                                               0 ⟩
+     Contractible ((a : A) → a ≡ a)       ↝⟨ mono₁ 0 ⟩
+     Is-proposition ((a : A) → a ≡ a)     ↝⟨ proj₂ $ ¬-type-of-refl-propositional (lower-extensionality _ _ ext) univ₀ ⟩□
+     ⊥                                    □)
+
+-- If the domain A is a set, then there is a split surjection from
+-- Iso-lens A B to Traditional-lens A B (assuming extensionality).
+
+Iso-lens↠Traditional-lens :
   ∀ {a b} {A : Set a} {B : Set b} →
   Extensionality (lsuc (a ⊔ b)) (a ⊔ b) →
   Is-set A →
-  Traditional-lens A B ⇔ Iso-lens A B
-Traditional-lens⇔Iso-lens {b = b} {A} {B} ext A-set = record
-  { to   = to
-  ; from = from
+  Iso-lens A B ↠ Traditional-lens A B
+Iso-lens↠Traditional-lens {ℓa} {ℓb} {A} {B} ext A-set = record
+  { logical-equivalence = record
+    { to   = Iso-lens.traditional-lens
+    ; from = from
+    }
+  ; right-inverse-of = to∘from
   }
   where
-
-  ext′ = lower-extensionality _ b ext
-
-  from : Iso-lens A B → Traditional-lens A B
-  from = Iso-lens.traditional-lens
-
-  to : Traditional-lens A B → Iso-lens A B
-  to l = isomorphism-to-lens′
+  from : Traditional-lens A B → Iso-lens A B
+  from l = isomorphism-to-lens′
     {R = ∃ λ (f : B → A) → ∀ b b′ → set (f b) b′ ≡ f b′}
     ext
     (record
@@ -758,7 +832,7 @@ Traditional-lens⇔Iso-lens {b = b} {A} {B} ext A-set = record
               irr =
                 _⇔_.to propositional⇔irrelevant
                   (Π-closure (lower-extensionality _ lzero ext) 1 λ _ →
-                   Π-closure ext′                               1 λ _ →
+                   Π-closure (lower-extensionality _ ℓb    ext) 1 λ _ →
                    A-set _ _)
                   _ _
 
@@ -767,7 +841,7 @@ Traditional-lens⇔Iso-lens {b = b} {A} {B} ext A-set = record
                 get (set (f b) b)  ≡⟨ get-set (f b) b ⟩∎
                 b                  ∎
             in
-            (set (f b) , set-set (f b)) , get (f b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ (ext′ (h b)) irr) lemma ⟩∎
+            (set (f b) , set-set (f b)) , get (f b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ (lower-extensionality _ ℓb ext (h b)) irr) lemma ⟩∎
             (f         , h            ) , b          ∎ }
          }
        ; left-inverse-of = λ a →
@@ -777,60 +851,59 @@ Traditional-lens⇔Iso-lens {b = b} {A} {B} ext A-set = record
     where
     open Traditional-lens l
 
--- If the domain A is a set, then Traditional-lens A B and
--- Iso-lens A B are isomorphic (assuming extensionality, univalence
--- and a resizing function for the propositional truncation).
-
-Traditional-lens↔Iso-lens :
-  ∀ {a b} {A : Set a} {B : Set b} →
-  Extensionality (lsuc (lsuc (a ⊔ b))) (lsuc (a ⊔ b)) →
-  Univalence (lsuc (a ⊔ b)) →
-  (∥ B ∥ 1 (a ⊔ b) → ∥ B ∥ 1 (lsuc (a ⊔ b))) →
-  Is-set A →
-  Traditional-lens A B ↔ Iso-lens A B
-Traditional-lens↔Iso-lens {a} {b} {A} {B} ext univ resize A-set = record
-  { surjection = record
-    { logical-equivalence = equiv
-    ; right-inverse-of    = to∘from
-    }
-  ; left-inverse-of = from∘to
-  }
-  where
-  equiv = Traditional-lens⇔Iso-lens (lower-extensionality _ _ ext) A-set
-
-  open Traditional-lens
-  open _⇔_ equiv
-
-  from∘to : ∀ l → from (to l) ≡ l
-  from∘to l =
-    cong (λ proofs → get l , set l , proofs)
+  to∘from : ∀ l → Iso-lens.traditional-lens (from l) ≡ l
+  to∘from l =
+    cong (λ proofs → get , set , proofs)
       (Σ-≡,≡→≡
          (_⇔_.to propositional⇔irrelevant
-            (Π-closure (lower-extensionality _ _ ext) 1 λ a →
-             Π-closure (lower-extensionality _ _ ext) 1 λ _ →
+            (Π-closure (lower-extensionality _ ℓa ext) 1 λ a →
+             Π-closure (lower-extensionality _ ℓa ext) 1 λ _ →
              B-set a _ _)
             _ _)
          (Σ-≡,≡→≡
            (_⇔_.to propositional⇔irrelevant
-              (Π-closure (lower-extensionality _ _ ext)  1 λ _ →
+              (Π-closure (lower-extensionality _ ℓb ext) 1 λ _ →
                A-set _ _)
               _ _)
            (_⇔_.to propositional⇔irrelevant
-              (Π-closure (lower-extensionality _ _ ext) 1 λ _ →
-               Π-closure (lower-extensionality _ _ ext) 1 λ _ →
-               Π-closure (lower-extensionality _ _ ext) 1 λ _ →
+              (Π-closure (lower-extensionality _ lzero ext) 1 λ _ →
+               Π-closure (lower-extensionality _ lzero ext) 1 λ _ →
+               Π-closure (lower-extensionality _ ℓb    ext) 1 λ _ →
                A-set _ _)
               _ _)))
     where
+    open Traditional-lens l
+
     B-set : A → Is-set B
     B-set a =
       proj₂-closure (proj₁ $ _≃_.to eq a) 2 $
       H-level.respects-surjection (_≃_.surjection eq) 2 A-set
       where
-      eq = proj₁ $ proj₂ $ to l
+      eq = Iso-lens.equiv (from l)
 
-  to∘from : ∀ l → to (from l) ≡ l
-  to∘from (R , l , inh) =
+-- If the domain A is a set, then Traditional-lens A B and
+-- Iso-lens A B are isomorphic (assuming extensionality, univalence
+-- and a resizing function for the propositional truncation).
+
+Iso-lens↔Traditional-lens :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (lsuc (a ⊔ b))) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  (∥ B ∥ 1 (a ⊔ b) → ∥ B ∥ 1 (lsuc (a ⊔ b))) →
+  Is-set A →
+  Iso-lens A B ↔ Traditional-lens A B
+Iso-lens↔Traditional-lens {a} {b} {A} {B} ext univ resize A-set = record
+  { surjection      = surj
+  ; left-inverse-of = from∘to
+  }
+  where
+  surj = Iso-lens↠Traditional-lens (lower-extensionality _ _ ext) A-set
+
+  open Traditional-lens
+  open _↠_ surj
+
+  from∘to : ∀ l → from (Iso-lens.traditional-lens l) ≡ l
+  from∘to (R , l , inh) =
     _↔_.from (equality-characterisation₄
                 (lower-extensionality _ lzero ext) univ)
              (lemma , λ _ → refl)
