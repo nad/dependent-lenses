@@ -421,7 +421,7 @@ Iso-lens′-cong {r} {t} {a₁} {b₁} {A₁} {B₁} {a₂} {b₂} {A₂} {B₂}
   →-cong (lower-extensionality (a₁ ⊔ a₂ ⊔ b₁ ⊔ b₂ ⊔ lsuc t)
                                (a₁ ⊔ a₂ ⊔ r) ext)
          F.id
-         (∥∥-cong (lower-extensionality (a₁ ⊔ a₂ ⊔ r ⊔ lsuc t)
+         (∥∥-cong (lower-extensionality (a₁ ⊔ a₂ ⊔ r)
                                         (a₁ ⊔ a₂ ⊔ r ⊔ lsuc t) ext)
                   B₁↔B₂)
 
