@@ -1093,7 +1093,85 @@ Iso-lens↔Traditional-lens {a} {b} {A} {B} ext univ resize A-set = record
       R                                                           □
 
 ------------------------------------------------------------------------
--- Some existence results
+-- Some Traditional-lens results related to h-levels
+
+-- If the domain of a Traditional-lens is inhabited and has h-level n,
+-- then the codomain also has h-level n.
+
+h-level-respects-Traditional-lens-from-inhabited :
+  ∀ {n a b} {A : Set a} {B : Set b} →
+  Traditional-lens A B → A → H-level n A → H-level n B
+h-level-respects-Traditional-lens-from-inhabited {n} {A = A} {B} l a =
+  H-level n A  ↝⟨ H-level.respects-surjection surj n ⟩
+  H-level n B  □
+  where
+  open Traditional-lens l
+
+  surj : A ↠ B
+  surj = record
+    { logical-equivalence = record
+      { to   = get
+      ; from = set a
+      }
+    ; right-inverse-of = λ b →
+        get (set a b)  ≡⟨ get-set a b ⟩∎
+        b              ∎
+    }
+
+-- If A and B have h-level n (where, in the case of B, one can assume
+-- that A is inhabited), then Traditional-lens A B also has h-level n
+-- (assuming extensionality).
+
+Traditional-lens-preserves-h-level :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (a ⊔ b) (a ⊔ b) →
+  ∀ n → H-level n A → (A → H-level n B) →
+  H-level n (Traditional-lens A B)
+Traditional-lens-preserves-h-level {ℓa} {ℓb} ext n hA hB =
+  Σ-closure n (Π-closure (lower-extensionality ℓb ℓa    ext) n λ a →
+               hB a) λ _ →
+  Σ-closure n (Π-closure (lower-extensionality ℓb lzero ext) n λ _ →
+               Π-closure (lower-extensionality ℓa ℓb    ext) n λ _ →
+               hA) λ _ →
+  ×-closure n (Π-closure (lower-extensionality ℓb ℓa    ext) n λ a →
+               Π-closure (lower-extensionality ℓa ℓa    ext) n λ _ →
+               mono₁ n (hB a) _ _) $
+  ×-closure n (Π-closure (lower-extensionality ℓb ℓb    ext) n λ _ →
+               mono₁ n hA _ _)
+              (Π-closure (lower-extensionality ℓb lzero ext) n λ _ →
+               Π-closure (lower-extensionality ℓa lzero ext) n λ _ →
+               Π-closure (lower-extensionality ℓa ℓb    ext) n λ _ →
+               mono₁ n hA _ _)
+
+-- If A has positive h-level n, then Traditional-lens A B also has
+-- h-level n (assuming extensionality).
+
+Traditional-lens-preserves-h-level-of-domain :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (a ⊔ b) (a ⊔ b) →
+  ∀ n → H-level (1 + n) A → H-level (1 + n) (Traditional-lens A B)
+Traditional-lens-preserves-h-level-of-domain {ℓa} {ℓb} ext n hA =
+  [inhabited⇒+]⇒+ n λ l →
+    Traditional-lens-preserves-h-level ext (1 + n) hA λ a →
+      h-level-respects-Traditional-lens-from-inhabited l a hA
+
+-- There is a type A such that Traditional-lens A ⊤ is not
+-- propositional (assuming extensionality and univalence).
+
+¬-traditional-lens-to-⊤-propositional :
+  Extensionality (# 1) (# 1) →
+  Univalence (# 0) →
+  ∃ λ (A : Set₁) → ¬ Is-proposition (Traditional-lens A ⊤)
+¬-traditional-lens-to-⊤-propositional ext univ =
+  A , (
+  Is-proposition (Traditional-lens A ⊤)  ↝⟨ H-level.respects-surjection (_↔_.surjection $ traditional-lens-to-⊤↔ ext) 1 ⟩
+  Is-proposition ((a : A) → a ≡ a)       ↝⟨ proj₂ $ ¬-type-of-refl-propositional ext univ ⟩□
+  ⊥₀                                     □)
+  where
+  A = _
+
+------------------------------------------------------------------------
+-- Some Iso-lens results related to h-levels
 
 -- If the domain of an Iso-lens is inhabited and has h-level n, then
 -- the codomain also has h-level n.
@@ -1101,24 +1179,31 @@ Iso-lens↔Traditional-lens {a} {b} {A} {B} ext univ resize A-set = record
 h-level-respects-lens-from-inhabited :
   ∀ {n a b} {A : Set a} {B : Set b} →
   Iso-lens A B → A → H-level n A → H-level n B
-h-level-respects-lens-from-inhabited {n} {A = A} {B} l x =
+h-level-respects-lens-from-inhabited {n} {A = A} {B} l a =
   H-level n A        ↝⟨ H-level.respects-surjection (_≃_.surjection equiv) n ⟩
-  H-level n (R × B)  ↝⟨ proj₂-closure (remainder x) n ⟩□
+  H-level n (R × B)  ↝⟨ proj₂-closure (remainder a) n ⟩□
   H-level n B        □
   where
   open Iso-lens l
 
--- In particular, Iso-lenses with contractible domains have
--- contractible codomains.
+-- This is not necessarily true for arbitrary domains (assuming
+-- extensionality and univalence).
 
-contractible-to-contractible :
-  ∀ {a b} {A : Set a} {B : Set b} →
-  Iso-lens A B → Contractible A → Contractible B
-contractible-to-contractible l c =
-  h-level-respects-lens-from-inhabited l (proj₁ c) c
+¬-h-level-respects-lens :
+  ∀ {a b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  ¬ (∀ {n} {A : Set a} {B : Set b} →
+     Iso-lens A B → H-level n A → H-level n B)
+¬-h-level-respects-lens ext univ resp =
+                             $⟨ ⊥-propositional ⟩
+  Is-proposition ⊥           ↝⟨ resp (_↔_.from (lens-from-⊥↔⊤ ext univ) _) ⟩
+  Is-proposition (↑ _ Bool)  ↝⟨ ↑⁻¹-closure 1 ⟩
+  Is-proposition Bool        ↝⟨ ¬-Bool-propositional ⟩□
+  ⊥₀                         □
 
--- There is an Iso-lens with a proposition as its domain and a non-set
--- as its codomain (assuming univalence).
+-- In fact, there is an Iso-lens with a proposition as its domain and
+-- a non-set as its codomain (assuming univalence).
 
 lens-from-proposition-to-non-set :
   Univalence lzero →
@@ -1134,6 +1219,264 @@ lens-from-proposition-to-non-set univ {b = b} =
    ⊥-elim) ,
   ⊥-propositional ,
   ¬-Set-set univ ⊚ H-level.respects-surjection (_↔_.surjection Bij.↑↔) 2
+
+-- Iso-lenses with contractible domains have contractible codomains.
+
+contractible-to-contractible :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Iso-lens A B → Contractible A → Contractible B
+contractible-to-contractible l c =
+  h-level-respects-lens-from-inhabited l (proj₁ c) c
+
+-- If the domain type of an Iso-lens is contractible, then the
+-- remainder type is also contractible (assuming extensionality).
+
+domain-contractible⇒remainder-contractible :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  (l : Iso-lens A B) → Contractible A → Contractible (Iso-lens.R l)
+domain-contractible⇒remainder-contractible {A = A} {B} ext l =
+  Contractible A                   ↔⟨ H-level-cong ext 0 equiv ⟩
+  Contractible (R × B)             ↔⟨ Contractible-commutes-with-× ext ⟩
+  Contractible R × Contractible B  ↝⟨ proj₁ ⟩□
+  Contractible R                   □
+  where
+  open Iso-lens l
+
+-- If the domain type of an Iso-lens has h-level n, then the remainder
+-- type also has h-level n (assuming extensionality and a resizing
+-- function for the propositional truncation).
+
+remainder-has-same-h-level-as-domain :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  (∥ B ∥ 1 (a ⊔ b) → ∥ B ∥ 1 (lsuc (a ⊔ b))) →
+  (l : Iso-lens A B) → ∀ n → H-level n A → H-level n (Iso-lens.R l)
+remainder-has-same-h-level-as-domain ext _ l zero =
+  domain-contractible⇒remainder-contractible ext l
+remainder-has-same-h-level-as-domain {A = A} {B}
+                                     ext resize l (suc n) h =
+  [inhabited⇒+]⇒+ n λ r →
+                             $⟨ h ⟩
+    H-level (1 + n) A        ↝⟨ H-level.respects-surjection (_≃_.surjection equiv) (1 + n) ⟩
+    H-level (1 + n) (R × B)  ↝⟨ rec (Π-closure ext 1 λ _ → H-level-propositional ext (1 + n))
+                                    (λ b → proj₁-closure (λ _ → b) (1 + n))
+                                    (resize (inhabited r)) ⟩□
+    H-level (1 + n) R        □
+  where
+  open Iso-lens l
+
+-- It is not necessarily the case that contractibility of A implies
+-- contractibility of Iso-lens A B (assuming extensionality and
+-- univalence).
+
+¬-Contractible-closed-domain :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  ¬ ({A : Set a} {B : Set b} →
+     Contractible A → Contractible (Iso-lens A B))
+¬-Contractible-closed-domain ext univ closure =
+                                     $⟨ ↑⊤-contractible ⟩
+  Contractible (↑ _ ⊤)               ↝⟨ closure ⟩
+  Contractible (Iso-lens (↑ _ ⊤) ⊥)  ↝⟨ H-level.respects-surjection
+                                          (_↔_.surjection $ lens-from-contractible↔codomain-contractible
+                                                              ext univ ↑⊤-contractible)
+                                          0 ⟩
+  Contractible (Contractible ⊥)      ↝⟨ proj₁ ⟩
+  Contractible ⊥                     ↝⟨ proj₁ ⟩
+  ⊥                                  ↝⟨ ⊥-elim ⟩□
+  ⊥₀                                 □
+  where
+  ↑⊤-contractible = ↑-closure 0 ⊤-contractible
+
+-- Contractible is closed under Iso-lens A (assuming extensionality
+-- and univalence).
+
+Contractible-closed-codomain :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  Contractible B → Contractible (Iso-lens A B)
+Contractible-closed-codomain {A = A} {B} ext univ cB =
+                               $⟨ lens-to-contractible↔⊤ ext univ cB ⟩
+  Iso-lens A B ↔ ⊤             ↝⟨ _⇔_.from contractible⇔⊤↔ ⊚ inverse ⟩□
+  Contractible (Iso-lens A B)  □
+
+-- If B is a proposition, then Iso-lens A B is also a proposition
+-- (assuming extensionality and univalence).
+
+Is-proposition-closed-codomain :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  Is-proposition B → Is-proposition (Iso-lens A B)
+Is-proposition-closed-codomain {A = A} {B} ext univ B-prop =
+                                 $⟨ Π-closure (lower-extensionality _ _ ext) 1 (λ _ → B-prop) ⟩
+  Is-proposition (A → B)         ↝⟨ H-level.respects-surjection
+                                      (_↔_.surjection $ inverse $ lens-to-proposition↔get ext univ B-prop)
+                                      1 ⟩□
+  Is-proposition (Iso-lens A B)  □
+
+private
+
+  -- If A has h-level 1 + n and equivalence between certain remainder
+  -- types has h-level n, then Iso-lens A B has h-level 1 + n
+  -- (assuming extensionality and univalence).
+
+  domain-1+-remainder-equivalence-0+⇒lens-1+ :
+    ∀ {a b} {A : Set a} {B : Set b} →
+    Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+    Univalence (lsuc (a ⊔ b)) →
+    ∀ n →
+    H-level (1 + n) A →
+    ((l₁ l₂ : Iso-lens A B) →
+       H-level n (Iso-lens.R l₁ ≃ Iso-lens.R l₂)) →
+    H-level (1 + n) (Iso-lens A B)
+  domain-1+-remainder-equivalence-0+⇒lens-1+
+    {A = A} ext univ n hA hR l₁ l₂ =                            $⟨ Σ-closure n (hR l₁ l₂) (λ _ →
+                                                                   Π-closure (lower-extensionality lzero _ ext) n λ _ →
+                                                                   hA _ _) ⟩
+    H-level n (∃ λ (eq : R l₁ ≃ R l₂) → ∀ p → _≡_ {A = A} _ _)  ↝⟨ H-level.respects-surjection
+                                                                     (_↔_.surjection $ inverse $ equality-characterisation₄ ext univ)
+                                                                     n ⟩□
+    H-level n (l₁ ≡ l₂)                                         □
+    where
+    open Iso-lens
+
+-- If A is a proposition, then Iso-lens A B is also a proposition
+-- (assuming extensionality, univalence and a resizing function for
+-- the propositional truncation).
+--
+-- Note that this could also be proved by going via Traditional-lens
+-- (as in Is-set-closed-domain below), with slightly different
+-- assumptions.
+
+Is-proposition-closed-domain :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  (∥ B ∥ 1 (a ⊔ b) → ∥ B ∥ 1 (lsuc (a ⊔ b))) →
+  Is-proposition A → Is-proposition (Iso-lens A B)
+Is-proposition-closed-domain
+  {b = b} {A} {B} ext univ resize A-prop =
+                                          $⟨ R₁≃R₂ ⟩
+  (∀ l₁ l₂ → R l₁ ≃ R l₂)                 ↝⟨ (λ hyp l₁ l₂ → propositional⇒inhabited⇒contractible
+                                                              (Eq.left-closure ext 0 (R-prop l₁))
+                                                              (hyp l₁ l₂)) ⟩
+  (∀ l₁ l₂ → Contractible (R l₁ ≃ R l₂))  ↝⟨ domain-1+-remainder-equivalence-0+⇒lens-1+ ext univ 0 A-prop ⟩□
+  Is-proposition (Iso-lens A B)           □
+  where
+  open Iso-lens
+
+  R-prop : (l : Iso-lens A B) → Is-proposition (R l)
+  R-prop l =
+    remainder-has-same-h-level-as-domain ext resize l 1 A-prop
+
+  remainder⁻¹ : (l : Iso-lens A B) → R l → A
+  remainder⁻¹ l r =
+    rec A-prop
+        (λ b → _≃_.from (equiv l) (r , b))
+        (with-lower-level b (inhabited l r))
+
+  R-to-R : (l₁ l₂ : Iso-lens A B) → R l₁ → R l₂
+  R-to-R l₁ l₂ = remainder l₂ ⊚ remainder⁻¹ l₁
+
+  involutive : (l : Iso-lens A B) {f : R l → R l} → ∀ r → f r ≡ r
+  involutive l _ = _⇔_.to propositional⇔irrelevant (R-prop l) _ _
+
+  R₁≃R₂ : (l₁ l₂ : Iso-lens A B) → R l₁ ≃ R l₂
+  R₁≃R₂ l₁ l₂ = Eq.↔⇒≃ $
+    Bij.bijection-from-involutive-family
+      R-to-R (λ l _ → involutive l) l₁ l₂
+
+-- If A is a set, then Iso-lens A B is also a set (assuming
+-- extensionality, univalence and a resizing function for the
+-- propositional truncation).
+--
+-- TODO: Can one prove that the corresponding result does not hold for
+-- codomains? Are there types A and B such that B is a set, but
+-- Iso-lens A B is not?
+
+Is-set-closed-domain :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (lsuc (a ⊔ b))) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  (∥ B ∥ 1 (a ⊔ b) → ∥ B ∥ 1 (lsuc (a ⊔ b))) →
+  Is-set A → Is-set (Iso-lens A B)
+Is-set-closed-domain {A = A} {B} ext univ resize A-set =
+                                 $⟨ Traditional-lens-preserves-h-level-of-domain (lower-extensionality _ _ ext) 1 A-set ⟩
+  Is-set (Traditional-lens A B)  ↝⟨ H-level.respects-surjection
+                                      (_↔_.surjection $ inverse $ Iso-lens↔Traditional-lens ext univ resize A-set)
+                                      2 ⟩□
+  Is-set (Iso-lens A B)          □
+
+-- If A has h-level n, then Iso-lens A B has h-level 1 + n (assuming
+-- extensionality, univalence and a resizing function for the
+-- propositional truncation).
+--
+-- TODO: Can this be improved? The corresponding result for
+-- Traditional-lens (Traditional-lens-preserves-h-level-of-domain) is
+-- stronger.
+
+domain-0+⇒lens-1+ :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  (∥ B ∥ 1 (a ⊔ b) → ∥ B ∥ 1 (lsuc (a ⊔ b))) →
+  ∀ n → H-level n A → H-level (1 + n) (Iso-lens A B)
+domain-0+⇒lens-1+ {A = A} {B} ext univ resize n hA =
+                                                      $⟨ (λ l₁ l₂ → Eq.h-level-closure ext n (hR l₁) (hR l₂)) ⟩
+  ((l₁ l₂ : Iso-lens A B) → H-level n (R l₁ ≃ R l₂))  ↝⟨ domain-1+-remainder-equivalence-0+⇒lens-1+ ext univ n (mono₁ n hA) ⟩□
+  H-level (1 + n) (Iso-lens A B)                      □
+  where
+  open Iso-lens
+
+  hR : ∀ l → H-level n (R l)
+  hR l = remainder-has-same-h-level-as-domain ext resize l n hA
+
+-- An alternative proof.
+
+domain-0+⇒lens-1+′ :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  (∥ B ∥ 1 (a ⊔ b) → ∥ B ∥ 1 (lsuc (a ⊔ b))) →
+  ∀ n → H-level n A → H-level (1 + n) (Iso-lens A B)
+domain-0+⇒lens-1+′ {A = A} {B} ext univ resize n hA =
+                                                   $⟨ Σ-closure (1 + n)
+                                                        (∃-H-level-H-level-1+ ext univ n)
+                                                        (λ _ → ×-closure (1 + n)
+                                                                 (Eq.left-closure ext n (mono₁ n hA))
+                                                                 (Π-closure ext (1 + n) λ _ →
+                                                                  mono (suc≤suc (zero≤ n)) $
+                                                                  truncation-has-correct-h-level 1
+                                                                    (lower-extensionality lzero _ ext))) ⟩
+  H-level (1 + n)
+    (∃ λ (p : ∃ (H-level n)) →
+       A ≃ (proj₁ p × B) × (proj₁ p → ∥ B ∥ 1 _))  ↝⟨ H-level.respects-surjection (_↔_.surjection $ inverse iso) (1 + n) ⟩□
+
+  H-level (1 + n) (Iso-lens A B)                   □
+  where
+  open Iso-lens
+
+  iso =
+    Iso-lens A B                                             ↝⟨ inverse $ drop-⊤-right (λ l →
+                                                                  inverse $ _⇔_.to contractible⇔⊤↔ $
+                                                                    propositional⇒inhabited⇒contractible
+                                                                      (H-level-propositional ext n)
+                                                                      (remainder-has-same-h-level-as-domain ext resize l n hA)) ⟩
+    (∃ λ (l : Iso-lens A B) → H-level n (R l))               ↝⟨ inverse Σ-assoc ⟩
+
+    (∃ λ R → (A ≃ (R × B) × (R → ∥ B ∥ 1 _)) × H-level n R)  ↝⟨ (∃-cong λ _ → ×-comm) ⟩
+
+    (∃ λ R → H-level n R × A ≃ (R × B) × (R → ∥ B ∥ 1 _))    ↝⟨ Σ-assoc ⟩□
+
+    (∃ λ (p : ∃ (H-level n)) →
+       A ≃ (proj₁ p × B) × (proj₁ p → ∥ B ∥ 1 _))            □
+
+------------------------------------------------------------------------
+-- An existence result
 
 -- There is, in general, no Iso-lens for the first projection from a
 -- Σ-type.
