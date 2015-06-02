@@ -249,7 +249,7 @@ isomorphism-to-lens′ {A = A} {B} {R} ext iso =
 -- Equality of Iso-lenses is isomorphic to certain pairs (assuming
 -- extensionality).
 
-equality-characterisation₁ :
+equality-characterisation₀ :
   ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
   let open Iso-lens in
   Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
@@ -257,7 +257,7 @@ equality-characterisation₁ :
     ↔
   ∃ λ (p : R l₁ ≡ R l₂) →
     subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂
-equality-characterisation₁ {A = A} {B} {l₁} {l₂} ext =
+equality-characterisation₀ {A = A} {B} {l₁} {l₂} ext =
   l₁ ≡ l₂                                                        ↝⟨ inverse Bij.Σ-≡,≡↔≡ ⟩
 
   (∃ λ (p : R l₁ ≡ R l₂) →
@@ -278,42 +278,40 @@ equality-characterisation₁ {A = A} {B} {l₁} {l₂} ext =
   where
   open Iso-lens
 
-private
+-- Equality of Iso-lenses is isomorphic to certain pairs (assuming
+-- extensionality and univalence).
 
-  -- Equality of Iso-lenses is isomorphic to certain pairs (assuming
-  -- extensionality and univalence).
+equality-characterisation₁ :
+  ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
+  let open Iso-lens in
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  l₁ ≡ l₂
+    ↔
+  ∃ λ (eq : R l₁ ≃ R l₂) →
+    (eq ×-cong F.id) F.∘ equiv l₁ ≡ equiv l₂
+equality-characterisation₁ {A = A} {B} {l₁} {l₂} ext univ =
+  l₁ ≡ l₂                                                            ↝⟨ equality-characterisation₀ ext ⟩
 
-  equality-characterisation₀ :
-    ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
-    let open Iso-lens in
-    Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
-    Univalence (lsuc (a ⊔ b)) →
-    l₁ ≡ l₂
-      ↔
-    ∃ λ (eq : R l₁ ≃ R l₂) →
-      (eq ×-cong F.id) F.∘ equiv l₁ ≡ equiv l₂
-  equality-characterisation₀ {A = A} {B} {l₁} {l₂} ext univ =
-    l₁ ≡ l₂                                                            ↝⟨ equality-characterisation₁ ext ⟩
+  (∃ λ (p : R l₁ ≡ R l₂) →
+     subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂)              ↝⟨ inverse $ Σ-cong (inverse $ ≡≃≃ univ) (λ _ → F.id) ⟩
 
-    (∃ λ (p : R l₁ ≡ R l₂) →
-       subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂)              ↝⟨ inverse $ Σ-cong (inverse $ ≡≃≃ univ) (λ _ → F.id) ⟩
+  (∃ λ (eq : R l₁ ≃ R l₂) →
+     subst (λ R → A ≃ (R × B)) (≃⇒≡ univ eq) (equiv l₁) ≡ equiv l₂)  ↝⟨ (∃-cong λ _ → inverse $ ≡⇒↝ _ $ cong (λ p → p ≡ _) $
+                                                                           transport-theorem
+                                                                             (λ R → A ≃ (R × B)) resp
+                                                                             (λ _ → Eq.lift-equality ext refl)
+                                                                             univ _ _) ⟩□
 
-    (∃ λ (eq : R l₁ ≃ R l₂) →
-       subst (λ R → A ≃ (R × B)) (≃⇒≡ univ eq) (equiv l₁) ≡ equiv l₂)  ↝⟨ (∃-cong λ _ → inverse $ ≡⇒↝ _ $ cong (λ p → p ≡ _) $
-                                                                             transport-theorem
-                                                                               (λ R → A ≃ (R × B)) resp
-                                                                               (λ _ → Eq.lift-equality ext refl)
-                                                                               univ _ _) ⟩□
+  (∃ λ (eq : R l₁ ≃ R l₂) → resp eq (equiv l₁) ≡ equiv l₂)           □
+  where
+  open Iso-lens
 
-    (∃ λ (eq : R l₁ ≃ R l₂) → resp eq (equiv l₁) ≡ equiv l₂)           □
-    where
-    open Iso-lens
-
-    resp : ∀ {X Y} → X ≃ Y → A ≃ (X × B) → A ≃ (Y × B)
-    resp {X} {Y} X≃Y A≃X×B =
-      A      ↝⟨ A≃X×B ⟩
-      X × B  ↝⟨ X≃Y ×-cong F.id ⟩□
-      Y × B  □
+  resp : ∀ {X Y} → X ≃ Y → A ≃ (X × B) → A ≃ (Y × B)
+  resp {X} {Y} X≃Y A≃X×B =
+    A      ↝⟨ A≃X×B ⟩
+    X × B  ↝⟨ X≃Y ×-cong F.id ⟩□
+    Y × B  □
 
 -- Equality of Iso-lenses is isomorphic to certain pairs (assuming
 -- extensionality and univalence).
@@ -329,7 +327,7 @@ equality-characterisation₂ :
     ∀ x → (_≃_.to eq (remainder l₁ x) , get l₁ x) ≡
           _≃_.to (equiv l₂) x
 equality-characterisation₂ {l₁ = l₁} {l₂} ext univ =
-  l₁ ≡ l₂                                             ↝⟨ equality-characterisation₀ ext univ ⟩
+  l₁ ≡ l₂                                             ↝⟨ equality-characterisation₁ ext univ ⟩
 
   (∃ λ (eq : R l₁ ≃ R l₂) →
      (eq ×-cong F.id) F.∘ equiv l₁ ≡ equiv l₂)        ↝⟨ (∃-cong λ _ → inverse $ ≃-to-≡↔≡ ext) ⟩□
@@ -388,7 +386,7 @@ equality-characterisation₄ :
     ∀ p → _≃_.from (equiv l₁) (_≃_.from eq (proj₁ p) , proj₂ p) ≡
           _≃_.from (equiv l₂) p
 equality-characterisation₄ {l₁ = l₁} {l₂} ext univ =
-  l₁ ≡ l₂                                                           ↝⟨ equality-characterisation₀ ext univ ⟩
+  l₁ ≡ l₂                                                           ↝⟨ equality-characterisation₁ ext univ ⟩
 
   (∃ λ (eq : R l₁ ≃ R l₂) →
      (eq ×-cong F.id) F.∘ equiv l₁ ≡ equiv l₂)                      ↝⟨ (∃-cong λ _ → inverse $ ≃-from-≡↔≡ ext) ⟩□
