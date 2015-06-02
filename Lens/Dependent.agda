@@ -6,11 +6,11 @@
 
 module Lens.Dependent where
 
-open import Bool
 open import Equality.Propositional
 open import Logical-equivalence using (module _⇔_)
 open import Prelude hiding (id) renaming (_∘_ to _⊚_)
 
+open import Bool equality-with-J
 open import Bijection equality-with-J using (_↔_; module _↔_; ↑↔)
 open import Equality.Decision-procedures equality-with-J
 open import Equality.Tactic equality-with-J as Tactic
