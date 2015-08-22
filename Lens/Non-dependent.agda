@@ -400,11 +400,258 @@ module Traditional-lens-combinators where
              set l₁ (get l₂ a)             c₂  ∎
 
        in
-       set l₂ (set l₂ a b₁) (set l₁ (get l₂ (set l₂ a b₁)) c₂)  ≡⟨ cong (set l₂ (set l₂ a b₁)) lemma ⟩
-       set l₂ (set l₂ a b₁) b₂                                  ≡⟨ set-set l₂ a b₁ b₂ ⟩∎
+       set l₂ (set l₂ a b₁) (set l₁ (get l₂ (set l₂ a b₁)) c₂)  ≡⟨ set-set l₂ a b₁ _ ⟩
+       set l₂ a             (set l₁ (get l₂ (set l₂ a b₁)) c₂)  ≡⟨ cong (set l₂ a) lemma ⟩∎
        set l₂ a             b₂                                  ∎)
     where
     open Traditional-lens
+
+  -- id is a left identity of _∘_ (assuming extensionality).
+
+  left-identity : ∀ {a b} {A : Set a} {B : Set b} →
+                  Extensionality (a ⊔ b) (a ⊔ b) →
+                  (l : Traditional-lens A B) → id ∘ l ≡ l
+  left-identity ext l =
+    _↔_.from (equality-characterisation ext)
+             (refl , refl , lemma₁ , lemma₂ , lemma₃)
+    where
+    open Traditional-lens l
+
+    lemma₁ = λ a b →
+      cong P.id (get-set a b)  ≡⟨ sym $ cong-id _ ⟩∎
+      get-set a b              ∎
+
+    lemma₂ = λ a →
+      trans refl (set-get a)  ≡⟨ trans-reflˡ _ ⟩∎
+      set-get a               ∎
+
+    lemma₃ = λ a b₁ b₂ →
+      trans (set-set a b₁ b₂)
+            (cong (set a) (cong (const b₂) (get-set a b₁)))  ≡⟨ cong (trans _ ⊚ cong (set a)) (cong-const (get-set a b₁)) ⟩∎
+
+      set-set a b₁ b₂                                        ∎
+
+  -- id is a right identity of _∘_ (assuming extensionality).
+
+  right-identity : ∀ {a b} {A : Set a} {B : Set b} →
+                   Extensionality (a ⊔ b) (a ⊔ b) →
+                   (l : Traditional-lens A B) → l ∘ id ≡ l
+  right-identity ext l =
+    _↔_.from (equality-characterisation ext)
+             (refl , refl , lemma₁ , lemma₂ , lemma₃)
+    where
+    open Traditional-lens l
+
+    lemma₁ = λ a b →
+      trans refl (get-set a b)  ≡⟨ trans-reflˡ _ ⟩∎
+      get-set a b               ∎
+
+    lemma₂ = λ a →
+      cong P.id (set-get a)  ≡⟨ sym $ cong-id _ ⟩∎
+      set-get a              ∎
+
+    lemma₃ = λ a b₁ b₂ →
+      trans refl (cong P.id (trans refl (set-set a b₁ b₂)))  ≡⟨ trans-reflˡ _ ⟩
+      cong P.id (trans refl (set-set a b₁ b₂))               ≡⟨ sym $ cong-id _ ⟩
+      trans refl (set-set a b₁ b₂)                           ≡⟨ trans-reflˡ _ ⟩∎
+      set-set a b₁ b₂                                        ∎
+
+  -- _∘_ is associative (assuming extensionality).
+
+  associativity :
+    ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : Set d} →
+    Extensionality (a ⊔ d) (a ⊔ d) →
+    (l₁ : Traditional-lens C D)
+    (l₂ : Traditional-lens B C)
+    (l₃ : Traditional-lens A B) →
+    l₁ ∘ (l₂ ∘ l₃) ≡ (l₁ ∘ l₂) ∘ l₃
+  associativity ext l₁ l₂ l₃ =
+    _↔_.from (equality-characterisation ext)
+             (refl , refl , lemma₁ , lemma₂ , lemma₃)
+    where
+    open Traditional-lens
+
+    lemma₁ = λ a d →
+      let
+        f  = get l₁
+        g  = get l₂
+        b  = get l₃ a
+        c  = g b
+        c′ = set l₁ c d
+        x  = get-set l₃ a (set l₂ b c′)
+        y  = get-set l₂ b c′
+        z  = get-set l₁ c d
+      in
+      trans (cong f $ trans (cong g x) y) z           ≡⟨ cong (λ x → trans x z) (cong-trans f _ y) ⟩
+      trans (trans (cong f $ cong g x) (cong f y)) z  ≡⟨ trans-assoc _ _ z ⟩
+      trans (cong f $ cong g x) (trans (cong f y) z)  ≡⟨ cong (λ x → trans x (trans (cong f y) z)) (cong-∘ f g x) ⟩∎
+      trans (cong (f ⊚ g) x) (trans (cong f y) z)     ∎
+
+    lemma₂ = λ a →
+      let
+        b = get l₃ a
+        f = set l₃ a
+        g = set l₂ b
+        x = set-get l₁ (get l₂ b)
+        y = set-get l₂ b
+        z = set-get l₃ a
+      in
+      trans (cong (f ⊚ g) x) (trans (cong f y) z)     ≡⟨ sym $ trans-assoc _ _ z ⟩
+      trans (trans (cong (f ⊚ g) x) (cong f y)) z     ≡⟨ cong (λ x → trans (trans x (cong f y)) z) (sym $ cong-∘ f g x) ⟩
+      trans (trans (cong f (cong g x)) (cong f y)) z  ≡⟨ cong (λ x → trans x z) (sym $ cong-trans f _ y) ⟩∎
+      trans (cong f $ trans (cong g x) y) z           ∎
+
+    lemma₃ = λ a d₁ d₂ →
+      let
+        f   = set l₃ a
+        g   = set l₂ (get l₃ a)
+        h   = λ x → set l₁ x d₂
+        i   = get l₂
+
+        c₁  = set l₁ (get (l₂ ∘ l₃) a) d₁
+        c₂  = h (i (get l₃ a))
+        c₂′ = h (i (get l₃ (set (l₂ ∘ l₃) a c₁)))
+        c₂″ = h (i (set l₂ (get l₃ a) c₁))
+
+        b₁  = set l₂ (get l₃ a) c₁
+        b₁′ = get l₃ (set l₃ a b₁)
+
+        x   = set-set l₃ a b₁ (set l₂ b₁′ c₂′)
+        y   = get-set l₃ a b₁
+        z   = set-set l₂ (get l₃ a) c₁
+        u   = get-set l₂ (get l₃ a) c₁
+        v   = set-set l₁ (get (l₂ ∘ l₃) a) d₁ d₂
+
+        c₂′≡c₂″ =
+          c₂′  ≡⟨ cong (h ⊚ i) y ⟩∎
+          c₂″  ∎
+
+        lemma₁₀ =
+          trans (sym (cong (h ⊚ i) y)) (cong h (cong i y))  ≡⟨ cong (trans _) (cong-∘ h i y) ⟩
+          trans (sym (cong (h ⊚ i) y)) (cong (h ⊚ i) y)     ≡⟨ trans-symˡ (cong (h ⊚ i) y) ⟩∎
+          refl                                              ∎
+
+        lemma₉ =
+          trans (cong (λ x → set l₂ x c₂′) y) (cong (set l₂ b₁) c₂′≡c₂″)  ≡⟨ cong (trans (cong (λ x → set l₂ x c₂′) y))
+                                                                                  (cong-∘ (set l₂ b₁) (h ⊚ i) y) ⟩
+          trans (cong (λ x → set l₂ x  (h (i b₁′))) y)
+                (cong (λ x → set l₂ b₁ (h (i x  ))) y)                    ≡⟨ trans-cong-cong (λ x y → set l₂ x (h (i y))) y ⟩∎
+
+          cong (λ x → set l₂ x (h (i x))) y                               ∎
+
+        lemma₈ =
+          sym (cong (set l₂ b₁) (sym c₂′≡c₂″))  ≡⟨ sym $ cong-sym (set l₂ b₁) (sym c₂′≡c₂″) ⟩
+          cong (set l₂ b₁) (sym (sym c₂′≡c₂″))  ≡⟨ cong (cong (set l₂ b₁)) (sym-sym c₂′≡c₂″) ⟩∎
+          cong (set l₂ b₁) c₂′≡c₂″              ∎
+
+        lemma₇ =
+          trans (cong g (sym c₂′≡c₂″)) (cong g (cong h (cong i y)))  ≡⟨ sym $ cong-trans g _ (cong h (cong i y)) ⟩
+          cong g (trans (sym c₂′≡c₂″) (cong h (cong i y)))           ≡⟨ cong (cong g) lemma₁₀ ⟩∎
+          refl                                                       ∎
+
+        lemma₆ =
+          trans (cong (λ x → set l₂ x c₂′) y)
+                (trans (cong (set l₂ b₁) c₂′≡c₂″)
+                       (trans (z c₂″) (cong g (sym c₂′≡c₂″))))       ≡⟨ sym $ trans-assoc _ _ (trans _ (cong g (sym c₂′≡c₂″))) ⟩
+
+          trans (trans (cong (λ x → set l₂ x c₂′) y)
+                       (cong (set l₂ b₁) c₂′≡c₂″))
+                (trans (z c₂″) (cong g (sym c₂′≡c₂″)))               ≡⟨ cong (λ e → trans e (trans (z c₂″) (cong g (sym c₂′≡c₂″)))) lemma₉ ⟩
+
+          trans (cong (λ x → set l₂ x (h (i x))) y)
+                (trans (z c₂″) (cong g (sym c₂′≡c₂″)))               ≡⟨ sym $ trans-assoc _ _ (cong g (sym c₂′≡c₂″)) ⟩∎
+
+          trans (trans (cong (λ x → set l₂ x (h (i x))) y) (z c₂″))
+                (cong g (sym c₂′≡c₂″))                               ∎
+
+        lemma₅ =
+          z c₂′                                                  ≡⟨ sym $ subst-application z (sym c₂′≡c₂″) ⟩
+
+          subst (λ x → set l₂ b₁ x ≡ g x) (sym c₂′≡c₂″) (z c₂″)  ≡⟨ subst-in-terms-of-trans-and-cong {f = set l₂ b₁} {g = g} {x≡y = sym c₂′≡c₂″} ⟩
+
+          trans (sym (cong (set l₂ b₁) (sym c₂′≡c₂″)))
+                (trans (z c₂″) (cong g (sym c₂′≡c₂″)))           ≡⟨ cong (λ e → trans e (trans (z c₂″) (cong g (sym c₂′≡c₂″)))) lemma₈ ⟩∎
+
+          trans (cong (set l₂ b₁) c₂′≡c₂″)
+                (trans (z c₂″) (cong g (sym c₂′≡c₂″)))           ∎
+
+        lemma₄ =
+          trans (trans (cong (λ x → set l₂ x c₂′) y) (z c₂′))
+                (cong g (cong h (cong i y)))                            ≡⟨ cong (λ e → trans (trans (cong (λ x → set l₂ x c₂′) y) e)
+                                                                                                    (cong g (cong h (cong i y))))
+                                                                                lemma₅ ⟩
+          trans (trans (cong (λ x → set l₂ x c₂′) y)
+                       (trans (cong (set l₂ b₁) c₂′≡c₂″)
+                              (trans (z c₂″) (cong g (sym c₂′≡c₂″)))))
+                (cong g (cong h (cong i y)))                            ≡⟨ cong (λ e → trans e (cong g (cong h (cong i y)))) lemma₆ ⟩
+
+          trans (trans (trans (cong (λ x → set l₂ x (h (i x))) y)
+                              (z c₂″))
+                       (cong g (sym c₂′≡c₂″)))
+                (cong g (cong h (cong i y)))                            ≡⟨ trans-assoc _ _ (cong g (cong h (cong i y))) ⟩
+
+          trans (trans (cong (λ x → set l₂ x (h (i x))) y) (z c₂″))
+                (trans (cong g (sym c₂′≡c₂″))
+                       (cong g (cong h (cong i y))))                    ≡⟨ cong (trans (trans _ (z c₂″))) lemma₇ ⟩∎
+
+          trans (cong (λ x → set l₂ x (h (i x))) y) (z c₂″)             ∎
+
+        lemma₃ =
+          cong g (trans (cong h (trans (cong i y) u)) v)           ≡⟨ cong (λ e → cong g (trans e v)) (cong-trans h _ u) ⟩
+
+          cong g (trans (trans (cong h (cong i y)) (cong h u)) v)  ≡⟨ cong (cong g) (trans-assoc _ _ v) ⟩
+
+          cong g (trans (cong h (cong i y)) (trans (cong h u) v))  ≡⟨ cong-trans g _ (trans _ v) ⟩∎
+
+          trans (cong g (cong h (cong i y)))
+                (cong g (trans (cong h u) v))                      ∎
+
+        lemma₂ =
+          trans (trans (cong (λ x → set l₂ x c₂′) y) (z c₂′))
+                (cong g (trans (cong h (trans (cong i y) u)) v))      ≡⟨ cong (trans (trans _ (z c₂′))) lemma₃ ⟩
+
+          trans (trans (cong (λ x → set l₂ x c₂′) y) (z c₂′))
+                (trans (cong g (cong h (cong i y)))
+                       (cong g (trans (cong h u) v)))                 ≡⟨ sym $ trans-assoc _ _ (cong g (trans _ v)) ⟩
+
+          trans (trans (trans (cong (λ x → set l₂ x c₂′) y) (z c₂′))
+                       (cong g (cong h (cong i y))))
+                (cong g (trans (cong h u) v))                         ≡⟨ cong (λ e → trans e (cong g (trans (cong h u) v))) lemma₄ ⟩
+
+          trans (trans (cong (λ x → set l₂ x (h (i x))) y) (z c₂″))
+                (cong g (trans (cong h u) v))                         ≡⟨ trans-assoc _ _ (cong g (trans _ v)) ⟩∎
+
+          trans (cong (λ x → set l₂ x (h (i x))) y)
+                (trans (z c₂″) (cong g (trans (cong h u) v)))         ∎
+
+        lemma₁ =
+          trans (cong f (trans (cong (λ x → set l₂ x c₂′) y) (z c₂′)))
+                (cong (f ⊚ g) (trans (cong h (trans (cong i y) u)) v))  ≡⟨ cong (λ e → trans (cong f (trans (cong (λ x → set l₂ x c₂′) y) (z c₂′)))
+                                                                                             e)
+                                                                                (sym $ cong-∘ f g (trans _ v)) ⟩
+          trans (cong f (trans (cong (λ x → set l₂ x c₂′) y) (z c₂′)))
+                (cong f (cong g (trans (cong h (trans (cong i y) u))
+                                       v)))                             ≡⟨ sym $ cong-trans f (trans _ (z c₂′)) (cong g (trans _ v)) ⟩
+
+          cong f (trans (trans (cong (λ x → set l₂ x c₂′) y) (z c₂′))
+                        (cong g (trans (cong h (trans (cong i y) u))
+                                       v)))                             ≡⟨ cong (cong f) lemma₂ ⟩∎
+
+          cong f (trans (cong (λ x → set l₂ x (h (i x))) y)
+                        (trans (z c₂″) (cong g (trans (cong h u) v))))  ∎
+      in
+      trans (trans x (cong f (trans (cong (λ x → set l₂ x c₂′) y)
+                                    (z c₂′))))
+            (cong (f ⊚ g) (trans (cong h (trans (cong i y) u)) v))    ≡⟨ trans-assoc _ _ (cong (f ⊚ g) (trans _ v)) ⟩
+
+      trans x (trans (cong f (trans (cong (λ x → set l₂ x c₂′) y)
+                                    (z c₂′)))
+                     (cong (f ⊚ g)
+                           (trans (cong h (trans (cong i y) u)) v)))  ≡⟨ cong (trans x) lemma₁ ⟩∎
+
+      trans x (cong f (trans (cong (λ x → set l₂ x (h (i x))) y)
+                             (trans (z c₂″)
+                                    (cong g (trans (cong h u) v)))))  ∎
 
 ------------------------------------------------------------------------
 -- Alternative formulations of lenses
