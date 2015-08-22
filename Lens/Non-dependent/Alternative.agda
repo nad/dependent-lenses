@@ -46,10 +46,10 @@ Higher-lens {a} {b} A B =
 --
 --   ∃ R. A ↔ (R × B).
 --
--- However, this definition is not in general isomorphic to the ones
--- above, not even if A, B and R are sets (consider the case in which
--- A and B are empty). The following variant of the definition solves
--- this problem.
+-- However, this definition is not in general isomorphic to
+-- Higher-lens A B or Traditional.Lens A B, not even if A and B are
+-- sets (consider the case in which A and B are empty). The following
+-- variant of the definition solves this problem.
 --
 -- (I had previously considered some other variants, when Andrea
 -- Vezzosi suggested that I should look at higher lenses, and that I
