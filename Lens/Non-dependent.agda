@@ -61,6 +61,299 @@ module Traditional-lens {a b} {A : Set a} {B : Set b}
   set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂
   set-set = proj₂ (proj₂ (proj₂ (proj₂ l)))
 
+-- Equality characterisation.
+
+abstract
+
+  equality-characterisation :
+    ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Traditional-lens A B} →
+    let open Traditional-lens in
+    Extensionality (a ⊔ b) (a ⊔ b) →
+
+    l₁ ≡ l₂
+      ↔
+    ∃ λ (g : get l₁ ≡ get l₂) →
+    ∃ λ (s : set l₁ ≡ set l₂) →
+      (∀ a b → subst (λ get → get (set l₂ a b) ≡ b) g
+                 (subst (λ set → get l₁ (set a b) ≡ b) s
+                    (get-set l₁ a b))
+                 ≡
+               get-set l₂ a b)
+        ×
+      (∀ a → subst (λ get → set l₂ a (get a) ≡ a) g
+               (subst (λ set → set a (get l₁ a) ≡ a) s
+                  (set-get l₁ a))
+               ≡
+             set-get l₂ a)
+        ×
+      (∀ a b₁ b₂ → subst (λ set → set (set a b₁) b₂ ≡ set a b₂) s
+                     (set-set l₁ a b₁ b₂)
+                     ≡
+                   set-set l₂ a b₁ b₂)
+
+  equality-characterisation {ℓa} {ℓb} {A} {B} {l₁} {l₂} ext =
+    l₁ ≡ l₂                                                          ↔⟨ Eq.≃-≡ (Eq.↔⇒≃ (inverse Σ-assoc)) ⟩
+
+    ((get l₁ , set l₁) , proj₂ (proj₂ l₁))
+      ≡
+    ((get l₂ , set l₂) , proj₂ (proj₂ l₂))                           ↝⟨ inverse Bij.Σ-≡,≡↔≡ ⟩
+
+    (∃ λ (gs : (get l₁ , set l₁) ≡ (get l₂ , set l₂)) →
+     subst (λ { (get , set) →
+                (∀ a b → get (set a b) ≡ b) ×
+                (∀ a → set a (get a) ≡ a) ×
+                (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂) })
+           gs (proj₂ (proj₂ l₁))
+       ≡
+     proj₂ (proj₂ l₂))                                               ↝⟨ Σ-cong (inverse ≡×≡↔≡) (λ gs → ≡⇒↝ _ $
+                                                                        cong (λ (gs : (get l₁ , set l₁) ≡ (get l₂ , set l₂)) →
+                                                                                subst (λ { (get , set) →
+                                                                                           (∀ a b → get (set a b) ≡ b) ×
+                                                                                           (∀ a → set a (get a) ≡ a) ×
+                                                                                           (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂) })
+                                                                                      gs (proj₂ (proj₂ l₁))
+                                                                                  ≡
+                                                                                proj₂ (proj₂ l₂))
+                                                                             (sym $ _↔_.right-inverse-of ≡×≡↔≡ gs)) ⟩
+    (∃ λ (gs : get l₁ ≡ get l₂ × set l₁ ≡ set l₂) →
+     subst (λ { (get , set) →
+                (∀ a b → get (set a b) ≡ b) ×
+                (∀ a → set a (get a) ≡ a) ×
+                (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂) })
+           (_↔_.to ≡×≡↔≡ gs) (proj₂ (proj₂ l₁))
+       ≡
+     proj₂ (proj₂ l₂))                                               ↝⟨ inverse Σ-assoc ⟩
+
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (s : set l₁ ≡ set l₂) →
+     subst (λ { (get , set) →
+                (∀ a b → get (set a b) ≡ b) ×
+                (∀ a → set a (get a) ≡ a) ×
+                (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂) })
+           (_↔_.to ≡×≡↔≡ (g , s)) (proj₂ (proj₂ l₁))
+       ≡
+     proj₂ (proj₂ l₂))                                               ↝⟨ (∃-cong λ g → ∃-cong λ s → ≡⇒↝ _ $
+                                                                         cong (λ x → x ≡ proj₂ (proj₂ l₂))
+                                                                              (push-subst-, {y≡z = _↔_.to ≡×≡↔≡ (g , s)} _ _)) ⟩
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (s : set l₁ ≡ set l₂) →
+     ( subst (λ { (get , set) → ∀ a b → get (set a b) ≡ b })
+             (_↔_.to ≡×≡↔≡ (g , s)) (get-set l₁)
+     , subst (λ { (get , set) →
+                  (∀ a → set a (get a) ≡ a) ×
+                  (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂) })
+           (_↔_.to ≡×≡↔≡ (g , s)) (proj₂ (proj₂ (proj₂ l₁)))
+     )
+       ≡
+     proj₂ (proj₂ l₂))                                               ↝⟨ (∃-cong λ _ → ∃-cong λ _ → inverse ≡×≡↔≡) ⟩
+
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (s : set l₁ ≡ set l₂) →
+     subst (λ { (get , set) → ∀ a b → get (set a b) ≡ b })
+           (_↔_.to ≡×≡↔≡ (g , s)) (get-set l₁)
+       ≡
+     get-set l₂
+       ×
+     subst (λ { (get , set) →
+                (∀ a → set a (get a) ≡ a) ×
+                (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂) })
+           (_↔_.to ≡×≡↔≡ (g , s)) (proj₂ (proj₂ (proj₂ l₁)))
+       ≡
+     proj₂ (proj₂ (proj₂ l₂)))                                       ↝⟨ (∃-cong λ g → ∃-cong λ s → ∃-cong λ _ → ≡⇒↝ _ $
+                                                                         cong (λ x → x ≡ proj₂ (proj₂ (proj₂ l₂)))
+                                                                              (push-subst-, {y≡z = _↔_.to ≡×≡↔≡ (g , s)} _ _)) ⟩
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (s : set l₁ ≡ set l₂) →
+     subst (λ { (get , set) → ∀ a b → get (set a b) ≡ b })
+           (_↔_.to ≡×≡↔≡ (g , s)) (get-set l₁)
+       ≡
+     get-set l₂
+       ×
+     ( subst (λ { (get , set) → ∀ a → set a (get a) ≡ a })
+             (_↔_.to ≡×≡↔≡ (g , s)) (set-get l₁)
+     , subst (λ { (get , set) →
+                  ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂ })
+             (_↔_.to ≡×≡↔≡ (g , s)) (set-set l₁)
+     )
+       ≡
+     proj₂ (proj₂ (proj₂ l₂)))                                       ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → inverse ≡×≡↔≡) ⟩
+
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (s : set l₁ ≡ set l₂) →
+     subst (λ { (get , set) → ∀ a b → get (set a b) ≡ b })
+           (_↔_.to ≡×≡↔≡ (g , s)) (get-set l₁)
+       ≡
+     get-set l₂
+       ×
+     subst (λ { (get , set) → ∀ a → set a (get a) ≡ a })
+           (_↔_.to ≡×≡↔≡ (g , s)) (set-get l₁)
+       ≡
+     set-get l₂
+       ×
+     subst (λ { (get , set) →
+                ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂ })
+           (_↔_.to ≡×≡↔≡ (g , s)) (set-set l₁)
+       ≡
+       set-set l₂)                                                   ↔⟨ (∃-cong λ g → ∃-cong λ s →
+                                                                         lemma₁ (lower-extensionality ℓb ℓa ext)
+                                                                                (λ { (get , set) a → ∀ b → get (set a b) ≡ b })
+                                                                                (_↔_.to ≡×≡↔≡ (g , s))
+                                                                           ×-cong
+                                                                         lemma₁ (lower-extensionality ℓb ℓb ext)
+                                                                                (λ { (get , set) a → set a (get a) ≡ a })
+                                                                                (_↔_.to ≡×≡↔≡ (g , s))
+                                                                           ×-cong
+                                                                         lemma₁ (lower-extensionality ℓb lzero ext)
+                                                                                (λ { (get , set) a → ∀ b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂ })
+                                                                                (_↔_.to ≡×≡↔≡ (g , s))) ⟩
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (s : set l₁ ≡ set l₂) →
+     (∀ a → subst (λ { (get , set) → ∀ b → get (set a b) ≡ b })
+                  (_↔_.to ≡×≡↔≡ (g , s)) (get-set l₁ a)
+              ≡
+            get-set l₂ a)
+       ×
+     (∀ a → subst (λ { (get , set) → set a (get a) ≡ a })
+                  (_↔_.to ≡×≡↔≡ (g , s)) (set-get l₁ a)
+              ≡
+            set-get l₂ a)
+       ×
+     (∀ a → subst (λ { (get , set) →
+                       ∀ b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂ })
+                  (_↔_.to ≡×≡↔≡ (g , s)) (set-set l₁ a)
+              ≡
+            set-set l₂ a))                                           ↔⟨ (∃-cong λ g → ∃-cong λ s →
+                                                                         (Eq.∀-preserves (lower-extensionality ℓb ℓa ext) λ a →
+                                                                            lemma₁ (lower-extensionality ℓa ℓa ext)
+                                                                                   (λ { (get , set) b → get (set a b) ≡ b })
+                                                                                   (_↔_.to ≡×≡↔≡ (g , s)))
+                                                                           ×-cong
+                                                                         F.id
+                                                                           ×-cong
+                                                                         (Eq.∀-preserves (lower-extensionality ℓb lzero ext) λ a →
+                                                                            lemma₁ (lower-extensionality ℓa lzero ext)
+                                                                                   (λ { (get , set) b₁ → ∀ b₂ → set (set a b₁) b₂ ≡ set a b₂ })
+                                                                                   (_↔_.to ≡×≡↔≡ (g , s)))) ⟩
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (s : set l₁ ≡ set l₂) →
+     (∀ a b → subst (λ { (get , set) → get (set a b) ≡ b })
+                    (_↔_.to ≡×≡↔≡ (g , s)) (get-set l₁ a b)
+                ≡
+              get-set l₂ a b)
+       ×
+     (∀ a → subst (λ { (get , set) → set a (get a) ≡ a })
+                  (_↔_.to ≡×≡↔≡ (g , s)) (set-get l₁ a)
+              ≡
+            set-get l₂ a)
+       ×
+     (∀ a b₁ → subst (λ { (get , set) →
+                          ∀ b₂ → set (set a b₁) b₂ ≡ set a b₂ })
+                     (_↔_.to ≡×≡↔≡ (g , s)) (set-set l₁ a b₁)
+                 ≡
+               set-set l₂ a b₁))                                     ↔⟨ (∃-cong λ g → ∃-cong λ s → ∃-cong λ _ → ∃-cong λ _ →
+                                                                         Eq.∀-preserves (lower-extensionality ℓb lzero ext) λ a →
+                                                                         Eq.∀-preserves (lower-extensionality ℓa lzero ext) λ b₁ →
+                                                                           lemma₁ (lower-extensionality ℓa ℓb ext)
+                                                                                  (λ { (get , set) b₂ → set (set a b₁) b₂ ≡ set a b₂ })
+                                                                                  (_↔_.to ≡×≡↔≡ (g , s))) ⟩
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (s : set l₁ ≡ set l₂) →
+     (∀ a b → subst (λ { (get , set) → get (set a b) ≡ b })
+                    (_↔_.to ≡×≡↔≡ (g , s)) (get-set l₁ a b)
+                ≡
+              get-set l₂ a b)
+       ×
+     (∀ a → subst (λ { (get , set) → set a (get a) ≡ a })
+                  (_↔_.to ≡×≡↔≡ (g , s)) (set-get l₁ a)
+              ≡
+            set-get l₂ a)
+       ×
+     (∀ a b₁ b₂ → subst (λ { (get , set) →
+                             set (set a b₁) b₂ ≡ set a b₂ })
+                        (_↔_.to ≡×≡↔≡ (g , s)) (set-set l₁ a b₁ b₂)
+                    ≡
+                  set-set l₂ a b₁ b₂))                               ↔⟨ (∃-cong λ g → ∃-cong λ s →
+                                                                         (Eq.∀-preserves (lower-extensionality ℓb ℓa ext) λ a →
+                                                                          Eq.∀-preserves (lower-extensionality ℓa ℓa ext) λ b →
+                                                                          lemma₂ (λ { (get , set) → get (set a b) ≡ b }) g s)
+                                                                           ×-cong
+                                                                         (Eq.∀-preserves (lower-extensionality ℓb ℓb ext) λ a →
+                                                                          lemma₂ (λ { (get , set) → set a (get a) ≡ a }) g s)
+                                                                           ×-cong
+                                                                         (Eq.∀-preserves (lower-extensionality ℓb lzero ext) λ a →
+                                                                          Eq.∀-preserves (lower-extensionality ℓa lzero ext) λ b₁ →
+                                                                          Eq.∀-preserves (lower-extensionality ℓa ℓb    ext) λ b₂ →
+                                                                          lemma₂ (λ { (get , set) → set (set a b₁) b₂ ≡ set a b₂ }) g s)) ⟩
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (s : set l₁ ≡ set l₂) →
+     (∀ a b → subst (λ get → get (set l₂ a b) ≡ b) g
+                (subst (λ set → get l₁ (set a b) ≡ b) s
+                   (get-set l₁ a b))
+                ≡
+              get-set l₂ a b)
+       ×
+     (∀ a → subst (λ get → set l₂ a (get a) ≡ a) g
+              (subst (λ set → set a (get l₁ a) ≡ a) s
+                 (set-get l₁ a))
+              ≡
+            set-get l₂ a)
+       ×
+     (∀ a b₁ b₂ →
+        subst (λ get → set l₂ (set l₂ a b₁) b₂ ≡ set l₂ a b₂) g
+          (subst (λ set → set (set a b₁) b₂ ≡ set a b₂) s
+             (set-set l₁ a b₁ b₂))
+          ≡
+        set-set l₂ a b₁ b₂))                                         ↔⟨ (∃-cong λ g → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
+                                                                         Eq.∀-preserves (lower-extensionality ℓb lzero ext) λ _ →
+                                                                         Eq.∀-preserves (lower-extensionality ℓa lzero ext) λ _ →
+                                                                         Eq.∀-preserves (lower-extensionality ℓa ℓb    ext) λ _ →
+                                                                         ≡⇒↝ _ $ cong (λ x → x ≡ _) $ subst-const g) ⟩□
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (s : set l₁ ≡ set l₂) →
+     (∀ a b → subst (λ get → get (set l₂ a b) ≡ b) g
+                (subst (λ set → get l₁ (set a b) ≡ b) s
+                   (get-set l₁ a b))
+                ≡
+              get-set l₂ a b)
+       ×
+     (∀ a → subst (λ get → set l₂ a (get a) ≡ a) g
+              (subst (λ set → set a (get l₁ a) ≡ a) s
+                 (set-get l₁ a))
+              ≡
+            set-get l₂ a)
+       ×
+     (∀ a b₁ b₂ → subst (λ set → set (set a b₁) b₂ ≡ set a b₂) s
+                    (set-set l₁ a b₁ b₂)
+                    ≡
+                  set-set l₂ a b₁ b₂))                               □
+    where
+    open Traditional-lens
+
+    abstract
+
+      lemma₁ :
+        ∀ {a b c} {A : Set a} {B : Set b} {u v} →
+        Extensionality b c →
+        ∀ (C : A → B → Set c) (eq : u ≡ v) {f g} →
+        (subst (λ x → ∀ y → C x y) eq f ≡ g)
+          ≃
+        (∀ y → subst (λ x → C x y) eq (f y) ≡ g y)
+      lemma₁ ext C eq {f} {g} =
+        subst (λ x → ∀ y → C x y) eq f ≡ g              ↝⟨ inverse $ Eq.extensionality-isomorphism ext ⟩
+        (∀ y → subst (λ x → ∀ y → C x y) eq f y ≡ g y)  ↝⟨ (Eq.∀-preserves ext λ y → ≡⇒↝ _ $
+                                                            cong (λ x → x ≡ _) (sym $ push-subst-application eq _)) ⟩□
+        (∀ y → subst (λ x → C x y) eq (f y) ≡ g y)      □
+
+    lemma₂ :
+      ∀ {a b p} {A : Set a} {B : Set b} {x₁ x₂ : A} {y₁ y₂ : B}
+      (P : A × B → Set p) (x₁≡x₂ : x₁ ≡ x₂) (y₁≡y₂ : y₁ ≡ y₂) {p p′} →
+      (subst P (_↔_.to ≡×≡↔≡ (x₁≡x₂ , y₁≡y₂)) p ≡ p′)
+        ≃
+      (subst (λ x → P (x , y₂)) x₁≡x₂ (subst (λ y → P (x₁ , y)) y₁≡y₂ p)
+         ≡
+       p′)
+    lemma₂ P refl refl = F.id
+
 -- Combinators.
 
 module Traditional-lens-combinators where
