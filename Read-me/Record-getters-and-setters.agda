@@ -20,7 +20,7 @@ open import Equality.Decision-procedures equality-with-J
 open import Function-universe equality-with-J as F hiding (_∘_)
 
 import Lens.Dependent
-import Lens.Non-dependent
+import Lens.Non-dependent.Alternative
 
 ------------------------------------------------------------------------
 -- Dependent lenses with "remainder types" visible in the type
@@ -186,7 +186,7 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
   ext₁ : Extensionality (# 1) (# 0)
   ext₁ = lower-extensionality _ _ ext₂
 
-  open Lens.Non-dependent
+  open Lens.Non-dependent.Alternative
     renaming (Iso-lens to Lens; module Iso-lens to Lens)
   open Iso-lens-combinators
 
