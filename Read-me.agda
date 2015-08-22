@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------
--- Dependent lenses
+-- Non-dependent and dependent lenses
 -- Nils Anders Danielsson
 ------------------------------------------------------------------------
 
@@ -7,7 +7,7 @@
 
 module Read-me where
 
--- Non-dependent lenses (for comparison).
+-- Non-dependent lenses.
 
 import Lens.Non-dependent
 
