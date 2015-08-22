@@ -366,6 +366,10 @@ module Lens-combinators where
     (λ _ _ _ → refl)
 
   -- Composition of lenses.
+  --
+  -- Note that composition can be defined in several different ways. I
+  -- don't know if these definitions are equal (if we require that the
+  -- three "monoid" laws below must hold, and assume extensionality).
 
   infixr 9 _∘_
 
