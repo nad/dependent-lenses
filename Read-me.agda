@@ -9,6 +9,7 @@ module Read-me where
 
 -- Non-dependent lenses.
 
+import Lens.Non-dependent
 import Lens.Non-dependent.Traditional
 import Lens.Non-dependent.Alternative
 

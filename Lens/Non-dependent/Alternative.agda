@@ -21,6 +21,7 @@ open import Preimage equality-with-J
 open import Surjection equality-with-J using (_↠_; module _↠_)
 open import Univalence-axiom equality-with-J
 
+import Lens.Non-dependent
 import Lens.Non-dependent.Traditional as Traditional
 
 ------------------------------------------------------------------------
@@ -1191,25 +1192,9 @@ no-first-projection-lens :
   ∀ {a b} →
   ∃ λ (A : Set a) → ∃ λ (B : A → Set b) →
     ¬ Iso-lens (Σ A B) A
-no-first-projection-lens {b = b} =
-  ↑ _ Bool ,
-  (λ b → ↑ _ (lower b ≡ true)) ,
-  λ l →                                           $⟨ singleton-contractible _ ⟩
-     Contractible (Singleton true)                ↝⟨ H-level.respects-surjection surj 0 ⟩
-     Contractible (∃ λ b → ↑ _ (lower b ≡ true))  ↝⟨ contractible-to-contractible l ⟩
-     Contractible (↑ _ Bool)                      ↝⟨ H-level.respects-surjection (_↔_.surjection Bij.↑↔) 0 ⟩
-     Contractible Bool                            ↝⟨ mono₁ 0 ⟩
-     Is-proposition Bool                          ↝⟨ ¬-Bool-propositional ⟩□
-     ⊥                                            □
-  where
-  surj : Singleton true ↠ ∃ λ b → ↑ _ (lower b ≡ true)
-  surj = record
-    { logical-equivalence = record
-      { to   = λ { (b , b≡true) → lift b , lift b≡true }
-      ; from = λ { (lift b , lift b≡true) → b , b≡true }
-      }
-    ; right-inverse-of = λ _ → refl
-    }
+no-first-projection-lens =
+  Lens.Non-dependent.no-first-projection-lens
+    Iso-lens contractible-to-contractible
 
 ------------------------------------------------------------------------
 -- Iso-lens combinators

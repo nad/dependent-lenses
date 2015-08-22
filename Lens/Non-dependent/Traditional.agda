@@ -18,6 +18,8 @@ open import H-level.Closure equality-with-J
 open import Surjection equality-with-J using (_↠_)
 open import Univalence-axiom equality-with-J
 
+import Lens.Non-dependent
+
 ------------------------------------------------------------------------
 -- Traditional lenses
 
@@ -799,6 +801,14 @@ h-level-respects-lens-from-inhabited {n} {A = A} {B} l a =
         b              ∎
     }
 
+-- Lenses with contractible domains have contractible codomains.
+
+contractible-to-contractible :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Lens A B → Contractible A → Contractible B
+contractible-to-contractible l c =
+  h-level-respects-lens-from-inhabited l (proj₁ c) c
+
 -- If A and B have h-level n (where, in the case of B, one can assume
 -- that A is inhabited), then Lens a b also has h-level n (assuming
 -- extensionality).
@@ -850,3 +860,17 @@ lens-preserves-h-level-of-domain {ℓa} {ℓb} ext n hA =
   ⊥₀                                □)
   where
   A = _
+
+------------------------------------------------------------------------
+-- An existence result
+
+-- There is, in general, no lens for the first projection from a
+-- Σ-type.
+
+no-first-projection-lens :
+  ∀ {a b} →
+  ∃ λ (A : Set a) → ∃ λ (B : A → Set b) →
+    ¬ Lens (Σ A B) A
+no-first-projection-lens =
+  Lens.Non-dependent.no-first-projection-lens
+    Lens contractible-to-contractible
