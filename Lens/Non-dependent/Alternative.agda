@@ -737,10 +737,7 @@ Iso-lens↠Traditional-lens {ℓa} {ℓb} {A} {B} ext A-set = record
 
     B-set : A → Is-set B
     B-set a =
-      proj₂-closure (proj₁ $ _≃_.to eq a) 2 $
-      H-level.respects-surjection (_≃_.surjection eq) 2 A-set
-      where
-      eq = Iso-lens.equiv (from l)
+      Traditional.h-level-respects-lens-from-inhabited l a A-set
 
 -- If the domain A is a set, then Traditional.Lens A B and
 -- Iso-lens A B are isomorphic (assuming extensionality, univalence
