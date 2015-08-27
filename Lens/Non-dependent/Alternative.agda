@@ -7,7 +7,7 @@
 module Lens.Non-dependent.Alternative where
 
 open import Equality.Propositional
-open import Logical-equivalence using (module _⇔_)
+open import Logical-equivalence using (_⇔_; module _⇔_)
 open import Prelude hiding (id) renaming (_∘_ to _⊚_)
 
 open import Bijection equality-with-J as Bij using (_↔_)
@@ -873,6 +873,54 @@ Iso-lens↔Traditional-lens {a} {b} {A} {B} ext univ resize A-set = record
       (∥ B ∥ 1 ℓ × (∥ B ∥ 1 (lsuc ℓ) → R))                        ↔⟨ lemma′ ⟩
 
       R                                                           □
+
+-- If the codomain B is an inhabited set, then Iso-lens A B and
+-- Traditional.Lens A B are logically equivalent (assuming
+-- extensionality).
+--
+-- This definition is inspired by the statement of Corollary 13 from
+-- "Algebras and Update Strategies" by Johnson, Rosebrugh and Wood.
+
+Iso-lens⇔Traditional-lens :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (a ⊔ b) →
+  Is-set B →
+  B →
+  Iso-lens A B ⇔ Traditional.Lens A B
+Iso-lens⇔Traditional-lens {A = A} {B} ext B-set b₀ = record
+  { to   = Iso-lens.traditional-lens
+  ; from = from
+  }
+  where
+  from : Traditional.Lens A B → Iso-lens A B
+  from l = isomorphism-to-lens′
+    {R = ∃ λ (a : A) → get a ≡ b₀}
+    ext
+    (record
+       { surjection = record
+         { logical-equivalence = record
+           { to   = λ a → (set a b₀ , get-set a b₀) , get a
+           ; from = λ { ((a , _) , b) → set a b }
+           }
+         ; right-inverse-of = λ { ((a , h) , b) →
+             let
+               lemma =
+                 set (set a b) b₀  ≡⟨ set-set a b b₀ ⟩
+                 set a b₀          ≡⟨ cong (set a) (sym h) ⟩
+                 set a (get a)     ≡⟨ set-get a ⟩∎
+                 a                 ∎
+             in
+             ((set (set a b) b₀ , get-set (set a b) b₀) , get (set a b))  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma (_⇔_.to set⇔UIP B-set _ _)) (get-set a b) ⟩∎
+             ((a                , h                   ) , b            )  ∎
+           }
+         }
+       ; left-inverse-of = λ a →
+           set (set a b₀) (get a)  ≡⟨ set-set a b₀ (get a) ⟩
+           set a (get a)           ≡⟨ set-get a ⟩∎
+           a                       ∎
+       })
+    where
+    open Traditional.Lens l
 
 ------------------------------------------------------------------------
 -- Some Iso-lens results related to h-levels
