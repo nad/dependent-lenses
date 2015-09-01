@@ -400,7 +400,7 @@ lens-to-⊥↔¬ :
   Iso-lens A (⊥ {ℓ = b}) ↔ ¬ A
 lens-to-⊥↔¬ {a} {A = A} ext univ =
   Iso-lens A ⊥  ↝⟨ lens-to-proposition↔get ext univ ⊥-propositional ⟩
-  (A → ⊥)       ↝⟨ →-cong (lower-extensionality _ _ ext) F.id (⊥↔uninhabited ⊥-elim) ⟩□
+  (A → ⊥)       ↝⟨ inverse $ ¬↔→⊥ (lower-extensionality _ _ ext) ⟩□
   ¬ A           □
 
 -- If A is contractible, then Iso-lens A B is isomorphic to
