@@ -307,7 +307,7 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
   convert (rec (rec (rec (_ , f) , x) , lemma)) =
     rec (rec (_ , x) , lemma)
 
-  -- Let us now try to construct lenses for the same fields, but now
+  -- Let us now try to construct lenses for the same fields, but
   -- accessed through an R₂ record.
 
   -- First we define a lens for the r₁ field.
