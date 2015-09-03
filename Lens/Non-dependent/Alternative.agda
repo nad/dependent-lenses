@@ -398,7 +398,7 @@ lens-to-⊥↔¬ :
   Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
   Univalence (lsuc (a ⊔ b)) →
   Iso-lens A (⊥ {ℓ = b}) ↔ ¬ A
-lens-to-⊥↔¬ {a} {A = A} ext univ =
+lens-to-⊥↔¬ {A = A} ext univ =
   Iso-lens A ⊥  ↝⟨ lens-to-proposition↔get ext univ ⊥-propositional ⟩
   (A → ⊥)       ↝⟨ inverse $ ¬↔→⊥ (lower-extensionality _ _ ext) ⟩□
   ¬ A           □
@@ -958,7 +958,7 @@ h-level-respects-lens-from-inhabited {n} {A = A} {B} l a =
 -- a non-set as its codomain (assuming univalence).
 
 lens-from-proposition-to-non-set :
-  Univalence lzero →
+  Univalence (# 0) →
   ∀ {a b} →
   ∃ λ (A : Set a) → ∃ λ (B : Set (lsuc lzero ⊔ b)) →
   Iso-lens A B × Is-proposition A × ¬ Is-set B
