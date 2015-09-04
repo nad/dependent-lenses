@@ -10,14 +10,17 @@ open import Equality.Propositional
 open import Logical-equivalence using (module _⇔_)
 open import Prelude hiding (id) renaming (_∘_ to _⊚_)
 
+open import Bijection equality-with-J as Bij using (_↔_; module _↔_)
 open import Bool equality-with-J
-open import Bijection equality-with-J using (_↔_; module _↔_; ↑↔)
+open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Decision-procedures equality-with-J
-open import Equality.Tactic equality-with-J as Tactic
-open import Equivalence equality-with-J using (_≃_; module _≃_; ↔⇒≃)
+open import Equality.Tactic equality-with-J as Tactic hiding (module Eq)
+open import Equivalence equality-with-J as Eq using (_≃_; module _≃_)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
-open import H-level equality-with-J
+open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
+open import H-level.Truncation equality-with-J as Trunc
+open import Surjection equality-with-J using (module _↠_)
 open import Univalence-axiom equality-with-J
 
 ------------------------------------------------------------------------
@@ -27,12 +30,12 @@ open import Univalence-axiom equality-with-J
 -- into a "remainder" r of type R and a value of type B r.
 
 Lens₃ : ∀ {a r b} → Set a → (R : Set r) → (R → Set b) → Set _
-Lens₃ A R B = A ↔ Σ R B
+Lens₃ A R B = A ≃ Σ R B
 
 module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
              (lens : Lens₃ A R B) where
 
-  open _↔_
+  open _≃_
 
   -- The remainder.
 
@@ -63,7 +66,7 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
 
   -- A related isomorphism.
 
-  B-set↔ : ∀ {a b} → B (remainder (set a b)) ↔ B (remainder a)
+  B-set↔ : ∀ {a b} → B (remainder (set a b)) ≃ B (remainder a)
   B-set↔ = ≡⇒↝ _ (cong B (remainder-set _ _))
 
   -- Some lens laws.
@@ -92,7 +95,7 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
   get-set₂ : ∀ a b → get (set a b) ≡ from B-set↔ b
   get-set₂ a b =
     proj₂ (to lens (from lens (remainder a , b)))  ≡⟨ get-set₁ _ _ ⟩
-    subst B (sym (cong proj₁ lemma)) b             ≡⟨ subst-in-terms-of-inverse∘≡⇒↝ bijection (cong proj₁ lemma) _ _ ⟩∎
+    subst B (sym (cong proj₁ lemma)) b             ≡⟨ subst-in-terms-of-inverse∘≡⇒↝ equivalence (cong proj₁ lemma) _ _ ⟩∎
     from (≡⇒↝ _ (cong B (cong proj₁ lemma))) b     ∎
     where
     lemma = right-inverse-of lens _
@@ -108,7 +111,7 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
   set-set₂ : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a (to B-set↔ b₂)
   set-set₂ a b₁ b₂ =
     set (set a b₁) b₂                  ≡⟨ set-set₁ _ _ _ ⟩
-    set a (subst B eq b₂)              ≡⟨ cong (set a) (subst-in-terms-of-≡⇒↝ bijection eq _ _) ⟩∎
+    set a (subst B eq b₂)              ≡⟨ cong (set a) (subst-in-terms-of-≡⇒↝ equivalence eq _ _) ⟩∎
     set a (to (≡⇒↝ _ (cong B eq)) b₂)  ∎
     where
     eq = remainder-set a b₁
@@ -138,107 +141,170 @@ _₃∘₃_ {A = A} {R₁} {B₁} {R₂} {B₂} l₁ l₂ =
   Σ (Σ R₁ R₂) (uncurry B₂)      □
 
 ------------------------------------------------------------------------
--- Lens₃ equality and some properties
-
--- If Lens₃ lenses had been defined using equivalences instead of
--- bijections, and we had access to extensionality for functions, then
--- Equal₃ could have been replaced by _≡_.
-
-Equal₃ : ∀ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
-         (l₁ l₂ : Lens₃ A R B) → Set (a ⊔ r ⊔ b)
-Equal₃ l₁ l₂ = ∀ x → to l₁ x ≡ to l₂ x
-  where open _↔_
+-- Some Lens₃ properties
 
 -- id₃ and _₃∘₃_ form a kind of monoid.
 
 left-identity₃ :
-  ∀ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
+  ∀ {a r b} {A : Set a} {R : Set r} {B : R → Set b} →
+  Extensionality (a ⊔ b ⊔ r) (a ⊔ b ⊔ r) →
   (l : Lens₃ A R B) →
-  Equal₃
-    (id₃ ₃∘₃ l)
-    (A                      ↝⟨ l ⟩
-     Σ R B                  ↝⟨ Σ-cong (inverse ×-right-identity) (λ _ → F.id) ⟩□
-     Σ (R × ⊤) (B ⊚ proj₁)  □)
-left-identity₃ _ _ = refl
+  id₃ ₃∘₃ l
+    ≡
+  (A                      ↝⟨ l ⟩
+   Σ R B                  ↝⟨ Σ-cong (inverse ×-right-identity) (λ _ → F.id) ⟩□
+   Σ (R × ⊤) (B ⊚ proj₁)  □)
+left-identity₃ ext _ = Eq.lift-equality ext refl
 
 right-identity₃ :
-  ∀ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
+  ∀ {a r b} {A : Set a} {R : Set r} {B : R → Set b} →
+  Extensionality (a ⊔ b ⊔ r) (a ⊔ b ⊔ r) →
   (l : Lens₃ A R B) →
-  Equal₃
-    (l ₃∘₃ id₃)
-    (A                      ↝⟨ l ⟩
-     Σ R B                  ↝⟨ Σ-cong (inverse ×-left-identity) (λ _ → F.id) ⟩□
-     Σ (⊤ × R) (B ⊚ proj₂)  □)
-right-identity₃ _ _ = refl
+  l ₃∘₃ id₃
+    ≡
+  (A                      ↝⟨ l ⟩
+   Σ R B                  ↝⟨ Σ-cong (inverse ×-left-identity) (λ _ → F.id) ⟩□
+   Σ (⊤ × R) (B ⊚ proj₂)  □)
+right-identity₃ ext _ = Eq.lift-equality ext refl
 
 associativity₃ :
   ∀ {a r₁ b₁ r₂ b₂ r₃ b₃}
     {A : Set a} {R₁ : Set r₁} {B₁ : R₁ → Set b₁}
     {R₂ : R₁ → Set r₂} {B₂ : (r₁ : R₁) → R₂ r₁ → Set b₂}
     {R₃ : (r₁ : R₁) → R₂ r₁ → Set r₃}
-    {B₃ : (r₁ : R₁) (r₂ : R₂ r₁) → R₃ r₁ r₂ → Set b₃}
+    {B₃ : (r₁ : R₁) (r₂ : R₂ r₁) → R₃ r₁ r₂ → Set b₃} →
+  Extensionality (a ⊔ r₁ ⊔ r₂ ⊔ r₃ ⊔ b₃) (a ⊔ r₁ ⊔ r₂ ⊔ r₃ ⊔ b₃) →
   (l₁ : ∀ {r₁ r₂} → Lens₃ (B₂ r₁ r₂) (R₃ r₁ r₂) (B₃ r₁ r₂))
   (l₂ : ∀ {r} → Lens₃ (B₁ r) (R₂ r) (B₂ r))
   (l₃ : Lens₃ A R₁ B₁) →
-  Equal₃
-    (l₁ ₃∘₃ (l₂ ₃∘₃ l₃))
-    (A                                                             ↝⟨ (l₁ ₃∘₃ l₂) ₃∘₃ l₃ ⟩
-     Σ (Σ R₁ (λ r₁ → Σ (R₂ r₁) (R₃ r₁))) (uncurry (uncurry ⊚ B₃))  ↝⟨ Σ-cong Σ-assoc (λ _ → F.id) ⟩□
-     Σ (Σ (Σ R₁ R₂) (uncurry R₃)) (uncurry (uncurry B₃))           □)
-associativity₃ _ _ _ _ = refl
+  l₁ ₃∘₃ (l₂ ₃∘₃ l₃)
+    ≡
+  (A                                                             ↝⟨ (l₁ ₃∘₃ l₂) ₃∘₃ l₃ ⟩
+   Σ (Σ R₁ (λ r₁ → Σ (R₂ r₁) (R₃ r₁))) (uncurry (uncurry ⊚ B₃))  ↝⟨ Σ-cong Σ-assoc (λ _ → F.id) ⟩□
+   Σ (Σ (Σ R₁ R₂) (uncurry R₃)) (uncurry (uncurry B₃))           □)
+associativity₃ ext _ _ _ = Eq.lift-equality ext refl
 
 ------------------------------------------------------------------------
 -- Dependent lenses without "remainder types" visible in the type
 
--- The remainder /level/ is still visible in the type.
+Lens : ∀ {a b} (A : Set a) → (A → Set b) → Set (lsuc (lsuc (a ⊔ b)))
+Lens {a} {b} A B =
+  ∃ λ (R : Set (lsuc (a ⊔ b))) →
+  ∃ λ (B′ : R → Set b) →
+  ∃ λ (lens : Lens₃ A R B′) →
+  ((r : R) → ∥ B′ r ∥ 1 b)
+    ×
+  (∀ a → B′ (Lens₃.remainder lens a) ≡ B a)
 
-record Lens {a b} r
-            (A : Set a) (B : A → Set b) : Set (a ⊔ lsuc (b ⊔ r)) where
-  field
-    -- The remainder type: what remains of A when B is removed
-    -- (roughly).
+module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
 
-    R : Set r
+  -- The remainder type: what remains of A when B is removed
+  -- (roughly).
 
-    -- A variant of B, indexed by Rs instead of As.
+  R : Set (lsuc (a ⊔ b))
+  R = proj₁ l
 
-    B′ : R → Set b
+  -- A variant of B, indexed by Rs instead of As.
 
-    -- The main lens isomorphism.
+  B′ : R → Set b
+  B′ = proj₁ (proj₂ l)
 
-    lens : Lens₃ A R B′
+  -- The main lens isomorphism.
+
+  lens : Lens₃ A R B′
+  lens = proj₁ (proj₂ (proj₂ l))
+
+  -- If the remainder type is inhabited, then the corresponding view
+  -- should also be (merely) inhabited.
+
+  inhabited : (r : R) → ∥ B′ r ∥ 1 b
+  inhabited = proj₁ (proj₂ (proj₂ (proj₂ l)))
 
   private module L = Lens₃ lens
-  open _↔_
+  open _≃_
 
-  -- The non-B part of the A value.
+  -- The "non-B" part of the A value.
 
   remainder : A → R
   remainder = L.remainder
 
-  field
-    -- An equality that specifies in what sense B′ is a variant of B.
-    --
-    -- (This used to be a bijection, but it was turned into an
-    -- equality in order to make it obvious that, if the K rule is
-    -- enabled, then variant cannot do anything strange.)
+  -- An equality that specifies in what sense B′ is a variant of B.
+  --
+  -- (This used to be a bijection, but it was turned into an
+  -- equality in order to make it obvious that, if the K rule is
+  -- enabled, then variant cannot do anything strange.)
 
-    variant : ∀ {a} → B′ (remainder a) ≡ B a
+  variant : ∀ a → B′ (remainder a) ≡ B a
+  variant = proj₂ (proj₂ (proj₂ (proj₂ l)))
 
   -- A corresponding isomorphism.
 
-  variant↔ : ∀ {a} → B′ (remainder a) ↔ B a
-  variant↔ = ≡⇒↝ _ variant
+  variant≃ : ∀ {a} → B′ (remainder a) ≃ B a
+  variant≃ = ≡⇒↝ _ (variant _)
+
+  -- A variant of variant.
+
+  other-variant : ∀ r (b′ : B′ r) → B′ r ≡ B (from lens (r , b′))
+  other-variant r b′ =
+    B′ r                                       ≡⟨⟩
+    B′ (proj₁ {B = B′} (r , b′))               ≡⟨ cong (B′ ⊚ proj₁) (sym $ right-inverse-of lens _) ⟩
+    B′ (proj₁ (to lens (from lens (r , b′))))  ≡⟨⟩
+    B′ (remainder (from lens (r , b′)))        ≡⟨ variant _ ⟩∎
+    B (from lens (r , b′))                     ∎
+
+  -- Note that B ⊚ _≃_.from lens only depends on the "R part" of the
+  -- argument.
+
+  independent-of-B′ : (r : R) → Constant (B ⊚ _≃_.from lens ⊚ (r ,_))
+  independent-of-B′ r b₁ b₂ =
+    B (_≃_.from lens (r , b₁))  ≡⟨ sym $ other-variant _ _ ⟩
+    B′ r                        ≡⟨ other-variant _ _ ⟩∎
+    B (_≃_.from lens (r , b₂))  ∎
+
+  -- Thus we can, with a fair number of assumptions, define a variant
+  -- of B that only depends on R.
+  --
+  -- The assumptions:
+  -- * Extensionality.
+  -- * A resizing rule for the propositional truncation.
+  -- * The K rule.
+  -- I don't know if these assumptions are mutually consistent.
+
+  module _ (ext    : Extensionality (lsuc (lsuc b)) (lsuc b))
+           (resize : ∀ {r} → ∥ B′ r ∥ 1 b → ∥ B′ r ∥ 1 (lsuc (lsuc b)))
+           (K      : K-rule (lsuc b) (lsuc b))
+           where
+
+    private
+      B̲′ : (r : R) → ∥ B′ r ∥ 1 (lsuc b) → Set b
+      B̲′ r =
+        to (constant-function≃∥inhabited∥⇒inhabited
+              (# 0) ext (_⇔_.from set⇔UIP (_⇔_.to K⇔UIP K)))
+           (B ⊚ _≃_.from lens ⊚ (r ,_) , independent-of-B′ r)
+
+    B̲ : R → Set b
+    B̲ r = B̲′ r (with-lower-level _ (resize (inhabited r)))
+
+    -- This type is pointwise equal to B′ (given the same assumptions).
+
+    B̲≡B′ : ∀ r → B̲ r ≡ B′ r
+    B̲≡B′ r = Trunc.prop-elim
+      ext
+      (λ ∥b′∥ → B̲′ r ∥b′∥ ≡ B′ r)
+      (λ _ → _⇔_.from set⇔UIP (_⇔_.to K⇔UIP K) _ _)
+      (λ b′ → sym (other-variant r b′))
+      (resize (inhabited r))
+      (with-lower-level _ (resize (inhabited r)))
 
   -- Getter.
 
   get : (a : A) → B a
-  get a = to variant↔ (L.get a)
+  get a = to variant≃ (L.get a)
 
   -- Setter.
 
   set : (a : A) → B a → A
-  set a b = L.set a (from variant↔ b)
+  set a b = L.set a (from variant≃ b)
 
   -- Modifier.
 
@@ -248,20 +314,20 @@ record Lens {a b} r
   -- Setting leaves the remainder unchanged.
 
   remainder-set : ∀ a b → remainder (set a b) ≡ remainder a
-  remainder-set a b = L.remainder-set a (from variant↔ b)
+  remainder-set a b = L.remainder-set a (from variant≃ b)
 
   -- Hence the type of the gettable part stays unchanged after a set.
 
   B-set : ∀ {a b} → B (set a b) ≡ B a
   B-set {a} {b} =
-    B (set a b)               ≡⟨ sym variant ⟩
+    B (set a b)               ≡⟨ sym (variant _) ⟩
     B′ (remainder (set a b))  ≡⟨ cong B′ (remainder-set a b) ⟩
-    B′ (remainder a)          ≡⟨ variant ⟩∎
+    B′ (remainder a)          ≡⟨ variant _ ⟩∎
     B a                       ∎
 
   -- A corresponding isomorphism.
 
-  B-set↔ : ∀ {a b} → B (set a b) ↔ B a
+  B-set↔ : ∀ {a b} → B (set a b) ≃ B a
   B-set↔ = ≡⇒↝ _ B-set
 
   -- Unfolding lemmas for B-set↔.
@@ -269,33 +335,36 @@ record Lens {a b} r
   to-B-set↔ :
     ∀ {a b} →
     to (B-set↔ {a = a} {b = b}) ≡
-    to variant↔ ⊚ to L.B-set↔ ⊚ from variant↔
+    to variant≃ ⊚ to L.B-set↔ ⊚ from variant≃
   to-B-set↔ =
-    to (≡⇒↝ _ (trans (sym variant) (trans eq variant)))       ≡⟨ ≡⇒↝-trans bijection {B≡C = trans eq variant} ⟩
-    to (≡⇒↝ _ (trans eq variant)) ⊚ to (≡⇒↝ _ (sym variant))  ≡⟨ cong (to (≡⇒↝ _ (trans eq variant)) ⊚_) (≡⇒↝-sym bijection {eq = variant}) ⟩
-    to (≡⇒↝ _ (trans eq variant)) ⊚ from variant↔             ≡⟨ cong (_⊚ from variant↔) (≡⇒↝-trans bijection {B≡C = variant}) ⟩∎
-    to variant↔ ⊚ to (≡⇒↝ _ eq) ⊚ from variant↔               ∎
+    to (≡⇒↝ _ (trans (sym (variant _)) (trans eq (variant _))))       ≡⟨ ≡⇒↝-trans equivalence {B≡C = trans eq (variant _)} ⟩
+    to (≡⇒↝ _ (trans eq (variant _))) ⊚ to (≡⇒↝ _ (sym (variant _)))  ≡⟨ cong (to (≡⇒↝ _ (trans eq (variant _))) ⊚_)
+                                                                              (≡⇒↝-sym equivalence {eq = variant _}) ⟩
+    to (≡⇒↝ _ (trans eq (variant _))) ⊚ from variant≃                 ≡⟨ cong (_⊚ from variant≃) (≡⇒↝-trans equivalence {B≡C = variant _}) ⟩∎
+    to variant≃ ⊚ to (≡⇒↝ _ eq) ⊚ from variant≃                       ∎
     where
     eq = cong B′ (remainder-set _ _)
 
   from-B-set↔ :
     ∀ {a b} →
     from (B-set↔ {a = a} {b = b}) ≡
-    to variant↔ ⊚ from L.B-set↔ ⊚ from variant↔
+    to variant≃ ⊚ from L.B-set↔ ⊚ from variant≃
   from-B-set↔ =
-    from (≡⇒↝ _ (trans (sym variant) (trans eq variant)))         ≡⟨ sym $ ≡⇒↝-sym bijection {eq = trans (sym variant) (trans eq variant)} ⟩
-    to (≡⇒↝ _ (sym (trans (sym variant) (trans eq variant))))     ≡⟨ cong (to ⊚ ≡⇒↝ bijection)
-                                                                          (Tactic.prove (Sym (Trans (Sym (Lift variant))
-                                                                                                    (Trans (Lift eq) (Lift variant))))
-                                                                                        (Trans (Trans (Sym (Lift variant)) (Sym (Lift eq)))
-                                                                                               (Lift variant))
-                                                                                        refl) ⟩
-    to (≡⇒↝ _ (trans (trans (sym variant) (sym eq)) variant))     ≡⟨ ≡⇒↝-trans bijection {B≡C = variant} ⟩
-    to variant↔ ⊚ to (≡⇒↝ _ (trans (sym variant) (sym eq)))       ≡⟨ cong (to variant↔ ⊚_) (≡⇒↝-trans bijection {B≡C = sym eq}) ⟩
-    to variant↔ ⊚ to (≡⇒↝ _ (sym eq)) ⊚ to (≡⇒↝ _ (sym variant))  ≡⟨ cong₂ (λ f g → to variant↔ ⊚ f ⊚ g)
-                                                                           (≡⇒↝-sym bijection {eq = eq})
-                                                                           (≡⇒↝-sym bijection {eq = variant}) ⟩∎
-    to variant↔ ⊚ from (≡⇒↝ _ eq) ⊚ from variant↔                 ∎
+    from (≡⇒↝ _ (trans (sym (variant _)) (trans eq (variant _))))      ≡⟨ sym $ ≡⇒↝-sym equivalence {eq = trans (sym (variant _))
+                                                                                                                (trans eq (variant _))} ⟩
+    to (≡⇒↝ _ (sym (trans (sym (variant _)) (trans eq (variant _)))))  ≡⟨ cong (to ⊚ ≡⇒↝ equivalence)
+                                                                               (Tactic.prove (Sym (Trans (Sym (Lift (variant _)))
+                                                                                                         (Trans (Lift eq) (Lift (variant _)))))
+                                                                                             (Trans (Trans (Sym (Lift (variant _)))
+                                                                                                           (Sym (Lift eq)))
+                                                                                                    (Lift (variant _)))
+                                                                                             refl) ⟩
+    to (≡⇒↝ _ (trans (trans (sym (variant _)) (sym eq)) (variant _)))  ≡⟨ ≡⇒↝-trans equivalence {B≡C = variant _} ⟩
+    to variant≃ ⊚ to (≡⇒↝ _ (trans (sym (variant _)) (sym eq)))        ≡⟨ cong (to variant≃ ⊚_) (≡⇒↝-trans equivalence {B≡C = sym eq}) ⟩
+    to variant≃ ⊚ to (≡⇒↝ _ (sym eq)) ⊚ to (≡⇒↝ _ (sym (variant _)))   ≡⟨ cong₂ (λ f g → to variant≃ ⊚ f ⊚ g)
+                                                                                (≡⇒↝-sym equivalence {eq = eq})
+                                                                                (≡⇒↝-sym equivalence {eq = variant _}) ⟩∎
+    to variant≃ ⊚ from (≡⇒↝ _ eq) ⊚ from variant≃                      ∎
     where
     eq = cong B′ (remainder-set _ _)
 
@@ -303,45 +372,70 @@ record Lens {a b} r
 
   set-get : ∀ a → set a (get a) ≡ a
   set-get a =
-    L.set a (from variant↔ (to variant↔ (L.get a)))  ≡⟨ cong (L.set a) (left-inverse-of variant↔ _) ⟩
+    L.set a (from variant≃ (to variant≃ (L.get a)))  ≡⟨ cong (L.set a) (left-inverse-of variant≃ _) ⟩
     L.set a (L.get a)                                ≡⟨ L.set-get a ⟩∎
     a                                                ∎
 
   get-set : ∀ a b → get (set a b) ≡ from B-set↔ b
   get-set a b =
-    to variant↔ (L.get (L.set a (from variant↔ b)))  ≡⟨ cong (to variant↔) $ L.get-set₂ _ _ ⟩
-    to variant↔ (from (≡⇒↝ _ eq) (from variant↔ b))  ≡⟨ cong (_$ b) (sym from-B-set↔) ⟩∎
+    to variant≃ (L.get (L.set a (from variant≃ b)))  ≡⟨ cong (to variant≃) $ L.get-set₂ _ _ ⟩
+    to variant≃ (from (≡⇒↝ _ eq) (from variant≃ b))  ≡⟨ cong (_$ b) (sym from-B-set↔) ⟩∎
     from B-set↔ b                                    ∎
     where
     eq = cong B′ (remainder-set a b)
 
   set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a (to B-set↔ b₂)
   set-set a b₁ b₂ =
-    L.set (L.set a (from variant↔ b₁)) (from variant↔ b₂)  ≡⟨ L.set-set₂ a (from variant↔ b₁) (from variant↔ b₂) ⟩
-    L.set a (to L.B-set↔ (from variant↔ b₂))               ≡⟨ cong (L.set a) lemma ⟩∎
-    L.set a (from variant↔ (to B-set↔ b₂))                 ∎
+    L.set (L.set a (from variant≃ b₁)) (from variant≃ b₂)  ≡⟨ L.set-set₂ a (from variant≃ b₁) (from variant≃ b₂) ⟩
+    L.set a (to L.B-set↔ (from variant≃ b₂))               ≡⟨ cong (L.set a) lemma ⟩∎
+    L.set a (from variant≃ (to B-set↔ b₂))                 ∎
     where
     lemma =
-      to L.B-set↔ (from variant↔ b₂)                                ≡⟨ sym $ left-inverse-of variant↔ _ ⟩
-      from variant↔ (to variant↔ (to L.B-set↔ (from variant↔ b₂)))  ≡⟨ cong (from variant↔ ⊚ (_$ b₂)) $ sym to-B-set↔ ⟩∎
-      from variant↔ (to B-set↔ b₂)                                  ∎
+      to L.B-set↔ (from variant≃ b₂)                                ≡⟨ sym $ left-inverse-of variant≃ _ ⟩
+      from variant≃ (to variant≃ (to L.B-set↔ (from variant≃ b₂)))  ≡⟨ cong (from variant≃ ⊚ (_$ b₂)) $ sym to-B-set↔ ⟩∎
+      from variant≃ (to B-set↔ b₂)                                  ∎
 
 ------------------------------------------------------------------------
 -- Lens combinators
 
--- Conversion from Lens₃ to Lens.
+-- Conversion from Lens₃ to Lens (depends on extensionality).
 
-Lens₃-to-Lens : ∀ {a r b} {A : Set a} {R : Set r} {B : R → Set b} →
-                (l : Lens₃ A R B) → Lens r A (B ⊚ Lens₃.remainder l)
-Lens₃-to-Lens l = record
-  { lens    = l
-  ; variant = refl
-  }
+Lens₃-to-Lens :
+  ∀ {a b} {A : Set a} {R : Set (lsuc (a ⊔ b))} {B : R → Set b} →
+  Extensionality (lsuc b) b →
+  (l : Lens₃ A R B) →
+  Lens A (B ⊚ Lens₃.remainder l)
+Lens₃-to-Lens {A = A} {R} {B} ext l =
+  _ ,
+  _ ,
+  (A                                                  ↝⟨ l ⟩
+   Σ R B                                              ↔⟨ ∃-cong (λ _ → inverse (∥∥×↔ ext)) ⟩
+   Σ R (λ r → ∥ B r ∥ 1 _ × B r)                      ↔⟨ Σ-assoc ⟩□
+   Σ (Σ R (λ r → ∥ B r ∥ 1 _)) (λ { (r , _) → B r })  □) ,
+  proj₂ ,
+  λ _ → refl
 
--- Identity lens.
+-- A variant of Lens₃-to-Lens.
 
-id : ∀ {a} {A : Set a} → Lens lzero A (λ _ → A)
-id = Lens₃-to-Lens id₃
+Lens₃-to-Lens′ :
+  ∀ {a r b} {A : Set (a ⊔ r)} {R : Set r} {B : R → Set b} →
+  Extensionality (lsuc b) b →
+  (l : Lens₃ A R B) →
+  Lens A (B ⊚ Lens₃.remainder l)
+Lens₃-to-Lens′ {A = A} {R} {B} ext l =
+  Lens₃-to-Lens ext
+    (A                                 ↝⟨ l ⟩
+     Σ R B                             ↝⟨ Σ-cong (inverse Bij.↑↔) (λ _ → F.id) ⟩□
+     Σ (↑ _ R) (λ { (lift r) → B r })  □)
+
+-- Identity lens (defined using extensionality).
+
+id : ∀ {a} {A : Set a} →
+     Extensionality (lsuc a) a →
+     Lens A (λ _ → A)
+id {A = A} ext = Lens₃-to-Lens′ ext
+  (A      ↔⟨ inverse ×-left-identity ⟩□
+   ⊤ × A  □)
 
 -- Composition of lenses.
 --
@@ -349,15 +443,17 @@ id = Lens₃-to-Lens id₃
 
 infixr 9 _∘₃_
 
-_∘₃_ : ∀ {a r₁ r₂ b c} {A : Set a} {R : Set r₂} {B : R → Set b}
-         {C : {r : R} → B r → Set c} →
-       (∀ {r} → Lens r₁ (B r) C) → (l₂ : Lens₃ A R B) →
-       Lens _ A (C ⊚ Lens₃.get l₂)
-l₁ ∘₃ l₂ = record
-  { lens    = lens l₁ ₃∘₃ l₂
-  ; variant = variant l₁
-  }
-  where open Lens
+_∘₃_ :
+  ∀ {a b c} {A : Set (a ⊔ b ⊔ c)} {R : Set (lsuc (a ⊔ b ⊔ c))}
+    {B : R → Set (b ⊔ c)} {C : {r : R} → B r → Set c} →
+  (∀ {r} → Lens (B r) C) → (l₂ : Lens₃ A R B) →
+  Lens A (C ⊚ Lens₃.get l₂)
+_∘₃_ {R = R} l₁ l₂ =
+  (∃ λ (r : R) → Lens.R (l₁ {r = r})) ,
+  (λ { (r₁ , r₂) → Lens.B′ (l₁ {r = r₁}) r₂ }) ,
+  Lens.lens l₁ ₃∘₃ l₂ ,
+  Lens.inhabited l₁ ⊚ proj₂ ,
+  Lens.variant l₁ ⊚ Lens₃.get l₂
 
 -- /Forward/ composition of lenses.
 --
@@ -367,46 +463,283 @@ l₁ ∘₃ l₂ = record
 
 infixr 9 _∘_
 
-_∘_ : ∀ {a b c r₁ r₂} {A : Set a} {B : A → Set b} {C : A → Set c} →
-      (l₁ : Lens r₁ A B) →
-      let open Lens l₁; open _↔_ lens in
-      (∀ {r} → Lens r₂ (B′ r) (λ b′ → C (from (r , b′)))) →
-      Lens _ A C
-_∘_ {C = C} l₁ l₂ = record
-  { lens    = lens l₂ ₃∘₃ lens l₁
-  ; variant = λ {a} →
-      B′ l₂ (remainder l₂ (Lens₃.get (lens l₁) a))  ≡⟨ variant l₂ ⟩
-      C (from (lens l₁) (to (lens l₁) a))           ≡⟨ cong C (left-inverse-of (lens l₁) a) ⟩∎
-      C a                                           ∎
-  }
+_∘_ : ∀ {a b c}
+        {A : Set (a ⊔ b ⊔ c)} {B : A → Set (b ⊔ c)} {C : A → Set c} →
+      (l₁ : Lens A B) →
+      let open Lens l₁; open _≃_ lens in
+      (∀ {r} → Lens (B′ r) (λ b′ → C (from (r , b′)))) →
+      Lens A C
+_∘_ {C = C} l₁ l₂ =
+  (∃ λ (r₁ : R l₁) → Lens.R (l₂ {r = r₁})) ,
+  (λ { (r₁ , r₂) → B′ (l₂ {r = r₁}) r₂ }) ,
+  lens l₂ ₃∘₃ lens l₁ ,
+  (λ { (_ , r₂) → inhabited l₂ r₂ }) ,
+  λ a →
+    B′ l₂ (remainder l₂ (Lens₃.get (lens l₁) a))  ≡⟨ variant l₂ _ ⟩
+    C (from (lens l₁) (to (lens l₁) a))           ≡⟨ cong C (left-inverse-of (lens l₁) a) ⟩∎
+    C a                                           ∎
   where
-  open _↔_
+  open _≃_
   open Lens
 
--- Lenses respect (certain) isomorphisms.
+-- Lenses respect (certain) equivalences.
 --
 -- Note that B₁ and B₂ are required to have the same universe level.
 -- One could avoid this restriction by adding another level parameter
 -- to the definition of Lens.
 
-cast : ∀ {r b}
-         {a₁} {A₁ : Set a₁} {B₁ : A₁ → Set b}
-         {a₂} {A₂ : Set a₂} {B₂ : A₂ → Set b}
-       (A₁↔A₂ : A₁ ↔ A₂) →
-       (∀ a → B₁ (_↔_.from A₁↔A₂ a) ≡ B₂ a) →
-       Lens r A₁ B₁ → Lens _ A₂ B₂
-cast {A₁ = A₁} {B₁} {A₂ = A₂} {B₂} A₁↔A₂ B₁≡B₂ l = record
-  { lens    = A₂      ↔⟨ inverse A₁↔A₂ ⟩
-              A₁      ↔⟨ lens ⟩□
-              Σ R B′  □
-  ; variant = λ {a} →
-              B′ (remainder (from a))  ≡⟨ variant ⟩
-              B₁ (from a)              ≡⟨ B₁≡B₂ _ ⟩∎
-              B₂ a                     ∎
-  }
+cast : ∀ {a b} {A₁ A₂ : Set a} {B₁ : A₁ → Set b} {B₂ : A₂ → Set b}
+       (A₁≃A₂ : A₁ ≃ A₂) →
+       (∀ a → B₁ (_≃_.from A₁≃A₂ a) ≡ B₂ a) →
+       Lens A₁ B₁ → Lens A₂ B₂
+cast {A₁ = A₁} {A₂} {B₁} {B₂} A₁≃A₂ B₁≡B₂ l =
+  _ ,
+  _ ,
+  (A₂      ↝⟨ inverse A₁≃A₂ ⟩
+   A₁      ↝⟨ lens ⟩□
+   Σ R B′  □) ,
+  inhabited ,
+  λ a →
+    B′ (remainder (from a))  ≡⟨ variant _ ⟩
+    B₁ (from a)              ≡⟨ B₁≡B₂ _ ⟩∎
+    B₂ a                     ∎
   where
-  open _↔_ A₁↔A₂
+  open _≃_ A₁≃A₂
   open Lens l
+
+------------------------------------------------------------------------
+-- Some lens isomorphisms
+
+-- If B x is a proposition for all x, then Lens A B is isomorphic to
+-- (x : A) → B x (assuming extensionality and univalence).
+
+lens-to-proposition↔get :
+  ∀ {a b} {A : Set a} {B : A → Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  Univalence b →
+  (∀ x → Is-proposition (B x)) →
+  Lens A B ↔ ((x : A) → B x)
+lens-to-proposition↔get {a} {b} {A} {B} ext univ₁ univ₂ B-prop =
+  (∃ λ (R : Set _) →
+   ∃ λ (B′ : R → Set _) →
+   ∃ λ (lens : A ≃ Σ R B′) →
+   ((r : R) → ∥ B′ r ∥ 1 _)
+     ×
+   (∀ a → B′ (Lens₃.remainder lens a) ≡ B a))                ↔⟨ (∃-cong λ _ → ∃-cong λ B′ → ∃-cong λ l → ∃-cong λ _ →
+                                                                 Eq.Π-preserves (lower-extensionality lzero (lsuc a) ext) l λ _ →
+                                                                 ≡⇒↝ _ $ cong (λ x → _ ≡ B x) $ sym $ _≃_.left-inverse-of l _) ⟩
+  (∃ λ (R : Set _) →
+   ∃ λ (B′ : R → Set _) →
+   ∃ λ (lens : A ≃ Σ R B′) →
+   ((r : R) → ∥ B′ r ∥ 1 _)
+     ×
+   (∀ p → B′ (proj₁ p) ≡ B (_≃_.from lens p)))               ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → currying) ⟩
+
+  (∃ λ (R : Set _) →
+   ∃ λ (B′ : R → Set _) →
+   ∃ λ (lens : A ≃ Σ R B′) →
+   ((r : R) → ∥ B′ r ∥ 1 _)
+     ×
+   ((r : R) (b : B′ r) → B′ r ≡ B (_≃_.from lens (r , b))))  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → inverse ΠΣ-comm) ⟩
+
+  (∃ λ (R : Set _) →
+   ∃ λ (B′ : R → Set _) →
+   ∃ λ (lens : A ≃ Σ R B′) →
+   ((r : R) →
+      ∥ B′ r ∥ 1 _
+        ×
+      ((b : B′ r) → B′ r ≡ B (_≃_.from lens (r , b)))))      ↔⟨ (∃-cong λ _ → ∃-cong λ B′ → ∃-cong λ lens →
+                                                                 Eq.∀-preserves (lower-extensionality lzero (lsuc a) ext) $
+                                                                 lemma₁ B′ lens) ⟩
+  (∃ λ (R : Set _) →
+   ∃ λ (B′ : R → Set _) →
+   ∃ λ (lens : A ≃ Σ R B′) →
+   ((r : R) → ∃ λ (⊤≃B′ : ⊤ ≃ B′ r) →
+                B (_≃_.from lens (r , _≃_.to ⊤≃B′ _))))      ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ΠΣ-comm) ⟩
+
+  (∃ λ (R : Set _) →
+   ∃ λ (B′ : R → Set _) →
+   ∃ λ (lens : A ≃ Σ R B′) →
+   ∃ λ (⊤≃B′ : ∀ r → ⊤ ≃ B′ r) →
+   ∀ r → B (_≃_.from lens (r , _≃_.to (⊤≃B′ r) _)))          ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-comm) ⟩
+
+  (∃ λ (R : Set _) →
+   ∃ λ (B′ : R → Set _) →
+   ∃ λ (⊤≃B′ : ∀ r → ⊤ ≃ B′ r) →
+   ∃ λ (lens : A ≃ Σ R B′) →
+   ∀ r → B (_≃_.from lens (r , _≃_.to (⊤≃B′ r) _)))          ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ ⊤≃B′ →
+                                                                 Σ-cong (Eq.≃-preserves-bijections ext F.id
+                                                                           (drop-⊤-right (λ r → inverse (⊤≃B′ r)))) λ _ →
+                                                                 F.id) ⟩
+  (∃ λ (R : Set _) →
+   ∃ λ (B′ : R → Set _) →
+   (∀ r → ⊤ ≃ B′ r)
+     ×
+   ∃ λ (lens : A ≃ R) →
+   ∀ r → B (_≃_.from lens r))                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-comm) ⟩
+
+  (∃ λ (R : Set _) →
+   ∃ λ (B′ : R → Set _) →
+   ∃ λ (lens : A ≃ R) →
+   (∀ r → ⊤ ≃ B′ r)
+     ×
+   ∀ r → B (_≃_.from lens r))                                ↝⟨ (∃-cong λ _ → ∃-comm) ⟩
+
+  (∃ λ (R : Set _) →
+   ∃ λ (lens : A ≃ R) →
+   ∃ λ (B′ : R → Set _) →
+   (∀ r → ⊤ ≃ B′ r)
+     ×
+   ∀ r → B (_≃_.from lens r))                                ↝⟨ Σ-assoc ⟩
+
+  (Σ (∃ λ (R : Set _) → A ≃ R) λ { (R , lens) →
+   ∃ λ (B′ : R → Set _) →
+   (∀ r → ⊤ ≃ B′ r)
+     ×
+   ∀ r → B (_≃_.from lens r) })                              ↝⟨ drop-⊤-left-Σ (other-singleton-with-≃-↔-⊤ ext univ₁) ⟩
+
+  (∃ λ (B′ : ↑ _ A → Set _) →
+   (∀ a → ⊤ ≃ B′ a)
+     ×
+   (∀ a → B (lower a)))                                      ↝⟨ Σ-assoc ⟩
+
+  (∃ λ (B′ : ↑ _ A → Set _) → ∀ a → ⊤ ≃ B′ a)
+    ×
+  (∀ a → B (lower a))                                        ↔⟨ ((∃-cong λ _ → Eq.∀-preserves (lower-extensionality lzero _ ext) λ _ →
+                                                                  Eq.≃-preserves (lower-extensionality _ _ ext) (inverse $ Eq.↔⇒≃ Bij.↑↔) F.id)
+                                                                   ×-cong
+                                                                 Eq.Π-preserves (lower-extensionality lzero _ ext)
+                                                                                (Eq.↔⇒≃ Bij.↑↔) (λ _ → F.id)) ⟩
+  (∃ λ (B′ : ↑ _ A → Set _) → ∀ a → ↑ _ ⊤ ≃ B′ a)
+    ×
+  (∀ a → B a)                                                ↔⟨ (∃-cong λ B′ →
+                                                                 Eq.∀-preserves (lower-extensionality lzero (lsuc a) ext) λ _ →
+                                                                 inverse $ ≡≃≃ univ₂)
+                                                                  ×-cong
+                                                                F.id ⟩
+  (∃ λ (B′ : ↑ _ A → Set _) → ∀ a → ↑ _ ⊤ ≡ B′ a)
+    ×
+  (∀ a → B a)                                                ↔⟨ (∃-cong λ _ →
+                                                                 Eq.extensionality-isomorphism (lower-extensionality lzero (lsuc a) ext))
+                                                                  ×-cong
+                                                                F.id ⟩
+  (∃ λ (B′ : ↑ _ A → Set _) → const (↑ _ ⊤) ≡ B′)
+    ×
+  (∀ a → B a)                                                ↝⟨ drop-⊤-left-× (λ _ →
+                                                                inverse $ _⇔_.to contractible⇔⊤↔ (other-singleton-contractible _)) ⟩□
+  (∀ a → B a)                                                □
+  where
+  lemma₂ : {R : Set _} (B′ : R → Set _) (r : R) → _
+  lemma₂ B′ r =
+    (∥ B′ r ∥ 1 _ × Is-proposition (B′ r))  ↝⟨ ×-comm ⟩
+
+    (Is-proposition (B′ r) × ∥ B′ r ∥ 1 _)  ↝⟨ (∃-cong λ B′-prop → ∥∥↔ b (lower-extensionality (lsuc a) _ ext) B′-prop) ⟩
+
+    (Is-proposition (B′ r) × B′ r)          ↔⟨ _↠_.from (Eq.≃↠⇔ (Σ-closure 1 (H-level-propositional (lower-extensionality _ _ ext) 1) λ B′-prop →
+                                                                 B′-prop)
+                                                                (H-level-propositional (lower-extensionality _ _ ext) 0))
+                                                        (record { to   = uncurry propositional⇒inhabited⇒contractible
+                                                                ; from = λ B′-contr → mono₁ 0 B′-contr , proj₁ B′-contr
+                                                                }) ⟩
+    Contractible (B′ r)                     ↝⟨ contractible↔⊤≃ (lower-extensionality _ _ ext) ⟩□
+
+    ⊤ ≃ B′ r                                □
+
+  lemma₁ : {R : Set _} (B′ : R → Set _) (lens : A ≃ Σ R B′) (r : R) → _
+  lemma₁ B′ lens r =
+    ∥ B′ r ∥ 1 _
+      ×
+    ((b′ : B′ r) → B′ r ≡ B (_≃_.from lens (r , b′)))  ↝⟨ (∃-cong λ _ → Eq.∀-preserves (lower-extensionality _ (lsuc a) ext) λ _ →
+                                                           ≡≃≃ univ₂) ⟩
+    ∥ B′ r ∥ 1 _
+      ×
+    ((b′ : B′ r) → B′ r ≃ B (_≃_.from lens (r , b′)))  ↝⟨ (∃-cong λ _ → Eq.∀-preserves (lower-extensionality _ _ ext) λ b′ →
+                                                           _↠_.from (Eq.≃↠⇔ (Eq.right-closure (lower-extensionality _ _ ext)
+                                                                                              0
+                                                                                              (B-prop _))
+                                                                            (×-closure 1
+                                                                                       (H-level-propositional (lower-extensionality _ _ ext) 1)
+                                                                                       (B-prop _)))
+                                                                    (record
+                                                                       { to   = λ eq →   H-level.respects-surjection
+                                                                                           (_≃_.surjection (inverse eq))
+                                                                                           1
+                                                                                           (B-prop _)
+                                                                                       , _≃_.to eq b′
+                                                                       ; from = λ { (B′-prop , b) → _↠_.from (Eq.≃↠⇔ B′-prop (B-prop _))
+                                                                                                             (record { to   = const b
+                                                                                                                     ; from = const b′
+                                                                                                                     }) }
+                                                                       })) ⟩
+    ∥ B′ r ∥ 1 _
+      ×
+    ((b′ : B′ r) → Is-proposition (B′ r)
+                     ×
+                   B (_≃_.from lens (r , b′)))         ↔⟨ (∃-cong λ _ → ΠΣ-comm) ⟩
+
+    ∥ B′ r ∥ 1 _
+      ×
+    (B′ r → Is-proposition (B′ r))
+      ×
+    ((b′ : B′ r) → B (_≃_.from lens (r , b′)))         ↝⟨ (∃-cong λ _ →
+                                                           _↠_.from (Eq.≃↠⇔ (Π-closure (lower-extensionality _ _ ext) 1 λ _ →
+                                                                             H-level-propositional (lower-extensionality _ _ ext) 1)
+                                                                            (H-level-propositional (lower-extensionality _ _ ext) 1))
+                                                                    (record { to   = λ B′-prop → [inhabited⇒+]⇒+ 0 B′-prop
+                                                                            ; from = λ B′-prop _ → B′-prop
+                                                                            })
+                                                             ×-cong
+                                                           F.id) ⟩
+    ∥ B′ r ∥ 1 _
+      ×
+    Is-proposition (B′ r)
+      ×
+    ((b′ : B′ r) → B (_≃_.from lens (r , b′)))         ↔⟨ ×-assoc ⟩
+
+    (∥ B′ r ∥ 1 _
+      ×
+     Is-proposition (B′ r))
+      ×
+    ((b′ : B′ r) → B (_≃_.from lens (r , b′)))         ↔⟨ lemma₂ B′ r ×-cong F.id ⟩
+
+    (⊤ ≃ B′ r)
+      ×
+    ((b′ : B′ r) → B (_≃_.from lens (r , b′)))         ↔⟨ (∃-cong λ ⊤≃B′ → drop-⊤-left-Π (lower-extensionality _ _ ext)
+                                                                                         (_≃_.bijection $ inverse ⊤≃B′)) ⟩□
+    (∃ λ (⊤≃B′ : ⊤ ≃ B′ r) →
+     B (_≃_.from lens (r , _≃_.to ⊤≃B′ _)))            □
+
+-- If B x is contractible for all x, then Lens A B is isomorphic to ⊤
+-- (assuming extensionality and univalence).
+
+lens-to-contractible↔⊤ :
+  ∀ {a b} {A : Set a} {B : A → Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  Univalence b →
+  (∀ x → Contractible (B x)) →
+  Lens A B ↔ ⊤
+lens-to-contractible↔⊤ {A = A} {B} ext univ₁ univ₂ cB =
+  Lens A B         ↝⟨ lens-to-proposition↔get ext univ₁ univ₂ (mono₁ 0 ⊚ cB) ⟩
+  ((x : A) → B x)  ↔⟨ (Eq.∀-preserves (lower-extensionality _ _ ext) λ _ →
+                       Eq.↔⇒≃ $ inverse $ _⇔_.to contractible⇔⊤↔ (cB _)) ⟩
+  (A → ⊤)          ↝⟨ →-right-zero ⟩□
+  ⊤                □
+
+-- Lens A (const ⊥) is isomorphic to ¬ A (assuming extensionality and
+-- univalence).
+
+lens-to-⊥↔¬ :
+  ∀ {a b} {A : Set a} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  Univalence b →
+  Lens A (const (⊥ {ℓ = b})) ↔ ¬ A
+lens-to-⊥↔¬ {A = A} ext univ₁ univ₂ =
+  Lens A (const ⊥)  ↝⟨ lens-to-proposition↔get ext univ₁ univ₂ (λ _ → ⊥-propositional) ⟩
+  (A → ⊥)           ↝⟨ inverse $ ¬↔→⊥ (lower-extensionality _ _ ext) ⟩□
+  ¬ A               □
 
 ------------------------------------------------------------------------
 -- An observation
@@ -414,7 +747,7 @@ cast {A₁ = A₁} {B₁} {A₂ = A₂} {B₂} A₁↔A₂ B₁≡B₂ l = recor
 -- Lens₃ lenses cannot (easily) be used to replace ordinary
 -- projections: one cannot, in general, define lenses with the type of
 -- the first projection from a Σ-type. For Lens lenses the situation
--- is more complicated.
+-- is unclear.
 
 module Observation where
 
@@ -448,18 +781,18 @@ module Observation where
   -- The first projection Lens cannot be defined for Unit /if/ we
   -- assume that the K rule holds.
 
-  not-proj₁ : ∀ {r} → K-rule r r → ¬ Lens r Unit (λ _ → Bool)
-  not-proj₁ {r} k l = contradiction
+  not-proj₁ : K-rule (# 1) (# 1) → ¬ Lens Unit (λ _ → Bool)
+  not-proj₁ k l = contradiction
     where
-    open _↔_
+    open _≃_
     open Lens l
 
     -- Some lemmas.
 
     helper :
-      {A C : Set} {B : Set r} {a₁ a₂ : A} {c : C}
+      {A C : Set} {B : Set₁} {a₁ a₂ : A} {c : C}
       (P : B → Set) (f : A → B)
-      (inv : ∀ {a} → P (f a) ↔ C) →
+      (inv : ∀ {a} → P (f a) ≃ C) →
       Is-set B →
       a₁ ≡ a₂ → (eq : f a₁ ≡ f a₂) →
       to inv (from (≡⇒↝ _ (cong P eq)) (from inv c)) ≡ c
@@ -473,9 +806,9 @@ module Observation where
     from-B-set : ∀ b → from (B-set↔ {a = u} {b = b}) b ≡ b
     from-B-set b =
       from B-set↔ b                                             ≡⟨ cong (_$ b) from-B-set↔ ⟩
-      to variant↔ (from (Lens₃.B-set↔ lens) (from variant↔ b))  ≡⟨ helper B′
+      to variant≃ (from (Lens₃.B-set↔ lens) (from variant≃ b))  ≡⟨ helper B′
                                                                           remainder
-                                                                          variant↔
+                                                                          variant≃
                                                                           (_⇔_.from set⇔UIP (_⇔_.to K⇔UIP k))
                                                                           (equal (set u b) u)
                                                                           (remainder-set u b) ⟩∎
@@ -492,68 +825,4 @@ module Observation where
       from B-set↔ false  ≡⟨ from-B-set false ⟩∎
       false              ∎)
 
-  -- If we assume univalence, then we /can/ define two Lenses that
-  -- have the same type signature as a first projection lens for Unit
-  -- (modulo the presence of a lifting).
-
-  possible : (Bool ≃ Bool) ↔ Bool →
-             Univalence lzero →
-             Univalence (lsuc lzero) →
-             Lens _ Unit (λ _ → ↑ _ Bool)
-  possible [Bool≃Bool]↔Bool univ₀ univ₁ = record
-    { R       = Set
-    ; B′      = _≡ Bool
-    ; lens    = Σ Bool (_≡ true)  ↝⟨ inverse $ _⇔_.to contractible⇔⊤↔ (singleton-contractible _) ⟩
-                ⊤                 ↝⟨ _⇔_.to contractible⇔⊤↔ (singleton-contractible _) ⟩□
-                Σ Set  (_≡ Bool)  □
-    ; variant = ≃⇒≡ univ₁ (↔⇒≃ (
-                  Bool ≡ Bool  ↔⟨ ≡≃≃ univ₀ ⟩
-                  Bool ≃ Bool  ↝⟨ [Bool≃Bool]↔Bool ⟩
-                  Bool         ↝⟨ inverse ↑↔ ⟩□
-                  ↑ _ Bool     □))
-    }
-
-  proj₁₁ : Univalence lzero →
-           Univalence (lsuc lzero) →
-           Lens _ Unit (λ _ → ↑ _ Bool)
-  proj₁₁ univ₀ univ₁ =
-    possible ([Bool≃Bool]↔Bool₁
-                (dependent-extensionality univ₁ (λ _ → univ₀)))
-             univ₀ univ₁
-
-  proj₁₂ : Univalence lzero →
-           Univalence (lsuc lzero) →
-           Lens _ Unit (λ _ → ↑ _ Bool)
-  proj₁₂ univ₀ univ₁ =
-    possible ([Bool≃Bool]↔Bool₂
-                (dependent-extensionality univ₁ (λ _ → univ₀)))
-             univ₀ univ₁
-
-  -- One of the Lenses has a reasonable get function, and is thus a
-  -- first projection lens:
-
-  get-possible :
-    ∀ (iso : (Bool ≃ Bool) ↔ Bool)
-    (univ₀ : Univalence _) (univ₁ : Univalence _) p →
-    Lens.get (possible iso univ₀ univ₁) p ≡
-    lift (_↔_.to iso F.id)
-  get-possible iso univ₀ univ₁ _ =
-    to (≡⇒↝ _ (≃⇒≡ univ₁ (↔⇒≃ iso′))) refl  ≡⟨ cong (_$ refl) (≡⇒→-≃⇒≡ bijection univ₁) ⟩
-    to iso′ refl                            ≡⟨ refl ⟩∎
-    lift (to iso F.id)                      ∎
-    where
-    open _↔_
-
-    iso′ = (inverse ↑↔ F.∘ iso) F.∘ _≃_.bijection (≡≃≃ univ₀)
-
-  proj₁₁-get : ∀ (univ₀ : Univalence _) (univ₁ : Univalence _) p →
-               Lens.get (proj₁₁ univ₀ univ₁) p ≡ lift true
-  proj₁₁-get univ₀ univ₁ =
-    get-possible ([Bool≃Bool]↔Bool₁ _) univ₀ univ₁
-
-  -- The other Lens doesn't have a reasonable get function:
-
-  proj₁₂-get : ∀ (univ₀ : Univalence _) (univ₁ : Univalence _) p →
-               Lens.get (proj₁₂ univ₀ univ₁) p ≡ lift false
-  proj₁₂-get univ₀ univ₁ =
-    get-possible ([Bool≃Bool]↔Bool₂ _) univ₀ univ₁
+  -- TODO: What is the situation in the presence of univalence?

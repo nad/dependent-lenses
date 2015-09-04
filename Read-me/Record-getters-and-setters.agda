@@ -17,6 +17,7 @@ open import Prelude hiding (_∘_)
 
 open import Bijection equality-with-J as Bij using (_↔_; module _↔_)
 open import Equality.Decision-procedures equality-with-J
+import Equivalence equality-with-J as Eq
 open import Function-universe equality-with-J as F hiding (_∘_)
 
 import Lens.Dependent
@@ -50,7 +51,7 @@ module Dependent₃ where
 
   x : {A : Set} →
       Lens₃ (R₁ A) (∃ λ (f : A → A) → ∀ y → f y ≡ y) (λ _ → A)
-  x = record
+  x = Eq.↔⇒≃ (record
     { surjection = record
       { logical-equivalence = record
         { to   = λ r → (R₁.f r , R₁.lemma r) , R₁.x r
@@ -59,14 +60,14 @@ module Dependent₃ where
       ; right-inverse-of = λ _ → refl
       }
     ; left-inverse-of = λ _ → refl
-    }
+    })
 
   -- The lemma field depends on the f field, so whenever the f field
   -- is set the lemma field needs to be updated as well.
 
   f : {A : Set} →
       Lens₃ (R₁ A) A (λ _ → ∃ λ (f : A → A) → ∀ y → f y ≡ y)
-  f = record
+  f = Eq.↔⇒≃ (record
     { surjection = record
       { logical-equivalence = record
         { to   = λ r → R₁.x r , (R₁.f r , R₁.lemma r)
@@ -75,13 +76,13 @@ module Dependent₃ where
       ; right-inverse-of = λ _ → refl
       }
     ; left-inverse-of = λ _ → refl
-    }
+    })
 
   -- The lemma field can be updated independently.
 
   lemma : {A : Set} →
           Lens₃ (R₁ A) (A × (A → A)) (λ r → ∀ y → proj₂ r y ≡ y)
-  lemma = record
+  lemma = Eq.↔⇒≃ (record
     { surjection = record
       { logical-equivalence = record
         { to   = λ r → (R₁.x r , R₁.f r) , R₁.lemma r
@@ -90,7 +91,7 @@ module Dependent₃ where
       ; right-inverse-of = λ _ → refl
       }
     ; left-inverse-of = λ _ → refl
-    }
+    })
 
   -- Note that the type of the last lens may not be quite
   -- satisfactory: the type of the lens does not guarantee that the
@@ -110,7 +111,7 @@ module Dependent₃ where
   A = id₃
 
   r₁ : Lens₃ R₂ Set R₁
-  r₁ = record
+  r₁ = Eq.↔⇒≃ (record
     { surjection = record
       { logical-equivalence = record
         { to   = λ r → R₂.A r , R₂.r₁ r
@@ -119,7 +120,7 @@ module Dependent₃ where
       ; right-inverse-of = λ _ → refl
       }
     ; left-inverse-of = λ _ → refl
-    }
+    })
 
   -- The lenses for the three R₁ fields can now be defined by
   -- composition:
@@ -139,21 +140,23 @@ module Dependent₃ where
 ------------------------------------------------------------------------
 -- Dependent lenses without "remainder types" visible in the type
 
-module Dependent where
+-- The code makes use of extensionality.
+
+module Dependent (ext₁ : Extensionality (# 1) (# 0)) where
 
   open Lens.Dependent
   open Dependent₃ using (R₁; module R₁; R₂; module R₂)
 
   -- Lenses for each of the three fields of R₁.
 
-  x : {A : Set} → Lens _ (R₁ A) (λ _ → A)
-  x = Lens₃-to-Lens Dependent₃.x
+  x : {A : Set} → Lens (R₁ A) (λ _ → A)
+  x = Lens₃-to-Lens′ ext₁ Dependent₃.x
 
-  f : {A : Set} → Lens _ (R₁ A) (λ _ → ∃ λ (f : A → A) → ∀ y → f y ≡ y)
-  f = Lens₃-to-Lens Dependent₃.f
+  f : {A : Set} → Lens (R₁ A) (λ _ → ∃ λ (f : A → A) → ∀ y → f y ≡ y)
+  f = Lens₃-to-Lens′ ext₁ Dependent₃.f
 
-  lemma : {A : Set} → Lens _ (R₁ A) (λ r → ∀ y → R₁.f r y ≡ y)
-  lemma = Lens₃-to-Lens Dependent₃.lemma
+  lemma : {A : Set} → Lens (R₁ A) (λ r → ∀ y → R₁.f r y ≡ y)
+  lemma = Lens₃-to-Lens′ ext₁ Dependent₃.lemma
 
   -- Note that the type of lemma is now more satisfactory: the type of
   -- the lens /does/ guarantee that the lemma applies to the input's f
@@ -161,19 +164,19 @@ module Dependent where
 
   -- A lens for the r₁ field of R₂.
 
-  r₁ : Lens _ R₂ (λ r → R₁ (R₂.A r))
-  r₁ = Lens₃-to-Lens Dependent₃.r₁
+  r₁ : Lens R₂ (λ r → R₁ (R₂.A r))
+  r₁ = Lens₃-to-Lens′ {a = # 0} ext₁ Dependent₃.r₁
 
   -- Lenses for the fields of R₁, accessed through an R₂ record. Note
   -- the use of /forward/ composition.
 
-  x₂ : Lens _ R₂ (λ r → R₂.A r)
+  x₂ : Lens R₂ (λ r → R₂.A r)
   x₂ = r₁ ∘ x
 
-  f₂ : Lens _ R₂ (λ r → ∃ λ (f : R₂.A r → R₂.A r) → ∀ y → f y ≡ y)
+  f₂ : Lens R₂ (λ r → ∃ λ (f : R₂.A r → R₂.A r) → ∀ y → f y ≡ y)
   f₂ = r₁ ∘ f
 
-  lemma₂ : Lens _ R₂ (λ r → ∀ y → proj₁ (Lens.get f₂ r) y ≡ y)
+  lemma₂ : Lens R₂ (λ r → ∀ y → R₁.f (R₂.r₁ r) y ≡ y)
   lemma₂ = r₁ ∘ lemma
 
 ------------------------------------------------------------------------
