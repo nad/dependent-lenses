@@ -247,9 +247,9 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
   other-variant : ∀ r (b′ : B′ r) → B′ r ≡ B (from lens (r , b′))
   other-variant r b′ =
     B′ r                                       ≡⟨⟩
-    B′ (proj₁ {B = B′} (r , b′))               ≡⟨ cong (B′ ⊚ proj₁) (sym $ right-inverse-of lens _) ⟩
+    B′ (proj₁ {B = B′} (r , b′))               ≡⟨ cong (B′ ⊚ proj₁) (sym $ right-inverse-of lens (r , b′)) ⟩
     B′ (proj₁ (to lens (from lens (r , b′))))  ≡⟨⟩
-    B′ (remainder (from lens (r , b′)))        ≡⟨ variant _ ⟩∎
+    B′ (remainder (from lens (r , b′)))        ≡⟨ variant (_≃_.from lens (r , b′)) ⟩∎
     B (from lens (r , b′))                     ∎
 
   -- Note that B ⊚ _≃_.from lens only depends on the "R part" of the
@@ -270,7 +270,8 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
   -- * The K rule.
   -- I don't know if these assumptions are mutually consistent.
 
-  module _ (ext    : Extensionality (lsuc (lsuc b)) (lsuc b))
+  module First-variant-of-B
+           (ext    : Extensionality (lsuc (lsuc b)) (lsuc b))
            (resize : ∀ {r} → ∥ B′ r ∥ 1 b → ∥ B′ r ∥ 1 (lsuc (lsuc b)))
            (K      : K-rule (lsuc b) (lsuc b))
            where
@@ -285,16 +286,142 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
     B̲ : R → Set b
     B̲ r = B̲′ r (with-lower-level _ (resize (inhabited r)))
 
-    -- This type is pointwise equal to B′ (given the same assumptions).
+    -- This type family is pointwise equal to B′ (given the same
+    -- assumptions).
 
-    B̲≡B′ : ∀ r → B̲ r ≡ B′ r
-    B̲≡B′ r = Trunc.prop-elim
+    B′≡B̲ : ∀ r → B′ r ≡ B̲ r
+    B′≡B̲ r = Trunc.prop-elim
       ext
-      (λ ∥b′∥ → B̲′ r ∥b′∥ ≡ B′ r)
+      (λ ∥b′∥ → B′ r ≡ B̲′ r ∥b′∥)
       (λ _ → _⇔_.from set⇔UIP (_⇔_.to K⇔UIP K) _ _)
-      (λ b′ → sym (other-variant r b′))
+      (other-variant r)
       (resize (inhabited r))
       (with-lower-level _ (resize (inhabited r)))
+
+  -- We can also use other assumptions:
+  --
+  -- * Extensionality.
+  -- * Univalence.
+  -- * A resizing rule for the propositional truncation.
+  -- * B should be a family of sets.
+
+  module Second-variant-of-B
+           (ext    : Extensionality (lsuc (lsuc b)) (lsuc b))
+           (univ   : Univalence b)
+           (resize : ∀ {r} → ∥ B′ r ∥ 1 b → ∥ B′ r ∥ 1 (lsuc b))
+           (B-set  : ∀ a → Is-set (B a))
+           where
+
+    private
+
+      B̲-triple : (r : R) → ∃ λ (X : SET b) → B′ r ≡ proj₁ X
+      B̲-triple r =
+        to (coherently-constant-function≃∥inhabited∥⇒inhabited
+              (# 0)
+              ext
+              (Σ-closure 3
+                 (∃-H-level-H-level-1+
+                    (lower-extensionality _ _ ext) univ 2)
+                 (λ { (_ , X-set) → mono₁ 2 $
+                      H-level-H-level-≡ʳ
+                        (lower-extensionality _ _ ext) univ 1 X-set })))
+           ( (λ b′ →   (B (_≃_.from lens (r , b′)) , B-set _)
+                     , other-variant r b′)
+           , (λ b′₁ b′₂ → Σ-≡,≡→≡
+                (Σ-≡,≡→≡ (independent-of-B′ r b′₁ b′₂)
+                         (_⇔_.to propositional⇔irrelevant
+                            Is-set-is-propositional
+                            _ _))
+                (subst (λ X → B′ r ≡ proj₁ X)
+                       (Σ-≡,≡→≡ (independent-of-B′ r b′₁ b′₂) _)
+                       (other-variant r b′₁)                        ≡⟨ subst-∘ (B′ r ≡_) proj₁
+                                                                               (Σ-≡,≡→≡ (independent-of-B′ r b′₁ b′₂) _) ⟩
+                 subst (B′ r ≡_)
+                       (cong proj₁ $
+                          Σ-≡,≡→≡ (independent-of-B′ r b′₁ b′₂) _)
+                       (other-variant r b′₁)                        ≡⟨⟩
+
+                 trans (other-variant r b′₁)
+                       (cong proj₁ $
+                          Σ-≡,≡→≡ (independent-of-B′ r b′₁ b′₂) _)  ≡⟨ cong (trans (other-variant r b′₁)) $
+                                                                         proj₁-Σ-≡,≡→≡ (independent-of-B′ r b′₁ b′₂) _ ⟩
+                 trans (other-variant r b′₁)
+                       (independent-of-B′ r b′₁ b′₂)                ≡⟨⟩
+
+                 trans (other-variant r b′₁)
+                       (trans (sym $ other-variant r b′₁)
+                              (other-variant r b′₂))                ≡⟨ sym $ trans-assoc _ _ (other-variant r b′₂) ⟩
+
+                 trans (trans (other-variant r b′₁)
+                              (sym $ other-variant r b′₁))
+                       (other-variant r b′₂)                        ≡⟨ cong (flip trans (other-variant r b′₂)) $
+                                                                         trans-symʳ (other-variant r b′₁) ⟩
+                 trans refl (other-variant r b′₂)                   ≡⟨ trans-reflˡ _ ⟩∎
+
+                 other-variant r b′₂                                ∎))
+           , (λ b′₁ b′₂ b′₃ →
+                let lemma =
+                      trans (independent-of-B′ r b′₁ b′₂)
+                            (independent-of-B′ r b′₂ b′₃)              ≡⟨⟩
+
+                      trans (trans (sym $ other-variant r b′₁)
+                                   (other-variant r b′₂))
+                            (trans (sym $ other-variant r b′₂)
+                                   (other-variant r b′₃))              ≡⟨ sym $ trans-assoc (independent-of-B′ r b′₁ b′₂)
+                                                                                            (sym $ other-variant r b′₂)
+                                                                                            (other-variant r b′₃) ⟩
+                      trans (trans (trans (sym $ other-variant r b′₁)
+                                          (other-variant r b′₂))
+                                   (sym $ other-variant r b′₂))
+                            (other-variant r b′₃)                      ≡⟨ cong (flip trans (other-variant r b′₃)) $
+                                                                            trans-[trans]-sym (sym $ other-variant r b′₁)
+                                                                                              (other-variant r b′₂) ⟩
+                      trans (sym $ other-variant r b′₁)
+                            (other-variant r b′₃)                      ≡⟨ refl ⟩∎
+
+                      independent-of-B′ r b′₁ b′₃                      ∎
+                in
+                trans
+                  (Σ-≡,≡→≡ (Σ-≡,≡→≡ (independent-of-B′ r b′₁ b′₂) _) _)
+                  (Σ-≡,≡→≡ (Σ-≡,≡→≡ (independent-of-B′ r b′₂ b′₃) _) _)  ≡⟨ trans-Σ-≡,≡→≡ (Σ-≡,≡→≡ (independent-of-B′ r b′₁ b′₂) _)
+                                                                                          (Σ-≡,≡→≡ (independent-of-B′ r b′₂ b′₃) _)
+                                                                                          _ _ ⟩
+                Σ-≡,≡→≡
+                  (trans (Σ-≡,≡→≡ (independent-of-B′ r b′₁ b′₂) _)
+                         (Σ-≡,≡→≡ (independent-of-B′ r b′₂ b′₃) _))
+                  _                                                      ≡⟨ Σ-≡,≡→≡-cong (trans-Σ-≡,≡→≡ (independent-of-B′ r b′₁ b′₂)
+                                                                                                        (independent-of-B′ r b′₂ b′₃)
+                                                                                                        _ _)
+                                                                                         refl ⟩
+                Σ-≡,≡→≡
+                  (Σ-≡,≡→≡ (trans (independent-of-B′ r b′₁ b′₂)
+                                  (independent-of-B′ r b′₂ b′₃))
+                           _)
+                  _                                                      ≡⟨ Σ-≡,≡→≡-cong
+                                                                              (Σ-≡,≡→≡-cong lemma
+                                                                                            (_⇔_.to propositional⇔irrelevant
+                                                                                               (mono₁ 0 (Is-set-is-propositional _ _))
+                                                                                               _ _))
+                                                                              (_⇔_.to propositional⇔irrelevant
+                                                                                 (H-level-H-level-≡ʳ (lower-extensionality _ _ ext)
+                                                                                                     univ 1 (B-set _) _ _)
+                                                                                 _ _) ⟩∎
+                Σ-≡,≡→≡ (Σ-≡,≡→≡ (independent-of-B′ r b′₁ b′₃) _) _      ∎))
+          (resize (inhabited r))
+        where
+        Is-set-is-propositional :
+          {B : Set b} → Is-proposition (Is-set B)
+        Is-set-is-propositional =
+          H-level-propositional (lower-extensionality _ _ ext) 2
+
+    B̲ : R → Set b
+    B̲ r = proj₁ (proj₁ (B̲-triple r))
+
+    B̲-set : ∀ r → Is-set (B̲ r)
+    B̲-set r = proj₂ (proj₁ (B̲-triple r))
+
+    B′≡B̲ : ∀ r → B′ r ≡ B̲ r
+    B′≡B̲ r = proj₂ (B̲-triple r)
 
   -- Getter.
 
