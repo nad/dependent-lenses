@@ -564,6 +564,44 @@ id {A = A} ext = Lens₃-to-Lens′ ext
   (A      ↔⟨ inverse ×-left-identity ⟩□
    ⊤ × A  □)
 
+-- Alternative conversion from Lens₃ to Lens.
+
+Lens₃-to-Lens-if-inhabited :
+  ∀ {a b} {A : Set a} {R : Set (lsuc (a ⊔ b))} {B : R → Set b} →
+  (l : Lens₃ A R B) →
+  (∀ r → ∥ B r ∥ 1 b) →
+  Lens A (B ⊚ Lens₃.remainder l)
+Lens₃-to-Lens-if-inhabited {A = A} {R} {B} l inh =
+  _ ,
+  _ ,
+  l ,
+  inh ,
+  λ _ → refl
+
+-- A variant of Lens₃-to-Lens-if-inhabited.
+
+Lens₃-to-Lens-if-inhabited′ :
+  ∀ {a r b} {A : Set (a ⊔ r)} {R : Set r} {B : R → Set b} →
+  (l : Lens₃ A R B) →
+  (∀ r → ∥ B r ∥ 1 b) →
+  Lens A (B ⊚ Lens₃.remainder l)
+Lens₃-to-Lens-if-inhabited′ {A = A} {R} {B} l inh =
+  Lens₃-to-Lens-if-inhabited
+    (A                                 ↝⟨ l ⟩
+     Σ R B                             ↝⟨ Σ-cong (inverse Bij.↑↔) (λ _ → F.id) ⟩□
+     Σ (↑ _ R) (λ { (lift r) → B r })  □)
+    (λ { (lift r) → inh r })
+
+-- Identity lens for merely inhabited types.
+
+id-if-inhabited : ∀ {a} {A : Set a} →
+                  ∥ A ∥ 1 a → Lens A (λ _ → A)
+id-if-inhabited {A = A} ∥a∥ =
+  Lens₃-to-Lens-if-inhabited′
+    (A      ↔⟨ inverse ×-left-identity ⟩□
+     ⊤ × A  □)
+    (const ∥a∥)
+
 -- Composition of lenses.
 --
 -- Note that this function combines a family of Lenses and a Lens₃.
