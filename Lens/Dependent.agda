@@ -610,10 +610,6 @@ _∘_ {C = C} l₁ l₂ =
   open Lens
 
 -- Lenses respect (certain) equivalences.
---
--- Note that B₁ and B₂ are required to have the same universe level.
--- One could avoid this restriction by adding another level parameter
--- to the definition of Lens.
 
 cast : ∀ {a b} {A₁ A₂ : Set a} {B₁ : A₁ → Set b} {B₂ : A₂ → Set b}
        (A₁≃A₂ : A₁ ≃ A₂) →
