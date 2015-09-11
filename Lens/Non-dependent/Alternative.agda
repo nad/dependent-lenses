@@ -33,7 +33,8 @@ import Lens.Non-dependent.Traditional as Traditional
 -- truncation instead of the one from the HoTT book. The
 -- Church-encoded truncation is perhaps less usable than the other
 -- one, but when both definitions are available they are isomorphic
--- (see H-level.Truncation.Real-propositional-truncation.isomorphic).
+-- (modulo some details, see
+-- H-level.Truncation.Real-propositional-truncation.isomorphic).
 
 Higher-lens : ∀ {a b} → Set a → Set b → Set (lsuc (lsuc (a ⊔ b)))
 Higher-lens {a} {b} A B =
