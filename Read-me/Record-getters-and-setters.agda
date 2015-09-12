@@ -369,12 +369,12 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
       open Lens
 
       isomorphisms = λ A r →
-        ⊤                                                  ↝⟨ inverse Bij.↑↔ ⟩
-        ↑ _ ⊤                                              ↝⟨ inverse Record↔Recʳ ⟩
+        ⊤                                                 ↝⟨ inverse Bij.↑↔ ⟩
+        ↑ _ ⊤                                             ↝⟨ inverse Record↔Recʳ ⟩
         Record (R₂ With ″A″  ≔ (λ _ → A)
-                   With ″r₁″ ≔ (λ _ → lift r))             ↔⟨ equiv r₁₂ ⟩
-        R r₁₂ × Record (R₁ A With ″f″  ≔ (λ _ → r · ″f″))  ↝⟨ F.id ×-cong Record↔Recʳ ⟩□
-        R r₁₂ × A × (∀ y → (r · ″f″) y ≡ y)                □
+                   With ″r₁″ ≔ (λ _ → lift r))            ↔⟨ equiv r₁₂ ⟩
+        R r₁₂ × Record (R₁ A With ″f″ ≔ (λ _ → r · ″f″))  ↝⟨ F.id ×-cong Record↔Recʳ ⟩□
+        R r₁₂ × A × (∀ y → (r · ″f″) y ≡ y)               □
 
       isomorphism : ∃ λ (A : Set₂) → ⊤ ↔ A × Bool
       isomorphism =
