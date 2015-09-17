@@ -8,7 +8,7 @@ module Lens.Non-dependent.Alternative where
 
 open import Equality.Propositional
 open import Logical-equivalence using (_⇔_; module _⇔_)
-open import Prelude hiding (id) renaming (_∘_ to _⊚_)
+open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 
 open import Bijection equality-with-J as Bij using (_↔_)
 open import Equality.Decidable-UIP equality-with-J
@@ -133,6 +133,13 @@ module Iso-lens {a b} {A : Set a} {B : Set b} (l : Iso-lens A B) where
     _≃_.from equiv (proj₁ (_≃_.to equiv (_≃_.from equiv (r , b₁))) , b₂)  ≡⟨ cong (λ x → _≃_.from equiv (proj₁ x , b₂))
                                                                                   (_≃_.right-inverse-of equiv _) ⟩∎
     _≃_.from equiv (r , b₂)                                               ∎
+
+  -- Another law.
+
+  remainder-set : ∀ a b → remainder (set a b) ≡ remainder a
+  remainder-set a b =
+    proj₁ (_≃_.to equiv (_≃_.from equiv (remainder a , b)))  ≡⟨ cong proj₁ $ _≃_.right-inverse-of equiv _ ⟩∎
+    remainder a                                              ∎
 
   -- Traditional lens.
 
@@ -322,6 +329,97 @@ equality-characterisation₄ {l₁ = l₁} {l₂} ext univ =
            _≃_.from (equiv l₂) p)                                   □
   where
   open Iso-lens
+
+------------------------------------------------------------------------
+-- More lens equalities
+
+-- If two lenses have equal setters, then they also have equal
+-- getters.
+
+getters-equal-if-setters-equal :
+  let open Iso-lens in
+  ∀ {a b} {A : Set a} {B : Set b} →
+  (l₁ l₂ : Iso-lens A B) →
+  (∀ a b → set l₁ a b ≡ set l₂ a b) →
+  (∀ a   → get l₁ a   ≡ get l₂ a)
+getters-equal-if-setters-equal l₁ l₂ setters-equal a =
+  get l₁ a                           ≡⟨⟩
+  proj₂ (to (equiv l₁) a)            ≡⟨ cong proj₂ $ from-to (equiv l₁) lemma ⟩
+  proj₂ (remainder l₁ a , get l₂ a)  ≡⟨ refl ⟩∎
+  get l₂ a                           ∎
+  where
+  open Iso-lens
+  open _≃_
+
+  lemma =
+    from (equiv l₁) (remainder l₁ a , get l₂ a)  ≡⟨⟩
+    set l₁ a (get l₂ a)                          ≡⟨ setters-equal _ _ ⟩
+    set l₂ a (get l₂ a)                          ≡⟨ set-get l₂ _ ⟩∎
+    a                                            ∎
+
+-- Let us assume that two lenses have a codomain type that is
+-- inhabited whenever it is merely inhabited. In that case the lenses
+-- are equal if their setters are equal (assuming extensionality and
+-- univalence).
+
+lenses-equal-if-setters-equal :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
+  (∥ B ∥ 1 (a ⊔ b) → B) →
+  (l₁ l₂ : Iso-lens A B) →
+  (∀ a b → Iso-lens.set l₁ a b ≡ Iso-lens.set l₂ a b) →
+  l₁ ≡ l₂
+lenses-equal-if-setters-equal {A = A} {B = B}
+                              ext univ ∥B∥→B l₁ l₂ setters-equal =
+  _↔_.from (equality-characterisation₃ ext univ)
+    ( R≃R
+    , (λ a →
+         remainder l₂ (set l₁ a _)  ≡⟨ cong (remainder l₂) $ setters-equal _ _ ⟩
+         remainder l₂ (set l₂ a _)  ≡⟨ remainder-set l₂ _ _ ⟩∎
+         remainder l₂ a             ∎)
+    , getters-equal-if-setters-equal l₁ l₂ setters-equal
+    )
+  where
+  open Iso-lens
+  open _≃_
+
+  BR≃BR =
+    B × R l₁  ↔⟨ ×-comm ⟩
+    R l₁ × B  ↝⟨ inverse (equiv l₁) ⟩
+    A         ↝⟨ equiv l₂ ⟩
+    R l₂ × B  ↔⟨ ×-comm ⟩□
+    B × R l₂  □
+
+  f : R l₁ → R l₂
+  f r = remainder l₂ (from (equiv l₁) (r , ∥B∥→B (inhabited l₁ r)))
+
+  id-f≃ : Eq.Is-equivalence (Σ-map P.id f)
+  id-f≃ = Eq.respects-extensional-equality
+    (λ { (b , r) → cong (uncurry λ x y → (y , x)) (
+         let b′ = ∥B∥→B (inhabited l₁ r) in
+
+         to (equiv l₂) (from (equiv l₁) (r , b))                    ≡⟨ cong (λ p → to (equiv l₂) (from (equiv l₁) (proj₁ p , b))) $
+                                                                         sym $ right-inverse-of (equiv l₁) _ ⟩
+         to (equiv l₂) (from (equiv l₁)
+           (proj₁ (to (equiv l₁) (from (equiv l₁) (r , b′))) , b))  ≡⟨⟩
+
+         to (equiv l₂) (set l₁ (from (equiv l₁) (r , b′)) b)        ≡⟨ cong (to (equiv l₂)) $ setters-equal _ _ ⟩
+
+         to (equiv l₂) (set l₂ (from (equiv l₁) (r , b′)) b)        ≡⟨⟩
+
+         to (equiv l₂)
+            (from (equiv l₂)
+                  (remainder l₂ (from (equiv l₁) (r , b′)) , b))    ≡⟨ right-inverse-of (equiv l₂) _ ⟩∎
+
+         (remainder l₂ (from (equiv l₁) (r , b′)) , b)              ∎) })
+    (is-equivalence BR≃BR)
+
+  f≃ : Eq.Is-equivalence f
+  f≃ r = Eq.drop-Σ-map-id _ id-f≃ (∥B∥→B (inhabited l₂ r)) r
+
+  R≃R : R l₁ ≃ R l₂
+  R≃R = Eq.⟨ f , f≃ ⟩
 
 ------------------------------------------------------------------------
 -- Some lens isomorphisms
