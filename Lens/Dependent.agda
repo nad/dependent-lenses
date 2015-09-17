@@ -29,6 +29,8 @@ open import H-level.Truncation equality-with-J as Trunc
 open import Surjection equality-with-J using (module _↠_)
 open import Univalence-axiom equality-with-J
 
+open import Lens.Non-dependent.Alternative as ND using (Iso-lens)
+
 ------------------------------------------------------------------------
 -- Dependent lenses with "remainder types" visible in the type
 
@@ -760,6 +762,134 @@ lens-to-⊥↔¬ {A = A} ext univ₁ univ₂ =
   Lens A (const ⊥)  ↝⟨ lens-to-proposition↔get ext univ₁ univ₂ (λ _ → ⊥-propositional) ⟩
   (A → ⊥)           ↝⟨ inverse $ ¬↔→⊥ (lower-extensionality _ _ ext) ⟩□
   ¬ A               □
+
+-- If we assume that equality with the codomain type is propositional,
+-- then non-dependent dependent lenses are isomorphic to non-dependent
+-- lenses (assuming extensionality and resizing rules for the
+-- propositional truncation).
+--
+-- TODO: Can this be proved without assuming that equality with the
+-- codomain type is propositional? If not, can the definition of Lens
+-- be changed so that it can be proved?
+
+non-dependent-lenses-isomorphic :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  (∥ B ∥ 1 b → ∥ B ∥ 1 (a ⊔ b)) →
+  ({B′ : Set b} → ∥ B′ ∥ 1 b → ∥ B′ ∥ 1 (lsuc b)) →
+  (∀ {B′} → Is-proposition (B′ ≡ B)) →
+  ∃ λ (iso : Lens A (const B) ↔ Iso-lens A B) →
+    ∀ {l a} → Lens.get l a ≡ ND.Iso-lens.get (_↔_.to iso l) a
+non-dependent-lenses-isomorphic {a} {A = A} {B}
+                                ext resize₁ resize₂ ≡B-prop =
+  (Lens A (const B)  ↝⟨ ∃-cong lemma ⟩□
+   Iso-lens A B      □)
+  , λ {l a} →
+    let p = variant l a
+        q = Trunc.rec _ _ (resize₂ (inhabited l (remainder l a)))
+    in
+    _≃_.to (≡⇒↝ _ p) (proj₂ (_≃_.to (lens l) a))  ≡⟨ cong (λ eq → _≃_.to (≡⇒↝ _ eq) (proj₂ (_≃_.to (lens l) a)))
+                                                          (_⇔_.to propositional⇔irrelevant ≡B-prop p q) ⟩∎
+    _≃_.to (≡⇒↝ _ q) (proj₂ (_≃_.to (lens l) a))  ∎
+  where
+  open Lens
+
+  lemma = λ R →
+    (∃ λ (B′ : R → Set _) →
+     ∃ λ (lens : A ≃ Σ R B′) →
+     ((r : R) → ∥ B′ r ∥ 1 _)
+       ×
+     (∀ a → B′ (Lens₃.remainder lens a) ≡ B))     ↔⟨ (∃-cong λ _ → ∃-cong λ l → ∃-cong λ _ →
+                                                      Eq.Π-preserves (lower-extensionality lzero (lsuc a) ext) l (λ _ → F.id)) ⟩
+    (∃ λ (B′ : R → Set _) →
+     (A ≃ Σ R B′)
+       ×
+     ((r : R) → ∥ B′ r ∥ 1 _)
+       ×
+     (∀ p → B′ (proj₁ p) ≡ B))                    ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → currying) ⟩
+
+    (∃ λ (B′ : R → Set _) →
+     (A ≃ Σ R B′)
+       ×
+     ((r : R) → ∥ B′ r ∥ 1 _)
+       ×
+     ((r : R) → B′ r → B′ r ≡ B))                 ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ inh →
+                                                      Eq.∀-preserves (lower-extensionality lzero (lsuc a) ext) λ r →
+                                                      _↠_.from (Eq.≃↠⇔ (Π-closure (lower-extensionality _ (lsuc a) ext) 1 λ _ →
+                                                                        ≡B-prop)
+                                                                       ≡B-prop)
+                                                        (record { from = λ B′r≡B     → const B′r≡B
+                                                                ; to   = λ B′r→B′r≡B → Trunc.rec ≡B-prop B′r→B′r≡B (resize₂ (inh r))
+                                                                })) ⟩
+    (∃ λ (B′ : R → Set _) →
+     (A ≃ Σ R B′)
+       ×
+     ((r : R) → ∥ B′ r ∥ 1 _)
+       ×
+     ((r : R) → B′ r ≡ B))                        ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ×-comm) ⟩
+
+    (∃ λ (B′ : R → Set _) →
+     (A ≃ Σ R B′)
+       ×
+     ((r : R) → B′ r ≡ B)
+       ×
+     ((r : R) → ∥ B′ r ∥ 1 _))                    ↝⟨ (∃-cong λ _ → ∃-comm) ⟩
+
+    (∃ λ (B′ : R → Set _) →
+     ((r : R) → B′ r ≡ B)
+       ×
+     (A ≃ Σ R B′)
+       ×
+     ((r : R) → ∥ B′ r ∥ 1 _))                    ↔⟨ (∃-cong λ _ →
+                                                        Σ-cong (Eq.extensionality-isomorphism
+                                                                  (lower-extensionality lzero (lsuc a) ext)) λ B′≡B →
+                                                        Eq.≃-preserves ext F.id (∃-cong λ _ → ≡⇒↝ _ (B′≡B _))
+                                                          ×-cong
+                                                        Eq.∀-preserves (lower-extensionality lzero (lsuc a) ext) (λ _ →
+                                                          Eq.↔⇒≃ $ ∥∥-cong (lower-extensionality (lsuc a) _ ext)
+                                                                           (≡⇒↝ _ (B′≡B _))))  ⟩
+    (∃ λ (B′ : R → Set _) →
+     B′ ≡ const B
+       ×
+     (A ≃ (R × B))
+       ×
+     (R → ∥ B ∥ 1 _))                             ↝⟨ Σ-assoc ⟩
+
+    ((∃ λ (B′ : R → Set _) → B′ ≡ const B)
+       ×
+     (A ≃ (R × B))
+       ×
+     (R → ∥ B ∥ 1 _))                             ↝⟨ drop-⊤-left-× (λ _ →
+                                                     inverse $ _⇔_.to contractible⇔⊤↔ (singleton-contractible _)) ⟩
+    ((A ≃ (R × B))
+       ×
+     (R → ∥ B ∥ 1 _))                             ↔⟨ (∃-cong λ _ →
+                                                      _↠_.from (Eq.≃↠⇔ (Π-closure (lower-extensionality lzero (lsuc a) ext) 1 λ _ →
+                                                                        truncation-has-correct-h-level 1 (lower-extensionality (lsuc a) _ ext))
+                                                                       (Π-closure ext 1 λ _ →
+                                                                        truncation-has-correct-h-level 1 (lower-extensionality lzero _ ext)))
+                                                        (record { from = λ R→∥B∥ r → with-lower-level a (R→∥B∥ r)
+                                                                ; to   = λ R→∥B∥ r → resize₁ (R→∥B∥ r)
+                                                                })) ⟩□
+    ((A ≃ (R × B))
+       ×
+     (R → ∥ B ∥ 1 _))                             □
+
+-- Non-dependent dependent lenses are isomorphic to non-dependent
+-- lenses, assuming extensionality, resizing rules for the
+-- propositional truncation, and the K rule.
+
+non-dependent-lenses-isomorphic-K :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  (∥ B ∥ 1 b → ∥ B ∥ 1 (a ⊔ b)) →
+  ({B′ : Set b} → ∥ B′ ∥ 1 b → ∥ B′ ∥ 1 (lsuc b)) →
+  K-rule (lsuc b) (lsuc b) →
+  ∃ λ (iso : Lens A (const B) ↔ Iso-lens A B) →
+    ∀ {l a} → Lens.get l a ≡ ND.Iso-lens.get (_↔_.to iso l) a
+non-dependent-lenses-isomorphic-K ext resize₁ resize₂ K =
+  non-dependent-lenses-isomorphic ext resize₁ resize₂
+    (_⇔_.from set⇔UIP (_⇔_.to K⇔UIP K) _ _)
 
 ------------------------------------------------------------------------
 -- Lens combinators
