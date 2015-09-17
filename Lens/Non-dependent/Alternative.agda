@@ -176,6 +176,20 @@ isomorphism-to-lens′ {A = A} {B} {R} ext iso =
      R × B      ↝⟨ inverse Bij.↑↔ ×-cong F.id ⟩□
      ↑ _ R × B  □)
 
+-- Another variant of isomorphism-to-lens.
+
+isomorphism-to-lens-if-inhabited :
+  ∀ {a b r} {A : Set (a ⊔ r)} {B : Set b} {R : Set r} →
+  A ↔ R × B →
+  (R → ∥ B ∥ 1 (a ⊔ b ⊔ r)) →
+  Iso-lens A B
+isomorphism-to-lens-if-inhabited {A = A} {B} {R} iso inhabited =
+  _ ,
+  (A          ↔⟨ iso ⟩
+   R × B      ↔⟨ inverse Bij.↑↔ ×-cong F.id ⟩□
+   ↑ _ R × B  □) ,
+  (inhabited ⊚ lower)
+
 ------------------------------------------------------------------------
 -- Equality characterisations for Iso-lenses
 
@@ -1477,6 +1491,34 @@ module Iso-lens-combinators where
     isomorphism-to-lens ext
       (A          ↝⟨ inverse $ drop-⊤-left-× (λ _ → Bij.↑↔) ⟩□
        ↑ _ ⊤ × A  □)
+
+  -- Identity lens for merely inhabited types.
+
+  id-if-inhabited :
+    ∀ {a} {A : Set a} →
+    ∥ A ∥ 1 a → Iso-lens A A
+  id-if-inhabited {A = A} ∥a∥ =
+    isomorphism-to-lens-if-inhabited
+      (A      ↔⟨ inverse ×-left-identity ⟩□
+       ⊤ × A  □)
+      (λ _ → ∥a∥)
+
+  -- The two definitions of the identity lens are equal (for merely
+  -- inhabited types, assuming extensionality and univalence).
+
+  id≡id-if-inhabited :
+    ∀ {a} {A : Set a} →
+    Extensionality (lsuc a) (lsuc a) →
+    Univalence (lsuc a) →
+    (ext : Extensionality (lsuc a) a) →
+    (∥a∥ : ∥ A ∥ 1 a) →
+    id ext ≡ id-if-inhabited ∥a∥
+  id≡id-if-inhabited {A = A} ext⁺ univ ext ∥a∥ =
+    _↔_.from (equality-characterisation₂ ext⁺ univ)
+      ( (↑ _ ⊤ × ∥ A ∥ 1 _  ↔⟨ drop-⊤-right (λ _ → inhabited⇒∥∥↔⊤ ext ∥a∥) ⟩
+         ↑ _ ⊤              □)
+      , λ _ → refl
+      )
 
   -- Composition of lenses.
   --
