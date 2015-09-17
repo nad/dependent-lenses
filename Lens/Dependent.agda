@@ -2,6 +2,12 @@
 -- Dependent lenses
 ------------------------------------------------------------------------
 
+-- Some code below depends on both the K rule and resizing rules for
+-- the propositional truncation. I don't know if these assumptions are
+-- mutually consistent, but Andrea Vezzosi and I have discussed this,
+-- and it seems plausible that some form of extensional type theory
+-- with squash types would provide a model for these axioms.
+
 {-# OPTIONS --without-K #-}
 
 module Lens.Dependent where
@@ -268,7 +274,6 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
   -- * Extensionality.
   -- * A resizing rule for the propositional truncation.
   -- * The K rule.
-  -- I don't know if these assumptions are mutually consistent.
 
   module First-variant-of-B
            (ext    : Extensionality (lsuc (lsuc b)) (lsuc b))
