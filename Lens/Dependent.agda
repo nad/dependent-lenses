@@ -552,6 +552,41 @@ codomain-set-≃≡id K l =
 ------------------------------------------------------------------------
 -- Some lens isomorphisms
 
+-- Iso-lens preserves level-preserving equivalences (assuming
+-- extensionality and univalence).
+
+Lens-cong :
+  ∀ {a b} {A₁ A₂ : Set a} {B₁ : A₁ → Set b} {B₂ : A₂ → Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Univalence b →
+  (A₁≃A₂ : A₁ ≃ A₂) →
+  (∀ a → B₁ a ≃ B₂ (_≃_.to A₁≃A₂ a)) →
+  Lens A₁ B₁ ≃ Lens A₂ B₂
+Lens-cong {a} {A₁ = A₁} {A₂} {B₁} {B₂} ext univ A₁≃A₂ B₁≃B₂ =
+  (∃ λ (R : Set _) →
+   ∃ λ (B′ : R → Set _) →
+   ∃ λ (lens : Lens₃ A₁ R B′) →
+   ((r : R) → ∥ B′ r ∥ 1 _)
+     ×
+   (∀ a → B′ (remainder lens a) ≡ B₁ a))              ↝⟨ (∃-cong λ R → ∃-cong λ B′ →
+                                                          Σ-cong (Eq.≃-preserves ext A₁≃A₂ F.id) λ lens →
+                                                          ∃-cong λ _ →
+                                                          Eq.Π-preserves (lower-extensionality _ (lsuc a) ext) A₁≃A₂ λ a →
+                                                          ≡-preserves-≃ (lower-extensionality _ _ ext) univ univ
+                                                            (≡⇒↝ _ (
+      B′ (proj₁ (to lens a))                                        ≡⟨ cong (λ a → B′ (proj₁ (to lens a))) $ sym $ left-inverse-of A₁≃A₂ _ ⟩∎
+      B′ (proj₁ (to lens (from A₁≃A₂ (to A₁≃A₂ a))))                ∎))
+                                                            (B₁≃B₂ a)) ⟩□
+  (∃ λ (R : Set _) →
+   ∃ λ (B′ : R → Set _) →
+   ∃ λ (lens : Lens₃ A₂ R B′) →
+   ((r : R) → ∥ B′ r ∥ 1 _)
+     ×
+   (∀ a → B′ (remainder lens a) ≡ B₂ a))              □
+  where
+  open Lens₃
+  open _≃_
+
 -- If B x is a proposition for all x, then Lens A B is isomorphic to
 -- (x : A) → B x (assuming extensionality and univalence).
 
@@ -1196,26 +1231,6 @@ no-fully-general-composition-operator-K′ K comp = contradiction
     from (codomain-set-≃ l₃) false  ≡⟨ cong (λ eq → from eq false) $ codomain-set-≃≡id K l₃ ⟩∎
     false                           ∎)
 
--- Lenses respect (certain) equivalences.
-
-cast : ∀ {a b} {A₁ A₂ : Set a} {B₁ : A₁ → Set b} {B₂ : A₂ → Set b}
-       (A₁≃A₂ : A₁ ≃ A₂) →
-       (∀ a → B₁ (_≃_.from A₁≃A₂ a) ≡ B₂ a) →
-       Lens A₁ B₁ → Lens A₂ B₂
-cast {A₁ = A₁} {A₂} {B₁} {B₂} A₁≃A₂ B₁≡B₂ l =
-  _ ,
-  _ ,
-  (A₂      ↝⟨ inverse A₁≃A₂ ⟩
-   A₁      ↝⟨ lens ⟩□
-   Σ R B′  □) ,
-  inhabited ,
-  λ a →
-    B′ (remainder (from a))  ≡⟨ variant _ ⟩
-    B₁ (from a)              ≡⟨ B₁≡B₂ _ ⟩∎
-    B₂ a                     ∎
-  where
-  open _≃_ A₁≃A₂
-  open Lens l
 
 ------------------------------------------------------------------------
 -- An observation
