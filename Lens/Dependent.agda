@@ -1036,6 +1036,166 @@ _∘_ {C = C} l₁ l₂ =
   open _≃_
   open Lens
 
+-- Can the composition operation be generalised?
+
+-- The argument below does not depend on the details of the
+-- implementation of Lens.
+
+module No-fully-general-composition-operator
+  (Lens′ : (A : Set) → (A → Set) → Set₂)
+  (get′  : ∀ {A B} → Lens′ A B → (a : A) → B a)
+  where
+
+  -- The following type signature—and partial specification—might seem
+  -- like a reasonable goal (if we restrict attention to Set₀).
+
+  Type-of-composition : Set₂
+  Type-of-composition =
+    {A : Set} {B : A → Set} {C : (a : A) → B a → Set}
+    (l₁ : Lens′ A B)
+    (l₂ : ∀ a → Lens′ (B a) (C a)) →
+    ∃ λ (l₃ : Lens′ A (λ a → C a (get′ l₁ a))) →
+      ∀ a → get′ l₃ a ≡ get′ (l₂ a) (get′ l₁ a)
+
+  -- However, this specification is unsatisfiable in the non-dependent
+  -- case (for Iso-lenses).
+
+  no-corresponding-non-dependent-composition-operator :
+    let open ND.Iso-lens in
+    ¬ ({A B C : Set}
+       (l₁ : Iso-lens A B)
+       (l₂ : A → Iso-lens B C) →
+       ∃ λ (l₃ : Iso-lens A C) →
+         ∀ a → get l₃ a ≡ get (l₂ a) (get l₁ a))
+  no-corresponding-non-dependent-composition-operator comp =
+    contradiction
+    where
+    open ND.Iso-lens
+    open _≃_
+
+    idL : Iso-lens Bool Bool
+    idL = ND.Iso-lens-combinators.id-if-inhabited ∣ true ∣
+
+    swapL : Iso-lens Bool Bool
+    swapL = ND.isomorphism-to-lens-if-inhabited
+      (Bool      ↔⟨ swap ⟩
+       Bool      ↔⟨ inverse ×-left-identity ⟩□
+       ⊤ × Bool  □)
+      (λ _ → ∣ true ∣)
+
+    l₁ : Iso-lens Bool Bool
+    l₁ = idL
+
+    l₂ : Bool → Iso-lens Bool Bool
+    l₂ = if_then idL else swapL
+
+    l₃ : Iso-lens Bool Bool
+    l₃ = proj₁ (comp l₁ l₂)
+
+    get-constant : ∀ b → get l₃ b ≡ true
+    get-constant true  = proj₂ (comp l₁ l₂) _
+    get-constant false = proj₂ (comp l₁ l₂) _
+
+    contradiction : ⊥
+    contradiction = Bool.true≢false (
+      true                        ≡⟨ sym $ get-constant (set l₃ true false) ⟩
+      get l₃ (set l₃ true false)  ≡⟨ get-set l₃ true false ⟩∎
+      false                       ∎)
+
+  -- Thus it is also unsatisfiable if non-dependent dependent lenses
+  -- are isomorphic (in a certain sense) to the corresponding
+  -- Iso-lenses.
+
+  no-composition-operator :
+    ({A B : Set} →
+     ∃ λ (iso : Lens′ A (λ _ → B) ↔ Iso-lens A B) →
+       ∀ {l a} → get′ l a ≡ ND.Iso-lens.get (_↔_.to iso l) a) →
+    ¬ Type-of-composition
+  no-composition-operator Lens↔Iso-lens comp =
+    no-corresponding-non-dependent-composition-operator
+      (λ l₁ l₂ →
+         let l₃ , get-l₃ = comp (from l₁) (λ a → from (l₂ a))
+         in
+         to l₃ , λ a →
+           get (to l₃) a                                  ≡⟨ sym $ proj₂ Lens↔Iso-lens ⟩
+           get′ l₃ a                                      ≡⟨ get-l₃ a ⟩
+           get′ (from (l₂ a)) (get′ (from l₁) a)          ≡⟨ cong (get′ (from (l₂ a))) (proj₂ Lens↔Iso-lens) ⟩
+           get′ (from (l₂ a)) (get (to (from l₁)) a)      ≡⟨ proj₂ Lens↔Iso-lens ⟩
+           get (to (from (l₂ a))) (get (to (from l₁)) a)  ≡⟨ cong₂ (λ l₁ l₂ → get l₁ (get l₂ a))
+                                                                   (right-inverse-of _)
+                                                                   (right-inverse-of _) ⟩∎
+           get (l₂ a) (get l₁ a)                          ∎)
+    where
+    open ND.Iso-lens
+    open module Lens↔Iso-lens {A B : Set} =
+      _↔_ (proj₁ (Lens↔Iso-lens {A = A} {B = B}))
+
+-- In the presence of the K rule it is impossible to define a fully
+-- general composition operator (assuming extensionality and a
+-- resizing rule for the propositional truncation).
+
+no-fully-general-composition-operator-K :
+  let open Lens in
+  Extensionality (# 1) (# 1) →
+  ({B′ : Set} → ∥ B′ ∥ 1 (# 0) → ∥ B′ ∥ 1 (# 1)) →
+  K-rule (# 1) (# 1) →
+  ¬ ({A : Set} {B : A → Set} {C : (a : A) → B a → Set}
+     (l₁ : Lens A B)
+     (l₂ : ∀ a → Lens (B a) (C a)) →
+     ∃ λ (l₃ : Lens A (λ a → C a (Lens.get l₁ a))) →
+       ∀ a → get l₃ a ≡ get (l₂ a) (get l₁ a))
+no-fully-general-composition-operator-K ext resize K =
+  No-fully-general-composition-operator.no-composition-operator
+    Lens Lens.get
+    (non-dependent-lenses-isomorphic-K ext F.id resize K)
+
+-- If a direct proof is used, then some of the assumptions can be
+-- dropped: in the presence of the K rule it is impossible to define a
+-- fully general composition operator.
+
+no-fully-general-composition-operator-K′ :
+  let open Lens in
+  K-rule (# 1) (# 1) →
+  ¬ ({A : Set} {B : A → Set} {C : (a : A) → B a → Set}
+     (l₁ : Lens A B)
+     (l₂ : ∀ a → Lens (B a) (C a)) →
+     ∃ λ (l₃ : Lens A (λ a → C a (Lens.get l₁ a))) →
+       ∀ a → get l₃ a ≡ get (l₂ a) (get l₁ a))
+no-fully-general-composition-operator-K′ K comp = contradiction
+  where
+  open Lens
+  open _≃_
+
+  idL : Lens Bool (const Bool)
+  idL = id-if-inhabited ∣ true ∣
+
+  swapL : Lens Bool (const Bool)
+  swapL = Lens₃-to-Lens-if-inhabited′
+    (Bool      ↔⟨ swap ⟩
+     Bool      ↔⟨ inverse ×-left-identity ⟩□
+     ⊤ × Bool  □)
+    (λ _ → ∣ true ∣)
+
+  l₁ : Lens Bool (const Bool)
+  l₁ = idL
+
+  l₂ : Bool → Lens Bool (const Bool)
+  l₂ = if_then idL else swapL
+
+  l₃ : Lens Bool (const Bool)
+  l₃ = proj₁ (comp l₁ l₂)
+
+  get-constant : ∀ b → get l₃ b ≡ true
+  get-constant true  = proj₂ (comp l₁ l₂) _
+  get-constant false = proj₂ (comp l₁ l₂) _
+
+  contradiction : ⊥
+  contradiction = Bool.true≢false (
+    true                            ≡⟨ sym $ get-constant (set l₃ true false) ⟩
+    get l₃ (set l₃ true false)      ≡⟨ get-set l₃ true false ⟩
+    from (codomain-set-≃ l₃) false  ≡⟨ cong (λ eq → from eq false) $ codomain-set-≃≡id K l₃ ⟩∎
+    false                           ∎)
+
 -- Lenses respect (certain) equivalences.
 
 cast : ∀ {a b} {A₁ A₂ : Set a} {B₁ : A₁ → Set b} {B₂ : A₂ → Set b}
