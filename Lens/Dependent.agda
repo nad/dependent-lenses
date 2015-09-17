@@ -74,8 +74,8 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
 
   -- A related isomorphism.
 
-  B-set↔ : ∀ {a b} → B (remainder (set a b)) ≃ B (remainder a)
-  B-set↔ = ≡⇒↝ _ (cong B (remainder-set _ _))
+  codomain-set-≃ : ∀ {a b} → B (remainder (set a b)) ≃ B (remainder a)
+  codomain-set-≃ = ≡⇒↝ _ (cong B (remainder-set _ _))
 
   -- Some lens laws.
 
@@ -100,7 +100,7 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
     where
     lemma = right-inverse-of lens _
 
-  get-set₂ : ∀ a b → get (set a b) ≡ from B-set↔ b
+  get-set₂ : ∀ a b → get (set a b) ≡ from codomain-set-≃ b
   get-set₂ a b =
     proj₂ (to lens (from lens (remainder a , b)))  ≡⟨ get-set₁ _ _ ⟩
     subst B (sym (cong proj₁ lemma)) b             ≡⟨ subst-in-terms-of-inverse∘≡⇒↝ equivalence (cong proj₁ lemma) _ _ ⟩∎
@@ -116,7 +116,8 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
     where
     eq = remainder-set a b₁
 
-  set-set₂ : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a (to B-set↔ b₂)
+  set-set₂ : ∀ a b₁ b₂ →
+             set (set a b₁) b₂ ≡ set a (to codomain-set-≃ b₂)
   set-set₂ a b₁ b₂ =
     set (set a b₁) b₂                  ≡⟨ set-set₁ _ _ _ ⟩
     set a (subst B eq b₂)              ≡⟨ cong (set a) (subst-in-terms-of-≡⇒↝ equivalence eq _ _) ⟩∎
@@ -452,8 +453,8 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
 
   -- Hence the type of the gettable part stays unchanged after a set.
 
-  B-set : ∀ {a b} → B (set a b) ≡ B a
-  B-set {a} {b} =
+  codomain-set : ∀ {a b} → B (set a b) ≡ B a
+  codomain-set {a} {b} =
     B (set a b)               ≡⟨ sym (variant _) ⟩
     B′ (remainder (set a b))  ≡⟨ cong B′ (remainder-set a b) ⟩
     B′ (remainder a)          ≡⟨ variant _ ⟩∎
@@ -461,16 +462,16 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
 
   -- A corresponding isomorphism.
 
-  B-set↔ : ∀ {a b} → B (set a b) ≃ B a
-  B-set↔ = ≡⇒↝ _ B-set
+  codomain-set-≃ : ∀ {a b} → B (set a b) ≃ B a
+  codomain-set-≃ = ≡⇒↝ _ codomain-set
 
-  -- Unfolding lemmas for B-set↔.
+  -- Unfolding lemmas for codomain-set-≃.
 
-  to-B-set↔ :
+  to-codomain-set-≃ :
     ∀ {a b} →
-    to (B-set↔ {a = a} {b = b}) ≡
-    to variant≃ ⊚ to L.B-set↔ ⊚ from variant≃
-  to-B-set↔ =
+    to (codomain-set-≃ {a = a} {b = b}) ≡
+    to variant≃ ⊚ to L.codomain-set-≃ ⊚ from variant≃
+  to-codomain-set-≃ =
     to (≡⇒↝ _ (trans (sym (variant _)) (trans eq (variant _))))       ≡⟨ ≡⇒↝-trans equivalence {B≡C = trans eq (variant _)} ⟩
     to (≡⇒↝ _ (trans eq (variant _))) ⊚ to (≡⇒↝ _ (sym (variant _)))  ≡⟨ cong (to (≡⇒↝ _ (trans eq (variant _))) ⊚_)
                                                                               (≡⇒↝-sym equivalence {eq = variant _}) ⟩
@@ -479,11 +480,11 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
     where
     eq = cong B′ (remainder-set _ _)
 
-  from-B-set↔ :
+  from-codomain-set-≃ :
     ∀ {a b} →
-    from (B-set↔ {a = a} {b = b}) ≡
-    to variant≃ ⊚ from L.B-set↔ ⊚ from variant≃
-  from-B-set↔ =
+    from (codomain-set-≃ {a = a} {b = b}) ≡
+    to variant≃ ⊚ from L.codomain-set-≃ ⊚ from variant≃
+  from-codomain-set-≃ =
     from (≡⇒↝ _ (trans (sym (variant _)) (trans eq (variant _))))      ≡⟨ sym $ ≡⇒↝-sym equivalence {eq = trans (sym (variant _))
                                                                                                                 (trans eq (variant _))} ⟩
     to (≡⇒↝ _ (sym (trans (sym (variant _)) (trans eq (variant _)))))  ≡⟨ cong (to ⊚ ≡⇒↝ equivalence)
@@ -510,24 +511,27 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
     L.set a (L.get a)                                ≡⟨ L.set-get a ⟩∎
     a                                                ∎
 
-  get-set : ∀ a b → get (set a b) ≡ from B-set↔ b
+  get-set : ∀ a b → get (set a b) ≡ from codomain-set-≃ b
   get-set a b =
     to variant≃ (L.get (L.set a (from variant≃ b)))  ≡⟨ cong (to variant≃) $ L.get-set₂ _ _ ⟩
-    to variant≃ (from (≡⇒↝ _ eq) (from variant≃ b))  ≡⟨ cong (_$ b) (sym from-B-set↔) ⟩∎
-    from B-set↔ b                                    ∎
+    to variant≃ (from (≡⇒↝ _ eq) (from variant≃ b))  ≡⟨ cong (_$ b) (sym from-codomain-set-≃) ⟩∎
+    from codomain-set-≃ b                            ∎
     where
     eq = cong B′ (remainder-set a b)
 
-  set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a (to B-set↔ b₂)
+  set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a (to codomain-set-≃ b₂)
   set-set a b₁ b₂ =
     L.set (L.set a (from variant≃ b₁)) (from variant≃ b₂)  ≡⟨ L.set-set₂ a (from variant≃ b₁) (from variant≃ b₂) ⟩
-    L.set a (to L.B-set↔ (from variant≃ b₂))               ≡⟨ cong (L.set a) lemma ⟩∎
-    L.set a (from variant≃ (to B-set↔ b₂))                 ∎
+    L.set a (to L.codomain-set-≃ (from variant≃ b₂))       ≡⟨ cong (L.set a) lemma ⟩∎
+    L.set a (from variant≃ (to codomain-set-≃ b₂))         ∎
     where
     lemma =
-      to L.B-set↔ (from variant≃ b₂)                                ≡⟨ sym $ left-inverse-of variant≃ _ ⟩
-      from variant≃ (to variant≃ (to L.B-set↔ (from variant≃ b₂)))  ≡⟨ cong (from variant≃ ⊚ (_$ b₂)) $ sym to-B-set↔ ⟩∎
-      from variant≃ (to B-set↔ b₂)                                  ∎
+      to L.codomain-set-≃ (from variant≃ b₂)                    ≡⟨ sym $ left-inverse-of variant≃ _ ⟩
+
+      from variant≃
+        (to variant≃ (to L.codomain-set-≃ (from variant≃ b₂)))  ≡⟨ cong (from variant≃ ⊚ (_$ b₂)) $ sym to-codomain-set-≃ ⟩∎
+
+      from variant≃ (to codomain-set-≃ b₂)                      ∎
 
 ------------------------------------------------------------------------
 -- Some lens isomorphisms
@@ -1099,26 +1103,27 @@ module Observation where
       to inv (from inv c)                               ≡⟨ right-inverse-of inv _ ⟩∎
       c                                                 ∎
 
-    from-B-set : ∀ b → from (B-set↔ {a = u} {b = b}) b ≡ b
-    from-B-set b =
-      from B-set↔ b                                             ≡⟨ cong (_$ b) from-B-set↔ ⟩
-      to variant≃ (from (Lens₃.B-set↔ lens) (from variant≃ b))  ≡⟨ helper B′
-                                                                          remainder
-                                                                          variant≃
-                                                                          (_⇔_.from set⇔UIP (_⇔_.to K⇔UIP k))
-                                                                          (equal (set u b) u)
-                                                                          (remainder-set u b) ⟩∎
-      b                                                         ∎
+    from-codomain-set :
+      ∀ b → from (codomain-set-≃ {a = u} {b = b}) b ≡ b
+    from-codomain-set b =
+      from codomain-set-≃ b                                             ≡⟨ cong (_$ b) from-codomain-set-≃ ⟩
+      to variant≃ (from (Lens₃.codomain-set-≃ lens) (from variant≃ b))  ≡⟨ helper B′
+                                                                                  remainder
+                                                                                  variant≃
+                                                                                  (_⇔_.from set⇔UIP (_⇔_.to K⇔UIP k))
+                                                                                  (equal (set u b) u)
+                                                                                  (remainder-set u b) ⟩∎
+      b                                                                 ∎
 
     -- A contradiction.
 
     contradiction : ⊥
     contradiction = Bool.true≢false (
-      true               ≡⟨ sym $ from-B-set true ⟩
-      from B-set↔ true   ≡⟨ sym $ get-set u true ⟩
-      get (set u true)   ≡⟨ cong get (equal (set u true) (set u false)) ⟩
-      get (set u false)  ≡⟨ get-set u false ⟩
-      from B-set↔ false  ≡⟨ from-B-set false ⟩∎
-      false              ∎)
+      true                       ≡⟨ sym $ from-codomain-set true ⟩
+      from codomain-set-≃ true   ≡⟨ sym $ get-set u true ⟩
+      get (set u true)           ≡⟨ cong get (equal (set u true) (set u false)) ⟩
+      get (set u false)          ≡⟨ get-set u false ⟩
+      from codomain-set-≃ false  ≡⟨ from-codomain-set false ⟩∎
+      false                      ∎)
 
   -- TODO: What is the situation in the presence of univalence?
