@@ -533,6 +533,22 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
 
       from variant≃ (to codomain-set-≃ b₂)                      ∎
 
+-- For non-dependent dependent lenses, and in the presence of the K
+-- rule, codomain-set-≃ is equal to the identity.
+
+codomain-set-≃≡id :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  K-rule (lsuc b) (lsuc b) →
+  (l : Lens A (λ _ → B)) →
+  ∀ {a b} → Lens.codomain-set-≃ l {a = a} {b = b} ≡ Eq.id
+codomain-set-≃≡id K l =
+  codomain-set-≃      ≡⟨⟩
+  ≡⇒↝ _ codomain-set  ≡⟨ cong (≡⇒↝ _) (_⇔_.to K⇔UIP K codomain-set refl) ⟩
+  ≡⇒↝ _ refl          ≡⟨ refl ⟩∎
+  Eq.id               ∎
+  where
+  open Lens l
+
 ------------------------------------------------------------------------
 -- Some lens isomorphisms
 
@@ -1082,48 +1098,15 @@ module Observation where
   -- assume that the K rule holds.
 
   not-proj₁ : K-rule (# 1) (# 1) → ¬ Lens Unit (λ _ → Bool)
-  not-proj₁ k l = contradiction
+  not-proj₁ K l = Bool.true≢false (
+    true                       ≡⟨ sym $ cong (λ eq → from eq true) $ codomain-set-≃≡id K l ⟩
+    from codomain-set-≃ true   ≡⟨ sym $ get-set u true ⟩
+    get (set u true)           ≡⟨ cong get (equal (set u true) (set u false)) ⟩
+    get (set u false)          ≡⟨ get-set u false ⟩
+    from codomain-set-≃ false  ≡⟨ cong (λ eq → from eq false) $ codomain-set-≃≡id K l ⟩∎
+    false                      ∎)
     where
     open _≃_
     open Lens l
-
-    -- Some lemmas.
-
-    helper :
-      {A C : Set} {B : Set₁} {a₁ a₂ : A} {c : C}
-      (P : B → Set) (f : A → B)
-      (inv : ∀ {a} → P (f a) ≃ C) →
-      Is-set B →
-      a₁ ≡ a₂ → (eq : f a₁ ≡ f a₂) →
-      to inv (from (≡⇒↝ _ (cong P eq)) (from inv c)) ≡ c
-    helper {c = c} P _ inv B-is-set refl eq =
-      to inv (from (≡⇒↝ _ (cong P eq))   (from inv c))  ≡⟨ cong (λ eq → to inv (from (≡⇒↝ _ (cong P eq)) _))
-                                                                (_⇔_.to set⇔UIP B-is-set eq refl) ⟩
-      to inv (from (≡⇒↝ _ (cong P refl)) (from inv c))  ≡⟨⟩
-      to inv (from inv c)                               ≡⟨ right-inverse-of inv _ ⟩∎
-      c                                                 ∎
-
-    from-codomain-set :
-      ∀ b → from (codomain-set-≃ {a = u} {b = b}) b ≡ b
-    from-codomain-set b =
-      from codomain-set-≃ b                                             ≡⟨ cong (_$ b) from-codomain-set-≃ ⟩
-      to variant≃ (from (Lens₃.codomain-set-≃ lens) (from variant≃ b))  ≡⟨ helper B′
-                                                                                  remainder
-                                                                                  variant≃
-                                                                                  (_⇔_.from set⇔UIP (_⇔_.to K⇔UIP k))
-                                                                                  (equal (set u b) u)
-                                                                                  (remainder-set u b) ⟩∎
-      b                                                                 ∎
-
-    -- A contradiction.
-
-    contradiction : ⊥
-    contradiction = Bool.true≢false (
-      true                       ≡⟨ sym $ from-codomain-set true ⟩
-      from codomain-set-≃ true   ≡⟨ sym $ get-set u true ⟩
-      get (set u true)           ≡⟨ cong get (equal (set u true) (set u false)) ⟩
-      get (set u false)          ≡⟨ get-set u false ⟩
-      from codomain-set-≃ false  ≡⟨ from-codomain-set false ⟩∎
-      false                      ∎)
 
   -- TODO: What is the situation in the presence of univalence?
