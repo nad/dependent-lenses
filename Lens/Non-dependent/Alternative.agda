@@ -16,7 +16,7 @@ open import Equivalence equality-with-J as Eq using (_≃_; module _≃_)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
-open import H-level.Truncation equality-with-J
+open import H-level.Truncation equality-with-J as Trunc
 open import Preimage equality-with-J
 open import Surjection equality-with-J using (_↠_; module _↠_)
 open import Univalence-axiom equality-with-J
@@ -1359,6 +1359,115 @@ no-first-projection-lens =
 
 module Iso-lens-combinators where
 
+  -- The definition of the identity lens is unique, if the get
+  -- function is required to be the identity (assuming extensionality,
+  -- univalence and a resizing function for the propositional
+  -- truncation).
+
+  id-unique :
+    ∀ {a} {A : Set a} →
+    Extensionality (lsuc a) (lsuc a) →
+    Univalence (lsuc a) →
+    (∥ A ∥ 1 a → ∥ A ∥ 1 (lsuc a)) →
+    (l₁ l₂ : ∃ λ (l : Iso-lens A A) →
+                 ∀ a → Iso-lens.get l a ≡ a) →
+    proj₁ l₁ ≡ proj₁ l₂
+  id-unique {A = A} ext univ resize l₁ l₂ =
+    _↔_.from (equality-characterisation₃ ext univ)
+      ( R₁≃R₂
+      , (λ _ → _⇔_.to propositional⇔irrelevant
+                 (remainder-propositional l₂)
+                 _ _)
+      , λ a →
+          get (proj₁ l₁) a  ≡⟨ proj₂ l₁ a ⟩
+          a                 ≡⟨ sym $ proj₂ l₂ a ⟩∎
+          get (proj₁ l₂) a  ∎
+      )
+    where
+    remainder-propositional :
+      (l : ∃ λ (l : Iso-lens A A) → ∀ a → Iso-lens.get l a ≡ a) →
+      Is-proposition (Iso-lens.R (proj₁ l))
+    remainder-propositional (l , get≡id) =
+      [inhabited⇒+]⇒+ 0 λ r →
+        Trunc.rec
+          (H-level-propositional ext 1)
+          (λ a → _⇔_.from propositional⇔irrelevant λ r₁ r₂ →
+                   cong proj₁ (
+                     (r₁ , a)        ≡⟨ sym $ to-lemma a r₁ ⟩
+                     _≃_.to equiv a  ≡⟨ to-lemma a r₂ ⟩∎
+                     (r₂ , a)        ∎))
+          (resize (inhabited r))
+      where
+      open Iso-lens l
+
+      from-lemma : ∀ r a → _≃_.from equiv (r , a) ≡ a
+      from-lemma r a =
+        _≃_.from equiv (r , a)                                 ≡⟨ cong (λ a′ → _≃_.from equiv (proj₁ a′ , a)) $ sym $
+                                                                    _≃_.right-inverse-of equiv _ ⟩
+        _≃_.from equiv
+          (proj₁ (_≃_.to equiv (_≃_.from equiv (r , a))) , a)  ≡⟨⟩
+
+        set (_≃_.from equiv (r , a)) a                         ≡⟨ sym $ get≡id _ ⟩
+
+        get (set (_≃_.from equiv (r , a)) a)                   ≡⟨ get-set _ _ ⟩∎
+
+        a                                                      ∎
+
+      to-lemma : ∀ a r → _≃_.to equiv a ≡ (r , a)
+      to-lemma a r =
+        _≃_.to equiv a                         ≡⟨ cong (_≃_.to equiv) $ sym $ from-lemma r a ⟩
+        _≃_.to equiv (_≃_.from equiv (r , a))  ≡⟨ _≃_.right-inverse-of equiv (r , a) ⟩∎
+        (r , a)                                ∎
+
+    open Iso-lens
+
+    R→R :
+      (l₁ l₂ : ∃ λ (l : Iso-lens A A) → ∀ a → get l a ≡ a) →
+      R (proj₁ l₁) → R (proj₁ l₂)
+    R→R (l₁ , l₁-id) (l₂ , l₂-id) r =
+      Trunc.rec
+        (remainder-propositional (l₂ , l₂-id))
+        (A         ↔⟨ equiv l₂ ⟩
+         R l₂ × A  ↝⟨ proj₁ ⟩□
+         R l₂      □)
+        (resize (inhabited l₁ r))
+
+    R₁≃R₂ : R (proj₁ l₁) ≃ R (proj₁ l₂)
+    R₁≃R₂ =
+      _↠_.from (Eq.≃↠⇔ (remainder-propositional l₁)
+                       (remainder-propositional l₂))
+               (record { to   = R→R l₁ l₂
+                       ; from = R→R l₂ l₁
+                       })
+
+  -- The result of composing two lenses is unique if the codomain type
+  -- is inhabited whenever it is merely inhabited, and we require that
+  -- the resulting setter function is defined in a certain way
+  -- (assuming extensionality and univalence).
+
+  ∘-unique :
+    let open Iso-lens in
+    ∀ {a b c} {A : Set a} {B : Set b} {C : Set c} →
+    Extensionality (lsuc (lsuc (a ⊔ b ⊔ c))) (lsuc (lsuc (a ⊔ b ⊔ c))) →
+    Univalence (lsuc (a ⊔ c)) →
+    (∥ C ∥ 1 (a ⊔ c) → C) →
+    (comp₁ comp₂ :
+       ∃ λ (comp : Iso-lens B C → Iso-lens A B → Iso-lens A C) →
+         ∀ l₁ l₂ a c →
+           set (comp l₁ l₂) a c ≡ set l₂ a (set l₁ (get l₂ a) c)) →
+    proj₁ comp₁ ≡ proj₁ comp₂
+  ∘-unique {a} {b} {c} {A = A} {C = C} ext univ ∥C∥→C
+           (comp₁ , set₁) (comp₂ , set₂) =
+    lower-extensionality (lsuc (lsuc a)) lzero           ext λ l₁ →
+    lower-extensionality (lsuc (lsuc c)) (lsuc (lsuc b)) ext λ l₂ →
+      lenses-equal-if-setters-equal (lower-extensionality _ _ ext) univ
+        ∥C∥→C (comp₁ l₁ l₂) (comp₂ l₁ l₂) λ a c →
+          set (comp₁ l₁ l₂) a c           ≡⟨ set₁ _ _ _ _ ⟩
+          set l₂ a (set l₁ (get l₂ a) c)  ≡⟨ sym $ set₂ _ _ _ _ ⟩∎
+          set (comp₂ l₁ l₂) a c           ∎
+    where
+    open Iso-lens
+
   -- Identity lens (defined using extensionality).
 
   id : ∀ {a} {A : Set a} →
@@ -1399,6 +1508,24 @@ module Iso-lens-combinators where
     ∀ {a b c} {A : Set (a ⊔ b ⊔ c)} {B : Set (b ⊔ c)} {C : Set c} →
     Iso-lens B C → Iso-lens A B → Iso-lens A C
   _∘_ {a} {b} l₁ l₂ = ⟨ a , b ⟩ l₁ ∘ l₂
+
+  -- Other definitions of composition match ⟨_,_⟩_∘_, if the codomain
+  -- type is inhabited whenever it is merely inhabited, and the
+  -- resulting setter function is defined in a certain way (assuming
+  -- extensionality and univalence).
+
+  composition≡∘ :
+    let open Iso-lens in
+    ∀ {a b c} {A : Set (a ⊔ b ⊔ c)} {B : Set (b ⊔ c)} {C : Set c} →
+    Extensionality (lsuc (lsuc (a ⊔ b ⊔ c))) (lsuc (lsuc (a ⊔ b ⊔ c))) →
+    Univalence (lsuc (a ⊔ b ⊔ c)) →
+    (∥ C ∥ 1 (a ⊔ b ⊔ c) → C) →
+    (comp : Iso-lens B C → Iso-lens A B → Iso-lens A C) →
+    (∀ l₁ l₂ a c →
+       set (comp l₁ l₂) a c ≡ set l₂ a (set l₁ (get l₂ a) c)) →
+    comp ≡ ⟨ a , b ⟩_∘_
+  composition≡∘ ext univ ∥C∥→C comp set-comp =
+    ∘-unique ext univ ∥C∥→C (comp , set-comp) (_ , λ _ _ _ _ → refl)
 
   -- Identity and composition form a kind of monoid (assuming
   -- extensionality and univalence).
