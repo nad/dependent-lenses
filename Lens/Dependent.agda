@@ -523,152 +523,6 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
       from variant≃ (to B-set↔ b₂)                                  ∎
 
 ------------------------------------------------------------------------
--- Lens combinators
-
--- Conversion from Lens₃ to Lens (depends on extensionality).
-
-Lens₃-to-Lens :
-  ∀ {a b} {A : Set a} {R : Set (lsuc (a ⊔ b))} {B : R → Set b} →
-  Extensionality (lsuc b) b →
-  (l : Lens₃ A R B) →
-  Lens A (B ⊚ Lens₃.remainder l)
-Lens₃-to-Lens {A = A} {R} {B} ext l =
-  _ ,
-  _ ,
-  (A                                                  ↝⟨ l ⟩
-   Σ R B                                              ↔⟨ ∃-cong (λ _ → inverse (∥∥×↔ ext)) ⟩
-   Σ R (λ r → ∥ B r ∥ 1 _ × B r)                      ↔⟨ Σ-assoc ⟩□
-   Σ (Σ R (λ r → ∥ B r ∥ 1 _)) (λ { (r , _) → B r })  □) ,
-  proj₂ ,
-  λ _ → refl
-
--- A variant of Lens₃-to-Lens.
-
-Lens₃-to-Lens′ :
-  ∀ {a r b} {A : Set (a ⊔ r)} {R : Set r} {B : R → Set b} →
-  Extensionality (lsuc b) b →
-  (l : Lens₃ A R B) →
-  Lens A (B ⊚ Lens₃.remainder l)
-Lens₃-to-Lens′ {A = A} {R} {B} ext l =
-  Lens₃-to-Lens ext
-    (A                                 ↝⟨ l ⟩
-     Σ R B                             ↝⟨ Σ-cong (inverse Bij.↑↔) (λ _ → F.id) ⟩□
-     Σ (↑ _ R) (λ { (lift r) → B r })  □)
-
--- Identity lens (defined using extensionality).
-
-id : ∀ {a} {A : Set a} →
-     Extensionality (lsuc a) a →
-     Lens A (λ _ → A)
-id {A = A} ext = Lens₃-to-Lens′ ext
-  (A      ↔⟨ inverse ×-left-identity ⟩□
-   ⊤ × A  □)
-
--- Alternative conversion from Lens₃ to Lens.
-
-Lens₃-to-Lens-if-inhabited :
-  ∀ {a b} {A : Set a} {R : Set (lsuc (a ⊔ b))} {B : R → Set b} →
-  (l : Lens₃ A R B) →
-  (∀ r → ∥ B r ∥ 1 b) →
-  Lens A (B ⊚ Lens₃.remainder l)
-Lens₃-to-Lens-if-inhabited {A = A} {R} {B} l inh =
-  _ ,
-  _ ,
-  l ,
-  inh ,
-  λ _ → refl
-
--- A variant of Lens₃-to-Lens-if-inhabited.
-
-Lens₃-to-Lens-if-inhabited′ :
-  ∀ {a r b} {A : Set (a ⊔ r)} {R : Set r} {B : R → Set b} →
-  (l : Lens₃ A R B) →
-  (∀ r → ∥ B r ∥ 1 b) →
-  Lens A (B ⊚ Lens₃.remainder l)
-Lens₃-to-Lens-if-inhabited′ {A = A} {R} {B} l inh =
-  Lens₃-to-Lens-if-inhabited
-    (A                                 ↝⟨ l ⟩
-     Σ R B                             ↝⟨ Σ-cong (inverse Bij.↑↔) (λ _ → F.id) ⟩□
-     Σ (↑ _ R) (λ { (lift r) → B r })  □)
-    (λ { (lift r) → inh r })
-
--- Identity lens for merely inhabited types.
-
-id-if-inhabited : ∀ {a} {A : Set a} →
-                  ∥ A ∥ 1 a → Lens A (λ _ → A)
-id-if-inhabited {A = A} ∥a∥ =
-  Lens₃-to-Lens-if-inhabited′
-    (A      ↔⟨ inverse ×-left-identity ⟩□
-     ⊤ × A  □)
-    (const ∥a∥)
-
--- Composition of lenses.
---
--- Note that this function combines a family of Lenses and a Lens₃.
-
-infixr 9 _∘₃_
-
-_∘₃_ :
-  ∀ {a b c} {A : Set (a ⊔ b ⊔ c)} {R : Set (lsuc (a ⊔ b ⊔ c))}
-    {B : R → Set (b ⊔ c)} {C : {r : R} → B r → Set c} →
-  (∀ {r} → Lens (B r) C) → (l₂ : Lens₃ A R B) →
-  Lens A (C ⊚ Lens₃.get l₂)
-_∘₃_ {R = R} l₁ l₂ =
-  (∃ λ (r : R) → Lens.R (l₁ {r = r})) ,
-  (λ { (r₁ , r₂) → Lens.B′ (l₁ {r = r₁}) r₂ }) ,
-  Lens.lens l₁ ₃∘₃ l₂ ,
-  Lens.inhabited l₁ ⊚ proj₂ ,
-  Lens.variant l₁ ⊚ Lens₃.get l₂
-
--- /Forward/ composition of lenses.
---
--- This function combines /Lens/es, but has a type which is arguably
--- more complicated. The type is also somewhat restricted: C is only
--- indexed by As, not Bs.
-
-infixr 9 _∘_
-
-_∘_ : ∀ {a b c}
-        {A : Set (a ⊔ b ⊔ c)} {B : A → Set (b ⊔ c)} {C : A → Set c} →
-      (l₁ : Lens A B) →
-      let open Lens l₁; open _≃_ lens in
-      (∀ {r} → Lens (B′ r) (λ b′ → C (from (r , b′)))) →
-      Lens A C
-_∘_ {C = C} l₁ l₂ =
-  (∃ λ (r₁ : R l₁) → Lens.R (l₂ {r = r₁})) ,
-  (λ { (r₁ , r₂) → B′ (l₂ {r = r₁}) r₂ }) ,
-  lens l₂ ₃∘₃ lens l₁ ,
-  (λ { (_ , r₂) → inhabited l₂ r₂ }) ,
-  λ a →
-    B′ l₂ (remainder l₂ (Lens₃.get (lens l₁) a))  ≡⟨ variant l₂ _ ⟩
-    C (from (lens l₁) (to (lens l₁) a))           ≡⟨ cong C (left-inverse-of (lens l₁) a) ⟩∎
-    C a                                           ∎
-  where
-  open _≃_
-  open Lens
-
--- Lenses respect (certain) equivalences.
-
-cast : ∀ {a b} {A₁ A₂ : Set a} {B₁ : A₁ → Set b} {B₂ : A₂ → Set b}
-       (A₁≃A₂ : A₁ ≃ A₂) →
-       (∀ a → B₁ (_≃_.from A₁≃A₂ a) ≡ B₂ a) →
-       Lens A₁ B₁ → Lens A₂ B₂
-cast {A₁ = A₁} {A₂} {B₁} {B₂} A₁≃A₂ B₁≡B₂ l =
-  _ ,
-  _ ,
-  (A₂      ↝⟨ inverse A₁≃A₂ ⟩
-   A₁      ↝⟨ lens ⟩□
-   Σ R B′  □) ,
-  inhabited ,
-  λ a →
-    B′ (remainder (from a))  ≡⟨ variant _ ⟩
-    B₁ (from a)              ≡⟨ B₁≡B₂ _ ⟩∎
-    B₂ a                     ∎
-  where
-  open _≃_ A₁≃A₂
-  open Lens l
-
-------------------------------------------------------------------------
 -- Some lens isomorphisms
 
 -- If B x is a proposition for all x, then Lens A B is isomorphic to
@@ -901,6 +755,152 @@ lens-to-⊥↔¬ {A = A} ext univ₁ univ₂ =
   Lens A (const ⊥)  ↝⟨ lens-to-proposition↔get ext univ₁ univ₂ (λ _ → ⊥-propositional) ⟩
   (A → ⊥)           ↝⟨ inverse $ ¬↔→⊥ (lower-extensionality _ _ ext) ⟩□
   ¬ A               □
+
+------------------------------------------------------------------------
+-- Lens combinators
+
+-- Conversion from Lens₃ to Lens (depends on extensionality).
+
+Lens₃-to-Lens :
+  ∀ {a b} {A : Set a} {R : Set (lsuc (a ⊔ b))} {B : R → Set b} →
+  Extensionality (lsuc b) b →
+  (l : Lens₃ A R B) →
+  Lens A (B ⊚ Lens₃.remainder l)
+Lens₃-to-Lens {A = A} {R} {B} ext l =
+  _ ,
+  _ ,
+  (A                                                  ↝⟨ l ⟩
+   Σ R B                                              ↔⟨ ∃-cong (λ _ → inverse (∥∥×↔ ext)) ⟩
+   Σ R (λ r → ∥ B r ∥ 1 _ × B r)                      ↔⟨ Σ-assoc ⟩□
+   Σ (Σ R (λ r → ∥ B r ∥ 1 _)) (λ { (r , _) → B r })  □) ,
+  proj₂ ,
+  λ _ → refl
+
+-- A variant of Lens₃-to-Lens.
+
+Lens₃-to-Lens′ :
+  ∀ {a r b} {A : Set (a ⊔ r)} {R : Set r} {B : R → Set b} →
+  Extensionality (lsuc b) b →
+  (l : Lens₃ A R B) →
+  Lens A (B ⊚ Lens₃.remainder l)
+Lens₃-to-Lens′ {A = A} {R} {B} ext l =
+  Lens₃-to-Lens ext
+    (A                                 ↝⟨ l ⟩
+     Σ R B                             ↝⟨ Σ-cong (inverse Bij.↑↔) (λ _ → F.id) ⟩□
+     Σ (↑ _ R) (λ { (lift r) → B r })  □)
+
+-- Identity lens (defined using extensionality).
+
+id : ∀ {a} {A : Set a} →
+     Extensionality (lsuc a) a →
+     Lens A (λ _ → A)
+id {A = A} ext = Lens₃-to-Lens′ ext
+  (A      ↔⟨ inverse ×-left-identity ⟩□
+   ⊤ × A  □)
+
+-- Alternative conversion from Lens₃ to Lens.
+
+Lens₃-to-Lens-if-inhabited :
+  ∀ {a b} {A : Set a} {R : Set (lsuc (a ⊔ b))} {B : R → Set b} →
+  (l : Lens₃ A R B) →
+  (∀ r → ∥ B r ∥ 1 b) →
+  Lens A (B ⊚ Lens₃.remainder l)
+Lens₃-to-Lens-if-inhabited {A = A} {R} {B} l inh =
+  _ ,
+  _ ,
+  l ,
+  inh ,
+  λ _ → refl
+
+-- A variant of Lens₃-to-Lens-if-inhabited.
+
+Lens₃-to-Lens-if-inhabited′ :
+  ∀ {a r b} {A : Set (a ⊔ r)} {R : Set r} {B : R → Set b} →
+  (l : Lens₃ A R B) →
+  (∀ r → ∥ B r ∥ 1 b) →
+  Lens A (B ⊚ Lens₃.remainder l)
+Lens₃-to-Lens-if-inhabited′ {A = A} {R} {B} l inh =
+  Lens₃-to-Lens-if-inhabited
+    (A                                 ↝⟨ l ⟩
+     Σ R B                             ↝⟨ Σ-cong (inverse Bij.↑↔) (λ _ → F.id) ⟩□
+     Σ (↑ _ R) (λ { (lift r) → B r })  □)
+    (λ { (lift r) → inh r })
+
+-- Identity lens for merely inhabited types.
+
+id-if-inhabited : ∀ {a} {A : Set a} →
+                  ∥ A ∥ 1 a → Lens A (λ _ → A)
+id-if-inhabited {A = A} ∥a∥ =
+  Lens₃-to-Lens-if-inhabited′
+    (A      ↔⟨ inverse ×-left-identity ⟩□
+     ⊤ × A  □)
+    (const ∥a∥)
+
+-- Composition of lenses.
+--
+-- Note that this function combines a family of Lenses and a Lens₃.
+
+infixr 9 _∘₃_
+
+_∘₃_ :
+  ∀ {a b c} {A : Set (a ⊔ b ⊔ c)} {R : Set (lsuc (a ⊔ b ⊔ c))}
+    {B : R → Set (b ⊔ c)} {C : {r : R} → B r → Set c} →
+  (∀ {r} → Lens (B r) C) → (l₂ : Lens₃ A R B) →
+  Lens A (C ⊚ Lens₃.get l₂)
+_∘₃_ {R = R} l₁ l₂ =
+  (∃ λ (r : R) → Lens.R (l₁ {r = r})) ,
+  (λ { (r₁ , r₂) → Lens.B′ (l₁ {r = r₁}) r₂ }) ,
+  Lens.lens l₁ ₃∘₃ l₂ ,
+  Lens.inhabited l₁ ⊚ proj₂ ,
+  Lens.variant l₁ ⊚ Lens₃.get l₂
+
+-- /Forward/ composition of lenses.
+--
+-- This function combines /Lens/es, but has a type which is arguably
+-- more complicated. The type is also somewhat restricted: C is only
+-- indexed by As, not Bs.
+
+infixr 9 _∘_
+
+_∘_ : ∀ {a b c}
+        {A : Set (a ⊔ b ⊔ c)} {B : A → Set (b ⊔ c)} {C : A → Set c} →
+      (l₁ : Lens A B) →
+      let open Lens l₁; open _≃_ lens in
+      (∀ {r} → Lens (B′ r) (λ b′ → C (from (r , b′)))) →
+      Lens A C
+_∘_ {C = C} l₁ l₂ =
+  (∃ λ (r₁ : R l₁) → Lens.R (l₂ {r = r₁})) ,
+  (λ { (r₁ , r₂) → B′ (l₂ {r = r₁}) r₂ }) ,
+  lens l₂ ₃∘₃ lens l₁ ,
+  (λ { (_ , r₂) → inhabited l₂ r₂ }) ,
+  λ a →
+    B′ l₂ (remainder l₂ (Lens₃.get (lens l₁) a))  ≡⟨ variant l₂ _ ⟩
+    C (from (lens l₁) (to (lens l₁) a))           ≡⟨ cong C (left-inverse-of (lens l₁) a) ⟩∎
+    C a                                           ∎
+  where
+  open _≃_
+  open Lens
+
+-- Lenses respect (certain) equivalences.
+
+cast : ∀ {a b} {A₁ A₂ : Set a} {B₁ : A₁ → Set b} {B₂ : A₂ → Set b}
+       (A₁≃A₂ : A₁ ≃ A₂) →
+       (∀ a → B₁ (_≃_.from A₁≃A₂ a) ≡ B₂ a) →
+       Lens A₁ B₁ → Lens A₂ B₂
+cast {A₁ = A₁} {A₂} {B₁} {B₂} A₁≃A₂ B₁≡B₂ l =
+  _ ,
+  _ ,
+  (A₂      ↝⟨ inverse A₁≃A₂ ⟩
+   A₁      ↝⟨ lens ⟩□
+   Σ R B′  □) ,
+  inhabited ,
+  λ a →
+    B′ (remainder (from a))  ≡⟨ variant _ ⟩
+    B₁ (from a)              ≡⟨ B₁≡B₂ _ ⟩∎
+    B₂ a                     ∎
+  where
+  open _≃_ A₁≃A₂
+  open Lens l
 
 ------------------------------------------------------------------------
 -- An observation
