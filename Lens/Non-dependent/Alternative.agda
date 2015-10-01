@@ -76,6 +76,18 @@ Iso-lens {a} {b} A B =
 -- isomorphic to R, but with the modified definition of Iso-lens I
 -- could only prove that R gave me an element in ∥ A ∥ 1 b.
 
+-- Yet another alternative definition of lenses. This one replaces the
+-- R → ∥ B ∥ function with a requirement that the remainder function
+-- should be surjective.
+
+Iso-lens′ : ∀ {a b} → Set a → Set b → Set (lsuc (lsuc (a ⊔ b)))
+Iso-lens′ {a} {b} A B =
+  ∃ λ (get       : A → B) →
+  ∃ λ (R         : Set (lsuc (a ⊔ b))) →
+  ∃ λ (remainder : A → R) →
+    Eq.Is-equivalence (λ a → remainder a , get a) ×
+    Surjective (a ⊔ b) remainder
+
 ------------------------------------------------------------------------
 -- Simple definitions related to Iso-lenses
 
@@ -709,6 +721,69 @@ Higher-lens↔Iso-lens {a} {b} {A} {B} ext univ =
       (∀ b → (g ⊚ lower) ⁻¹ b ≡ H ∣ b ∣)  ↝⟨ Eq.extensionality-isomorphism
                                                (lower-extensionality _ (lsuc ℓ) ext) ⟩□
       ((g ⊚ lower) ⁻¹_) ≡ H ⊚ ∣_∣         □
+
+
+-- Iso-lens A B is isomorphic to Iso-lens′ A B (assuming
+-- extensionality).
+
+Iso-lens↔Iso-lens′ :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
+  Iso-lens A B ↔ Iso-lens′ A B
+Iso-lens↔Iso-lens′ {A = A} {B} ext =
+
+  (∃ λ (R : Set _) →
+     (A ≃ (R × B)) ×
+     (R → ∥ B ∥ 1 _))                                     ↝⟨ (∃-cong λ _ → Eq.≃-as-Σ ×-cong F.id) ⟩
+
+  (∃ λ (R : Set _) →
+     (∃ λ (f : A → R × B) → Eq.Is-equivalence f) ×
+     (R → ∥ B ∥ 1 _))                                     ↝⟨ (∃-cong λ _ → inverse Σ-assoc) ⟩
+
+  (∃ λ (R : Set _) →
+   ∃ λ (f : A → R × B) →
+     Eq.Is-equivalence f ×
+     (R → ∥ B ∥ 1 _))                                     ↝⟨ (∃-cong λ _ → Σ-cong ΠΣ-comm λ _ → F.id) ⟩
+
+  (∃ λ (R  : Set _) →
+   ∃ λ (rg : (A → R) × (A → B)) →
+     Eq.Is-equivalence (λ a → proj₁ rg a , proj₂ rg a) ×
+     (R → ∥ B ∥ 1 _))                                     ↝⟨ (∃-cong λ _ → inverse Σ-assoc) ⟩
+
+  (∃ λ (R         : Set _) →
+   ∃ λ (remainder : A → R) →
+   ∃ λ (get       : A → B) →
+     Eq.Is-equivalence (λ a → remainder a , get a) ×
+     (R → ∥ B ∥ 1 _))                                     ↝⟨ (∃-cong λ _ → ∃-comm) ⟩
+
+  (∃ λ (R         : Set _) →
+   ∃ λ (get       : A → B) →
+   ∃ λ (remainder : A → R) →
+     Eq.Is-equivalence (λ a → remainder a , get a) ×
+     (R → ∥ B ∥ 1 _))                                     ↝⟨ ∃-comm ⟩
+
+  (∃ λ (get       : A → B) →
+   ∃ λ (R         : Set _) →
+   ∃ λ (remainder : A → R) →
+     Eq.Is-equivalence (λ a → remainder a , get a) ×
+     (R → ∥ B ∥ 1 _))                                     ↔⟨ (∃-cong λ get → ∃-cong λ R → ∃-cong λ rem → ∃-cong λ eq →
+                                                              Eq.∀-preserves ext λ _ → Eq.↔⇒≃ $ ∥∥-cong ext $
+                                                              lemma get R rem eq _) ⟩□
+  (∃ λ (get       : A → B) →
+   ∃ λ (R         : Set _) →
+   ∃ λ (remainder : A → R) →
+     Eq.Is-equivalence (λ a → remainder a , get a) ×
+     Surjective _ remainder)                              □
+
+  where
+  lemma = λ _ _ remainder eq r →
+    B                            ↝⟨ (inverse $ drop-⊤-right λ _ →
+                                     inverse $ _⇔_.to contractible⇔⊤↔ $
+                                     singleton-contractible _) ⟩
+    B × Singleton r              ↝⟨ Σ-assoc ⟩
+    (∃ λ { (_ , r′) → r′ ≡ r })  ↝⟨ (Σ-cong ×-comm λ _ → F.id) ⟩
+    (∃ λ { (r′ , _) → r′ ≡ r })  ↝⟨ (inverse $ Σ-cong Eq.⟨ _ , eq ⟩ λ _ → F.id) ⟩□
+    (∃ λ a → remainder a ≡ r)    □
 
 -- There is a split surjection from "Iso-lens A B without the
 -- inhabitance proof" to Iso-lens A B (assuming extensionality and
