@@ -1,0 +1,3 @@
+name: dependent-lenses
+depend: equality
+include: .
