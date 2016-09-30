@@ -563,7 +563,7 @@ module Lens-combinators where
                 (cong g (sym c₂′≡c₂″))                               ∎
 
         lemma₅ =
-          z c₂′                                                  ≡⟨ sym $ subst-application z (sym c₂′≡c₂″) ⟩
+          z c₂′                                                  ≡⟨ sym $ dependent-cong z (sym c₂′≡c₂″) ⟩
 
           subst (λ x → set l₂ b₁ x ≡ g x) (sym c₂′≡c₂″) (z c₂″)  ≡⟨ subst-in-terms-of-trans-and-cong {f = set l₂ b₁} {g = g} {x≡y = sym c₂′≡c₂″} ⟩
 
@@ -760,7 +760,7 @@ lens-to-⊥↔ :
   Lens A (⊥ {ℓ = b}) ↔ ¬ A
 lens-to-⊥↔ {a} {b} {A} ext =
   Lens A ⊥                     ↝⟨ lens-to-proposition↔ ext ⊥-propositional ⟩
-  (A → ⊥) × ((a : A) → a ≡ a)  ↝⟨ →-cong (lower-extensionality b a ext) F.id (⊥↔uninhabited ⊥-elim)
+  (A → ⊥) × ((a : A) → a ≡ a)  ↝⟨ →-cong (lower-extensionality b a ext) F.id (Bij.⊥↔uninhabited ⊥-elim)
                                     ×-cong
                                   F.id ⟩
   ¬ A × ((a : A) → a ≡ a)      ↝⟨ drop-⊤-right lemma ⟩□

@@ -17,6 +17,7 @@ open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import H-level.Truncation equality-with-J as Trunc
+import Nat equality-with-J as Nat
 open import Preimage equality-with-J
 open import Surjection equality-with-J using (_↠_; module _↠_)
 open import Univalence-axiom equality-with-J
@@ -1403,7 +1404,7 @@ domain-0+⇒lens-1+′ {A = A} {B} ext univ resize n hA =
                                                         (λ _ → ×-closure (1 + n)
                                                                  (Eq.left-closure ext n (mono₁ n hA))
                                                                  (Π-closure ext (1 + n) λ _ →
-                                                                  mono (suc≤suc (zero≤ n)) $
+                                                                  mono (Nat.suc≤suc (Nat.zero≤ n)) $
                                                                   truncation-has-correct-h-level 1
                                                                     (lower-extensionality lzero _ ext))) ⟩
   H-level (1 + n)

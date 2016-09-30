@@ -14,7 +14,7 @@ module Lens.Dependent where
 
 open import Equality.Propositional
 open import Logical-equivalence using (module _⇔_)
-open import Prelude hiding (id) renaming (_∘_ to _⊚_)
+open import Prelude hiding (id; Unit) renaming (_∘_ to _⊚_)
 
 open import Bijection equality-with-J as Bij using (_↔_; module _↔_)
 open import Bool equality-with-J
@@ -87,7 +87,7 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
 
   get-set₁ : ∀ a b → get (set a b) ≡ subst B (sym (remainder-set a b)) b
   get-set₁ a b =
-    proj₂ (to lens (from lens (remainder a , b)))  ≡⟨ sym $ subst-application proj₂ (sym lemma) ⟩
+    proj₂ (to lens (from lens (remainder a , b)))  ≡⟨ sym $ dependent-cong proj₂ (sym lemma) ⟩
 
     subst (B ⊚ proj₁) (sym lemma)
           (proj₂ {B = B} (remainder a , b))        ≡⟨⟩
@@ -647,7 +647,7 @@ lens-to-proposition↔get {a} {b} {A} {B} ext univ₁ univ₂ B-prop =
    ∃ λ (lens : A ≃ Σ R B′) →
    ∀ r → B (_≃_.from lens (r , _≃_.to (⊤≃B′ r) _)))          ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ ⊤≃B′ →
                                                                  Σ-cong (Eq.≃-preserves-bijections ext F.id
-                                                                           (drop-⊤-right (λ r → inverse (⊤≃B′ r)))) λ _ →
+                                                                           (drop-⊤-right (λ r → inverse {k = equivalence} (⊤≃B′ r)))) λ _ →
                                                                  F.id) ⟩
   (∃ λ (R : Set _) →
    ∃ λ (B′ : R → Set _) →
