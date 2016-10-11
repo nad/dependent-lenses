@@ -345,7 +345,7 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
     (r₁₂ : {A : Set} {r : Record (R₁ A)} →
            Lens (Record (R₂ With ″A″  ≔ (λ _ → A)
                             With ″r₁″ ≔ (λ _ → lift r)))
-                (Record (R₁ A With ″f″  ≔ (λ _ → r · ″f″)))) where
+                (Record (R₁ A With ″f″ ≔ (λ _ → r · ″f″)))) where
 
     -- To start with, what should the type of the lemma lens be? The
     -- type used below is an obvious choice.
