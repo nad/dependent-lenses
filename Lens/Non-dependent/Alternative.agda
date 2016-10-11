@@ -43,15 +43,18 @@ Higher-lens {a} {b} A B =
   ∃ λ (H : Pow lzero (∥ B ∥ 1 (a ⊔ b))) →
     ↑ _ ⊚ (g ⁻¹_) ≡ H ⊚ ∣_∣
 
--- The following more traditional (?) alternative definition uses a
--- bijection:
---
---   ∃ R. A ↔ (R × B).
---
--- However, this definition is not in general isomorphic to
+-- A more traditional (?) alternative definition that uses a
+-- bijection.
+
+Bijection-lens : ∀ {a b} → Set a → Set b → ∀ ℓ → Set (a ⊔ b ⊔ lsuc ℓ)
+Bijection-lens {a} {b} A B ℓ =
+  ∃ λ (R : Set ℓ) → A ↔ (R × B)
+
+-- However, the definition above is not in general isomorphic to
 -- Higher-lens A B or Traditional.Lens A B, not even if A and B are
--- sets (consider the case in which A and B are empty). The following
--- variant of the definition solves this problem.
+-- sets (consider the case in which A and B are empty; see
+-- ¬Iso-lens↠Bijection-lens below). The following variant of the
+-- definition solves this problem.
 --
 -- (I had previously considered some other variants, when Andrea
 -- Vezzosi suggested that I should look at higher lenses, and that I
@@ -619,6 +622,20 @@ lens-from-⊥↔⊤ {B = B} ext univ =
           (λ b → ⊥-elim (_≃_.from (equiv l) (r , b)))
           (inhabited l r)
 
+-- Bijection-lens ⊥ ⊥ ℓ is isomorphic to Set ℓ (assuming
+-- extensionality).
+
+Bijection-lens-⊥-⊥↔Set :
+  ∀ {a b ℓ} →
+  Extensionality (a ⊔ b ⊔ ℓ) (a ⊔ b ⊔ ℓ) →
+  Bijection-lens (⊥ {ℓ = a}) (⊥ {ℓ = b}) ℓ ↔ Set ℓ
+Bijection-lens-⊥-⊥↔Set {a} {b} {ℓ} ext =
+  Bijection-lens ⊥ ⊥ ℓ   ↔⟨ (∃-cong λ _ → Eq.↔↔≃ ext (mono₁ 1 ⊥-propositional)) ⟩
+  (∃ λ R → ⊥ ≃ (R × ⊥))  ↔⟨ (∃-cong λ _ → Eq.≃-preserves-bijections ext F.id ×-right-zero) ⟩
+  (∃ λ R → ⊥ ≃ ⊥₀)       ↔⟨ (∃-cong λ _ → ≃⊥≃¬ (lower-extensionality (b ⊔ ℓ) (b ⊔ ℓ) ext)) ⟩
+  (∃ λ R → ¬ ⊥)          ↔⟨ drop-⊤-right (λ _ → ¬⊥↔⊤ (lower-extensionality (b ⊔ ℓ) _ ext)) ⟩□
+  Set ℓ                  □
+
 ------------------------------------------------------------------------
 -- Results relating different kinds of lenses
 
@@ -791,20 +808,18 @@ Iso-lens↔Iso-lens′ {A = A} {B} ext =
     (∃ λ { (r′ , _) → r′ ≡ r })  ↝⟨ (inverse $ Σ-cong Eq.⟨ _ , eq ⟩ λ _ → F.id) ⟩□
     (∃ λ a → remainder a ≡ r)    □
 
--- There is a split surjection from "Iso-lens A B without the
--- inhabitance proof" to Iso-lens A B (assuming extensionality and
--- univalence).
+-- There is a split surjection from Bijections-lens A B something to
+-- Iso-lens A B (assuming extensionality and univalence).
 
-Iso-lens-without-inhabitance↠Iso-lens :
+Bijection-lens↠Iso-lens :
   ∀ {a b} {A : Set a} {B : Set b} →
   Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
   Univalence (lsuc (a ⊔ b)) →
-  (∃ λ (R : Set (lsuc (a ⊔ b))) → A ≃ (R × B)) ↠ Iso-lens A B
-Iso-lens-without-inhabitance↠Iso-lens {A = A} {B} ext univ = record
+  Bijection-lens A B (lsuc (a ⊔ b)) ↠ Iso-lens A B
+Bijection-lens↠Iso-lens {A = A} {B} ext univ = record
   { logical-equivalence = record
-    { to   = λ { (R , A≃R×B) → isomorphism-to-lens
-                                 ext′ (_≃_.bijection A≃R×B) }
-    ; from = λ { (R , A≃R×B , _) → R , A≃R×B }
+    { to   = λ { (R , A↔R×B) → isomorphism-to-lens ext′ A↔R×B }
+    ; from = λ { (R , A≃R×B , _) → R , _≃_.bijection A≃R×B }
     }
   ; right-inverse-of = λ { (R , A≃R×B , inh) →
       _↔_.from (equality-characterisation₂ ext univ)
@@ -817,24 +832,27 @@ Iso-lens-without-inhabitance↠Iso-lens {A = A} {B} ext univ = record
   ext′ = lower-extensionality lzero _ ext
 
 -- However, there is in general no split surjection in the other
--- direction (assuming extensionality and univalence).
+-- direction, not even for sets (assuming extensionality and
+-- univalence).
 
-¬Iso-lens↠Iso-lens-without-inhabitance :
+¬Iso-lens↠Bijection-lens :
   ∀ {a b} →
   Extensionality (lsuc (a ⊔ b)) (lsuc (a ⊔ b)) →
   Univalence (lsuc (a ⊔ b)) →
   ¬ ({A : Set a} {B : Set b} →
-     Iso-lens A B ↠ (∃ λ (R : Set (lsuc (a ⊔ b))) → A ≃ (R × B)))
-¬Iso-lens↠Iso-lens-without-inhabitance ext univ surj =
+     Is-set A → Is-set B →
+     Iso-lens A B ↠ Bijection-lens A B (lsuc (a ⊔ b)))
+¬Iso-lens↠Bijection-lens ext univ surj =
   ⊥-elim (subst F.id ⊤≡⊥ _)
   where
+  ⊥-is-set : ∀ {ℓ} → Is-set (⊥ {ℓ = ℓ})
+  ⊥-is-set = mono₁ 1 ⊥-propositional
+
   ⊤↠Set =
-    ⊤                      ↔⟨ inverse $ lens-from-⊥↔⊤ ext univ ⟩
-    Iso-lens ⊥ ⊥           ↝⟨ surj ⟩
-    (∃ λ R → ⊥ ≃ (R × ⊥))  ↔⟨ (∃-cong λ _ → Eq.≃-preserves-bijections ext F.id ×-right-zero) ⟩
-    (∃ λ R → ⊥ ≃ ⊥₀)       ↔⟨ (∃-cong λ _ → ≃⊥≃¬ (lower-extensionality _ _ ext)) ⟩
-    (∃ λ R → ¬ ⊥)          ↔⟨ drop-⊤-right (λ _ → ¬⊥↔⊤ (lower-extensionality _ _ ext)) ⟩□
-    Set _                  □
+    ⊤                     ↔⟨ inverse $ lens-from-⊥↔⊤ ext univ ⟩
+    Iso-lens ⊥ ⊥          ↝⟨ surj ⊥-is-set ⊥-is-set ⟩
+    Bijection-lens ⊥ ⊥ _  ↔⟨ Bijection-lens-⊥-⊥↔Set ext ⟩□
+    Set _                 □
 
   ⊤≡⊥ : ↑ _ ⊤ ≡ ⊥
   ⊤≡⊥ =
