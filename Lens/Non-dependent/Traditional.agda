@@ -784,6 +784,26 @@ lens-to-⊥↔ {a} {b} {A} ext =
         ⊥-elim (¬a a)
     }
 
+-- Iso-lens ⊥ B is isomorphic to the unit type (assuming
+-- extensionality).
+
+lens-from-⊥↔⊤ :
+  ∀ {a b} {B : Set b} →
+  Extensionality (a ⊔ b) (a ⊔ b) →
+  Lens (⊥ {ℓ = a}) B ↔ ⊤
+lens-from-⊥↔⊤ {a} {b} {B} ext =
+  inverse $ _⇔_.to contractible⇔⊤↔ $
+    (  ⊥-elim , ⊥-elim
+    , (λ a → ⊥-elim a) , (λ a → ⊥-elim a) , (λ a → ⊥-elim a)
+    ) ,
+    λ l → _↔_.from (equality-characterisation ext)
+            ( lower-extensionality b a ext (λ a → ⊥-elim a)
+            , lower-extensionality b lzero ext (λ a → ⊥-elim a)
+            , (λ a → ⊥-elim a)
+            , (λ a → ⊥-elim a)
+            , (λ a → ⊥-elim a)
+            )
+
 ------------------------------------------------------------------------
 -- Some lens results related to h-levels
 
