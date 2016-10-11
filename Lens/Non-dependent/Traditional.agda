@@ -7,6 +7,7 @@
 module Lens.Non-dependent.Traditional where
 
 open import Equality.Propositional
+open import Interval using (ext)
 open import Logical-equivalence using (module _⇔_)
 open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 
@@ -70,7 +71,6 @@ abstract
   equality-characterisation :
     ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Lens A B} →
     let open Lens in
-    Extensionality (a ⊔ b) (a ⊔ b) →
 
     l₁ ≡ l₂
       ↔
@@ -93,7 +93,7 @@ abstract
                      ≡
                    set-set l₂ a b₁ b₂)
 
-  equality-characterisation {ℓa} {ℓb} {A} {B} {l₁} {l₂} ext =
+  equality-characterisation {A = A} {B} {l₁} {l₂} =
     l₁ ≡ l₂                                                          ↔⟨ Eq.≃-≡ (Eq.↔⇒≃ (inverse Σ-assoc)) ⟩
 
     ((get l₁ , set l₁) , proj₂ (proj₂ l₁))
@@ -197,16 +197,13 @@ abstract
            (_↔_.to ≡×≡↔≡ (g , s)) (set-set l₁)
        ≡
        set-set l₂)                                                   ↔⟨ (∃-cong λ g → ∃-cong λ s →
-                                                                         lemma₁ (lower-extensionality ℓb ℓa ext)
-                                                                                (λ { (get , set) a → ∀ b → get (set a b) ≡ b })
+                                                                         lemma₁ (λ { (get , set) a → ∀ b → get (set a b) ≡ b })
                                                                                 (_↔_.to ≡×≡↔≡ (g , s))
                                                                            ×-cong
-                                                                         lemma₁ (lower-extensionality ℓb ℓb ext)
-                                                                                (λ { (get , set) a → set a (get a) ≡ a })
+                                                                         lemma₁ (λ { (get , set) a → set a (get a) ≡ a })
                                                                                 (_↔_.to ≡×≡↔≡ (g , s))
                                                                            ×-cong
-                                                                         lemma₁ (lower-extensionality ℓb lzero ext)
-                                                                                (λ { (get , set) a → ∀ b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂ })
+                                                                         lemma₁ (λ { (get , set) a → ∀ b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂ })
                                                                                 (_↔_.to ≡×≡↔≡ (g , s))) ⟩
     (∃ λ (g : get l₁ ≡ get l₂) →
      ∃ λ (s : set l₁ ≡ set l₂) →
@@ -225,16 +222,14 @@ abstract
                   (_↔_.to ≡×≡↔≡ (g , s)) (set-set l₁ a)
               ≡
             set-set l₂ a))                                           ↔⟨ (∃-cong λ g → ∃-cong λ s →
-                                                                         (Eq.∀-preserves (lower-extensionality ℓb ℓa ext) λ a →
-                                                                            lemma₁ (lower-extensionality ℓa ℓa ext)
-                                                                                   (λ { (get , set) b → get (set a b) ≡ b })
+                                                                         (Eq.∀-preserves ext λ a →
+                                                                            lemma₁ (λ { (get , set) b → get (set a b) ≡ b })
                                                                                    (_↔_.to ≡×≡↔≡ (g , s)))
                                                                            ×-cong
                                                                          F.id
                                                                            ×-cong
-                                                                         (Eq.∀-preserves (lower-extensionality ℓb lzero ext) λ a →
-                                                                            lemma₁ (lower-extensionality ℓa lzero ext)
-                                                                                   (λ { (get , set) b₁ → ∀ b₂ → set (set a b₁) b₂ ≡ set a b₂ })
+                                                                         (Eq.∀-preserves ext λ a →
+                                                                            lemma₁ (λ { (get , set) b₁ → ∀ b₂ → set (set a b₁) b₂ ≡ set a b₂ })
                                                                                    (_↔_.to ≡×≡↔≡ (g , s)))) ⟩
     (∃ λ (g : get l₁ ≡ get l₂) →
      ∃ λ (s : set l₁ ≡ set l₂) →
@@ -253,10 +248,9 @@ abstract
                      (_↔_.to ≡×≡↔≡ (g , s)) (set-set l₁ a b₁)
                  ≡
                set-set l₂ a b₁))                                     ↔⟨ (∃-cong λ g → ∃-cong λ s → ∃-cong λ _ → ∃-cong λ _ →
-                                                                         Eq.∀-preserves (lower-extensionality ℓb lzero ext) λ a →
-                                                                         Eq.∀-preserves (lower-extensionality ℓa lzero ext) λ b₁ →
-                                                                           lemma₁ (lower-extensionality ℓa ℓb ext)
-                                                                                  (λ { (get , set) b₂ → set (set a b₁) b₂ ≡ set a b₂ })
+                                                                         Eq.∀-preserves ext λ a →
+                                                                         Eq.∀-preserves ext λ b₁ →
+                                                                           lemma₁ (λ { (get , set) b₂ → set (set a b₁) b₂ ≡ set a b₂ })
                                                                                   (_↔_.to ≡×≡↔≡ (g , s))) ⟩
     (∃ λ (g : get l₁ ≡ get l₂) →
      ∃ λ (s : set l₁ ≡ set l₂) →
@@ -275,16 +269,16 @@ abstract
                         (_↔_.to ≡×≡↔≡ (g , s)) (set-set l₁ a b₁ b₂)
                     ≡
                   set-set l₂ a b₁ b₂))                               ↔⟨ (∃-cong λ g → ∃-cong λ s →
-                                                                         (Eq.∀-preserves (lower-extensionality ℓb ℓa ext) λ a →
-                                                                          Eq.∀-preserves (lower-extensionality ℓa ℓa ext) λ b →
+                                                                         (Eq.∀-preserves ext λ a →
+                                                                          Eq.∀-preserves ext λ b →
                                                                           lemma₂ (λ { (get , set) → get (set a b) ≡ b }) g s)
                                                                            ×-cong
-                                                                         (Eq.∀-preserves (lower-extensionality ℓb ℓb ext) λ a →
+                                                                         (Eq.∀-preserves ext λ a →
                                                                           lemma₂ (λ { (get , set) → set a (get a) ≡ a }) g s)
                                                                            ×-cong
-                                                                         (Eq.∀-preserves (lower-extensionality ℓb lzero ext) λ a →
-                                                                          Eq.∀-preserves (lower-extensionality ℓa lzero ext) λ b₁ →
-                                                                          Eq.∀-preserves (lower-extensionality ℓa ℓb    ext) λ b₂ →
+                                                                         (Eq.∀-preserves ext λ a →
+                                                                          Eq.∀-preserves ext λ b₁ →
+                                                                          Eq.∀-preserves ext λ b₂ →
                                                                           lemma₂ (λ { (get , set) → set (set a b₁) b₂ ≡ set a b₂ }) g s)) ⟩
     (∃ λ (g : get l₁ ≡ get l₂) →
      ∃ λ (s : set l₁ ≡ set l₂) →
@@ -306,9 +300,9 @@ abstract
              (set-set l₁ a b₁ b₂))
           ≡
         set-set l₂ a b₁ b₂))                                         ↔⟨ (∃-cong λ g → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
-                                                                         Eq.∀-preserves (lower-extensionality ℓb lzero ext) λ _ →
-                                                                         Eq.∀-preserves (lower-extensionality ℓa lzero ext) λ _ →
-                                                                         Eq.∀-preserves (lower-extensionality ℓa ℓb    ext) λ _ →
+                                                                         Eq.∀-preserves ext λ _ →
+                                                                         Eq.∀-preserves ext λ _ →
+                                                                         Eq.∀-preserves ext λ _ →
                                                                          ≡⇒↝ _ $ cong (λ x → x ≡ _) $ subst-const g) ⟩□
     (∃ λ (g : get l₁ ≡ get l₂) →
      ∃ λ (s : set l₁ ≡ set l₂) →
@@ -335,12 +329,11 @@ abstract
 
       lemma₁ :
         ∀ {a b c} {A : Set a} {B : Set b} {u v} →
-        Extensionality b c →
         ∀ (C : A → B → Set c) (eq : u ≡ v) {f g} →
         (subst (λ x → ∀ y → C x y) eq f ≡ g)
           ≃
         (∀ y → subst (λ x → C x y) eq (f y) ≡ g y)
-      lemma₁ ext C eq {f} {g} =
+      lemma₁ C eq {f} {g} =
         subst (λ x → ∀ y → C x y) eq f ≡ g              ↝⟨ inverse $ Eq.extensionality-isomorphism ext ⟩
         (∀ y → subst (λ x → ∀ y → C x y) eq f y ≡ g y)  ↝⟨ (Eq.∀-preserves ext λ y → ≡⇒↝ _ $
                                                             cong (λ x → x ≡ _) (sym $ push-subst-application eq _)) ⟩□
@@ -374,7 +367,7 @@ module Lens-combinators where
   --
   -- Note that composition can be defined in several different ways. I
   -- don't know if these definitions are equal (if we require that the
-  -- three "monoid" laws below must hold, and assume extensionality).
+  -- three "monoid" laws below must hold).
 
   infixr 9 _∘_
 
@@ -411,13 +404,12 @@ module Lens-combinators where
     where
     open Lens
 
-  -- id is a left identity of _∘_ (assuming extensionality).
+  -- id is a left identity of _∘_.
 
   left-identity : ∀ {a b} {A : Set a} {B : Set b} →
-                  Extensionality (a ⊔ b) (a ⊔ b) →
                   (l : Lens A B) → id ∘ l ≡ l
-  left-identity ext l =
-    _↔_.from (equality-characterisation ext)
+  left-identity l =
+    _↔_.from equality-characterisation
              (refl , refl , lemma₁ , lemma₂ , lemma₃)
     where
     open Lens l
@@ -436,13 +428,12 @@ module Lens-combinators where
 
       set-set a b₁ b₂                                        ∎
 
-  -- id is a right identity of _∘_ (assuming extensionality).
+  -- id is a right identity of _∘_.
 
   right-identity : ∀ {a b} {A : Set a} {B : Set b} →
-                   Extensionality (a ⊔ b) (a ⊔ b) →
                    (l : Lens A B) → l ∘ id ≡ l
-  right-identity ext l =
-    _↔_.from (equality-characterisation ext)
+  right-identity l =
+    _↔_.from equality-characterisation
              (refl , refl , lemma₁ , lemma₂ , lemma₃)
     where
     open Lens l
@@ -461,15 +452,14 @@ module Lens-combinators where
       trans refl (set-set a b₁ b₂)                           ≡⟨ trans-reflˡ _ ⟩∎
       set-set a b₁ b₂                                        ∎
 
-  -- _∘_ is associative (assuming extensionality).
+  -- _∘_ is associative.
 
   associativity :
     ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : Set d} →
-    Extensionality (a ⊔ d) (a ⊔ d) →
     (l₁ : Lens C D) (l₂ : Lens B C) (l₃ : Lens A B) →
     l₁ ∘ (l₂ ∘ l₃) ≡ (l₁ ∘ l₂) ∘ l₃
-  associativity ext l₁ l₂ l₃ =
-    _↔_.from (equality-characterisation ext)
+  associativity l₁ l₂ l₃ =
+    _↔_.from equality-characterisation
              (refl , refl , lemma₁ , lemma₂ , lemma₃)
     where
     open Lens
@@ -660,30 +650,29 @@ module Lens-combinators where
 -- Some lens isomorphisms
 
 -- If B is a proposition, then Lens a b is isomorphic to
--- (A → B) × ((a : A) → a ≡ a) (assuming extensionality).
+-- (A → B) × ((a : A) → a ≡ a).
 
 lens-to-proposition↔ :
   ∀ {a b} {A : Set a} {B : Set b} →
-  Extensionality (a ⊔ b) (a ⊔ b) →
   Is-proposition B →
   Lens A B ↔ (A → B) × ((a : A) → a ≡ a)
-lens-to-proposition↔ {ℓa} {ℓb} {A} {B} ext B-prop =
+lens-to-proposition↔ {A = A} {B} B-prop =
   (∃ λ (get : A → B) →
    ∃ λ (set : A → B → A) →
      (∀ a b → get (set a b) ≡ b) ×
      (∀ a → set a (get a) ≡ a) ×
-     (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂))     ↔⟨ (∃-cong λ get → ∃-cong λ set → ∃-cong λ _ → ∃-cong λ _ →
-                                                         Eq.∀-preserves (lower-extensionality ℓb lzero ext) λ a →
-                                                         Eq.∀-preserves (lower-extensionality ℓa lzero ext) λ b₁ →
-                                                         Eq.∀-preserves (lower-extensionality ℓa ℓb    ext) λ b₂ →
-                                                           ≡⇒↝ _ (
-       (set (set a b₁)                         b₂ ≡ set a b₂)       ≡⟨ cong (λ b → set (set a b) b₂ ≡ _)
-                                                                            (_⇔_.to propositional⇔irrelevant B-prop _ _) ⟩
-       (set (set a (get a))                    b₂ ≡ set a b₂)       ≡⟨ cong (λ b → set (set a (get a)) b ≡ _)
-                                                                            (_⇔_.to propositional⇔irrelevant B-prop _ _) ⟩
-       (set (set a (get a)) (get (set a (get a))) ≡ set a b₂)       ≡⟨ cong (λ b → _ ≡ set a b)
-                                                                            (_⇔_.to propositional⇔irrelevant B-prop _ _) ⟩∎
-       (set (set a (get a)) (get (set a (get a))) ≡ set a (get a))  ∎)) ⟩
+     (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂))                    ↔⟨ (∃-cong λ get → ∃-cong λ set → ∃-cong λ _ → ∃-cong λ _ →
+                                                                        Eq.∀-preserves ext λ a →
+                                                                        Eq.∀-preserves ext λ b₁ →
+                                                                        Eq.∀-preserves ext λ b₂ →
+                                                                          ≡⇒↝ _ (
+       (set (set a b₁)                         b₂ ≡ set a b₂)               ≡⟨ cong (λ b → set (set a b) b₂ ≡ _)
+                                                                                    (_⇔_.to propositional⇔irrelevant B-prop _ _) ⟩
+       (set (set a (get a))                    b₂ ≡ set a b₂)               ≡⟨ cong (λ b → set (set a (get a)) b ≡ _)
+                                                                                    (_⇔_.to propositional⇔irrelevant B-prop _ _) ⟩
+       (set (set a (get a)) (get (set a (get a))) ≡ set a b₂)               ≡⟨ cong (λ b → _ ≡ set a b)
+                                                                                    (_⇔_.to propositional⇔irrelevant B-prop _ _) ⟩∎
+       (set (set a (get a)) (get (set a (get a))) ≡ set a (get a))          ∎)) ⟩
 
   (∃ λ (get : A → B) →
    ∃ λ (set : A → B → A) →
@@ -691,51 +680,50 @@ lens-to-proposition↔ {ℓa} {ℓb} {A} {B} ext B-prop =
      (∀ a → set a (get a) ≡ a) ×
      (∀ a → B → B →
         set (set a (get a)) (get (set a (get a))) ≡
-        set a (get a)))                              ↝⟨ (∃-cong λ get →
-                                                         Σ-cong (A→B→A≃A→A get) λ set →
-                                                           drop-⊤-left-× λ _ →
-                                                             inverse $ _⇔_.to contractible⇔⊤↔ $
-                                                               Π-closure (lower-extensionality ℓb ℓa ext) 0 λ _ →
-                                                               Π-closure (lower-extensionality ℓa ℓa ext) 0 λ _ →
-                                                               B-prop _ _) ⟩
+        set a (get a)))                                             ↝⟨ (∃-cong λ get →
+                                                                        Σ-cong (A→B→A≃A→A get) λ set →
+                                                                          drop-⊤-left-× λ _ →
+                                                                            inverse $ _⇔_.to contractible⇔⊤↔ $
+                                                                              Π-closure ext 0 λ _ →
+                                                                              Π-closure ext 0 λ _ →
+                                                                              B-prop _ _) ⟩
   ((A → B) ×
    ∃ λ (f : A → A) →
      (∀ a → f a ≡ a) ×
-     (∀ a → B → B → f (f a) ≡ f a))                  ↔⟨ (∃-cong λ get → ∃-cong λ _ → ∃-cong λ _ →
-                                                         Eq.∀-preserves (lower-extensionality ℓb lzero ext) λ a →
-                                                           Eq.↔⇒≃ $ drop-⊤-left-Π (lower-extensionality ℓa lzero ext) (B↔⊤ (get a))) ⟩
+     (∀ a → B → B → f (f a) ≡ f a))                                 ↔⟨ (∃-cong λ get → ∃-cong λ _ → ∃-cong λ _ →
+                                                                        Eq.∀-preserves ext λ a →
+                                                                          Eq.↔⇒≃ $ drop-⊤-left-Π ext (B↔⊤ (get a))) ⟩
   ((A → B) ×
    ∃ λ (f : A → A) →
      (∀ a → f a ≡ a) ×
-     (∀ a → B → f (f a) ≡ f a))                      ↔⟨ (∃-cong λ get → ∃-cong λ _ → ∃-cong λ _ →
-                                                         Eq.∀-preserves (lower-extensionality ℓb lzero ext) λ a →
-                                                           Eq.↔⇒≃ $ drop-⊤-left-Π (lower-extensionality ℓa ℓb ext) (B↔⊤ (get a))) ⟩
+     (∀ a → B → f (f a) ≡ f a))                                     ↔⟨ (∃-cong λ get → ∃-cong λ _ → ∃-cong λ _ →
+                                                                        Eq.∀-preserves ext λ a →
+                                                                          Eq.↔⇒≃ $ drop-⊤-left-Π ext (B↔⊤ (get a))) ⟩
   ((A → B) ×
    ∃ λ (f : A → A) →
      (∀ a → f a ≡ a) ×
-     (∀ a → f (f a) ≡ f a))                          ↔⟨ (∃-cong λ _ → ∃-cong λ f →
-                                                         Σ-cong (Eq.extensionality-isomorphism
-                                                                   (lower-extensionality ℓb ℓb ext)) λ f≡id →
-                                                         Eq.∀-preserves (lower-extensionality ℓb ℓb ext) λ a →
-                                                         ≡⇒↝ _ (cong₂ _≡_ (trans (f≡id (f a)) (f≡id a)) (f≡id a ))) ⟩
+     (∀ a → f (f a) ≡ f a))                                         ↔⟨ (∃-cong λ _ → ∃-cong λ f →
+                                                                        Σ-cong (Eq.extensionality-isomorphism ext) λ f≡id →
+                                                                        Eq.∀-preserves ext λ a →
+                                                                        ≡⇒↝ _ (cong₂ _≡_ (trans (f≡id (f a)) (f≡id a)) (f≡id a ))) ⟩
   ((A → B) ×
    ∃ λ (f : A → A) →
      f ≡ P.id ×
-     (∀ a → a ≡ a))                                  ↝⟨ (∃-cong λ _ → Σ-assoc) ⟩
+     (∀ a → a ≡ a))                                                 ↝⟨ (∃-cong λ _ → Σ-assoc) ⟩
 
   (A → B) ×
   (∃ λ (f : A → A) → f ≡ P.id) ×
-  (∀ a → a ≡ a)                                      ↝⟨ (∃-cong λ _ → drop-⊤-left-× λ _ →
-                                                           inverse $ _⇔_.to contractible⇔⊤↔ $
-                                                             singleton-contractible _) ⟩□
-  (A → B) × (∀ a → a ≡ a)                            □
+  (∀ a → a ≡ a)                                                     ↝⟨ (∃-cong λ _ → drop-⊤-left-× λ _ →
+                                                                          inverse $ _⇔_.to contractible⇔⊤↔ $
+                                                                            singleton-contractible _) ⟩□
+  (A → B) × (∀ a → a ≡ a)                                           □
 
   where
   A→B→A≃A→A : (A → B) → (A → B → A) ≃ (A → A)
   A→B→A≃A→A get =
-    (A → B → A)  ↝⟨ Eq.∀-preserves (lower-extensionality ℓb lzero ext) (λ a →
+    (A → B → A)  ↝⟨ Eq.∀-preserves ext (λ a →
                       Eq.↔⇒≃ $
-                      drop-⊤-left-Π (lower-extensionality ℓa ℓb ext) $
+                      drop-⊤-left-Π ext $
                         inverse $ _⇔_.to contractible⇔⊤↔ $
                           propositional⇒inhabited⇒contractible B-prop (get a)) ⟩□
     (A → A)      □
@@ -745,27 +733,24 @@ lens-to-proposition↔ {ℓa} {ℓb} {A} {B} ext B-prop =
     inverse $ _⇔_.to contractible⇔⊤↔ $
       propositional⇒inhabited⇒contractible B-prop b
 
--- Lens A ⊤ is isomorphic to (a : A) → a ≡ a (assuming
--- extensionality).
+-- Lens A ⊤ is isomorphic to (a : A) → a ≡ a.
 
 lens-to-⊤↔ :
   ∀ {a} {A : Set a} →
-  Extensionality a a →
   Lens A ⊤ ↔ ((a : A) → a ≡ a)
-lens-to-⊤↔ {A = A} ext =
-  Lens A ⊤                     ↝⟨ lens-to-proposition↔ ext (mono₁ 0 ⊤-contractible) ⟩
+lens-to-⊤↔ {A = A} =
+  Lens A ⊤                     ↝⟨ lens-to-proposition↔ (mono₁ 0 ⊤-contractible) ⟩
   (A → ⊤) × ((a : A) → a ≡ a)  ↝⟨ drop-⊤-left-× (λ _ → →-right-zero) ⟩□
   ((a : A) → a ≡ a)            □
 
--- Lens A ⊥ is isomorphic to ¬ A (assuming extensionality).
+-- Lens A ⊥ is isomorphic to ¬ A.
 
 lens-to-⊥↔ :
   ∀ {a b} {A : Set a} →
-  Extensionality (a ⊔ b) (a ⊔ b) →
   Lens A (⊥ {ℓ = b}) ↔ ¬ A
-lens-to-⊥↔ {a} {b} {A} ext =
-  Lens A ⊥                     ↝⟨ lens-to-proposition↔ ext ⊥-propositional ⟩
-  (A → ⊥) × ((a : A) → a ≡ a)  ↝⟨ →-cong (lower-extensionality b a ext) F.id (Bij.⊥↔uninhabited ⊥-elim)
+lens-to-⊥↔ {a} {b} {A} =
+  Lens A ⊥                     ↝⟨ lens-to-proposition↔ ⊥-propositional ⟩
+  (A → ⊥) × ((a : A) → a ≡ a)  ↝⟨ →-cong ext F.id (Bij.⊥↔uninhabited ⊥-elim)
                                     ×-cong
                                   F.id ⟩
   ¬ A × ((a : A) → a ≡ a)      ↝⟨ drop-⊤-right lemma ⟩□
@@ -780,25 +765,23 @@ lens-to-⊥↔ {a} {b} {A} ext =
         }
       ; right-inverse-of = λ _ → refl
       }
-    ; left-inverse-of = λ eq → lower-extensionality b b ext λ a →
+    ; left-inverse-of = λ eq → ext λ a →
         ⊥-elim (¬a a)
     }
 
--- Iso-lens ⊥ B is isomorphic to the unit type (assuming
--- extensionality).
+-- Iso-lens ⊥ B is isomorphic to the unit type.
 
 lens-from-⊥↔⊤ :
   ∀ {a b} {B : Set b} →
-  Extensionality (a ⊔ b) (a ⊔ b) →
   Lens (⊥ {ℓ = a}) B ↔ ⊤
-lens-from-⊥↔⊤ {a} {b} {B} ext =
+lens-from-⊥↔⊤ =
   inverse $ _⇔_.to contractible⇔⊤↔ $
     (  ⊥-elim , ⊥-elim
     , (λ a → ⊥-elim a) , (λ a → ⊥-elim a) , (λ a → ⊥-elim a)
     ) ,
-    λ l → _↔_.from (equality-characterisation ext)
-            ( lower-extensionality b a ext (λ a → ⊥-elim a)
-            , lower-extensionality b lzero ext (λ a → ⊥-elim a)
+    λ l → _↔_.from equality-characterisation
+            ( ext (λ a → ⊥-elim a)
+            , ext (λ a → ⊥-elim a)
             , (λ a → ⊥-elim a)
             , (λ a → ⊥-elim a)
             , (λ a → ⊥-elim a)
@@ -839,52 +822,47 @@ contractible-to-contractible l c =
   h-level-respects-lens-from-inhabited l (proj₁ c) c
 
 -- If A and B have h-level n (where, in the case of B, one can assume
--- that A is inhabited), then Lens a b also has h-level n (assuming
--- extensionality).
+-- that A is inhabited), then Lens a b also has h-level n.
 
 lens-preserves-h-level :
   ∀ {a b} {A : Set a} {B : Set b} →
-  Extensionality (a ⊔ b) (a ⊔ b) →
   ∀ n → H-level n A → (A → H-level n B) →
   H-level n (Lens A B)
-lens-preserves-h-level {ℓa} {ℓb} ext n hA hB =
-  Σ-closure n (Π-closure (lower-extensionality ℓb ℓa    ext) n λ a →
+lens-preserves-h-level n hA hB =
+  Σ-closure n (Π-closure ext n λ a →
                hB a) λ _ →
-  Σ-closure n (Π-closure (lower-extensionality ℓb lzero ext) n λ _ →
-               Π-closure (lower-extensionality ℓa ℓb    ext) n λ _ →
+  Σ-closure n (Π-closure ext n λ _ →
+               Π-closure ext n λ _ →
                hA) λ _ →
-  ×-closure n (Π-closure (lower-extensionality ℓb ℓa    ext) n λ a →
-               Π-closure (lower-extensionality ℓa ℓa    ext) n λ _ →
+  ×-closure n (Π-closure ext n λ a →
+               Π-closure ext n λ _ →
                mono₁ n (hB a) _ _) $
-  ×-closure n (Π-closure (lower-extensionality ℓb ℓb    ext) n λ _ →
+  ×-closure n (Π-closure ext n λ _ →
                mono₁ n hA _ _)
-              (Π-closure (lower-extensionality ℓb lzero ext) n λ _ →
-               Π-closure (lower-extensionality ℓa lzero ext) n λ _ →
-               Π-closure (lower-extensionality ℓa ℓb    ext) n λ _ →
+              (Π-closure ext n λ _ →
+               Π-closure ext n λ _ →
+               Π-closure ext n λ _ →
                mono₁ n hA _ _)
 
--- If A has positive h-level n, then Lens A B also has
--- h-level n (assuming extensionality).
+-- If A has positive h-level n, then Lens A B also has h-level n.
 
 lens-preserves-h-level-of-domain :
   ∀ {a b} {A : Set a} {B : Set b} →
-  Extensionality (a ⊔ b) (a ⊔ b) →
   ∀ n → H-level (1 + n) A → H-level (1 + n) (Lens A B)
-lens-preserves-h-level-of-domain {ℓa} {ℓb} ext n hA =
+lens-preserves-h-level-of-domain n hA =
   [inhabited⇒+]⇒+ n λ l →
-    lens-preserves-h-level ext (1 + n) hA λ a →
+    lens-preserves-h-level (1 + n) hA λ a →
       h-level-respects-lens-from-inhabited l a hA
 
 -- There is a type A such that Lens A ⊤ is not propositional (assuming
--- extensionality and univalence).
+-- univalence).
 
 ¬-lens-to-⊤-propositional :
-  Extensionality (# 1) (# 1) →
   Univalence (# 0) →
   ∃ λ (A : Set₁) → ¬ Is-proposition (Lens A ⊤)
-¬-lens-to-⊤-propositional ext univ =
+¬-lens-to-⊤-propositional univ =
   A , (
-  Is-proposition (Lens A ⊤)         ↝⟨ H-level.respects-surjection (_↔_.surjection $ lens-to-⊤↔ ext) 1 ⟩
+  Is-proposition (Lens A ⊤)         ↝⟨ H-level.respects-surjection (_↔_.surjection lens-to-⊤↔) 1 ⟩
   Is-proposition ((a : A) → a ≡ a)  ↝⟨ proj₂ $ ¬-type-of-refl-propositional ext univ ⟩□
   ⊥₀                                □)
   where

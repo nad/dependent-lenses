@@ -140,9 +140,7 @@ module Dependent₃ where
 ------------------------------------------------------------------------
 -- Dependent lenses without "remainder types" visible in the type
 
--- The code makes use of extensionality.
-
-module Dependent (ext₁ : Extensionality (# 1) (# 0)) where
+module Dependent where
 
   open Lens.Dependent
   open Dependent₃ using (R₁; module R₁; R₂; module R₂)
@@ -150,13 +148,13 @@ module Dependent (ext₁ : Extensionality (# 1) (# 0)) where
   -- Lenses for each of the three fields of R₁.
 
   x : {A : Set} → Lens (R₁ A) (λ _ → A)
-  x = Lens₃-to-Lens′ ext₁ Dependent₃.x
+  x = Lens₃-to-Lens Dependent₃.x
 
   f : {A : Set} → Lens (R₁ A) (λ _ → ∃ λ (f : A → A) → ∀ y → f y ≡ y)
-  f = Lens₃-to-Lens′ ext₁ Dependent₃.f
+  f = Lens₃-to-Lens Dependent₃.f
 
   lemma : {A : Set} → Lens (R₁ A) (λ r → ∀ y → R₁.f r y ≡ y)
-  lemma = Lens₃-to-Lens′ ext₁ Dependent₃.lemma
+  lemma = Lens₃-to-Lens Dependent₃.lemma
 
   -- Note that the type of lemma is now more satisfactory: the type of
   -- the lens /does/ guarantee that the lemma applies to the input's f
@@ -165,7 +163,7 @@ module Dependent (ext₁ : Extensionality (# 1) (# 0)) where
   -- A lens for the r₁ field of R₂.
 
   r₁ : Lens R₂ (λ r → R₁ (R₂.A r))
-  r₁ = Lens₃-to-Lens′ {a = # 0} ext₁ Dependent₃.r₁
+  r₁ = Lens₃-to-Lens {-a = # 0-} Dependent₃.r₁
 
   -- Lenses for the fields of R₁, accessed through an R₂ record. Note
   -- the use of /forward/ composition.
@@ -182,12 +180,7 @@ module Dependent (ext₁ : Extensionality (# 1) (# 0)) where
 ------------------------------------------------------------------------
 -- Non-dependent lenses
 
--- The code makes use of extensionality.
-
-module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
-
-  ext₁ : Extensionality (# 1) (# 0)
-  ext₁ = lower-extensionality _ _ ext₂
+module Non-dependent where
 
   open Lens.Non-dependent.Alternative
     renaming (Iso-lens to Lens; module Iso-lens to Lens)
@@ -267,7 +260,7 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
   -- The x field is easiest, because it is independent of the others.
 
   x : {A : Set} → Lens (Record (R₁ A)) A
-  x {A} = isomorphism-to-lens′ ext₁
+  x {A} = isomorphism-to-lens
 
     (Record (R₁ A)                                    ↝⟨ Record↔Recʳ ⟩
      (∃ λ (f : A → A) → ∃ λ (x : A) → ∀ y → f y ≡ y)  ↝⟨ ∃-comm ⟩
@@ -281,7 +274,7 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
       Lens (Record (R₁ A))
            (Record (∅ , ″f″     ∶ (λ _ → A → A)
                       , ″lemma″ ∶ (λ r → ∀ x → (r · ″f″) x ≡ x)))
-  f {A} = isomorphism-to-lens′ ext₁
+  f {A} = isomorphism-to-lens
 
     (Record (R₁ A)                                    ↝⟨ Record↔Recʳ ⟩
      (∃ λ (f : A → A) → ∃ λ (x : A) → ∀ y → f y ≡ y)  ↝⟨ ∃-comm ⟩
@@ -295,7 +288,7 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
   lemma : {A : Set} {f : A → A} →
           Lens (Record (R₁ A With ″f″ ≔ (λ _ → f)))
                (∀ x → f x ≡ x)
-  lemma {A} {f} = isomorphism-to-lens′ ext₁
+  lemma {A} {f} = isomorphism-to-lens
 
     (Record (R₁ A With ″f″ ≔ (λ _ → f))  ↝⟨ Record↔Recʳ ⟩□
      A × (∀ x → f x ≡ x)                 □)
@@ -317,7 +310,7 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
 
   r₁ : {A : Set} →
        Lens (Record (R₂ With ″A″ ≔ λ _ → A)) (Record (R₁ A))
-  r₁ {A} = isomorphism-to-lens ext₂
+  r₁ {A} = isomorphism-to-lens
 
     (Record (R₂ With ″A″ ≔ λ _ → A)  ↝⟨ Record↔Recʳ ⟩
      ↑ _ (Record (R₁ A))             ↝⟨ Bij.↑↔ ⟩
@@ -376,7 +369,7 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
         R r₁₂ × Record (R₁ A With ″f″ ≔ (λ _ → r · ″f″))  ↝⟨ F.id ×-cong Record↔Recʳ ⟩□
         R r₁₂ × A × (∀ y → (r · ″f″) y ≡ y)               □
 
-      isomorphism : ∃ λ (A : Set₂) → ⊤ ↔ A × Bool
+      isomorphism : ∃ λ (A : Set₁) → ⊤ ↔ A × Bool
       isomorphism =
         _ ,
         (⊤                               ↝⟨ isomorphisms Bool r ⟩
@@ -387,7 +380,7 @@ module Non-dependent (ext₂ : Extensionality (# 2) (# 1)) where
         r : Record (R₁ Bool)
         r = rec (rec (rec (_ , F.id) , true) , λ _ → refl)
 
-      no-isomorphism : ¬ ∃ λ (A : Set₂) → ⊤ ↔ A × Bool
+      no-isomorphism : ¬ ∃ λ (A : Set₁) → ⊤ ↔ A × Bool
       no-isomorphism (A , iso) = Bool.true≢false (
         true                           ≡⟨⟩
         proj₂ (a , true)               ≡⟨ cong proj₂ $ sym $ right-inverse-of (a , true) ⟩
