@@ -47,6 +47,11 @@ module Lens {a b} {A : Set a} {B : Set b} (l : Lens A B) where
   set : A → B → A
   set = proj₁ (proj₂ l)
 
+  -- A combination of get and set.
+
+  modify : (B → B) → A → A
+  modify f x = set x (f (get x))
+
   -- Lens laws.
 
   get-set : ∀ a b → get (set a b) ≡ b

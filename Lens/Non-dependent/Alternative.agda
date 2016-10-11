@@ -126,6 +126,11 @@ module Iso-lens {a b} {A : Set a} {B : Set b} (l : Iso-lens A B) where
   set : A → B → A
   set a b = _≃_.from equiv (remainder a , b)
 
+  -- A combination of get and set.
+
+  modify : (B → B) → A → A
+  modify f x = set x (f (get x))
+
   -- Lens laws.
 
   get-set : ∀ a b → get (set a b) ≡ b
