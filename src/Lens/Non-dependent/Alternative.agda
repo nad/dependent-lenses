@@ -410,14 +410,14 @@ lenses-equal-if-setters-equal {A = A} {B = B}
 
 -- A generalised variant of Iso-lens preserves bijections.
 
-Iso-lens′-cong :
+Iso-lens-cong′ :
   ∀ {r}
     {a₁ b₁} {A₁ : Set a₁} {B₁ : Set b₁}
     {a₂ b₂} {A₂ : Set a₂} {B₂ : Set b₂} →
   A₁ ↔ A₂ → B₁ ↔ B₂ →
   (∃ λ (R : Set r) → A₁ ≃ (R × B₁) × (R → ∥ B₁ ∥)) ↔
   (∃ λ (R : Set r) → A₂ ≃ (R × B₂) × (R → ∥ B₂ ∥))
-Iso-lens′-cong A₁↔A₂ B₁↔B₂ =
+Iso-lens-cong′ A₁↔A₂ B₁↔B₂ =
   ∃-cong λ _ →
   Eq.≃-preserves-bijections ext A₁↔A₂ (F.id ×-cong B₁↔B₂)
     ×-cong
@@ -429,7 +429,7 @@ Iso-lens-cong :
   ∀ {a b} {A₁ A₂ : Set a} {B₁ B₂ : Set b} →
   A₁ ↔ A₂ → B₁ ↔ B₂ →
   Iso-lens A₁ B₁ ↔ Iso-lens A₂ B₂
-Iso-lens-cong = Iso-lens′-cong
+Iso-lens-cong = Iso-lens-cong′
 
 -- If B is a proposition, then Iso-lens A B is isomorphic to A → B
 -- (assuming univalence).
