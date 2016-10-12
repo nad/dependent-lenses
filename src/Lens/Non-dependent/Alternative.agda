@@ -146,7 +146,13 @@ module Iso-lens {a b} {A : Set a} {B : Set b} (l : Iso-lens A B) where
   -- Traditional lens.
 
   traditional-lens : Traditional.Lens A B
-  traditional-lens = get , set , get-set , set-get , set-set
+  traditional-lens = record
+    { get     = get
+    ; set     = set
+    ; get-set = get-set
+    ; set-get = set-get
+    ; set-set = set-set
+    }
 
 -- Isomorphisms can be converted into lenses.
 
@@ -832,25 +838,22 @@ Iso-lens↠Traditional-lens {A = A} {B} A-set = record
     open Traditional.Lens l
 
   to∘from : ∀ l → Iso-lens.traditional-lens (from l) ≡ l
-  to∘from l =
-    cong (λ proofs → get , set , proofs)
-      (Σ-≡,≡→≡
-         (_⇔_.to propositional⇔irrelevant
-            (Π-closure ext 1 λ a →
-             Π-closure ext 1 λ _ →
-             B-set a _ _)
-            _ _)
-         (Σ-≡,≡→≡
-           (_⇔_.to propositional⇔irrelevant
-              (Π-closure ext 1 λ _ →
-               A-set _ _)
+  to∘from l = _↔_.from Traditional.equality-characterisation
+    ( refl
+    , refl
+    , (λ a _ →
+         _⇔_.to propositional⇔irrelevant
+           (B-set a _ _)
+           _ _)
+    , (λ _ →
+         _⇔_.to propositional⇔irrelevant
+           (A-set _ _)
+           _ _)
+    , (λ _ _ _ →
+         _⇔_.to propositional⇔irrelevant
+           (A-set _ _)
               _ _)
-           (_⇔_.to propositional⇔irrelevant
-              (Π-closure ext 1 λ _ →
-               Π-closure ext 1 λ _ →
-               Π-closure ext 1 λ _ →
-               A-set _ _)
-              _ _)))
+    )
     where
     open Traditional.Lens l
 

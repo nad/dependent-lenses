@@ -26,43 +26,52 @@ import Lens.Non-dependent
 
 -- Lenses.
 
-Lens : ∀ {a b} → Set a → Set b → Set (a ⊔ b)
-Lens A B =
-  ∃ λ (get : A → B) →
-  ∃ λ (set : A → B → A) →
-  (∀ a b → get (set a b) ≡ b) ×
-  (∀ a → set a (get a) ≡ a) ×
-  (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂)
+record Lens {a b} (A : Set a) (B : Set b) : Set (a ⊔ b) where
+  field
+    -- Getter and setter.
+    get : A → B
+    set : A → B → A
 
--- Projections.
-
-module Lens {a b} {A : Set a} {B : Set b} (l : Lens A B) where
-
-  -- Getter.
-
-  get : A → B
-  get = proj₁ l
-
-  -- Setter.
-
-  set : A → B → A
-  set = proj₁ (proj₂ l)
+    -- Lens laws.
+    get-set : ∀ a b → get (set a b) ≡ b
+    set-get : ∀ a → set a (get a) ≡ a
+    set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂
 
   -- A combination of get and set.
 
   modify : (B → B) → A → A
   modify f x = set x (f (get x))
 
-  -- Lens laws.
+-- The record type above is isomorphic to a nested Σ-type.
 
-  get-set : ∀ a b → get (set a b) ≡ b
-  get-set = proj₁ (proj₂ (proj₂ l))
-
-  set-get : ∀ a → set a (get a) ≡ a
-  set-get = proj₁ (proj₂ (proj₂ (proj₂ l)))
-
-  set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂
-  set-set = proj₂ (proj₂ (proj₂ (proj₂ l)))
+Lens-as-Σ :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Lens A B ↔
+  ∃ λ (get : A → B) →
+  ∃ λ (set : A → B → A) →
+  (∀ a b → get (set a b) ≡ b) ×
+  (∀ a → set a (get a) ≡ a) ×
+  (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂)
+Lens-as-Σ = record
+  { surjection = record
+    { logical-equivalence = record
+      { to   = λ l → get l , set l , get-set l , set-get l , set-set l
+      ; from = λ { (get , set , get-set , set-get , set-set) →
+                   record
+                     { get     = get
+                     ; set     = set
+                     ; get-set = get-set
+                     ; set-get = set-get
+                     ; set-set = set-set
+                     }
+                 }
+      }
+    ; right-inverse-of = λ _ → refl
+    }
+  ; left-inverse-of = λ _ → refl
+  }
+  where
+  open Lens
 
 -- Equality characterisation.
 
@@ -94,37 +103,39 @@ abstract
                    set-set l₂ a b₁ b₂)
 
   equality-characterisation {A = A} {B} {l₁} {l₂} =
-    l₁ ≡ l₂                                                          ↔⟨ Eq.≃-≡ (Eq.↔⇒≃ (inverse Σ-assoc)) ⟩
+    l₁ ≡ l₂                                                          ↔⟨ Eq.≃-≡ (Eq.↔⇒≃ (inverse Lens-as-Σ)) ⟩
 
-    ((get l₁ , set l₁) , proj₂ (proj₂ l₁))
+    l₁′ ≡ l₂′                                                        ↔⟨ Eq.≃-≡ (Eq.↔⇒≃ (inverse Σ-assoc)) ⟩
+
+    ((get l₁ , set l₁) , proj₂ (proj₂ l₁′))
       ≡
-    ((get l₂ , set l₂) , proj₂ (proj₂ l₂))                           ↝⟨ inverse Bij.Σ-≡,≡↔≡ ⟩
+    ((get l₂ , set l₂) , proj₂ (proj₂ l₂′))                          ↝⟨ inverse Bij.Σ-≡,≡↔≡ ⟩
 
     (∃ λ (gs : (get l₁ , set l₁) ≡ (get l₂ , set l₂)) →
      subst (λ { (get , set) →
                 (∀ a b → get (set a b) ≡ b) ×
                 (∀ a → set a (get a) ≡ a) ×
                 (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂) })
-           gs (proj₂ (proj₂ l₁))
+           gs (proj₂ (proj₂ l₁′))
        ≡
-     proj₂ (proj₂ l₂))                                               ↝⟨ Σ-cong (inverse ≡×≡↔≡) (λ gs → ≡⇒↝ _ $
+     proj₂ (proj₂ l₂′))                                              ↝⟨ Σ-cong (inverse ≡×≡↔≡) (λ gs → ≡⇒↝ _ $
                                                                         cong (λ (gs : (get l₁ , set l₁) ≡ (get l₂ , set l₂)) →
                                                                                 subst (λ { (get , set) →
                                                                                            (∀ a b → get (set a b) ≡ b) ×
                                                                                            (∀ a → set a (get a) ≡ a) ×
                                                                                            (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂) })
-                                                                                      gs (proj₂ (proj₂ l₁))
+                                                                                      gs (proj₂ (proj₂ l₁′))
                                                                                   ≡
-                                                                                proj₂ (proj₂ l₂))
+                                                                                proj₂ (proj₂ l₂′))
                                                                              (sym $ _↔_.right-inverse-of ≡×≡↔≡ gs)) ⟩
     (∃ λ (gs : get l₁ ≡ get l₂ × set l₁ ≡ set l₂) →
      subst (λ { (get , set) →
                 (∀ a b → get (set a b) ≡ b) ×
                 (∀ a → set a (get a) ≡ a) ×
                 (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂) })
-           (_↔_.to ≡×≡↔≡ gs) (proj₂ (proj₂ l₁))
+           (_↔_.to ≡×≡↔≡ gs) (proj₂ (proj₂ l₁′))
        ≡
-     proj₂ (proj₂ l₂))                                               ↝⟨ inverse Σ-assoc ⟩
+     proj₂ (proj₂ l₂′))                                              ↝⟨ inverse Σ-assoc ⟩
 
     (∃ λ (g : get l₁ ≡ get l₂) →
      ∃ λ (s : set l₁ ≡ set l₂) →
@@ -132,10 +143,10 @@ abstract
                 (∀ a b → get (set a b) ≡ b) ×
                 (∀ a → set a (get a) ≡ a) ×
                 (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂) })
-           (_↔_.to ≡×≡↔≡ (g , s)) (proj₂ (proj₂ l₁))
+           (_↔_.to ≡×≡↔≡ (g , s)) (proj₂ (proj₂ l₁′))
        ≡
-     proj₂ (proj₂ l₂))                                               ↝⟨ (∃-cong λ g → ∃-cong λ s → ≡⇒↝ _ $
-                                                                         cong (λ x → x ≡ proj₂ (proj₂ l₂))
+     proj₂ (proj₂ l₂′))                                              ↝⟨ (∃-cong λ g → ∃-cong λ s → ≡⇒↝ _ $
+                                                                         cong (λ x → x ≡ proj₂ (proj₂ l₂′))
                                                                               (push-subst-, {y≡z = _↔_.to ≡×≡↔≡ (g , s)} _ _)) ⟩
     (∃ λ (g : get l₁ ≡ get l₂) →
      ∃ λ (s : set l₁ ≡ set l₂) →
@@ -144,10 +155,10 @@ abstract
      , subst (λ { (get , set) →
                   (∀ a → set a (get a) ≡ a) ×
                   (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂) })
-           (_↔_.to ≡×≡↔≡ (g , s)) (proj₂ (proj₂ (proj₂ l₁)))
+           (_↔_.to ≡×≡↔≡ (g , s)) (proj₂ (proj₂ (proj₂ l₁′)))
      )
        ≡
-     proj₂ (proj₂ l₂))                                               ↝⟨ (∃-cong λ _ → ∃-cong λ _ → inverse ≡×≡↔≡) ⟩
+     proj₂ (proj₂ l₂′))                                              ↝⟨ (∃-cong λ _ → ∃-cong λ _ → inverse ≡×≡↔≡) ⟩
 
     (∃ λ (g : get l₁ ≡ get l₂) →
      ∃ λ (s : set l₁ ≡ set l₂) →
@@ -159,10 +170,10 @@ abstract
      subst (λ { (get , set) →
                 (∀ a → set a (get a) ≡ a) ×
                 (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂) })
-           (_↔_.to ≡×≡↔≡ (g , s)) (proj₂ (proj₂ (proj₂ l₁)))
+           (_↔_.to ≡×≡↔≡ (g , s)) (proj₂ (proj₂ (proj₂ l₁′)))
        ≡
-     proj₂ (proj₂ (proj₂ l₂)))                                       ↝⟨ (∃-cong λ g → ∃-cong λ s → ∃-cong λ _ → ≡⇒↝ _ $
-                                                                         cong (λ x → x ≡ proj₂ (proj₂ (proj₂ l₂)))
+     proj₂ (proj₂ (proj₂ l₂′)))                                      ↝⟨ (∃-cong λ g → ∃-cong λ s → ∃-cong λ _ → ≡⇒↝ _ $
+                                                                         cong (λ x → x ≡ proj₂ (proj₂ (proj₂ l₂′)))
                                                                               (push-subst-, {y≡z = _↔_.to ≡×≡↔≡ (g , s)} _ _)) ⟩
     (∃ λ (g : get l₁ ≡ get l₂) →
      ∃ λ (s : set l₁ ≡ set l₂) →
@@ -178,7 +189,7 @@ abstract
              (_↔_.to ≡×≡↔≡ (g , s)) (set-set l₁)
      )
        ≡
-     proj₂ (proj₂ (proj₂ l₂)))                                       ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → inverse ≡×≡↔≡) ⟩
+     proj₂ (proj₂ (proj₂ l₂′)))                                      ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → inverse ≡×≡↔≡) ⟩
 
     (∃ λ (g : get l₁ ≡ get l₂) →
      ∃ λ (s : set l₁ ≡ set l₂) →
@@ -325,6 +336,9 @@ abstract
     where
     open Lens
 
+    l₁′ = _↔_.to Lens-as-Σ l₁
+    l₂′ = _↔_.to Lens-as-Σ l₂
+
     abstract
 
       lemma₁ :
@@ -356,12 +370,13 @@ module Lens-combinators where
   -- Identity lens.
 
   id : ∀ {a} {A : Set a} → Lens A A
-  id =
-    P.id ,
-    flip const ,
-    (λ _ _   → refl) ,
-    (λ _     → refl) ,
-    (λ _ _ _ → refl)
+  id = record
+    { get     = λ a      → a
+    ; set     = λ _ a    → a
+    ; get-set = λ _ _    → refl
+    ; set-get = λ _      → refl
+    ; set-set = λ _ _ _  → refl
+    }
 
   -- Composition of lenses.
   --
@@ -373,34 +388,36 @@ module Lens-combinators where
 
   _∘_ : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c} →
         Lens B C → Lens A B → Lens A C
-  l₁ ∘ l₂ =
-    get l₁ ⊚ get l₂ ,
-    (λ a c → let b = set l₁ (get l₂ a) c in
-             set l₂ a b) ,
-    (λ a c → let b = set l₁ (get l₂ a) c in
+  l₁ ∘ l₂ = record
+    { get     = λ a → get l₁ (get l₂ a)
+    ; set     = λ a c →
+                let b = set l₁ (get l₂ a) c in
+                set l₂ a b
+    ; get-set = λ a c →
+        let b = set l₁ (get l₂ a) c in
+        get l₁ (get l₂ (set l₂ a b))  ≡⟨ cong (get l₁) $ get-set l₂ a b ⟩
+        get l₁ b                      ≡⟨⟩
+        get l₁ (set l₁ (get l₂ a) c)  ≡⟨ get-set l₁ (get l₂ a) c ⟩∎
+        c                             ∎
+    ; set-get = λ a →
+        set l₂ a (set l₁ (get l₂ a) (get l₁ (get l₂ a)))  ≡⟨ cong (set l₂ a) $ set-get l₁ (get l₂ a) ⟩
+        set l₂ a (get l₂ a)                               ≡⟨ set-get l₂ a ⟩∎
+        a                                                 ∎
+    ; set-set = λ a c₁ c₂ →
+        let b₁ = set l₁ (get l₂ a) c₁
+            b₂ = set l₁ (get l₂ a) c₂
 
-       get l₁ (get l₂ (set l₂ a b))  ≡⟨ cong (get l₁) $ get-set l₂ a b ⟩
-       get l₁ b                      ≡⟨⟩
-       get l₁ (set l₁ (get l₂ a) c)  ≡⟨ get-set l₁ (get l₂ a) c ⟩∎
-       c                             ∎) ,
-    (λ a →
-       set l₂ a (set l₁ (get l₂ a) (get l₁ (get l₂ a)))  ≡⟨ cong (set l₂ a) $ set-get l₁ (get l₂ a) ⟩
-       set l₂ a (get l₂ a)                               ≡⟨ set-get l₂ a ⟩∎
-       a                                                 ∎) ,
-    (λ a c₁ c₂ →
-       let b₁ = set l₁ (get l₂ a) c₁
-           b₂ = set l₁ (get l₂ a) c₂
+            lemma =
+              set l₁ (get l₂ (set l₂ a b₁))  c₂  ≡⟨ cong (λ x → set l₁ x c₂) $ get-set l₂ a b₁ ⟩
+              set l₁ b₁                      c₂  ≡⟨⟩
+              set l₁ (set l₁ (get l₂ a) c₁)  c₂  ≡⟨ set-set l₁ (get l₂ a) c₁ c₂ ⟩∎
+              set l₁ (get l₂ a)              c₂  ∎
 
-           lemma =
-             set l₁ (get l₂ (set l₂ a b₁)) c₂  ≡⟨ cong (λ x → set l₁ x c₂) $ get-set l₂ a b₁ ⟩
-             set l₁ b₁                     c₂  ≡⟨⟩
-             set l₁ (set l₁ (get l₂ a) c₁) c₂  ≡⟨ set-set l₁ (get l₂ a) c₁ c₂ ⟩∎
-             set l₁ (get l₂ a)             c₂  ∎
-
-       in
-       set l₂ (set l₂ a b₁) (set l₁ (get l₂ (set l₂ a b₁)) c₂)  ≡⟨ set-set l₂ a b₁ _ ⟩
-       set l₂ a             (set l₁ (get l₂ (set l₂ a b₁)) c₂)  ≡⟨ cong (set l₂ a) lemma ⟩∎
-       set l₂ a             b₂                                  ∎)
+        in
+        set l₂ (set l₂ a b₁) (set l₁ (get l₂ (set l₂ a b₁)) c₂)  ≡⟨ set-set l₂ a b₁ _ ⟩
+        set l₂ a             (set l₁ (get l₂ (set l₂ a b₁)) c₂)  ≡⟨ cong (set l₂ a) lemma ⟩∎
+        set l₂ a             b₂                                  ∎
+    }
     where
     open Lens
 
@@ -657,6 +674,8 @@ lens-to-proposition↔ :
   Is-proposition B →
   Lens A B ↔ (A → B) × ((a : A) → a ≡ a)
 lens-to-proposition↔ {A = A} {B} B-prop =
+  Lens A B                                                          ↝⟨ Lens-as-Σ ⟩
+
   (∃ λ (get : A → B) →
    ∃ λ (set : A → B → A) →
      (∀ a b → get (set a b) ≡ b) ×
@@ -776,9 +795,13 @@ lens-from-⊥↔⊤ :
   Lens (⊥ {ℓ = a}) B ↔ ⊤
 lens-from-⊥↔⊤ =
   inverse $ _⇔_.to contractible⇔⊤↔ $
-    (  ⊥-elim , ⊥-elim
-    , (λ a → ⊥-elim a) , (λ a → ⊥-elim a) , (λ a → ⊥-elim a)
-    ) ,
+    record
+      { get = ⊥-elim
+      ; set = ⊥-elim
+      ; get-set = λ a → ⊥-elim a
+      ; set-get = λ a → ⊥-elim a
+      ; set-set = λ a → ⊥-elim a
+      } ,
     λ l → _↔_.from equality-characterisation
             ( ext (λ a → ⊥-elim a)
             , ext (λ a → ⊥-elim a)
@@ -829,6 +852,7 @@ lens-preserves-h-level :
   ∀ n → H-level n A → (A → H-level n B) →
   H-level n (Lens A B)
 lens-preserves-h-level n hA hB =
+  H-level.respects-surjection (_↔_.surjection (inverse Lens-as-Σ)) n $
   Σ-closure n (Π-closure ext n λ a →
                hB a) λ _ →
   Σ-closure n (Π-closure ext n λ _ →
