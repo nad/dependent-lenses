@@ -290,12 +290,14 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
     -- This type family is pointwise equal to B′ (given the same
     -- assumptions).
 
-    B′≡B̲ : ∀ r → B′ r ≡ B̲ r
-    B′≡B̲ r = Trunc.elim
-      (λ ∥b′∥ → B′ r ≡ B̲′ r ∥b′∥)
-      (λ _ → _⇔_.from set⇔UIP uip _ _)
-      (other-variant r)
-      (inhabited r)
+    -- This code is commented out due to a bug in Agda.
+
+    -- B′≡B̲ : ∀ r → B′ r ≡ B̲ r
+    -- B′≡B̲ r = Trunc.elim
+    --   (λ ∥b′∥ → B′ r ≡ B̲′ r ∥b′∥)
+    --   (λ _ → _⇔_.from set⇔UIP uip _ _)
+    --   (other-variant r)
+    --   (inhabited r)
 
   -- We can also use other assumptions:
   --
