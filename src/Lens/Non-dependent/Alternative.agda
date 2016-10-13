@@ -979,6 +979,19 @@ Iso-lens↔Traditional-lens {A = A} {B} univ A-set = record
 
       R                                                           □
 
+-- If the domain A is a set, then Traditional.Lens A B and
+-- Higher-lens A B are isomorphic (assuming univalence).
+
+Higher-lens↔Traditional-lens :
+  ∀ {a b} {A : Set a} {B : Set b} →
+  Univalence (a ⊔ b) →
+  Is-set A →
+  Higher-lens A B ↔ Traditional.Lens A B
+Higher-lens↔Traditional-lens {A = A} {B} univ A-set =
+  Higher-lens A B       ↝⟨ Higher-lens↔Iso-lens univ ⟩
+  Iso-lens A B          ↝⟨ Iso-lens↔Traditional-lens univ A-set ⟩□
+  Traditional.Lens A B  □
+
 -- If the codomain B is an inhabited set, then Iso-lens A B and
 -- Traditional.Lens A B are logically equivalent.
 --
