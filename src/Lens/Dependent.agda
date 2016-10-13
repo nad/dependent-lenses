@@ -2,8 +2,8 @@
 -- Dependent lenses
 ------------------------------------------------------------------------
 
--- Some code below depends on the K rule. I don't know if the K rule,
--- the propositional truncation, and extensionality are mutually
+-- Some code below depends on UIP. I don't know if UIP, the
+-- propositional truncation, and extensionality are mutually
 -- consistent, but Andrea Vezzosi and I have discussed this, and it
 -- seems plausible that some form of extensional type theory with
 -- squash types would provide a model for these things. (I don't know
@@ -270,17 +270,18 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
     B′ r                        ≡⟨ other-variant _ _ ⟩∎
     B (_≃_.from lens (r , b₂))  ∎
 
-  -- Thus we can, assuming that the K rule holds, define a variant of
-  -- B that only depends on R.
+  -- Thus we can, assuming that UIP holds, define a variant of B that
+  -- only depends on R.
 
-  module First-variant-of-B (K : K-rule (lsuc b) (lsuc b)) where
+  module First-variant-of-B
+           (uip : Uniqueness-of-identity-proofs (Set b)) where
 
     private
 
       B̲′ : (r : R) → ∥ B′ r ∥ → Set b
       B̲′ r =
         to (constant-function≃∥inhabited∥⇒inhabited
-              (_⇔_.from set⇔UIP (_⇔_.to K⇔UIP K)))
+              (_⇔_.from set⇔UIP uip))
            (B ⊚ _≃_.from lens ⊚ (r ,_) , independent-of-B′ r)
 
     B̲ : R → Set b
@@ -292,7 +293,7 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
     B′≡B̲ : ∀ r → B′ r ≡ B̲ r
     B′≡B̲ r = Trunc.elim
       (λ ∥b′∥ → B′ r ≡ B̲′ r ∥b′∥)
-      (λ _ → _⇔_.from set⇔UIP (_⇔_.to K⇔UIP K) _ _)
+      (λ _ → _⇔_.from set⇔UIP uip _ _)
       (other-variant r)
       (inhabited r)
 
@@ -514,17 +515,17 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
 
       from variant≃ (to codomain-set-≃ b₂)                      ∎
 
--- For non-dependent dependent lenses, and in the presence of the K
--- rule, codomain-set-≃ is equal to the identity.
+-- For non-dependent dependent lenses, and in the presence of UIP,
+-- codomain-set-≃ is equal to the identity.
 
 codomain-set-≃≡id :
   ∀ {a b} {A : Set a} {B : Set b} →
-  K-rule (lsuc b) (lsuc b) →
+  Uniqueness-of-identity-proofs (Set b) →
   (l : Lens A (λ _ → B)) →
   ∀ {a b} → Lens.codomain-set-≃ l {a = a} {b = b} ≡ Eq.id
-codomain-set-≃≡id K l =
+codomain-set-≃≡id uip l =
   codomain-set-≃      ≡⟨⟩
-  ≡⇒↝ _ codomain-set  ≡⟨ cong (≡⇒↝ _) (_⇔_.to K⇔UIP K codomain-set refl) ⟩
+  ≡⇒↝ _ codomain-set  ≡⟨ cong (≡⇒↝ _) (uip codomain-set refl) ⟩
   ≡⇒↝ _ refl          ≡⟨ refl ⟩∎
   Eq.id               ∎
   where
@@ -887,16 +888,16 @@ non-dependent-lenses-isomorphic {a} {A = A} {B} ≡B-prop =
      (R → ∥ B ∥))                                 □
 
 -- Non-dependent dependent lenses are isomorphic to non-dependent
--- lenses, assuming the K rule.
+-- lenses, assuming UIP.
 
-non-dependent-lenses-isomorphic-K :
+non-dependent-lenses-isomorphic-UIP :
   ∀ {a b} {A : Set a} {B : Set b} →
-  K-rule (lsuc b) (lsuc b) →
+  Uniqueness-of-identity-proofs (Set b) →
   ∃ λ (iso : Lens A (const B) ↔ Iso-lens A B) →
     ∀ {l a} → Lens.get l a ≡ ND.Iso-lens.get (_↔_.to iso l) a
-non-dependent-lenses-isomorphic-K K =
+non-dependent-lenses-isomorphic-UIP uip =
   non-dependent-lenses-isomorphic
-    (_⇔_.from set⇔UIP (_⇔_.to K⇔UIP K) _ _)
+    (_⇔_.from set⇔UIP uip _ _)
 
 ------------------------------------------------------------------------
 -- Lens combinators
@@ -1075,21 +1076,21 @@ module No-fully-general-composition-operator
     open module Lens↔Iso-lens {A B : Set} =
       _↔_ (proj₁ (Lens↔Iso-lens {A = A} {B = B}))
 
--- In the presence of the K rule it is impossible to define a fully
--- general composition operator.
+-- In the presence of UIP it is impossible to define a fully general
+-- composition operator.
 
-no-fully-general-composition-operator-K :
+no-fully-general-composition-operator-UIP :
   let open Lens in
-  K-rule (# 1) (# 1) →
+  Uniqueness-of-identity-proofs Set →
   ¬ ({A : Set} {B : A → Set} {C : (a : A) → B a → Set}
      (l₁ : Lens A B)
      (l₂ : ∀ a → Lens (B a) (C a)) →
      ∃ λ (l₃ : Lens A (λ a → C a (Lens.get l₁ a))) →
        ∀ a → get l₃ a ≡ get (l₂ a) (get l₁ a))
-no-fully-general-composition-operator-K K =
+no-fully-general-composition-operator-UIP uip =
   No-fully-general-composition-operator.no-composition-operator
     Lens Lens.get
-    (non-dependent-lenses-isomorphic-K K)
+    (non-dependent-lenses-isomorphic-UIP uip)
 
 ------------------------------------------------------------------------
 -- An observation
@@ -1129,15 +1130,15 @@ module Observation where
     open Lens₃ l
 
   -- The first projection Lens cannot be defined for Unit /if/ we
-  -- assume that the K rule holds.
+  -- assume that UIP holds.
 
-  not-proj₁ : K-rule (# 1) (# 1) → ¬ Lens Unit (λ _ → Bool)
-  not-proj₁ K l = Bool.true≢false (
-    true                       ≡⟨ sym $ cong (λ eq → from eq true) $ codomain-set-≃≡id K l ⟩
+  not-proj₁ : Uniqueness-of-identity-proofs Set → ¬ Lens Unit (λ _ → Bool)
+  not-proj₁ uip l = Bool.true≢false (
+    true                       ≡⟨ sym $ cong (λ eq → from eq true) $ codomain-set-≃≡id uip l ⟩
     from codomain-set-≃ true   ≡⟨ sym $ get-set u true ⟩
     get (set u true)           ≡⟨ cong get (equal (set u true) (set u false)) ⟩
     get (set u false)          ≡⟨ get-set u false ⟩
-    from codomain-set-≃ false  ≡⟨ cong (λ eq → from eq false) $ codomain-set-≃≡id K l ⟩∎
+    from codomain-set-≃ false  ≡⟨ cong (λ eq → from eq false) $ codomain-set-≃≡id uip l ⟩∎
     false                      ∎)
     where
     open _≃_
