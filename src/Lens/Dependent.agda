@@ -18,15 +18,17 @@ open import Equality.Propositional
 open import Interval using (ext)
 open import H-level.Truncation.Propositional as Trunc
 open import Logical-equivalence using (module _⇔_)
-open import Prelude hiding (id; Unit) renaming (_∘_ to _⊚_)
+open import Prelude as P hiding (id; Unit) renaming (_∘_ to _⊚_)
 
 open import Bijection equality-with-J as Bij using (_↔_; module _↔_)
 open import Bool equality-with-J
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Decision-procedures equality-with-J
+import Equality.Groupoid equality-with-J as EG
 open import Equality.Tactic equality-with-J as Tactic hiding (module Eq)
 open import Equivalence equality-with-J as Eq using (_≃_; module _≃_)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
+open import Groupoid equality-with-J
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import Surjection equality-with-J using (module _↠_)
@@ -196,6 +198,8 @@ associativity₃ _ _ _ = Eq.lift-equality ext refl
 ------------------------------------------------------------------------
 -- Dependent lenses without "remainder types" visible in the type
 
+-- One definition.
+
 Lens : ∀ {a b} (A : Set a) → (A → Set b) → Set (lsuc (a ⊔ b))
 Lens {a} {b} A B =
   ∃ λ (R : Set (a ⊔ b)) →
@@ -204,6 +208,21 @@ Lens {a} {b} A B =
   ((r : R) → ∥ B′ r ∥)
     ×
   (∀ a → B′ (Lens₃.remainder lens a) ≡ B a)
+
+-- An alternative definition. This definition is pointwise isomorphic
+-- to the previous one, see Lens↔Lens′ below.
+
+Lens′ : ∀ {a b} (A : Set a) → (A → Set b) → Set (lsuc (a ⊔ b))
+Lens′ {a} {b} A B =
+  ∃ λ (get : (a : A) → B a) →
+  ∃ λ (R : Set (a ⊔ b)) →
+  ∃ λ (remainder : A → R) →
+  Surjective remainder
+    ×
+  ∃ λ (B′ : R → Set b) →
+  ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
+  Eq.Is-equivalence {B = ∃ B′}
+                    (λ a → remainder a , subst P.id variant (get a))
 
 module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
 
@@ -792,6 +811,9 @@ lens-to-⊥↔¬ {A = A} univ₁ univ₂ =
   (A → ⊥)           ↝⟨ inverse $ ¬↔→⊥ ext ⟩□
   ¬ A               □
 
+------------------------------------------------------------------------
+-- Results relating different kinds of lenses
+
 -- If we assume that equality with the codomain type is propositional,
 -- then non-dependent dependent lenses are isomorphic to non-dependent
 -- lenses.
@@ -898,6 +920,219 @@ non-dependent-lenses-isomorphic-UIP :
 non-dependent-lenses-isomorphic-UIP uip =
   non-dependent-lenses-isomorphic
     (_⇔_.from set⇔UIP uip _ _)
+
+-- Lens and Lens′ are pointwise isomorphic.
+
+Lens↔Lens′ : ∀ {a b} {A : Set a} {B : A → Set b} →
+             Lens A B ↔ Lens′ A B
+Lens↔Lens′ {a} {b} {A} {B} =
+  (∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (lens : Lens₃ A R B′) →
+   ((r : R) → ∥ B′ r ∥)
+     ×
+   (∀ a → B′ (Lens₃.remainder lens a) ≡ B a))                           ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
+                                                                            Σ-cong (Eq.≃-as-Σ) λ _ → F.id) ⟩
+  (∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (lens : ∃ λ (rg : A → Σ R B′) → Eq.Is-equivalence rg) →
+   ((r : R) → ∥ B′ r ∥)
+     ×
+   (∀ a → B′ (proj₁ (proj₁ lens a)) ≡ B a))                             ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
+                                                                            inverse Σ-assoc) ⟩
+  (∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (rg : A → Σ R B′) →
+   Eq.Is-equivalence rg
+     ×
+   ((r : R) → ∥ B′ r ∥)
+     ×
+   (∀ a → B′ (proj₁ (rg a)) ≡ B a))                                     ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
+                                                                            Σ-cong ΠΣ-comm λ _ → F.id) ⟩
+  (∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (rg : ∃ λ (remainder : A → R) →
+             (a : A) → B′ (remainder a)) →
+   Eq.Is-equivalence {B = ∃ B′} (λ a → proj₁ rg a , proj₂ rg a)
+     ×
+   ((r : R) → ∥ B′ r ∥)
+     ×
+   (∀ a → B′ (proj₁ rg a) ≡ B a))                                       ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
+                                                                            inverse Σ-assoc) ⟩
+  (∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (remainder : A → R) →
+   ∃ λ (get′ : (a : A) → B′ (remainder a)) →
+   Eq.Is-equivalence {B = ∃ B′} (λ a → remainder a , get′ a)
+     ×
+   ((r : R) → ∥ B′ r ∥)
+     ×
+   (∀ a → B′ (remainder a) ≡ B a))                                      ↔⟨ (∃-cong λ R → ∃-cong λ B′ → ∃-cong λ rem → ∃-cong λ get′ → ∃-cong λ eq →
+                                                                            Eq.∀-preserves ext (λ r → ∥∥-cong (lemma R B′ rem get′ eq r))
+                                                                              ×-cong
+                                                                            F.id) ⟩
+  (∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (remainder : A → R) →
+   ∃ λ (get′ : (a : A) → B′ (remainder a)) →
+   Eq.Is-equivalence {B = ∃ B′} (λ a → remainder a , get′ a)
+     ×
+   Surjective remainder
+     ×
+   (∀ a → B′ (remainder a) ≡ B a))                                      ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
+                                                                            ×-comm) ⟩
+  (∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (remainder : A → R) →
+   ∃ λ (get′ : (a : A) → B′ (remainder a)) →
+   Eq.Is-equivalence {B = ∃ B′} (λ a → remainder a , get′ a)
+     ×
+   (∀ a → B′ (remainder a) ≡ B a)
+     ×
+   Surjective remainder)                                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
+                                                                            ∃-comm) ⟩
+  (∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (remainder : A → R) →
+   ∃ λ (get′ : (a : A) → B′ (remainder a)) →
+   (∀ a → B′ (remainder a) ≡ B a)
+     ×
+   Eq.Is-equivalence {B = ∃ B′} (λ a → remainder a , get′ a)
+     ×
+   Surjective remainder)                                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
+                                                                            ∃-comm) ⟩
+  (∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (remainder : A → R) →
+   (∀ a → B′ (remainder a) ≡ B a)
+     ×
+   ∃ λ (get′ : (a : A) → B′ (remainder a)) →
+   Eq.Is-equivalence {B = ∃ B′} (λ a → remainder a , get′ a)
+     ×
+   Surjective remainder)                                                ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ×-cong₁ λ _ →
+                                                                            Eq.∀-preserves ext λ _ →
+                                                                            Eq.↔⇒≃ $ Groupoid.⁻¹-bijection (EG.groupoid _)) ⟩
+  (∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (remainder : A → R) →
+   (∀ a → B a ≡ B′ (remainder a))
+     ×
+   ∃ λ (get′ : (a : A) → B′ (remainder a)) →
+   Eq.Is-equivalence {B = ∃ B′} (λ a → remainder a , get′ a)
+     ×
+   Surjective remainder)                                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ×-cong₁ λ _ →
+                                                                            inverse Bij.implicit-Π↔Π) ⟩
+  (∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (remainder : A → R) →
+   (∀ {a} → B a ≡ B′ (remainder a))
+     ×
+   ∃ λ (get′ : (a : A) → B′ (remainder a)) →
+   Eq.Is-equivalence {B = ∃ B′} (λ a → remainder a , get′ a)
+     ×
+   Surjective remainder)                                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ variant → inverse $
+                                                                            Σ-cong (Eq.∀-preserves ext λ _ →
+                                                                                    Eq.subst-as-equivalence P.id (variant {_})) λ _ →
+                                                                            F.id) ⟩
+  (∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (remainder : A → R) →
+   ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
+   ∃ λ (get : (a : A) → B a) →
+   Eq.Is-equivalence {B = ∃ B′}
+                     (λ a → remainder a , subst P.id variant (get a))
+     ×
+   Surjective remainder)                                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
+                                                                            ∃-comm) ⟩
+  (∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (remainder : A → R) →
+   ∃ λ (get : (a : A) → B a) →
+   ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
+   Eq.Is-equivalence {B = ∃ B′}
+                     (λ a → remainder a , subst P.id variant (get a))
+     ×
+   Surjective remainder)                                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
+                                                                            ∃-comm) ⟩
+  (∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (get : (a : A) → B a) →
+   ∃ λ (remainder : A → R) →
+   ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
+   Eq.Is-equivalence {B = ∃ B′}
+                     (λ a → remainder a , subst P.id variant (get a))
+     ×
+   Surjective remainder)                                                ↝⟨ (∃-cong λ _ →
+                                                                            ∃-comm) ⟩
+  (∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (get : (a : A) → B a) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (remainder : A → R) →
+   ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
+   Eq.Is-equivalence {B = ∃ B′}
+                     (λ a → remainder a , subst P.id variant (get a))
+     ×
+   Surjective remainder)                                                ↝⟨ ∃-comm ⟩
+
+  (∃ λ (get : (a : A) → B a) →
+   ∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (remainder : A → R) →
+   ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
+   Eq.Is-equivalence {B = ∃ B′}
+                     (λ a → remainder a , subst P.id variant (get a))
+     ×
+   Surjective remainder)                                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
+                                                                            ×-comm) ⟩
+  (∃ λ (get : (a : A) → B a) →
+   ∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (remainder : A → R) →
+   ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
+   Surjective remainder
+     ×
+   Eq.Is-equivalence {B = ∃ B′}
+                     (λ a → remainder a , subst P.id variant (get a)))  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
+                                                                            ∃-comm) ⟩
+  (∃ λ (get : (a : A) → B a) →
+   ∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (remainder : A → R) →
+   Surjective remainder
+     ×
+   ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
+   Eq.Is-equivalence {B = ∃ B′}
+                     (λ a → remainder a , subst P.id variant (get a)))  ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
+                                                                            ∃-comm) ⟩
+  (∃ λ (get : (a : A) → B a) →
+   ∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (remainder : A → R) →
+   ∃ λ (B′ : R → Set b) →
+   Surjective remainder
+     ×
+   ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
+   Eq.Is-equivalence {B = ∃ B′}
+                     (λ a → remainder a , subst P.id variant (get a)))  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
+                                                                            ∃-comm) ⟩□
+  (∃ λ (get : (a : A) → B a) →
+   ∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (remainder : A → R) →
+   Surjective remainder
+     ×
+   ∃ λ (B′ : R → Set b) →
+   ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
+   Eq.Is-equivalence {B = ∃ B′}
+                     (λ a → remainder a , subst P.id variant (get a)))  □
+  where
+  lemma = λ _ B′ remainder _ eq r →
+    B′ r                            ↔⟨ (inverse $ drop-⊤-right λ _ →
+                                        inverse $ _⇔_.to contractible⇔⊤↔ $
+                                        singleton-contractible _) ⟩
+    B′ r × Singleton r              ↔⟨ ∃-comm ⟩
+    (∃ λ r′ → B′ r × r′ ≡ r)        ↝⟨ ∃-cong (λ _ → ×-cong₁ λ r′≡r → ≡⇒↝ _ (cong B′ (sym r′≡r))) ⟩
+    (∃ λ r′ → B′ r′ × r′ ≡ r)       ↔⟨ Σ-assoc ⟩
+    (∃ λ (p : ∃ B′) → proj₁ p ≡ r)  ↝⟨ (inverse $ Σ-cong Eq.⟨ _ , eq ⟩ λ _ → F.id) ⟩□
+    (∃ λ a → remainder a ≡ r)       □
 
 ------------------------------------------------------------------------
 -- Lens combinators
