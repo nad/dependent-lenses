@@ -1195,15 +1195,15 @@ _∘₃_ {R = R} l₁ l₂ =
 -- more complicated. The type is also somewhat restricted: C is only
 -- indexed by As, not Bs.
 
-infixr 9 _∘_
+infixr 9 _⨾_
 
-_∘_ : ∀ {a b c}
+_⨾_ : ∀ {a b c}
         {A : Set (a ⊔ b ⊔ c)} {B : A → Set (b ⊔ c)} {C : A → Set c} →
       (l₁ : Lens A B) →
       let open Lens l₁; open _≃_ lens in
       (∀ {r} → Lens (B′ r) (λ b′ → C (from (r , b′)))) →
       Lens A C
-_∘_ {C = C} l₁ l₂ =
+_⨾_ {C = C} l₁ l₂ =
   (∃ λ (r₁ : R l₁) → Lens.R (l₂ {r = r₁})) ,
   (λ { (r₁ , r₂) → B′ (l₂ {r = r₁}) r₂ }) ,
   lens l₂ ₃∘₃ lens l₁ ,

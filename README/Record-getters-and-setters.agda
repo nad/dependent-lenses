@@ -169,13 +169,13 @@ module Dependent where
   -- the use of /forward/ composition.
 
   x₂ : Lens R₂ (λ r → R₂.A r)
-  x₂ = r₁ ∘ x
+  x₂ = r₁ ⨾ x
 
   f₂ : Lens R₂ (λ r → ∃ λ (f : R₂.A r → R₂.A r) → ∀ y → f y ≡ y)
-  f₂ = r₁ ∘ f
+  f₂ = r₁ ⨾ f
 
   lemma₂ : Lens R₂ (λ r → ∀ y → R₁.f (R₂.r₁ r) y ≡ y)
-  lemma₂ = r₁ ∘ lemma
+  lemma₂ = r₁ ⨾ lemma
 
 ------------------------------------------------------------------------
 -- Non-dependent lenses
