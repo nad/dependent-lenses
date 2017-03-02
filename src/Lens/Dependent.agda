@@ -625,8 +625,7 @@ lens-to-proposition↔get {b = b} {A} {B} univ₁ univ₂ B-prop =
    ((r : R) →
       ∥ B′ r ∥
         ×
-      ((b : B′ r) → B′ r ≡ B (_≃_.from lens (r , b)))))      ↔⟨ (∃-cong λ _ → ∃-cong λ B′ → ∃-cong λ lens →
-                                                                 Eq.∀-preserves ext $
+      ((b : B′ r) → B′ r ≡ B (_≃_.from lens (r , b)))))      ↔⟨ (∃-cong λ _ → ∃-cong λ B′ → ∃-cong λ lens → ∀-cong ext $
                                                                  lemma₁ B′ lens) ⟩
   (∃ λ (R : Set _) →
    ∃ λ (B′ : R → Set _) →
@@ -682,14 +681,13 @@ lens-to-proposition↔get {b = b} {A} {B} univ₁ univ₂ B-prop =
 
   (∃ λ (B′ : ↑ _ A → Set _) → ∀ a → ⊤ ≃ B′ a)
     ×
-  (∀ a → B (lower a))                                        ↔⟨ ((∃-cong λ _ → Eq.∀-preserves ext λ _ →
+  (∀ a → B (lower a))                                        ↔⟨ ((∃-cong λ _ → ∀-cong ext λ _ →
                                                                   Eq.≃-preserves ext (inverse $ Eq.↔⇒≃ Bij.↑↔) F.id)
                                                                    ×-cong
                                                                  Eq.Π-preserves ext (Eq.↔⇒≃ Bij.↑↔) (λ _ → F.id)) ⟩
   (∃ λ (B′ : ↑ _ A → Set _) → ∀ a → ↑ _ ⊤ ≃ B′ a)
     ×
-  (∀ a → B a)                                                ↔⟨ (∃-cong λ B′ →
-                                                                 Eq.∀-preserves ext λ _ →
+  (∀ a → B a)                                                ↔⟨ (∃-cong λ B′ → ∀-cong ext λ _ →
                                                                  inverse $ ≡≃≃ univ₂)
                                                                   ×-cong
                                                                 F.id ⟩
@@ -725,11 +723,11 @@ lens-to-proposition↔get {b = b} {A} {B} univ₁ univ₂ B-prop =
   lemma₁ B′ lens r =
     ∥ B′ r ∥
       ×
-    ((b′ : B′ r) → B′ r ≡ B (_≃_.from lens (r , b′)))  ↝⟨ (∃-cong λ _ → Eq.∀-preserves ext λ _ →
+    ((b′ : B′ r) → B′ r ≡ B (_≃_.from lens (r , b′)))  ↝⟨ (∃-cong λ _ → ∀-cong ext λ _ →
                                                            ≡≃≃ univ₂) ⟩
     ∥ B′ r ∥
       ×
-    ((b′ : B′ r) → B′ r ≃ B (_≃_.from lens (r , b′)))  ↝⟨ (∃-cong λ _ → Eq.∀-preserves ext λ b′ →
+    ((b′ : B′ r) → B′ r ≃ B (_≃_.from lens (r , b′)))  ↝⟨ (∃-cong λ _ → ∀-cong ext λ b′ →
                                                            _↠_.from (Eq.≃↠⇔ (Eq.right-closure ext 0 (B-prop _))
                                                                             (×-closure 1
                                                                                        (H-level-propositional ext 1)
@@ -794,8 +792,8 @@ lens-to-contractible↔⊤ :
   Lens A B ↔ ⊤
 lens-to-contractible↔⊤ {A = A} {B} univ₁ univ₂ cB =
   Lens A B         ↝⟨ lens-to-proposition↔get univ₁ univ₂ (mono₁ 0 ⊚ cB) ⟩
-  ((x : A) → B x)  ↔⟨ (Eq.∀-preserves ext λ _ →
-                       Eq.↔⇒≃ $ inverse $ _⇔_.to contractible⇔⊤↔ (cB _)) ⟩
+  ((x : A) → B x)  ↝⟨ (∀-cong ext λ _ →
+                       inverse $ _⇔_.to contractible⇔⊤↔ (cB _)) ⟩
   (A → ⊤)          ↝⟨ →-right-zero ⟩□
   ⊤                □
 
@@ -860,7 +858,7 @@ non-dependent-lenses-isomorphic {a} {A = A} {B} ≡B-prop =
      ((r : R) → ∥ B′ r ∥)
        ×
      ((r : R) → B′ r → B′ r ≡ B))                 ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ inh →
-                                                      Eq.∀-preserves ext λ r →
+                                                      ∀-cong ext λ r →
                                                       _↠_.from (Eq.≃↠⇔ (Π-closure ext 1 λ _ →
                                                                         ≡B-prop)
                                                                        ≡B-prop)
@@ -890,7 +888,7 @@ non-dependent-lenses-isomorphic {a} {A = A} {B} ≡B-prop =
                                                         Σ-cong (Eq.extensionality-isomorphism ext) λ B′≡B →
                                                         Eq.≃-preserves ext F.id (∃-cong λ _ → ≡⇒↝ _ (B′≡B _))
                                                           ×-cong
-                                                        Eq.∀-preserves ext (λ _ →
+                                                        ∀-cong ext (λ _ →
                                                           Eq.↔⇒≃ $ ∥∥-cong (≡⇒↝ _ (B′≡B _))))  ⟩
     (∃ λ (B′ : R → Set _) →
      B′ ≡ const B
@@ -967,8 +965,8 @@ Lens↔Lens′ {a} {b} {A} {B} =
      ×
    ((r : R) → ∥ B′ r ∥)
      ×
-   (∀ a → B′ (remainder a) ≡ B a))                                      ↔⟨ (∃-cong λ R → ∃-cong λ B′ → ∃-cong λ rem → ∃-cong λ get′ → ∃-cong λ eq →
-                                                                            Eq.∀-preserves ext (λ r → ∥∥-cong (lemma R B′ rem get′ eq r))
+   (∀ a → B′ (remainder a) ≡ B a))                                      ↝⟨ (∃-cong λ R → ∃-cong λ B′ → ∃-cong λ rem → ∃-cong λ get′ → ∃-cong λ eq →
+                                                                            ∀-cong ext (λ r → ∥∥-cong (lemma R B′ rem get′ eq r))
                                                                               ×-cong
                                                                             F.id) ⟩
   (∃ λ (R : Set (a ⊔ b)) →
@@ -1009,9 +1007,9 @@ Lens↔Lens′ {a} {b} {A} {B} =
    ∃ λ (get′ : (a : A) → B′ (remainder a)) →
    Eq.Is-equivalence {B = ∃ B′} (λ a → remainder a , get′ a)
      ×
-   Surjective remainder)                                                ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ×-cong₁ λ _ →
-                                                                            Eq.∀-preserves ext λ _ →
-                                                                            Eq.↔⇒≃ $ Groupoid.⁻¹-bijection (EG.groupoid _)) ⟩
+   Surjective remainder)                                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ×-cong₁ λ _ →
+                                                                            ∀-cong ext λ _ →
+                                                                            Groupoid.⁻¹-bijection (EG.groupoid _)) ⟩
   (∃ λ (R : Set (a ⊔ b)) →
    ∃ λ (B′ : R → Set b) →
    ∃ λ (remainder : A → R) →
@@ -1031,7 +1029,7 @@ Lens↔Lens′ {a} {b} {A} {B} =
    Eq.Is-equivalence {B = ∃ B′} (λ a → remainder a , get′ a)
      ×
    Surjective remainder)                                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ variant → inverse $
-                                                                            Σ-cong (Eq.∀-preserves ext λ _ →
+                                                                            Σ-cong (∀-cong ext λ _ →
                                                                                     Eq.subst-as-equivalence P.id (variant {_})) λ _ →
                                                                             F.id) ⟩
   (∃ λ (R : Set (a ⊔ b)) →
@@ -1125,13 +1123,13 @@ Lens↔Lens′ {a} {b} {A} {B} =
                      (λ a → remainder a , subst P.id variant (get a)))  □
   where
   lemma = λ _ B′ remainder _ eq r →
-    B′ r                            ↔⟨ (inverse $ drop-⊤-right λ _ →
+    B′ r                            ↝⟨ (inverse $ drop-⊤-right λ _ →
                                         inverse $ _⇔_.to contractible⇔⊤↔ $
                                         singleton-contractible _) ⟩
-    B′ r × Singleton r              ↔⟨ ∃-comm ⟩
+    B′ r × Singleton r              ↝⟨ ∃-comm ⟩
     (∃ λ r′ → B′ r × r′ ≡ r)        ↝⟨ ∃-cong (λ _ → ×-cong₁ λ r′≡r → ≡⇒↝ _ (cong B′ (sym r′≡r))) ⟩
-    (∃ λ r′ → B′ r′ × r′ ≡ r)       ↔⟨ Σ-assoc ⟩
-    (∃ λ (p : ∃ B′) → proj₁ p ≡ r)  ↝⟨ (inverse $ Σ-cong Eq.⟨ _ , eq ⟩ λ _ → F.id) ⟩□
+    (∃ λ r′ → B′ r′ × r′ ≡ r)       ↝⟨ Σ-assoc ⟩
+    (∃ λ (p : ∃ B′) → proj₁ p ≡ r)  ↝⟨ inverse $ Σ-cong Eq.⟨ _ , eq ⟩ (λ _ → F.id) ⟩□
     (∃ λ a → remainder a ≡ r)       □
 
 ------------------------------------------------------------------------

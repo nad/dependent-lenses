@@ -278,7 +278,7 @@ equality-characterisation₃ {l₁ = l₁} {l₂} univ =
 
   (∃ λ (eq : R l₁ ≃ R l₂) →
      ∀ x → (_≃_.to eq (remainder l₁ x) , get l₁ x) ≡
-           _≃_.to (equiv l₂) x)                           ↔⟨ (∃-cong λ _ → Eq.∀-preserves ext λ _ → Eq.↔⇒≃ $ inverse ≡×≡↔≡) ⟩
+           _≃_.to (equiv l₂) x)                           ↝⟨ (∃-cong λ _ → ∀-cong ext λ _ → inverse ≡×≡↔≡) ⟩
 
   (∃ λ (eq : R l₁ ≃ R l₂) →
      ∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x
@@ -440,10 +440,8 @@ lens-to-proposition↔get :
   Is-proposition B →
   Iso-lens A B ↔ (A → B)
 lens-to-proposition↔get {b = b} {A} {B} univ B-prop =
-  (∃ λ R → A ≃ (R × B) × (R → ∥ B ∥))  ↔⟨ (∃-cong λ _ →
-                                           ∃-cong λ _ →
-                                           Eq.∀-preserves ext λ _ →
-                                             Eq.↔⇒≃ $ ∥∥↔ B-prop) ⟩
+  (∃ λ R → A ≃ (R × B) × (R → ∥ B ∥))  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ →
+                                             ∥∥↔ B-prop) ⟩
   (∃ λ R → A ≃ (R × B) × (R → B))      ↝⟨ (∃-cong λ _ →
                                            ×-cong₁ λ R→B →
                                            Eq.≃-preserves-bijections ext F.id $
@@ -652,7 +650,7 @@ Higher-lens↔Iso-lens {a} {b} {A} {B} univ =
       (proj₁ (_↔_.to lemma₂ g) ≡ H ⊚ ∣_∣)
     lemma₃ g H =
       (g ⁻¹_) ≡ H ⊚ ∣_∣                   ↝⟨ inverse $ Eq.extensionality-isomorphism ext ⟩
-      (∀ b → g ⁻¹ b ≡ H ∣ b ∣)            ↝⟨ Eq.∀-preserves ext (λ _ →
+      (∀ b → g ⁻¹ b ≡ H ∣ b ∣)            ↝⟨ ∀-cong ext (λ _ →
                                                ≡-preserves-≃ ext univ univ
                                                  (Eq.↔⇒≃ $ lemma₁ _ _) F.id) ⟩
       (∀ b → (g ⊚ lower) ⁻¹ b ≡ H ∣ b ∣)  ↝⟨ Eq.extensionality-isomorphism ext ⟩□
@@ -699,8 +697,8 @@ Iso-lens↔Iso-lens′ {A = A} {B} =
    ∃ λ (R         : Set _) →
    ∃ λ (remainder : A → R) →
      Eq.Is-equivalence (λ a → remainder a , get a) ×
-     (R → ∥ B ∥))                                         ↔⟨ (∃-cong λ get → ∃-cong λ R → ∃-cong λ rem → ∃-cong λ eq →
-                                                              Eq.∀-preserves ext λ _ → Eq.↔⇒≃ $ ∥∥-cong $
+     (R → ∥ B ∥))                                         ↝⟨ (∃-cong λ get → ∃-cong λ R → ∃-cong λ rem → ∃-cong λ eq →
+                                                              ∀-cong ext λ _ → ∥∥-cong $
                                                               lemma get R rem eq _) ⟩□
   (∃ λ (get       : A → B) →
    ∃ λ (R         : Set _) →
@@ -924,30 +922,24 @@ Iso-lens↔Traditional-lens {A = A} {B} univ A-set = record
        ∃ λ (f : B → A) → ∀ b b′ →
            _≃_.from l (proj₁ (_≃_.to l (f b)) , b′) ≡ f b′)       ↝⟨ (∃-cong λ _ →
                                                                       Σ-cong (→-cong ext F.id l) λ f →
-                                                                             Eq.∀-preserves ext λ b →
-                                                                             Eq.∀-preserves ext λ b′ →
+                                                                             ∀-cong ext λ b → ∀-cong ext λ b′ →
                                                                              ≡⇒↝ _ (cong (_≃_.from l (proj₁ (_≃_.to l (f b)) , b′) ≡_)
                                                                                          (sym $ _≃_.left-inverse-of l _))) ⟩
       (∥ B ∥ ×
        ∃ λ (f : B → R × B) → ∀ b b′ →
-           _≃_.from l (proj₁ (f b) , b′) ≡ _≃_.from l (f b′))     ↝⟨ ∃-cong (λ _ → ∃-cong λ _ →
-                                                                       Eq.Π-preserves ext F.id λ _ →
-                                                                       Eq.Π-preserves ext F.id λ _ →
+           _≃_.from l (proj₁ (f b) , b′) ≡ _≃_.from l (f b′))     ↝⟨ ∃-cong (λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
                                                                        Eq.≃-≡ (inverse l)) ⟩
       (∥ B ∥ ×
-       ∃ λ (f : B → R × B) → ∀ b b′ → (proj₁ (f b) , b′) ≡ f b′)  ↝⟨ (∃-cong λ _ → Σ-cong ΠΣ-comm λ _ →
-                                                                        Eq.Π-preserves ext F.id λ _ →
-                                                                        Eq.Π-preserves ext F.id λ _ →
-                                                                        inverse $ Eq.↔⇒≃ ≡×≡↔≡) ⟩
+       ∃ λ (f : B → R × B) → ∀ b b′ → (proj₁ (f b) , b′) ≡ f b′)  ↔⟨ (∃-cong λ _ → Σ-cong ΠΣ-comm λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
+                                                                        inverse $ ≡×≡↔≡) ⟩
       (∥ B ∥ ×
        ∃ λ (p : (B → R) × (B → B)) →
          ∀ b b′ → proj₁ p b ≡ proj₁ p b′ × b′ ≡ proj₂ p b′)       ↔⟨ (∃-cong λ _ → inverse Σ-assoc) ⟩
 
       (∥ B ∥ ×
        ∃ λ (f : B → R) → ∃ λ (g : B → B) →
-         ∀ b b′ → f b ≡ f b′ × b′ ≡ g b′)                         ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
-                                                                        Eq.Π-preserves ext F.id λ _ →
-                                                                        Eq.↔⇒≃ ΠΣ-comm) ⟩
+         ∀ b b′ → f b ≡ f b′ × b′ ≡ g b′)                         ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ →
+                                                                        ΠΣ-comm) ⟩
       (∥ B ∥ ×
        ∃ λ (f : B → R) → ∃ λ (g : B → B) →
          ∀ b → (∀ b′ → f b ≡ f b′) × (∀ b′ → b′ ≡ g b′))          ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ΠΣ-comm) ⟩
