@@ -327,6 +327,7 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
            where
 
     private
+     abstract
 
       B̲-triple : (r : R) → ∃ λ (X : SET b) → B′ r ≡ proj₁ X
       B̲-triple r =
