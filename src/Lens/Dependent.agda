@@ -886,11 +886,10 @@ non-dependent-lenses-isomorphic {a} {A = A} {B} ≡B-prop =
      (A ≃ Σ R B′)
        ×
      ((r : R) → ∥ B′ r ∥))                        ↔⟨ (∃-cong λ _ →
-                                                        Σ-cong (Eq.extensionality-isomorphism ext) λ B′≡B →
-                                                        Eq.≃-preserves ext F.id (∃-cong λ _ → ≡⇒↝ _ (B′≡B _))
-                                                          ×-cong
-                                                        ∀-cong ext (λ _ →
-                                                          Eq.↔⇒≃ $ ∥∥-cong (≡⇒↝ _ (B′≡B _))))  ⟩
+                                                      Σ-cong (Eq.extensionality-isomorphism ext) λ B′≡B →
+                                                      Eq.≃-preserves ext F.id (∃-cong λ _ → ≡⇒↝ _ (B′≡B _))
+                                                        ×-cong
+                                                      ∀-cong ext (λ _ → Eq.↔⇒≃ $ ∥∥-cong (≡⇒↝ _ (B′≡B _)))) ⟩
     (∃ λ (B′ : R → Set _) →
      B′ ≡ const B
        ×
