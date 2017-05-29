@@ -18,7 +18,7 @@ open import Equality.Propositional
 open import Interval using (ext)
 open import H-level.Truncation.Propositional as Trunc
 open import Logical-equivalence using (module _⇔_)
-open import Prelude as P hiding (id; Unit) renaming (_∘_ to _⊚_)
+open import Prelude as P hiding (id; swap; Unit) renaming (_∘_ to _⊚_)
 
 open import Bijection equality-with-J as Bij using (_↔_; module _↔_)
 open import Bool equality-with-J
@@ -572,7 +572,7 @@ Lens-cong {A₁ = A₁} {A₂} {B₁} {B₂} univ A₁≃A₂ B₁≃B₂ =
    (∀ a → B′ (remainder lens a) ≡ B₁ a))              ↝⟨ (∃-cong λ R → ∃-cong λ B′ →
                                                           Σ-cong (Eq.≃-preserves ext A₁≃A₂ F.id) λ lens →
                                                           ∃-cong λ _ →
-                                                          Eq.Π-preserves ext A₁≃A₂ λ a →
+                                                          Π-cong ext A₁≃A₂ λ a →
                                                           ≡-preserves-≃ ext univ univ
                                                             (≡⇒↝ _ (
       B′ (proj₁ (to lens a))                                        ≡⟨ cong (λ a → B′ (proj₁ (to lens a))) $ sym $ left-inverse-of A₁≃A₂ _ ⟩∎
@@ -603,9 +603,9 @@ lens-to-proposition↔get {b = b} {A} {B} univ₁ univ₂ B-prop =
    ∃ λ (lens : A ≃ Σ R B′) →
    ((r : R) → ∥ B′ r ∥)
      ×
-   (∀ a → B′ (Lens₃.remainder lens a) ≡ B a))                ↔⟨ (∃-cong λ _ → ∃-cong λ B′ → ∃-cong λ l → ∃-cong λ _ →
-                                                                 Eq.Π-preserves ext l λ _ →
-                                                                 ≡⇒↝ _ $ cong (λ x → _ ≡ B x) $ sym $ _≃_.left-inverse-of l _) ⟩
+   (∀ a → B′ (Lens₃.remainder lens a) ≡ B a))                ↝⟨ (∃-cong λ _ → ∃-cong λ B′ → ∃-cong λ l → ∃-cong λ _ →
+                                                                 Π-cong ext l λ _ →
+                                                                 ≡⇒↝ _ $ cong (λ x → B′ _ ≡ B x) $ sym $ _≃_.left-inverse-of l _) ⟩
   (∃ λ (R : Set _) →
    ∃ λ (B′ : R → Set _) →
    ∃ λ (lens : A ≃ Σ R B′) →
@@ -685,7 +685,7 @@ lens-to-proposition↔get {b = b} {A} {B} univ₁ univ₂ B-prop =
   (∀ a → B (lower a))                                        ↔⟨ ((∃-cong λ _ → ∀-cong ext λ _ →
                                                                   Eq.≃-preserves ext (inverse $ Eq.↔⇒≃ Bij.↑↔) F.id)
                                                                    ×-cong
-                                                                 Eq.Π-preserves ext (Eq.↔⇒≃ Bij.↑↔) (λ _ → F.id)) ⟩
+                                                                 Π-cong ext (Eq.↔⇒≃ Bij.↑↔) (λ _ → F.id)) ⟩
   (∃ λ (B′ : ↑ _ A → Set _) → ∀ a → ↑ _ ⊤ ≃ B′ a)
     ×
   (∀ a → B a)                                                ↔⟨ (∃-cong λ B′ → ∀-cong ext λ _ →
@@ -701,7 +701,7 @@ lens-to-proposition↔get {b = b} {A} {B} univ₁ univ₂ B-prop =
   (∃ λ (B′ : ↑ _ A → Set _) → const (↑ _ ⊤) ≡ B′)
     ×
   (∀ a → B a)                                                ↝⟨ drop-⊤-left-× (λ _ →
-                                                                inverse $ _⇔_.to contractible⇔⊤↔ (other-singleton-contractible _)) ⟩□
+                                                                _⇔_.to contractible⇔↔⊤ (other-singleton-contractible _)) ⟩□
   (∀ a → B a)                                                □
   where
   lemma₂ : {R : Set _} (B′ : R → Set _) (r : R) → _
@@ -716,7 +716,9 @@ lens-to-proposition↔get {b = b} {A} {B} univ₁ univ₂ B-prop =
                                                     (record { to   = uncurry propositional⇒inhabited⇒contractible
                                                             ; from = λ B′-contr → mono₁ 0 B′-contr , proj₁ B′-contr
                                                             }) ⟩
-    Contractible (B′ r)                 ↝⟨ contractible↔⊤≃ ext ⟩□
+    Contractible (B′ r)                 ↝⟨ contractible↔≃⊤ ext ⟩
+
+    B′ r ≃ ⊤                            ↝⟨ Eq.inverse-isomorphism ext ⟩□
 
     ⊤ ≃ B′ r                            □
 
@@ -794,7 +796,7 @@ lens-to-contractible↔⊤ :
 lens-to-contractible↔⊤ {A = A} {B} univ₁ univ₂ cB =
   Lens A B         ↝⟨ lens-to-proposition↔get univ₁ univ₂ (mono₁ 0 ⊚ cB) ⟩
   ((x : A) → B x)  ↝⟨ (∀-cong ext λ _ →
-                       inverse $ _⇔_.to contractible⇔⊤↔ (cB _)) ⟩
+                       _⇔_.to contractible⇔↔⊤ (cB _)) ⟩
   (A → ⊤)          ↝⟨ →-right-zero ⟩□
   ⊤                □
 
@@ -844,8 +846,8 @@ non-dependent-lenses-isomorphic {a} {A = A} {B} ≡B-prop =
      ∃ λ (lens : A ≃ Σ R B′) →
      ((r : R) → ∥ B′ r ∥)
        ×
-     (∀ a → B′ (Lens₃.remainder lens a) ≡ B))     ↔⟨ (∃-cong λ _ → ∃-cong λ l → ∃-cong λ _ →
-                                                      Eq.Π-preserves ext l (λ _ → F.id)) ⟩
+     (∀ a → B′ (Lens₃.remainder lens a) ≡ B))     ↝⟨ (∃-cong λ _ → ∃-cong λ l → ∃-cong λ _ →
+                                                      Π-cong ext l (λ _ → F.id)) ⟩
     (∃ λ (B′ : R → Set _) →
      (A ≃ Σ R B′)
        ×
@@ -902,7 +904,7 @@ non-dependent-lenses-isomorphic {a} {A = A} {B} ≡B-prop =
      (A ≃ (R × B))
        ×
      (R → ∥ B ∥))                                 ↝⟨ drop-⊤-left-× (λ _ →
-                                                     inverse $ _⇔_.to contractible⇔⊤↔ (singleton-contractible _)) ⟩□
+                                                     _⇔_.to contractible⇔↔⊤ (singleton-contractible _)) ⟩□
     ((A ≃ (R × B))
        ×
      (R → ∥ B ∥))                                 □
@@ -1124,7 +1126,7 @@ Lens↔Lens′ {a} {b} {A} {B} =
   where
   lemma = λ _ B′ remainder _ eq r →
     B′ r                            ↝⟨ (inverse $ drop-⊤-right λ _ →
-                                        inverse $ _⇔_.to contractible⇔⊤↔ $
+                                        _⇔_.to contractible⇔↔⊤ $
                                         singleton-contractible _) ⟩
     B′ r × Singleton r              ↝⟨ ∃-comm ⟩
     (∃ λ r′ → B′ r × r′ ≡ r)        ↝⟨ ∃-cong (λ _ → ×-cong₁ λ r′≡r → ≡⇒↝ _ (cong B′ (sym r′≡r))) ⟩

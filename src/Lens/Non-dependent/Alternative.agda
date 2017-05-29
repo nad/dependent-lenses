@@ -446,7 +446,7 @@ lens-to-proposition↔get {b = b} {A} {B} univ B-prop =
                                            ×-cong₁ λ R→B →
                                            Eq.≃-preserves-bijections ext F.id $
                                              drop-⊤-right λ r →
-                                               inverse $ _⇔_.to contractible⇔⊤↔ $
+                                               _⇔_.to contractible⇔↔⊤ $
                                                  propositional⇒inhabited⇒contractible B-prop (R→B r)) ⟩
   (∃ λ R → A ≃ R × (R → B))            ↔⟨ (∃-cong λ _ →
                                            ∃-cong λ A≃R →
@@ -465,7 +465,7 @@ lens-to-contractible↔⊤ :
   Iso-lens A B ↔ ⊤
 lens-to-contractible↔⊤ {A = A} {B} univ cB =
   Iso-lens A B  ↝⟨ lens-to-proposition↔get univ (mono₁ 0 cB) ⟩
-  (A → B)       ↝⟨ →-cong ext F.id $ inverse $ _⇔_.to contractible⇔⊤↔ cB ⟩
+  (A → B)       ↝⟨ →-cong ext F.id $ _⇔_.to contractible⇔↔⊤ cB ⟩
   (A → ⊤)       ↝⟨ →-right-zero ⟩□
   ⊤             □
 
@@ -489,19 +489,18 @@ lens-from-contractible↔codomain-contractible :
   Contractible A →
   Iso-lens A B ↔ Contractible B
 lens-from-contractible↔codomain-contractible {A = A} {B} univ cA =
-  (∃ λ R → A ≃ (R × B) × (R → ∥ B ∥))                        ↝⟨ inverse $
-                                                                ∃-cong (λ _ →
-                                                                  Eq.≃-preserves-bijections ext (_⇔_.to contractible⇔⊤↔ cA) F.id
+  (∃ λ R → A ≃ (R × B) × (R → ∥ B ∥))                        ↝⟨ ∃-cong (λ _ →
+                                                                  Eq.≃-preserves-bijections ext (_⇔_.to contractible⇔↔⊤ cA) F.id
                                                                     ×-cong
                                                                   F.id) ⟩
-  (∃ λ R → ⊤ ≃ (R × B) × (R → ∥ B ∥))                        ↝⟨ ∃-cong (λ _ → inverse (contractible↔⊤≃ ext) ×-cong F.id) ⟩
+  (∃ λ R → ⊤ ≃ (R × B) × (R → ∥ B ∥))                        ↝⟨ ∃-cong (λ _ → Eq.inverse-isomorphism ext ×-cong F.id) ⟩
+  (∃ λ R → (R × B) ≃ ⊤ × (R → ∥ B ∥))                        ↝⟨ ∃-cong (λ _ → inverse (contractible↔≃⊤ ext) ×-cong F.id) ⟩
   (∃ λ R → Contractible (R × B) × (R → ∥ B ∥))               ↔⟨ ∃-cong (λ _ → Contractible-commutes-with-× ext ×-cong F.id) ⟩
   (∃ λ R → (Contractible R × Contractible B) × (R → ∥ B ∥))  ↝⟨ ∃-cong (λ _ → inverse ×-assoc) ⟩
-  (∃ λ R → Contractible R × Contractible B × (R → ∥ B ∥))    ↝⟨ inverse $
-                                                                ∃-cong (λ _ → ∃-cong λ cR →
+  (∃ λ R → Contractible R × Contractible B × (R → ∥ B ∥))    ↝⟨ ∃-cong (λ _ → ∃-cong λ cR →
                                                                   F.id
                                                                     ×-cong
-                                                                  →-cong ext (_⇔_.to contractible⇔⊤↔ cR) F.id) ⟩
+                                                                  →-cong ext (_⇔_.to contractible⇔↔⊤ cR) F.id) ⟩
   (∃ λ R → Contractible R × Contractible B × (⊤ → ∥ B ∥))    ↝⟨ ∃-cong (λ _ → F.id ×-cong F.id ×-cong Π-left-identity) ⟩
   (∃ λ R → Contractible R × Contractible B × ∥ B ∥)          ↝⟨ ∃-cong (λ _ → ×-comm) ⟩
   (∃ λ R → (Contractible B × ∥ B ∥) × Contractible R)        ↝⟨ ∃-comm ⟩
@@ -516,7 +515,7 @@ lens-from-⊥↔⊤ :
   Univalence (a ⊔ b) →
   Iso-lens (⊥ {ℓ = a}) B ↔ ⊤
 lens-from-⊥↔⊤ {B = B} univ =
-  inverse $ _⇔_.to contractible⇔⊤↔ $
+  _⇔_.to contractible⇔↔⊤ $
     isomorphism-to-lens
       (⊥      ↝⟨ inverse ×-left-zero ⟩□
        ⊥ × B  □) ,
@@ -601,7 +600,7 @@ Higher-lens↔Iso-lens {a} {b} {A} {B} univ =
    (∃ λ (P : Pow a B) → P ≡ H ⊚ ∣_∣) ×
    A ≃ ∃ (H ⊚ ∣_∣))                                                ↝⟨ (∃-cong λ _ →
                                                                        drop-⊤-left-× λ _ →
-                                                                       inverse (_⇔_.to contractible⇔⊤↔ (singleton-contractible _))) ⟩
+                                                                       _⇔_.to contractible⇔↔⊤ (singleton-contractible _)) ⟩
 
   (∃ λ (H : Pow a ∥ B ∥) → A ≃ ∃ (H ⊚ ∣_∣))                        ↔⟨ inverse $
                                                                       Σ-cong (inverse $ Pow↔Fam a ext univ) (λ _ →
@@ -613,7 +612,7 @@ Higher-lens↔Iso-lens {a} {b} {A} {B} univ =
    ∃ λ (f : R → ∥ B ∥) → A ≃ ∃ ((f ⁻¹_) ⊚ ∣_∣))                    ↔⟨ (∃-cong λ R → ∃-cong λ f →
                                                                        Eq.≃-preserves ext F.id
                             (∃ ((f ⁻¹_) ⊚ ∣_∣)                           ↔⟨ (∃-cong λ b → drop-⊤-right λ r →
-                                                                               inverse $ _⇔_.to contractible⇔⊤↔ $
+                                                                               _⇔_.to contractible⇔↔⊤ $
                                                                                  truncation-is-proposition _ _) ⟩
                              B × R                                       ↔⟨ ×-comm ⟩□
                              R × B                                       □)) ⟩
@@ -709,7 +708,7 @@ Iso-lens↔Iso-lens′ {A = A} {B} =
   where
   lemma = λ _ _ remainder eq r →
     B                            ↝⟨ (inverse $ drop-⊤-right λ _ →
-                                     inverse $ _⇔_.to contractible⇔⊤↔ $
+                                     _⇔_.to contractible⇔↔⊤ $
                                      singleton-contractible _) ⟩
     B × Singleton r              ↝⟨ Σ-assoc ⟩
     (∃ λ { (_ , r′) → r′ ≡ r })  ↝⟨ (Σ-cong ×-comm λ _ → F.id) ⟩
@@ -778,7 +777,7 @@ Bijection-lens↠Iso-lens {A = A} {B} univ = record
   let A = _ in
 
   A ,
-  (λ surj →                               $⟨ _⇔_.from contractible⇔⊤↔ (inverse $ lens-to-contractible↔⊤ univ₁ ⊤-contractible) ⟩
+  (λ surj →                               $⟨ _⇔_.from contractible⇔↔⊤ (lens-to-contractible↔⊤ univ₁ ⊤-contractible) ⟩
      Contractible (Iso-lens A ⊤)          ↝⟨ H-level.respects-surjection surj 0 ⟩
      Contractible (Traditional.Lens A ⊤)  ↝⟨ H-level.respects-surjection (_↔_.surjection $ Traditional.lens-to-⊤↔) 0 ⟩
      Contractible ((a : A) → a ≡ a)       ↝⟨ mono₁ 0 ⟩
@@ -963,7 +962,7 @@ Iso-lens↔Traditional-lens {A = A} {B} univ A-set = record
       (∥ B ∥ ×
        (∃ λ (f : B → R) → Constant f) ×
        (∃ λ (g : B → B) → F.id ≡ g))                              ↔⟨ (∃-cong λ _ → drop-⊤-right λ _ →
-                                                                        inverse $ _⇔_.to contractible⇔⊤↔ $
+                                                                        _⇔_.to contractible⇔↔⊤ $
                                                                         other-singleton-contractible _) ⟩
       (∥ B ∥ × ∃ λ (f : B → R) → Constant f)                      ↝⟨ (∃-cong λ ∥b∥ → constant-function≃∥inhabited∥⇒inhabited (R-set ∥b∥)) ⟩
 
@@ -1148,7 +1147,7 @@ Contractible-closed-codomain :
   Contractible B → Contractible (Iso-lens A B)
 Contractible-closed-codomain {A = A} {B} univ cB =
                                $⟨ lens-to-contractible↔⊤ univ cB ⟩
-  Iso-lens A B ↔ ⊤             ↝⟨ _⇔_.from contractible⇔⊤↔ ⊚ inverse ⟩□
+  Iso-lens A B ↔ ⊤             ↝⟨ _⇔_.from contractible⇔↔⊤ ⟩□
   Contractible (Iso-lens A B)  □
 
 -- If B is a proposition, then Iso-lens A B is also a proposition
@@ -1304,7 +1303,7 @@ domain-0+⇒lens-1+′ {A = A} {B} univ n hA =
 
   iso =
     Iso-lens A B                                         ↝⟨ inverse $ drop-⊤-right (λ l →
-                                                              inverse $ _⇔_.to contractible⇔⊤↔ $
+                                                              _⇔_.to contractible⇔↔⊤ $
                                                                 propositional⇒inhabited⇒contractible
                                                                   (H-level-propositional ext n)
                                                                   (remainder-has-same-h-level-as-domain l n hA)) ⟩

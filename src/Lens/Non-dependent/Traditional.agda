@@ -694,7 +694,7 @@ lens-to-proposition↔ {A = A} {B} B-prop =
         set a (get a)))                                             ↝⟨ (∃-cong λ get →
                                                                         Σ-cong (A→B→A↔A→A get) λ set →
                                                                           drop-⊤-left-× λ _ →
-                                                                            inverse $ _⇔_.to contractible⇔⊤↔ $
+                                                                            _⇔_.to contractible⇔↔⊤ $
                                                                               Π-closure ext 0 λ _ →
                                                                               Π-closure ext 0 λ _ →
                                                                               B-prop _ _) ⟩
@@ -725,7 +725,7 @@ lens-to-proposition↔ {A = A} {B} B-prop =
   (A → B) ×
   (∃ λ (f : A → A) → f ≡ P.id) ×
   (∀ a → a ≡ a)                                                     ↝⟨ (∃-cong λ _ → drop-⊤-left-× λ _ →
-                                                                          inverse $ _⇔_.to contractible⇔⊤↔ $
+                                                                          _⇔_.to contractible⇔↔⊤ $
                                                                             singleton-contractible _) ⟩□
   (A → B) × (∀ a → a ≡ a)                                           □
 
@@ -734,13 +734,13 @@ lens-to-proposition↔ {A = A} {B} B-prop =
   A→B→A↔A→A get =
     (A → B → A)  ↝⟨ ∀-cong ext (λ a →
                       drop-⊤-left-Π ext $
-                        inverse $ _⇔_.to contractible⇔⊤↔ $
+                        _⇔_.to contractible⇔↔⊤ $
                           propositional⇒inhabited⇒contractible B-prop (get a)) ⟩□
     (A → A)      □
 
   B↔⊤ : B → B ↔ ⊤
   B↔⊤ b =
-    inverse $ _⇔_.to contractible⇔⊤↔ $
+    _⇔_.to contractible⇔↔⊤ $
       propositional⇒inhabited⇒contractible B-prop b
 
 -- Lens A ⊤ is isomorphic to (a : A) → a ≡ a.
@@ -785,7 +785,7 @@ lens-from-⊥↔⊤ :
   ∀ {a b} {B : Set b} →
   Lens (⊥ {ℓ = a}) B ↔ ⊤
 lens-from-⊥↔⊤ =
-  inverse $ _⇔_.to contractible⇔⊤↔ $
+  _⇔_.to contractible⇔↔⊤ $
     record
       { get = ⊥-elim
       ; set = ⊥-elim
