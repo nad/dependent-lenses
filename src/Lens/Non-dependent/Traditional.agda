@@ -7,7 +7,7 @@
 module Lens.Non-dependent.Traditional where
 
 open import Equality.Propositional
-open import Interval using (ext)
+open import Interval using (ext; ⟨ext⟩)
 open import Logical-equivalence using (module _⇔_)
 open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 
@@ -775,7 +775,7 @@ lens-to-⊥↔ {a} {b} {A} =
         }
       ; right-inverse-of = λ _ → refl
       }
-    ; left-inverse-of = λ eq → ext λ a →
+    ; left-inverse-of = λ eq → ⟨ext⟩ λ a →
         ⊥-elim (¬a a)
     }
 
@@ -794,8 +794,8 @@ lens-from-⊥↔⊤ =
       ; set-set = λ a → ⊥-elim a
       } ,
     λ l → _↔_.from equality-characterisation
-            ( ext (λ a → ⊥-elim a)
-            , ext (λ a → ⊥-elim a)
+            ( ⟨ext⟩ (λ a → ⊥-elim a)
+            , ⟨ext⟩ (λ a → ⊥-elim a)
             , (λ a → ⊥-elim a)
             , (λ a → ⊥-elim a)
             , (λ a → ⊥-elim a)

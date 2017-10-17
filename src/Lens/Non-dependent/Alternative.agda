@@ -8,7 +8,7 @@ module Lens.Non-dependent.Alternative where
 
 open import Equality.Propositional
 open import H-level.Truncation.Propositional as Trunc
-open import Interval using (ext)
+open import Interval using (ext; ⟨ext⟩)
 open import Logical-equivalence using (_⇔_; module _⇔_)
 open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 
@@ -450,7 +450,7 @@ lens-to-proposition↔get {b = b} {A} {B} univ B-prop =
                                                  propositional⇒inhabited⇒contractible B-prop (R→B r)) ⟩
   (∃ λ R → A ≃ R × (R → B))            ↔⟨ (∃-cong λ _ →
                                            ∃-cong λ A≃R →
-                                           →-cong ext {k = equivalence} (inverse A≃R) F.id) ⟩
+                                           →-cong {k = equivalence} ext (inverse A≃R) F.id) ⟩
   (∃ λ R → A ≃ R × (A → B))            ↝⟨ Σ-assoc ⟩
   (∃ λ R → A ≃ R) × (A → B)            ↝⟨ (drop-⊤-left-× λ _ → other-singleton-with-≃-↔-⊤ {b = b} ext univ) ⟩□
   (A → B)                              □
@@ -555,7 +555,7 @@ Bijection-lens-⊥-⊥↔Set =
   Bijection-lens ⊥ ⊥     ↔⟨ (∃-cong λ _ → Eq.↔↔≃ ext (mono₁ 1 ⊥-propositional)) ⟩
   (∃ λ R → ⊥ ≃ (R × ⊥))  ↔⟨ (∃-cong λ _ → Eq.≃-preserves-bijections ext F.id ×-right-zero) ⟩
   (∃ λ R → ⊥ ≃ ⊥₀)       ↔⟨ (∃-cong λ _ → ≃⊥≃¬ ext) ⟩
-  (∃ λ R → ¬ ⊥)          ↔⟨ drop-⊤-right (λ _ → ¬⊥↔⊤ ext) ⟩□
+  (∃ λ R → ¬ ⊥)          ↔⟨ drop-⊤-right (λ _ → ¬⊥↔⊤ {k = bijection} ext) ⟩□
   Set _                  □
 
 ------------------------------------------------------------------------
@@ -824,7 +824,7 @@ Iso-lens↠Traditional-lens {A = A} {B} A-set = record
                 get (set (f b) b)  ≡⟨ get-set (f b) b ⟩∎
                 b                  ∎
             in
-            (set (f b) , set-set (f b)) , get (f b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ (ext (h b)) irr) lemma ⟩∎
+            (set (f b) , set-set (f b)) , get (f b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ (⟨ext⟩ (h b)) irr) lemma ⟩∎
             (f         , h            ) , b          ∎ }
          }
        ; left-inverse-of = λ a →
@@ -906,10 +906,10 @@ Iso-lens↔Traditional-lens {A = A} {B} univ A-set = record
           curry (_↔_.to ≡×≡↔≡)
             (_⇔_.to propositional⇔irrelevant
                truncation-is-proposition _ _)
-            (ext λ ∥b∥′ →
-               f ∥b∥           ≡⟨ cong f (_⇔_.to propositional⇔irrelevant
-                                            truncation-is-proposition _ _) ⟩∎
-               f ∥b∥′          ∎) }
+            (⟨ext⟩ λ ∥b∥′ →
+               f ∥b∥   ≡⟨ cong f (_⇔_.to propositional⇔irrelevant
+                                    truncation-is-proposition _ _) ⟩∎
+               f ∥b∥′  ∎) }
       }
 
     lemma =
@@ -1429,7 +1429,7 @@ module Iso-lens-combinators where
     proj₁ comp₁ ≡ proj₁ comp₂
   ∘-unique {A = A} {C = C} univ ∥C∥→C
            (comp₁ , set₁) (comp₂ , set₂) =
-    ext λ l₁ → ext λ l₂ →
+    ⟨ext⟩ λ l₁ → ⟨ext⟩ λ l₂ →
       lenses-equal-if-setters-equal univ
         ∥C∥→C (comp₁ l₁ l₂) (comp₂ l₁ l₂) λ a c →
           set (comp₁ l₁ l₂) a c           ≡⟨ set₁ _ _ _ _ ⟩

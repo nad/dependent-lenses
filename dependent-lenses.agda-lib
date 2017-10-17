@@ -1,3 +1,3 @@
 name: dependent-lenses
-depend: equality
+depend: equality equality-unsafe
 include: src

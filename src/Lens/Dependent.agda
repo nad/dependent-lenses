@@ -779,7 +779,7 @@ lens-to-proposition↔get {b = b} {A} {B} univ₁ univ₂ B-prop =
 
     (⊤ ≃ B′ r)
       ×
-    ((b′ : B′ r) → B (_≃_.from lens (r , b′)))         ↔⟨ (∃-cong λ ⊤≃B′ → drop-⊤-left-Π ext (_≃_.bijection $ inverse ⊤≃B′)) ⟩□
+    ((b′ : B′ r) → B (_≃_.from lens (r , b′)))         ↝⟨ (∃-cong λ ⊤≃B′ → drop-⊤-left-Π ext (_≃_.bijection $ inverse ⊤≃B′)) ⟩□
 
     (∃ λ (⊤≃B′ : ⊤ ≃ B′ r) →
      B (_≃_.from lens (r , _≃_.to ⊤≃B′ _)))            □
