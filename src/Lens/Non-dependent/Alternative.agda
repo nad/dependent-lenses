@@ -953,8 +953,8 @@ Iso-lens↔Traditional-lens {A = A} {B} univ A-set = record
 
       (∥ B ∥ ×
        (∃ λ (f : B → R) → Constant f) ×
-       (∃ λ (g : B → B) → B → ∀ b → b ≡ g b))                     ↔⟨ (∃-cong λ ∥b∥ → ∃-cong λ { (f , _) → ∃-cong λ _ → inverse $
-                                                                        →-intro ext (λ _ → B-set f ∥b∥ _ _) }) ⟩
+       (∃ λ (g : B → B) → B → ∀ b → b ≡ g b))                     ↔⟨ (∃-cong λ ∥b∥ → ∃-cong $ uncurry λ f _ → ∃-cong λ _ → inverse $
+                                                                        →-intro ext (λ _ → B-set f ∥b∥ _ _)) ⟩
       (∥ B ∥ ×
        (∃ λ (f : B → R) → Constant f) ×
        (∃ λ (g : B → B) → ∀ b → b ≡ g b))                         ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
