@@ -833,7 +833,12 @@ non-dependent-lenses-isomorphic {a} {A = A} {B} ≡B-prop =
    Iso-lens A B      □)
   , λ {l a} →
     let p = variant l a
-        q = Trunc.rec _ _ (inhabited l (remainder l a))
+        q = Trunc.rec _
+              (λ b → subst (λ { (r , _) → B′ l r ≡ B })
+                           (_≃_.right-inverse-of (lens l)
+                              (remainder l a , b))
+                           (variant l (Lens₃.set (lens l) a b)))
+              (inhabited l (remainder l a))
     in
     _≃_.to (≡⇒↝ _ p) (proj₂ (_≃_.to (lens l) a))  ≡⟨ cong (λ eq → _≃_.to (≡⇒↝ _ eq) (proj₂ (_≃_.to (lens l) a)))
                                                           (_⇔_.to propositional⇔irrelevant ≡B-prop p q) ⟩∎
