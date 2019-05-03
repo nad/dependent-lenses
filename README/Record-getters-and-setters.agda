@@ -3,7 +3,7 @@
 -- definition of composable record setters and getters
 ------------------------------------------------------------------------
 
-{-# OPTIONS --without-K #-}
+{-# OPTIONS --cubical --safe #-}
 
 -- This module uses both dependent and non-dependent lenses, in order
 -- to illustrate a problem with the non-dependent ones. It also uses
@@ -361,6 +361,7 @@ module Non-dependent where
       where
       open Lens
 
+      isomorphisms : ∀ _ _ → _
       isomorphisms = λ A r →
         ⊤                                                 ↝⟨ inverse Bij.↑↔ ⟩
         ↑ _ ⊤                                             ↝⟨ inverse Record↔Recʳ ⟩

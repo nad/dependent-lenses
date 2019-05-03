@@ -2,21 +2,24 @@
 -- Dependent lenses
 ------------------------------------------------------------------------
 
--- Some code below depends on UIP. I don't know if UIP, the
--- propositional truncation, and extensionality are mutually
--- consistent, but Andrea Vezzosi and I have discussed this, and it
--- seems plausible that some form of extensional type theory with
--- squash types would provide a model for these things. (I don't know
--- if the interval could be modelled in this way, but the interval is
--- not needed here, only extensionality.)
+-- Some code below depends on UIP for Set ℓ (for some ℓ). This kind of
+-- assumption is inconsistent in Cubical Agda. However, Andrea Vezzosi
+-- and I have discussed whether UIP, the propositional truncation, and
+-- extensionality are mutually consistent, and it seems plausible that
+-- some form of extensional type theory with squash types would
+-- provide a model for these things.
+--
+-- Note that the code that depends on UIP does not make use of
+-- univalence, or at least it did not use to do this, library code may
+-- have changed after the code was written. This development tracks
+-- usage of univalence in types, but at the time of writing there is
+-- some library code that does not do this.
 
-{-# OPTIONS --without-K --rewriting #-}
+{-# OPTIONS --cubical --safe #-}
 
 module Lens.Dependent where
 
 open import Equality.Propositional
-open import Interval using (ext)
-open import H-level.Truncation.Propositional as Trunc
 open import Logical-equivalence using (module _⇔_)
 open import Prelude as P hiding (id; swap; Unit) renaming (_∘_ to _⊚_)
 
@@ -25,12 +28,14 @@ open import Bool equality-with-J
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Decision-procedures equality-with-J
 import Equality.Groupoid equality-with-J as EG
+open import Equality.Path.Isomorphisms equality-with-J using (ext)
 open import Equality.Tactic equality-with-J as Tactic hiding (module Eq)
 open import Equivalence equality-with-J as Eq using (_≃_; module _≃_)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import Groupoid equality-with-J
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
+open import H-level.Truncation.Propositional equality-with-J as Trunc
 open import Surjection equality-with-J using (module _↠_)
 open import Univalence-axiom equality-with-J
 
@@ -1129,6 +1134,7 @@ Lens↔Lens′ {a} {b} {A} {B} =
    Eq.Is-equivalence {B = ∃ B′}
                      (λ a → remainder a , subst P.id variant (get a)))  □
   where
+  lemma : ∀ _ _ _ _ _ _ → _
   lemma = λ _ B′ remainder _ eq r →
     B′ r                            ↝⟨ (inverse $ drop-⊤-right λ _ →
                                         _⇔_.to contractible⇔↔⊤ $

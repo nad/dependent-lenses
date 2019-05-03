@@ -2,7 +2,7 @@
 -- Representation-independent results for non-dependent lenses
 ------------------------------------------------------------------------
 
-{-# OPTIONS --without-K #-}
+{-# OPTIONS --without-K --safe #-}
 
 module Lens.Non-dependent where
 

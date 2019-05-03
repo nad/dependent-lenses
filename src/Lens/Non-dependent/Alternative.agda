@@ -2,22 +2,23 @@
 -- Some alternative formulations of non-dependent lenses
 ------------------------------------------------------------------------
 
-{-# OPTIONS --without-K #-}
+{-# OPTIONS --cubical --safe #-}
 
 module Lens.Non-dependent.Alternative where
 
 open import Equality.Propositional
-open import H-level.Truncation.Propositional as Trunc
-open import Interval using (ext; ⟨ext⟩)
 open import Logical-equivalence using (_⇔_; module _⇔_)
 open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 
 open import Bijection equality-with-J as Bij using (_↔_)
 open import Equality.Decidable-UIP equality-with-J
+open import Equality.Path.Isomorphisms equality-with-J
+  using (ext; ⟨ext⟩)
 open import Equivalence equality-with-J as Eq using (_≃_; module _≃_)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
+open import H-level.Truncation.Propositional equality-with-J as Trunc
 import Nat equality-with-J as Nat
 open import Preimage equality-with-J
 open import Surjection equality-with-J using (_↠_; module _↠_)
@@ -706,6 +707,7 @@ Iso-lens↔Iso-lens′ {A = A} {B} =
      Surjective remainder)                                □
 
   where
+  lemma : ∀ _ _ _ _ _ → _
   lemma = λ _ _ remainder eq r →
     B                            ↝⟨ (inverse $ drop-⊤-right λ _ →
                                      _⇔_.to contractible⇔↔⊤ $
@@ -1092,7 +1094,7 @@ domain-contractible⇒remainder-contractible :
   ∀ {a b} {A : Set a} {B : Set b} →
   (l : Iso-lens A B) → Contractible A → Contractible (Iso-lens.R l)
 domain-contractible⇒remainder-contractible {A = A} {B} l =
-  Contractible A                   ↔⟨ H-level-cong ext 0 equiv ⟩
+  Contractible A                   ↔⟨ H-level-cong {k₂ = equivalence} ext 0 equiv ⟩
   Contractible (R × B)             ↔⟨ Contractible-commutes-with-× ext ⟩
   Contractible R × Contractible B  ↝⟨ proj₁ ⟩□
   Contractible R                   □

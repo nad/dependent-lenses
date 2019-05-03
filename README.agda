@@ -3,7 +3,7 @@
 -- Nils Anders Danielsson
 ------------------------------------------------------------------------
 
-{-# OPTIONS --without-K #-}
+{-# OPTIONS --cubical --safe #-}
 
 module README where
 
