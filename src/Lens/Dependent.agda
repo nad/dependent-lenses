@@ -85,7 +85,7 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
   -- A related isomorphism.
 
   codomain-set-≃ : ∀ {a b} → B (remainder (set a b)) ≃ B (remainder a)
-  codomain-set-≃ = ≡⇒↝ _ (cong B (remainder-set _ _))
+  codomain-set-≃ = ≡⇒≃ (cong B (remainder-set _ _))
 
   -- Some lens laws.
 
@@ -114,7 +114,7 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
   get-set₂ a b =
     proj₂ (to lens (from lens (remainder a , b)))  ≡⟨ get-set₁ _ _ ⟩
     subst B (sym (cong proj₁ lemma)) b             ≡⟨ subst-in-terms-of-inverse∘≡⇒↝ equivalence (cong proj₁ lemma) _ _ ⟩∎
-    from (≡⇒↝ _ (cong B (cong proj₁ lemma))) b     ∎
+    ≡⇒← (cong B (cong proj₁ lemma)) b              ∎
     where
     lemma = right-inverse-of lens _
 
@@ -129,9 +129,9 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
   set-set₂ : ∀ a b₁ b₂ →
              set (set a b₁) b₂ ≡ set a (to codomain-set-≃ b₂)
   set-set₂ a b₁ b₂ =
-    set (set a b₁) b₂                  ≡⟨ set-set₁ _ _ _ ⟩
-    set a (subst B eq b₂)              ≡⟨ cong (set a) (subst-in-terms-of-≡⇒↝ equivalence eq _ _) ⟩∎
-    set a (to (≡⇒↝ _ (cong B eq)) b₂)  ∎
+    set (set a b₁) b₂           ≡⟨ set-set₁ _ _ _ ⟩
+    set a (subst B eq b₂)       ≡⟨ cong (set a) (subst-in-terms-of-≡⇒↝ equivalence eq _ _) ⟩∎
+    set a (≡⇒→ (cong B eq) b₂)  ∎
     where
     eq = remainder-set a b₁
 
@@ -273,7 +273,7 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
   -- A corresponding isomorphism.
 
   variant≃ : ∀ {a} → B′ (remainder a) ≃ B a
-  variant≃ = ≡⇒↝ _ (variant _)
+  variant≃ = ≡⇒≃ (variant _)
 
   -- A variant of variant.
 
@@ -470,7 +470,7 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
   -- A corresponding isomorphism.
 
   codomain-set-≃ : ∀ {a b} → B (set a b) ≃ B a
-  codomain-set-≃ = ≡⇒↝ _ codomain-set
+  codomain-set-≃ = ≡⇒≃ codomain-set
 
   -- Unfolding lemmas for codomain-set-≃.
 
@@ -479,11 +479,11 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
     to (codomain-set-≃ {a = a} {b = b}) ≡
     to variant≃ ⊚ to L.codomain-set-≃ ⊚ from variant≃
   to-codomain-set-≃ =
-    to (≡⇒↝ _ (trans (sym (variant _)) (trans eq (variant _))))       ≡⟨ ≡⇒↝-trans equivalence {B≡C = trans eq (variant _)} ⟩
-    to (≡⇒↝ _ (trans eq (variant _))) ⊚ to (≡⇒↝ _ (sym (variant _)))  ≡⟨ cong (to (≡⇒↝ _ (trans eq (variant _))) ⊚_)
-                                                                              (≡⇒↝-sym equivalence {eq = variant _}) ⟩
-    to (≡⇒↝ _ (trans eq (variant _))) ⊚ from variant≃                 ≡⟨ cong (_⊚ from variant≃) (≡⇒↝-trans equivalence {B≡C = variant _}) ⟩∎
-    to variant≃ ⊚ to (≡⇒↝ _ eq) ⊚ from variant≃                       ∎
+    ≡⇒→ (trans (sym (variant _)) (trans eq (variant _)))  ≡⟨ ≡⇒↝-trans equivalence {B≡C = trans eq (variant _)} ⟩
+    ≡⇒→ (trans eq (variant _)) ⊚ ≡⇒→ (sym (variant _))    ≡⟨ cong (≡⇒→ (trans eq (variant _)) ⊚_)
+                                                                  (≡⇒↝-sym equivalence {eq = variant _}) ⟩
+    ≡⇒→ (trans eq (variant _)) ⊚ from variant≃            ≡⟨ cong (_⊚ from variant≃) (≡⇒↝-trans equivalence {B≡C = variant _}) ⟩∎
+    to variant≃ ⊚ ≡⇒→ eq ⊚ from variant≃                  ∎
     where
     eq = cong B′ (remainder-set _ _)
 
@@ -492,21 +492,21 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
     from (codomain-set-≃ {a = a} {b = b}) ≡
     to variant≃ ⊚ from L.codomain-set-≃ ⊚ from variant≃
   from-codomain-set-≃ =
-    from (≡⇒↝ _ (trans (sym (variant _)) (trans eq (variant _))))      ≡⟨ sym $ ≡⇒↝-sym equivalence {eq = trans (sym (variant _))
-                                                                                                                (trans eq (variant _))} ⟩
-    to (≡⇒↝ _ (sym (trans (sym (variant _)) (trans eq (variant _)))))  ≡⟨ cong (to ⊚ ≡⇒↝ equivalence)
-                                                                               (Tactic.prove (Sym (Trans (Sym (Lift (variant _)))
-                                                                                                         (Trans (Lift eq) (Lift (variant _)))))
-                                                                                             (Trans (Trans (Sym (Lift (variant _)))
-                                                                                                           (Sym (Lift eq)))
-                                                                                                    (Lift (variant _)))
-                                                                                             refl) ⟩
-    to (≡⇒↝ _ (trans (trans (sym (variant _)) (sym eq)) (variant _)))  ≡⟨ ≡⇒↝-trans equivalence {B≡C = variant _} ⟩
-    to variant≃ ⊚ to (≡⇒↝ _ (trans (sym (variant _)) (sym eq)))        ≡⟨ cong (to variant≃ ⊚_) (≡⇒↝-trans equivalence {B≡C = sym eq}) ⟩
-    to variant≃ ⊚ to (≡⇒↝ _ (sym eq)) ⊚ to (≡⇒↝ _ (sym (variant _)))   ≡⟨ cong₂ (λ f g → to variant≃ ⊚ f ⊚ g)
-                                                                                (≡⇒↝-sym equivalence {eq = eq})
-                                                                                (≡⇒↝-sym equivalence {eq = variant _}) ⟩∎
-    to variant≃ ⊚ from (≡⇒↝ _ eq) ⊚ from variant≃                      ∎
+    ≡⇒← (trans (sym (variant _)) (trans eq (variant _)))        ≡⟨ sym $ ≡⇒↝-sym equivalence {eq = trans (sym (variant _))
+                                                                                                         (trans eq (variant _))} ⟩
+    ≡⇒→ (sym (trans (sym (variant _)) (trans eq (variant _))))  ≡⟨ cong ≡⇒→
+                                                                        (Tactic.prove (Sym (Trans (Sym (Lift (variant _)))
+                                                                                                  (Trans (Lift eq) (Lift (variant _)))))
+                                                                                      (Trans (Trans (Sym (Lift (variant _)))
+                                                                                                    (Sym (Lift eq)))
+                                                                                             (Lift (variant _)))
+                                                                                      refl) ⟩
+    ≡⇒→ (trans (trans (sym (variant _)) (sym eq)) (variant _))  ≡⟨ ≡⇒↝-trans equivalence {B≡C = variant _} ⟩
+    to variant≃ ⊚ ≡⇒→ (trans (sym (variant _)) (sym eq))        ≡⟨ cong (to variant≃ ⊚_) (≡⇒↝-trans equivalence {B≡C = sym eq}) ⟩
+    to variant≃ ⊚ ≡⇒→ (sym eq) ⊚ ≡⇒→ (sym (variant _))          ≡⟨ cong₂ (λ f g → to variant≃ ⊚ f ⊚ g)
+                                                                         (≡⇒↝-sym equivalence {eq = eq})
+                                                                         (≡⇒↝-sym equivalence {eq = variant _}) ⟩∎
+    to variant≃ ⊚ ≡⇒← eq ⊚ from variant≃                        ∎
     where
     eq = cong B′ (remainder-set _ _)
 
@@ -521,7 +521,7 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
   get-set : ∀ a b → get (set a b) ≡ from codomain-set-≃ b
   get-set a b =
     to variant≃ (L.get (L.set a (from variant≃ b)))  ≡⟨ cong (to variant≃) $ L.get-set₂ _ _ ⟩
-    to variant≃ (from (≡⇒↝ _ eq) (from variant≃ b))  ≡⟨ cong (_$ b) (sym from-codomain-set-≃) ⟩∎
+    to variant≃ (≡⇒← eq (from variant≃ b))           ≡⟨ cong (_$ b) (sym from-codomain-set-≃) ⟩∎
     from codomain-set-≃ b                            ∎
     where
     eq = cong B′ (remainder-set a b)
@@ -549,10 +549,10 @@ codomain-set-≃≡id :
   (l : Lens A (λ _ → B)) →
   ∀ {a b} → Lens.codomain-set-≃ l {a = a} {b = b} ≡ Eq.id
 codomain-set-≃≡id uip l =
-  codomain-set-≃      ≡⟨⟩
-  ≡⇒↝ _ codomain-set  ≡⟨ cong (≡⇒↝ _) (uip codomain-set refl) ⟩
-  ≡⇒↝ _ refl          ≡⟨ refl ⟩∎
-  Eq.id               ∎
+  codomain-set-≃    ≡⟨⟩
+  ≡⇒≃ codomain-set  ≡⟨ cong ≡⇒≃ (uip codomain-set refl) ⟩
+  ≡⇒≃ refl          ≡⟨ refl ⟩∎
+  Eq.id             ∎
   where
   open Lens l
 
@@ -579,9 +579,9 @@ Lens-cong {A₁ = A₁} {A₂} {B₁} {B₂} univ A₁≃A₂ B₁≃B₂ =
                                                           ∃-cong λ _ →
                                                           Π-cong ext A₁≃A₂ λ a →
                                                           ≡-preserves-≃ ext univ univ
-                                                            (≡⇒↝ _ (
-      B′ (proj₁ (to lens a))                                        ≡⟨ cong (λ a → B′ (proj₁ (to lens a))) $ sym $ left-inverse-of A₁≃A₂ _ ⟩∎
-      B′ (proj₁ (to lens (from A₁≃A₂ (to A₁≃A₂ a))))                ∎))
+                                                            (≡⇒≃ (
+      B′ (proj₁ (to lens a))                                      ≡⟨ cong (λ a → B′ (proj₁ (to lens a))) $ sym $ left-inverse-of A₁≃A₂ _ ⟩∎
+      B′ (proj₁ (to lens (from A₁≃A₂ (to A₁≃A₂ a))))              ∎))
                                                             (B₁≃B₂ a)) ⟩□
   (∃ λ (R : Set _) →
    ∃ λ (B′ : R → Set _) →
@@ -845,9 +845,9 @@ non-dependent-lenses-isomorphic {a} {A = A} {B} ≡B-prop =
                            (variant l (Lens₃.set (lens l) a b)))
               (inhabited l (remainder l a))
     in
-    _≃_.to (≡⇒↝ _ p) (proj₂ (_≃_.to (lens l) a))  ≡⟨ cong (λ eq → _≃_.to (≡⇒↝ _ eq) (proj₂ (_≃_.to (lens l) a)))
-                                                          (_⇔_.to propositional⇔irrelevant ≡B-prop p q) ⟩∎
-    _≃_.to (≡⇒↝ _ q) (proj₂ (_≃_.to (lens l) a))  ∎
+    ≡⇒→ p (proj₂ (_≃_.to (lens l) a))  ≡⟨ cong (λ eq → ≡⇒→ eq (proj₂ (_≃_.to (lens l) a)))
+                                               (_⇔_.to propositional⇔irrelevant ≡B-prop p q) ⟩∎
+    ≡⇒→ q (proj₂ (_≃_.to (lens l) a))  ∎
   where
   open Lens
 
