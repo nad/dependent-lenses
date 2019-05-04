@@ -788,6 +788,176 @@ Bijection-lens↠Iso-lens {A = A} {B} univ = record
      Is-proposition ((a : A) → a ≡ a)     ↝⟨ proj₂ $ ¬-type-of-refl-propositional ext univ₀ ⟩□
      ⊥                                    □)
 
+-- Some lemmas used in Iso-lens↠Traditional-lens and
+-- Iso-lens↔Traditional-lens below.
+
+private
+
+  module Iso-lens↔Traditional-lens
+    {a b} {A : Set a} {B : Set b}
+    (A-set : Is-set A)
+    where
+
+    -- This function has an extra argument of type Unit to make it
+    -- possible to block its unfolding (in order to improve
+    -- compile-time performance).
+
+    from : Unit → Traditional.Lens A B → Iso-lens A B
+    from unit l = isomorphism-to-lens
+      {R = ∃ λ (f : B → A) → ∀ b b′ → set (f b) b′ ≡ f b′}
+      (record
+         { surjection = record
+           { logical-equivalence = record
+             { to   = λ a → (set a , set-set a) , get a
+             ; from = λ { ((f , _) , b) → f b }
+             }
+           ; right-inverse-of = λ { ((f , h) , b) →
+
+              let
+                irr = {p q : ∀ b b′ → set (f b) b′ ≡ f b′} → p ≡ q
+                irr =
+                  (Π-closure ext 1 λ _ →
+                   Π-closure ext 1 λ _ →
+                   A-set) _ _
+
+                lemma =
+                  get (f b)          ≡⟨ cong get (sym (h b b)) ⟩
+                  get (set (f b) b)  ≡⟨ get-set (f b) b ⟩∎
+                  b                  ∎
+              in
+              (set (f b) , set-set (f b)) , get (f b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ (⟨ext⟩ (h b)) irr) lemma ⟩∎
+              (f         , h            ) , b          ∎ }
+           }
+         ; left-inverse-of = λ a →
+             set a (get a)  ≡⟨ set-get a ⟩∎
+             a              ∎
+         })
+      where
+      open Traditional.Lens l
+
+    to∘from : ∀ u l → Iso-lens.traditional-lens (from u l) ≡ l
+    to∘from unit l = _↔_.from Traditional.equality-characterisation
+      ( refl
+      , refl
+      , (λ a _ → B-set a _ _)
+      , (λ _ → A-set _ _)
+      , (λ _ _ _ → A-set _ _)
+      )
+      where
+      open Traditional.Lens l
+
+      B-set : A → Is-set B
+      B-set a =
+        Traditional.h-level-respects-lens-from-inhabited 2 l a A-set
+
+    from∘to :
+      Univalence (a ⊔ b) →
+      ∀ u l → from u (Iso-lens.traditional-lens l) ≡ l
+    from∘to univ unit (R , l , inh) =
+      _↔_.from (equality-characterisation₄ univ)
+               (lemma , λ _ → refl)
+      where
+      B-set : (B → R) → ∥ B ∥ → Is-set B
+      B-set f =
+        rec (H-level-propositional ext 2)
+            (λ b → proj₂-closure (f b) 2 $
+                   H-level.respects-surjection
+                     (_≃_.surjection l) 2 A-set)
+
+      R-set : ∥ B ∥ → Is-set R
+      R-set =
+        rec (H-level-propositional ext 2)
+            (λ b → proj₁-closure (const b) 2 $
+                   H-level.respects-surjection
+                     (_≃_.surjection l) 2 A-set)
+
+      lemma′ : (∥ B ∥ × (∥ B ∥ → R)) ↔ R
+      lemma′ = record
+        { surjection = record
+          { logical-equivalence = record
+            { to   = λ { (∥b∥ , f) → f ∥b∥ }
+            ; from = λ r → inh r , λ _ → r
+            }
+          ; right-inverse-of = λ _ → refl
+          }
+        ; left-inverse-of = λ { (∥b∥ , f) →
+            curry (_↔_.to ≡×≡↔≡)
+              (truncation-is-proposition _ _)
+              (⟨ext⟩ λ ∥b∥′ →
+                 f ∥b∥   ≡⟨ cong f (truncation-is-proposition _ _) ⟩∎
+                 f ∥b∥′  ∎) }
+        }
+
+      lemma =
+        (∃ λ (f : B → A) → ∀ b b′ →
+             _≃_.from l (proj₁ (_≃_.to l (f b)) , b′) ≡ f b′) ×
+        ∥ B ∥                                                       ↔⟨ ×-comm ⟩
+
+        (∥ B ∥ ×
+         ∃ λ (f : B → A) → ∀ b b′ →
+             _≃_.from l (proj₁ (_≃_.to l (f b)) , b′) ≡ f b′)       ↝⟨ (∃-cong λ _ →
+                                                                        Σ-cong (→-cong ext F.id l) λ f →
+                                                                               ∀-cong ext λ b → ∀-cong ext λ b′ →
+                                                                               ≡⇒↝ _ (cong (_≃_.from l (proj₁ (_≃_.to l (f b)) , b′) ≡_)
+                                                                                           (sym $ _≃_.left-inverse-of l _))) ⟩
+        (∥ B ∥ ×
+         ∃ λ (f : B → R × B) → ∀ b b′ →
+             _≃_.from l (proj₁ (f b) , b′) ≡ _≃_.from l (f b′))     ↝⟨ ∃-cong (λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
+                                                                         Eq.≃-≡ (inverse l)) ⟩
+        (∥ B ∥ ×
+         ∃ λ (f : B → R × B) → ∀ b b′ → (proj₁ (f b) , b′) ≡ f b′)  ↔⟨ (∃-cong λ _ → Σ-cong ΠΣ-comm λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
+                                                                          inverse $ ≡×≡↔≡) ⟩
+        (∥ B ∥ ×
+         ∃ λ (p : (B → R) × (B → B)) →
+           ∀ b b′ → proj₁ p b ≡ proj₁ p b′ × b′ ≡ proj₂ p b′)       ↔⟨ (∃-cong λ _ → inverse Σ-assoc) ⟩
+
+        (∥ B ∥ ×
+         ∃ λ (f : B → R) → ∃ λ (g : B → B) →
+           ∀ b b′ → f b ≡ f b′ × b′ ≡ g b′)                         ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ →
+                                                                          ΠΣ-comm) ⟩
+        (∥ B ∥ ×
+         ∃ λ (f : B → R) → ∃ λ (g : B → B) →
+           ∀ b → (∀ b′ → f b ≡ f b′) × (∀ b′ → b′ ≡ g b′))          ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ΠΣ-comm) ⟩
+
+        (∥ B ∥ ×
+         ∃ λ (f : B → R) → ∃ λ (g : B → B) →
+           Constant f × (B → ∀ b → b ≡ g b))                        ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-comm) ⟩
+
+        (∥ B ∥ ×
+         ∃ λ (f : B → R) → Constant f ×
+         ∃ λ (g : B → B) → B → ∀ b → b ≡ g b)                       ↔⟨ (∃-cong λ _ → Σ-assoc) ⟩
+
+        (∥ B ∥ ×
+         (∃ λ (f : B → R) → Constant f) ×
+         (∃ λ (g : B → B) → B → ∀ b → b ≡ g b))                     ↔⟨ (∃-cong λ ∥b∥ → ∃-cong $ uncurry λ f _ → ∃-cong λ _ → inverse $
+                                                                          →-intro ext (λ _ → B-set f ∥b∥)) ⟩
+        (∥ B ∥ ×
+         (∃ λ (f : B → R) → Constant f) ×
+         (∃ λ (g : B → B) → ∀ b → b ≡ g b))                         ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
+                                                                          Eq.extensionality-isomorphism ext) ⟩
+        (∥ B ∥ ×
+         (∃ λ (f : B → R) → Constant f) ×
+         (∃ λ (g : B → B) → F.id ≡ g))                              ↔⟨ (∃-cong λ _ → drop-⊤-right λ _ →
+                                                                          _⇔_.to contractible⇔↔⊤ $
+                                                                          other-singleton-contractible _) ⟩
+        (∥ B ∥ × ∃ λ (f : B → R) → Constant f)                      ↝⟨ (∃-cong λ ∥b∥ → constant-function≃∥inhabited∥⇒inhabited (R-set ∥b∥)) ⟩
+
+        (∥ B ∥ × (∥ B ∥ → R))                                       ↔⟨ lemma′ ⟩
+
+        R                                                           □
+
+    iso :
+      Unit →
+      Univalence (a ⊔ b) →
+      Iso-lens A B ↔ Traditional.Lens A B
+    iso u univ = record
+      { surjection = record
+        { logical-equivalence = record { from = from u }
+        ; right-inverse-of    = to∘from u
+        }
+      ; left-inverse-of = from∘to univ u
+      }
+
 -- If the domain A is a set, then there is a split surjection from
 -- Iso-lens A B to Traditional.Lens A B.
 
@@ -798,58 +968,10 @@ Iso-lens↠Traditional-lens :
 Iso-lens↠Traditional-lens {A = A} {B} A-set = record
   { logical-equivalence = record
     { to   = Iso-lens.traditional-lens
-    ; from = from
+    ; from = Iso-lens↔Traditional-lens.from A-set unit
     }
-  ; right-inverse-of = to∘from
+  ; right-inverse-of = Iso-lens↔Traditional-lens.to∘from A-set unit
   }
-  where
-  from : Traditional.Lens A B → Iso-lens A B
-  from l = isomorphism-to-lens
-    {R = ∃ λ (f : B → A) → ∀ b b′ → set (f b) b′ ≡ f b′}
-    (record
-       { surjection = record
-         { logical-equivalence = record
-           { to   = λ a → (set a , set-set a) , get a
-           ; from = λ { ((f , _) , b) → f b }
-           }
-         ; right-inverse-of = λ { ((f , h) , b) →
-
-            let
-              irr = {p q : ∀ b b′ → set (f b) b′ ≡ f b′} → p ≡ q
-              irr =
-                (Π-closure ext 1 λ _ →
-                 Π-closure ext 1 λ _ →
-                 A-set) _ _
-
-              lemma =
-                get (f b)          ≡⟨ cong get (sym (h b b)) ⟩
-                get (set (f b) b)  ≡⟨ get-set (f b) b ⟩∎
-                b                  ∎
-            in
-            (set (f b) , set-set (f b)) , get (f b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ (⟨ext⟩ (h b)) irr) lemma ⟩∎
-            (f         , h            ) , b          ∎ }
-         }
-       ; left-inverse-of = λ a →
-           set a (get a)  ≡⟨ set-get a ⟩∎
-           a              ∎
-       })
-    where
-    open Traditional.Lens l
-
-  to∘from : ∀ l → Iso-lens.traditional-lens (from l) ≡ l
-  to∘from l = _↔_.from Traditional.equality-characterisation
-    ( refl
-    , refl
-    , (λ a _ → B-set a _ _)
-    , (λ _ → A-set _ _)
-    , (λ _ _ _ → A-set _ _)
-    )
-    where
-    open Traditional.Lens l
-
-    B-set : A → Is-set B
-    B-set a =
-      Traditional.h-level-respects-lens-from-inhabited 2 l a A-set
 
 -- If the domain A is a set, then Traditional.Lens A B and
 -- Iso-lens A B are isomorphic (assuming univalence).
@@ -859,107 +981,8 @@ Iso-lens↔Traditional-lens :
   Univalence (a ⊔ b) →
   Is-set A →
   Iso-lens A B ↔ Traditional.Lens A B
-Iso-lens↔Traditional-lens {A = A} {B} univ A-set = record
-  { surjection      = surj
-  ; left-inverse-of = from∘to
-  }
-  where
-  surj = Iso-lens↠Traditional-lens A-set
-
-  open Traditional.Lens
-  open _↠_ surj
-
-  from∘to : ∀ l → from (Iso-lens.traditional-lens l) ≡ l
-  from∘to (R , l , inh) =
-    _↔_.from (equality-characterisation₄ univ)
-             (lemma , λ _ → refl)
-    where
-    B-set : (B → R) → ∥ B ∥ → Is-set B
-    B-set f =
-      rec (H-level-propositional ext 2)
-          (λ b → proj₂-closure (f b) 2 $
-                 H-level.respects-surjection (_≃_.surjection l) 2 A-set)
-
-    R-set : ∥ B ∥ → Is-set R
-    R-set =
-      rec (H-level-propositional ext 2)
-          (λ b → proj₁-closure (const b) 2 $
-                 H-level.respects-surjection (_≃_.surjection l) 2 A-set)
-
-    lemma′ : (∥ B ∥ × (∥ B ∥ → R)) ↔ R
-    lemma′ = record
-      { surjection = record
-        { logical-equivalence = record
-          { to   = λ { (∥b∥ , f) → f ∥b∥ }
-          ; from = λ r → inh r , λ _ → r
-          }
-        ; right-inverse-of = λ _ → refl
-        }
-      ; left-inverse-of = λ { (∥b∥ , f) →
-          curry (_↔_.to ≡×≡↔≡)
-            (truncation-is-proposition _ _)
-            (⟨ext⟩ λ ∥b∥′ →
-               f ∥b∥   ≡⟨ cong f (truncation-is-proposition _ _) ⟩∎
-               f ∥b∥′  ∎) }
-      }
-
-    lemma =
-      (∃ λ (f : B → A) → ∀ b b′ →
-           _≃_.from l (proj₁ (_≃_.to l (f b)) , b′) ≡ f b′) ×
-      ∥ B ∥                                                       ↔⟨ ×-comm ⟩
-
-      (∥ B ∥ ×
-       ∃ λ (f : B → A) → ∀ b b′ →
-           _≃_.from l (proj₁ (_≃_.to l (f b)) , b′) ≡ f b′)       ↝⟨ (∃-cong λ _ →
-                                                                      Σ-cong (→-cong ext F.id l) λ f →
-                                                                             ∀-cong ext λ b → ∀-cong ext λ b′ →
-                                                                             ≡⇒↝ _ (cong (_≃_.from l (proj₁ (_≃_.to l (f b)) , b′) ≡_)
-                                                                                         (sym $ _≃_.left-inverse-of l _))) ⟩
-      (∥ B ∥ ×
-       ∃ λ (f : B → R × B) → ∀ b b′ →
-           _≃_.from l (proj₁ (f b) , b′) ≡ _≃_.from l (f b′))     ↝⟨ ∃-cong (λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
-                                                                       Eq.≃-≡ (inverse l)) ⟩
-      (∥ B ∥ ×
-       ∃ λ (f : B → R × B) → ∀ b b′ → (proj₁ (f b) , b′) ≡ f b′)  ↔⟨ (∃-cong λ _ → Σ-cong ΠΣ-comm λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
-                                                                        inverse $ ≡×≡↔≡) ⟩
-      (∥ B ∥ ×
-       ∃ λ (p : (B → R) × (B → B)) →
-         ∀ b b′ → proj₁ p b ≡ proj₁ p b′ × b′ ≡ proj₂ p b′)       ↔⟨ (∃-cong λ _ → inverse Σ-assoc) ⟩
-
-      (∥ B ∥ ×
-       ∃ λ (f : B → R) → ∃ λ (g : B → B) →
-         ∀ b b′ → f b ≡ f b′ × b′ ≡ g b′)                         ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ →
-                                                                        ΠΣ-comm) ⟩
-      (∥ B ∥ ×
-       ∃ λ (f : B → R) → ∃ λ (g : B → B) →
-         ∀ b → (∀ b′ → f b ≡ f b′) × (∀ b′ → b′ ≡ g b′))          ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ΠΣ-comm) ⟩
-
-      (∥ B ∥ ×
-       ∃ λ (f : B → R) → ∃ λ (g : B → B) →
-         Constant f × (B → ∀ b → b ≡ g b))                        ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-comm) ⟩
-
-      (∥ B ∥ ×
-       ∃ λ (f : B → R) → Constant f ×
-       ∃ λ (g : B → B) → B → ∀ b → b ≡ g b)                       ↔⟨ (∃-cong λ _ → Σ-assoc) ⟩
-
-      (∥ B ∥ ×
-       (∃ λ (f : B → R) → Constant f) ×
-       (∃ λ (g : B → B) → B → ∀ b → b ≡ g b))                     ↔⟨ (∃-cong λ ∥b∥ → ∃-cong $ uncurry λ f _ → ∃-cong λ _ → inverse $
-                                                                        →-intro ext (λ _ → B-set f ∥b∥)) ⟩
-      (∥ B ∥ ×
-       (∃ λ (f : B → R) → Constant f) ×
-       (∃ λ (g : B → B) → ∀ b → b ≡ g b))                         ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
-                                                                        Eq.extensionality-isomorphism ext) ⟩
-      (∥ B ∥ ×
-       (∃ λ (f : B → R) → Constant f) ×
-       (∃ λ (g : B → B) → F.id ≡ g))                              ↔⟨ (∃-cong λ _ → drop-⊤-right λ _ →
-                                                                        _⇔_.to contractible⇔↔⊤ $
-                                                                        other-singleton-contractible _) ⟩
-      (∥ B ∥ × ∃ λ (f : B → R) → Constant f)                      ↝⟨ (∃-cong λ ∥b∥ → constant-function≃∥inhabited∥⇒inhabited (R-set ∥b∥)) ⟩
-
-      (∥ B ∥ × (∥ B ∥ → R))                                       ↔⟨ lemma′ ⟩
-
-      R                                                           □
+Iso-lens↔Traditional-lens univ A-set =
+  Iso-lens↔Traditional-lens.iso A-set unit univ
 
 -- If the domain A is a set, then Traditional.Lens A B and
 -- Higher-lens A B are isomorphic (assuming univalence).
