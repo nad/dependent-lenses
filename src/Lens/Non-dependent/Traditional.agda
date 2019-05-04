@@ -678,12 +678,9 @@ lens-to-proposition↔ {A = A} {B} B-prop =
      (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂))                    ↝⟨ (∃-cong λ get → ∃-cong λ set → ∃-cong λ _ → ∃-cong λ _ →
                                                                         ∀-cong ext λ a → ∀-cong ext λ b₁ → ∀-cong ext λ b₂ →
                                                                           ≡⇒↝ _ (
-       (set (set a b₁)                         b₂ ≡ set a b₂)               ≡⟨ cong (λ b → set (set a b) b₂ ≡ _)
-                                                                                    (_⇔_.to propositional⇔irrelevant B-prop _ _) ⟩
-       (set (set a (get a))                    b₂ ≡ set a b₂)               ≡⟨ cong (λ b → set (set a (get a)) b ≡ _)
-                                                                                    (_⇔_.to propositional⇔irrelevant B-prop _ _) ⟩
-       (set (set a (get a)) (get (set a (get a))) ≡ set a b₂)               ≡⟨ cong (λ b → _ ≡ set a b)
-                                                                                    (_⇔_.to propositional⇔irrelevant B-prop _ _) ⟩∎
+       (set (set a b₁)                         b₂ ≡ set a b₂)               ≡⟨ cong (λ b → set (set a b) b₂ ≡ _) (B-prop _ _) ⟩
+       (set (set a (get a))                    b₂ ≡ set a b₂)               ≡⟨ cong (λ b → set (set a (get a)) b ≡ _) (B-prop _ _) ⟩
+       (set (set a (get a)) (get (set a (get a))) ≡ set a b₂)               ≡⟨ cong (λ b → _ ≡ set a b) (B-prop _ _) ⟩∎
        (set (set a (get a)) (get (set a (get a))) ≡ set a (get a))          ∎)) ⟩
 
   (∃ λ (get : A → B) →
@@ -698,7 +695,7 @@ lens-to-proposition↔ {A = A} {B} B-prop =
                                                                             _⇔_.to contractible⇔↔⊤ $
                                                                               Π-closure ext 0 λ _ →
                                                                               Π-closure ext 0 λ _ →
-                                                                              B-prop _ _) ⟩
+                                                                              +⇒≡ B-prop) ⟩
   ((A → B) ×
    ∃ λ (f : A → A) →
      (∀ a → f a ≡ a) ×
@@ -809,9 +806,9 @@ lens-from-⊥↔⊤ =
 -- then the codomain also has h-level n.
 
 h-level-respects-lens-from-inhabited :
-  ∀ {n a b} {A : Set a} {B : Set b} →
+  ∀ n {a b} {A : Set a} {B : Set b} →
   Lens A B → A → H-level n A → H-level n B
-h-level-respects-lens-from-inhabited {n} {A = A} {B} l a =
+h-level-respects-lens-from-inhabited n {A = A} {B} l a =
   H-level n A  ↝⟨ H-level.respects-surjection surj n ⟩
   H-level n B  □
   where
@@ -834,7 +831,7 @@ contractible-to-contractible :
   ∀ {a b} {A : Set a} {B : Set b} →
   Lens A B → Contractible A → Contractible B
 contractible-to-contractible l c =
-  h-level-respects-lens-from-inhabited l (proj₁ c) c
+  h-level-respects-lens-from-inhabited _ l (proj₁ c) c
 
 -- If A and B have h-level n (where, in the case of B, one can assume
 -- that A is inhabited), then Lens a b also has h-level n.
@@ -852,13 +849,13 @@ lens-preserves-h-level n hA hB =
                hA) λ _ →
   ×-closure n (Π-closure ext n λ a →
                Π-closure ext n λ _ →
-               mono₁ n (hB a) _ _) $
+               +⇒≡ $ mono₁ n (hB a)) $
   ×-closure n (Π-closure ext n λ _ →
-               mono₁ n hA _ _)
+               +⇒≡ $ mono₁ n hA)
               (Π-closure ext n λ _ →
                Π-closure ext n λ _ →
                Π-closure ext n λ _ →
-               mono₁ n hA _ _)
+               +⇒≡ $ mono₁ n hA)
 
 -- If A has positive h-level n, then Lens A B also has h-level n.
 
@@ -868,7 +865,7 @@ lens-preserves-h-level-of-domain :
 lens-preserves-h-level-of-domain n hA =
   [inhabited⇒+]⇒+ n λ l →
     lens-preserves-h-level (1 + n) hA λ a →
-      h-level-respects-lens-from-inhabited l a hA
+      h-level-respects-lens-from-inhabited _ l a hA
 
 -- There is a type A such that Lens A ⊤ is not propositional (assuming
 -- univalence).

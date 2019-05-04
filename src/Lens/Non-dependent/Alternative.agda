@@ -132,10 +132,12 @@ module Iso-lens {a b} {A : Set a} {B : Set b} (l : Iso-lens A B) where
   set-set a b₁ b₂ =
     let r = remainder a in
 
-    _≃_.from equiv (remainder (_≃_.from equiv (r , b₁)) , b₂)             ≡⟨⟩
-    _≃_.from equiv (proj₁ (_≃_.to equiv (_≃_.from equiv (r , b₁))) , b₂)  ≡⟨ cong (λ x → _≃_.from equiv (proj₁ x , b₂))
-                                                                                  (_≃_.right-inverse-of equiv _) ⟩∎
-    _≃_.from equiv (r , b₂)                                               ∎
+    _≃_.from equiv (remainder (_≃_.from equiv (r , b₁)) , b₂)  ≡⟨⟩
+
+    _≃_.from equiv
+      (proj₁ (_≃_.to equiv (_≃_.from equiv (r , b₁))) , b₂)    ≡⟨ cong (λ x → _≃_.from equiv (proj₁ x , b₂))
+                                                                       (_≃_.right-inverse-of equiv _) ⟩∎
+    _≃_.from equiv (r , b₂)                                    ∎
 
   -- Another law.
 
@@ -614,7 +616,7 @@ Higher-lens↔Iso-lens {a} {b} {A} {B} univ =
                                                                        Eq.≃-preserves ext F.id
                             (∃ ((f ⁻¹_) ⊚ ∣_∣)                           ↔⟨ (∃-cong λ b → drop-⊤-right λ r →
                                                                                _⇔_.to contractible⇔↔⊤ $
-                                                                                 truncation-is-proposition _ _) ⟩
+                                                                                 +⇒≡ truncation-is-proposition) ⟩
                              B × R                                       ↔⟨ ×-comm ⟩□
                              R × B                                       □)) ⟩
 
@@ -815,11 +817,9 @@ Iso-lens↠Traditional-lens {A = A} {B} A-set = record
             let
               irr = {p q : ∀ b b′ → set (f b) b′ ≡ f b′} → p ≡ q
               irr =
-                _⇔_.to propositional⇔irrelevant
-                  (Π-closure ext 1 λ _ →
-                   Π-closure ext 1 λ _ →
-                   A-set _ _)
-                  _ _
+                (Π-closure ext 1 λ _ →
+                 Π-closure ext 1 λ _ →
+                 A-set) _ _
 
               lemma =
                 get (f b)          ≡⟨ cong get (sym (h b b)) ⟩
@@ -840,25 +840,16 @@ Iso-lens↠Traditional-lens {A = A} {B} A-set = record
   to∘from l = _↔_.from Traditional.equality-characterisation
     ( refl
     , refl
-    , (λ a _ →
-         _⇔_.to propositional⇔irrelevant
-           (B-set a _ _)
-           _ _)
-    , (λ _ →
-         _⇔_.to propositional⇔irrelevant
-           (A-set _ _)
-           _ _)
-    , (λ _ _ _ →
-         _⇔_.to propositional⇔irrelevant
-           (A-set _ _)
-              _ _)
+    , (λ a _ → B-set a _ _)
+    , (λ _ → A-set _ _)
+    , (λ _ _ _ → A-set _ _)
     )
     where
     open Traditional.Lens l
 
     B-set : A → Is-set B
     B-set a =
-      Traditional.h-level-respects-lens-from-inhabited l a A-set
+      Traditional.h-level-respects-lens-from-inhabited 2 l a A-set
 
 -- If the domain A is a set, then Traditional.Lens A B and
 -- Iso-lens A B are isomorphic (assuming univalence).
@@ -906,11 +897,9 @@ Iso-lens↔Traditional-lens {A = A} {B} univ A-set = record
         }
       ; left-inverse-of = λ { (∥b∥ , f) →
           curry (_↔_.to ≡×≡↔≡)
-            (_⇔_.to propositional⇔irrelevant
-               truncation-is-proposition _ _)
+            (truncation-is-proposition _ _)
             (⟨ext⟩ λ ∥b∥′ →
-               f ∥b∥   ≡⟨ cong f (_⇔_.to propositional⇔irrelevant
-                                    truncation-is-proposition _ _) ⟩∎
+               f ∥b∥   ≡⟨ cong f (truncation-is-proposition _ _) ⟩∎
                f ∥b∥′  ∎) }
       }
 
@@ -956,7 +945,7 @@ Iso-lens↔Traditional-lens {A = A} {B} univ A-set = record
       (∥ B ∥ ×
        (∃ λ (f : B → R) → Constant f) ×
        (∃ λ (g : B → B) → B → ∀ b → b ≡ g b))                     ↔⟨ (∃-cong λ ∥b∥ → ∃-cong $ uncurry λ f _ → ∃-cong λ _ → inverse $
-                                                                        →-intro ext (λ _ → B-set f ∥b∥ _ _)) ⟩
+                                                                        →-intro ext (λ _ → B-set f ∥b∥)) ⟩
       (∥ B ∥ ×
        (∃ λ (f : B → R) → Constant f) ×
        (∃ λ (g : B → B) → ∀ b → b ≡ g b))                         ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
@@ -1018,7 +1007,7 @@ Iso-lens⇔Traditional-lens {A = A} {B} B-set b₀ = record
                  set a (get a)     ≡⟨ set-get a ⟩∎
                  a                 ∎
              in
-             ((set (set a b) b₀ , get-set (set a b) b₀) , get (set a b))  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma (_⇔_.to set⇔UIP B-set _ _)) (get-set a b) ⟩∎
+             ((set (set a b) b₀ , get-set (set a b) b₀) , get (set a b))  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma (B-set _ _)) (get-set a b) ⟩∎
              ((a                , h                   ) , b            )  ∎
            }
          }
@@ -1052,11 +1041,11 @@ h-level-respects-lens-from-inhabited {n} {A = A} {B} l a =
 ¬-h-level-respects-lens :
   ∀ {a b} →
   Univalence (a ⊔ b) →
-  ¬ (∀ {n} {A : Set a} {B : Set b} →
+  ¬ (∀ n {A : Set a} {B : Set b} →
      Iso-lens A B → H-level n A → H-level n B)
 ¬-h-level-respects-lens univ resp =
                              $⟨ ⊥-propositional ⟩
-  Is-proposition ⊥           ↝⟨ resp (_↔_.from (lens-from-⊥↔⊤ univ) _) ⟩
+  Is-proposition ⊥           ↝⟨ resp 1 (_↔_.from (lens-from-⊥↔⊤ univ) _) ⟩
   Is-proposition (↑ _ Bool)  ↝⟨ ↑⁻¹-closure 1 ⟩
   Is-proposition Bool        ↝⟨ ¬-Bool-propositional ⟩□
   ⊥₀                         □
@@ -1181,9 +1170,9 @@ private
        H-level n (Iso-lens.R l₁ ≃ Iso-lens.R l₂)) →
     H-level (1 + n) (Iso-lens A B)
   domain-1+-remainder-equivalence-0+⇒lens-1+
-    {A = A} univ n hA hR l₁ l₂ =                                $⟨ Σ-closure n (hR l₁ l₂) (λ _ →
+    {A = A} univ n hA hR = ≡↔+ _ _ λ l₁ l₂ →                    $⟨ Σ-closure n (hR l₁ l₂) (λ _ →
                                                                    Π-closure ext n λ _ →
-                                                                   hA _ _) ⟩
+                                                                   +⇒≡ hA) ⟩
     H-level n (∃ λ (eq : R l₁ ≃ R l₂) → ∀ p → _≡_ {A = A} _ _)  ↝⟨ H-level.respects-surjection
                                                                      (_↔_.surjection $ inverse $ equality-characterisation₄ univ)
                                                                      n ⟩□
@@ -1222,7 +1211,7 @@ Is-proposition-closed-domain {b = b} {A} {B} univ A-prop =
   R-to-R l₁ l₂ = remainder l₂ ⊚ remainder⁻¹ l₁
 
   involutive : (l : Iso-lens A B) {f : R l → R l} → ∀ r → f r ≡ r
-  involutive l _ = _⇔_.to propositional⇔irrelevant (R-prop l) _ _
+  involutive l _ = R-prop l _ _
 
   R₁≃R₂ : (l₁ l₂ : Iso-lens A B) → R l₁ ≃ R l₂
   R₁≃R₂ l₁ l₂ = Eq.↔⇒≃ $
@@ -1254,7 +1243,7 @@ Is-set-closed-domain :
   Univalence (a ⊔ b) →
   Is-set A → Is-set (Iso-lens A B)
 Is-set-closed-domain {A = A} {B} univ A-set =
-                                 $⟨ Traditional.lens-preserves-h-level-of-domain 1 A-set ⟩
+                                 $⟨ (λ {_ _} → Traditional.lens-preserves-h-level-of-domain 1 A-set) ⟩
   Is-set (Traditional.Lens A B)  ↝⟨ H-level.respects-surjection
                                       (_↔_.surjection $ inverse $ Iso-lens↔Traditional-lens univ A-set)
                                       2 ⟩□
@@ -1349,9 +1338,7 @@ module Iso-lens-combinators where
   id-unique {A = A} univ l₁ l₂ =
     _↔_.from (equality-characterisation₃ univ)
       ( R₁≃R₂
-      , (λ _ → _⇔_.to propositional⇔irrelevant
-                 (remainder-propositional l₂)
-                 _ _)
+      , (λ _ → remainder-propositional l₂ _ _)
       , λ a →
           get (proj₁ l₁) a  ≡⟨ proj₂ l₁ a ⟩
           a                 ≡⟨ sym $ proj₂ l₂ a ⟩∎
@@ -1365,11 +1352,10 @@ module Iso-lens-combinators where
       [inhabited⇒+]⇒+ 0 λ r →
         Trunc.rec
           (H-level-propositional ext 1)
-          (λ a → _⇔_.from propositional⇔irrelevant λ r₁ r₂ →
-                   cong proj₁ (
-                     (r₁ , a)        ≡⟨ sym $ to-lemma a r₁ ⟩
-                     _≃_.to equiv a  ≡⟨ to-lemma a r₂ ⟩∎
-                     (r₂ , a)        ∎))
+          (λ a r₁ r₂ → cong proj₁ (
+             (r₁ , a)        ≡⟨ sym $ to-lemma a r₁ ⟩
+             _≃_.to equiv a  ≡⟨ to-lemma a r₂ ⟩∎
+             (r₂ , a)        ∎))
           (inhabited r)
       where
       open Iso-lens l
@@ -1539,9 +1525,7 @@ module Iso-lens-combinators where
         ; right-inverse-of = λ _ → refl
         }
       ; left-inverse-of = λ { (r , _) →
-          cong (λ x → r , x) $
-            _⇔_.to propositional⇔irrelevant
-              truncation-is-proposition _ _ }
+          cong (λ x → r , x) $ truncation-is-proposition _ _ }
       }
 
   right-identity :
@@ -1571,7 +1555,5 @@ module Iso-lens-combinators where
         ; right-inverse-of = λ _ → refl
         }
       ; left-inverse-of = λ { (_ , r) →
-          cong (λ x → x , r) $
-            _⇔_.to propositional⇔irrelevant
-              truncation-is-proposition _ _ }
+          cong (λ x → x , r) $ truncation-is-proposition _ _ }
       }

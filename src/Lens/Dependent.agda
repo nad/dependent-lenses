@@ -294,18 +294,16 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
     B′ r                        ≡⟨ other-variant _ _ ⟩∎
     B (_≃_.from lens (r , b₂))  ∎
 
-  -- Thus we can, assuming that UIP holds, define a variant of B that
-  -- only depends on R.
+  -- Thus we can, assuming that Set b is a set, define a variant of B
+  -- that only depends on R.
 
-  module First-variant-of-B
-           (uip : Uniqueness-of-identity-proofs (Set b)) where
+  module First-variant-of-B (uip : Is-set (Set b)) where
 
     private
 
       B̲′ : (r : R) → ∥ B′ r ∥ → Set b
       B̲′ r =
-        to (constant-function≃∥inhabited∥⇒inhabited
-              (_⇔_.from set⇔UIP uip))
+        to (constant-function≃∥inhabited∥⇒inhabited uip)
            (B ⊚ _≃_.from lens ⊚ (r ,_) , independent-of-B′ r)
 
     B̲ : R → Set b
@@ -317,7 +315,7 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
     B′≡B̲ : ∀ r → B′ r ≡ B̲ r
     B′≡B̲ r = Trunc.elim
       (λ ∥b′∥ → B′ r ≡ B̲′ r ∥b′∥)
-      (λ _ → _⇔_.from set⇔UIP uip _ _)
+      (λ _ → uip)
       (other-variant r)
       (inhabited r)
 
@@ -345,9 +343,7 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
                      , other-variant r b′)
            , (λ b′₁ b′₂ → Σ-≡,≡→≡
                 (Σ-≡,≡→≡ (independent-of-B′ r b′₁ b′₂)
-                         (_⇔_.to propositional⇔irrelevant
-                            Is-set-is-propositional
-                            _ _))
+                         (Is-set-is-propositional _ _))
                 (subst (λ X → B′ r ≡ proj₁ X)
                        (Σ-≡,≡→≡ (independent-of-B′ r b′₁ b′₂) _)
                        (other-variant r b′₁)                        ≡⟨ subst-∘ (B′ r ≡_) proj₁
@@ -415,12 +411,8 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
                            _)
                   _                                                      ≡⟨ Σ-≡,≡→≡-cong
                                                                               (Σ-≡,≡→≡-cong lemma
-                                                                                            (_⇔_.to propositional⇔irrelevant
-                                                                                               (mono₁ 0 (Is-set-is-propositional _ _))
-                                                                                               _ _))
-                                                                              (_⇔_.to propositional⇔irrelevant
-                                                                                 (H-level-H-level-≡ʳ ext univ 1 (B-set _) _ _)
-                                                                                 _ _) ⟩∎
+                                                                                            (mono₁ 0 (+⇒≡ Is-set-is-propositional) _ _))
+                                                                              (H-level-H-level-≡ʳ ext univ 1 (B-set _) _ _) ⟩∎
                 Σ-≡,≡→≡ (Σ-≡,≡→≡ (independent-of-B′ r b′₁ b′₃) _) _      ∎))
           (inhabited r)
         where
@@ -540,12 +532,12 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
 
       from variant≃ (to codomain-set-≃ b₂)                      ∎
 
--- For non-dependent dependent lenses, and in the presence of UIP,
--- codomain-set-≃ is equal to the identity.
+-- For a non-dependent dependent lens, for which UIP holds for the
+-- codomain's universe, codomain-set-≃ is equal to the identity.
 
 codomain-set-≃≡id :
   ∀ {a b} {A : Set a} {B : Set b} →
-  Uniqueness-of-identity-proofs (Set b) →
+  Is-set (Set b) →
   (l : Lens A (λ _ → B)) →
   ∀ {a b} → Lens.codomain-set-≃ l {a = a} {b = b} ≡ Eq.id
 codomain-set-≃≡id uip l =
@@ -846,7 +838,7 @@ non-dependent-lenses-isomorphic {a} {A = A} {B} ≡B-prop =
               (inhabited l (remainder l a))
     in
     ≡⇒→ p (proj₂ (_≃_.to (lens l) a))  ≡⟨ cong (λ eq → ≡⇒→ eq (proj₂ (_≃_.to (lens l) a)))
-                                               (_⇔_.to propositional⇔irrelevant ≡B-prop p q) ⟩∎
+                                               (≡B-prop p q) ⟩∎
     ≡⇒→ q (proj₂ (_≃_.to (lens l) a))  ∎
   where
   open Lens
@@ -919,17 +911,17 @@ non-dependent-lenses-isomorphic {a} {A = A} {B} ≡B-prop =
        ×
      (R → ∥ B ∥))                                 □
 
--- Non-dependent dependent lenses are isomorphic to non-dependent
--- lenses, assuming UIP.
+-- The type of non-dependent dependent lenses from A to B is
+-- isomorphic to the type of non-dependent lenses from A to B if UIP
+-- holds for B.
 
 non-dependent-lenses-isomorphic-UIP :
   ∀ {a b} {A : Set a} {B : Set b} →
-  Uniqueness-of-identity-proofs (Set b) →
+  Is-set (Set b) →
   ∃ λ (iso : Lens A (const B) ↔ Iso-lens A B) →
     ∀ {l a} → Lens.get l a ≡ ND.Iso-lens.get (_↔_.to iso l) a
 non-dependent-lenses-isomorphic-UIP uip =
-  non-dependent-lenses-isomorphic
-    (_⇔_.from set⇔UIP uip _ _)
+  non-dependent-lenses-isomorphic uip
 
 -- Lens and Lens′ are pointwise isomorphic.
 
@@ -1322,12 +1314,12 @@ module No-fully-general-composition-operator
     open module Lens↔Iso-lens {A B : Set} =
       _↔_ (proj₁ (Lens↔Iso-lens {A = A} {B = B}))
 
--- In the presence of UIP it is impossible to define a fully general
--- composition operator.
+-- In the presence of UIP for Set it is impossible to define a fully
+-- general composition operator.
 
 no-fully-general-composition-operator-UIP :
   let open Lens in
-  Uniqueness-of-identity-proofs Set →
+  Is-set Set →
   ¬ ({A : Set} {B : A → Set} {C : (a : A) → B a → Set}
      (l₁ : Lens A B)
      (l₂ : ∀ a → Lens (B a) (C a)) →
@@ -1376,9 +1368,9 @@ module Observation where
     open Lens₃ l
 
   -- The first projection Lens cannot be defined for Unit /if/ we
-  -- assume that UIP holds.
+  -- assume that UIP holds for Set.
 
-  not-proj₁ : Uniqueness-of-identity-proofs Set → ¬ Lens Unit (λ _ → Bool)
+  not-proj₁ : Is-set Set → ¬ Lens Unit (λ _ → Bool)
   not-proj₁ uip l = Bool.true≢false (
     true                       ≡⟨ sym $ cong (λ eq → from eq true) $ codomain-set-≃≡id uip l ⟩
     from codomain-set-≃ true   ≡⟨ sym $ get-set u true ⟩
