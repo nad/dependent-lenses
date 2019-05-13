@@ -97,7 +97,7 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
 
   get-set₁ : ∀ a b → get (set a b) ≡ subst B (sym (remainder-set a b)) b
   get-set₁ a b =
-    proj₂ (to lens (from lens (remainder a , b)))  ≡⟨ sym $ dependent-cong proj₂ (sym lemma) ⟩
+    proj₂ (to lens (from lens (remainder a , b)))  ≡⟨ sym $ dcong proj₂ (sym lemma) ⟩
 
     subst (B ⊚ proj₁) (sym lemma)
           (proj₂ {B = B} (remainder a , b))        ≡⟨⟩

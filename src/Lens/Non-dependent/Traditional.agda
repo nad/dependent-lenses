@@ -570,7 +570,7 @@ module Lens-combinators where
                 (cong g (sym c₂′≡c₂″))                               ∎
 
         lemma₅ =
-          z c₂′                                                  ≡⟨ sym $ dependent-cong z (sym c₂′≡c₂″) ⟩
+          z c₂′                                                  ≡⟨ sym $ dcong z (sym c₂′≡c₂″) ⟩
 
           subst (λ x → set l₂ b₁ x ≡ g x) (sym c₂′≡c₂″) (z c₂″)  ≡⟨ subst-in-terms-of-trans-and-cong {f = set l₂ b₁} {g = g} {x≡y = sym c₂′≡c₂″} ⟩
 
