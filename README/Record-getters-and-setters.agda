@@ -241,7 +241,7 @@ module Non-dependent where
 
   -- Records.
 
-  open import Records-with-with Label _≟_
+  open import Records-with-with equality-with-J Label _≟_
 
   -- Nested records (defined using the record language from Record, so
   -- that we can use manifest fields).
