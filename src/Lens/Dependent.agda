@@ -830,7 +830,8 @@ non-dependent-lenses-isomorphic {a} {A = A} {B} ≡B-prop =
    Iso-lens A B      □)
   , λ {l a} →
     let p = variant l a
-        q = Trunc.rec _
+        q = Trunc.rec
+              ≡B-prop
               (λ b → subst (λ { (r , _) → B′ l r ≡ B })
                            (_≃_.right-inverse-of (lens l)
                               (remainder l a , b))
