@@ -498,7 +498,7 @@ lens-from-contractible↔codomain-contractible {A = A} {B} univ cA =
                                                                   F.id) ⟩
   (∃ λ R → ⊤ ≃ (R × B) × (R → ∥ B ∥))                        ↝⟨ ∃-cong (λ _ → Eq.inverse-isomorphism ext ×-cong F.id) ⟩
   (∃ λ R → (R × B) ≃ ⊤ × (R → ∥ B ∥))                        ↝⟨ ∃-cong (λ _ → inverse (contractible↔≃⊤ ext) ×-cong F.id) ⟩
-  (∃ λ R → Contractible (R × B) × (R → ∥ B ∥))               ↔⟨ ∃-cong (λ _ → Contractible-commutes-with-× ext ×-cong F.id) ⟩
+  (∃ λ R → Contractible (R × B) × (R → ∥ B ∥))               ↝⟨ ∃-cong (λ _ → Contractible-commutes-with-× ext ×-cong F.id) ⟩
   (∃ λ R → (Contractible R × Contractible B) × (R → ∥ B ∥))  ↝⟨ ∃-cong (λ _ → inverse ×-assoc) ⟩
   (∃ λ R → Contractible R × Contractible B × (R → ∥ B ∥))    ↝⟨ ∃-cong (λ _ → ∃-cong λ cR →
                                                                   F.id
@@ -1107,7 +1107,7 @@ domain-contractible⇒remainder-contractible :
   (l : Iso-lens A B) → Contractible A → Contractible (Iso-lens.R l)
 domain-contractible⇒remainder-contractible {A = A} {B} l =
   Contractible A                   ↔⟨ H-level-cong {k₂ = equivalence} ext 0 equiv ⟩
-  Contractible (R × B)             ↔⟨ Contractible-commutes-with-× ext ⟩
+  Contractible (R × B)             ↔⟨ Contractible-commutes-with-× {k = bijection} ext ⟩
   Contractible R × Contractible B  ↝⟨ proj₁ ⟩□
   Contractible R                   □
   where
