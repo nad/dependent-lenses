@@ -19,7 +19,7 @@
 
 module Lens.Dependent where
 
-open import Equality.Propositional
+open import Equality.Propositional.Cubical
 open import Logical-equivalence using (module _⇔_)
 open import Prelude as P hiding (id; swap; Unit) renaming (_∘_ to _⊚_)
 
@@ -28,14 +28,14 @@ open import Bool equality-with-J
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Decision-procedures equality-with-J
 import Equality.Groupoid equality-with-J as EG
-open import Equality.Path.Isomorphisms equality-with-J using (ext)
 open import Equality.Tactic equality-with-J as Tactic hiding (module Eq)
 open import Equivalence equality-with-J as Eq using (_≃_; module _≃_)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import Groupoid equality-with-J
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
-open import H-level.Truncation.Propositional equality-with-J as Trunc
+open import H-level.Truncation.Propositional equality-with-paths
+  as Trunc
 open import Surjection equality-with-J using (module _↠_)
 open import Univalence-axiom equality-with-J
 
