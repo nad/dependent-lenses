@@ -15,6 +15,10 @@ open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import Surjection equality-with-J using (_↠_)
 
+private
+  variable
+    a b c : Level
+
 ------------------------------------------------------------------------
 -- An existence result
 
@@ -23,7 +27,6 @@ open import Surjection equality-with-J using (_↠_)
 -- contractible codomains.
 
 no-first-projection-lens :
-  ∀ {a b c}
   (Lens : Set (a ⊔ b) → Set a → Set c) →
   (∀ {A B} → Lens A B → Contractible A → Contractible B) →
   ∃ λ (A : Set a) → ∃ λ (B : A → Set b) →

@@ -26,14 +26,20 @@ open import Univalence-axiom equality-with-J
 import Lens.Non-dependent
 import Lens.Non-dependent.Traditional as Traditional
 
+private
+  variable
+    a b c d r           : Level
+    A A₁ A₂ B B₁ B₂ X Y : Set a
+    n                   : ℕ
+
 ------------------------------------------------------------------------
 -- Alternative formulations of lenses
 
 -- Paolo Capriotti has described higher lenses
 -- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
 
-Higher-lens : ∀ {a b} → Set a → Set b → Set (lsuc (a ⊔ b))
-Higher-lens {a} {b} A B =
+Higher-lens : Set a → Set b → Set (lsuc (a ⊔ b))
+Higher-lens {a = a} A B =
   ∃ λ (g : A → B) →
   ∃ λ (H : Pow a ∥ B ∥) →
     (g ⁻¹_) ≡ H ⊚ ∣_∣
@@ -41,8 +47,8 @@ Higher-lens {a} {b} A B =
 -- A more traditional (?) alternative definition that uses a
 -- bijection.
 
-Bijection-lens : ∀ {a b} → Set a → Set b → Set (lsuc (a ⊔ b))
-Bijection-lens {a} {b} A B =
+Bijection-lens : Set a → Set b → Set (lsuc (a ⊔ b))
+Bijection-lens {a = a} {b = b} A B =
   ∃ λ (R : Set (a ⊔ b)) → A ↔ (R × B)
 
 -- However, the definition above is not in general isomorphic to
@@ -55,8 +61,8 @@ Bijection-lens {a} {b} A B =
 -- Vezzosi suggested that I should look at higher lenses, and that I
 -- could perhaps use R → ∥ B ∥. This worked out nicely.)
 
-Iso-lens : ∀ {a b} → Set a → Set b → Set (lsuc (a ⊔ b))
-Iso-lens {a} {b} A B =
+Iso-lens : Set a → Set b → Set (lsuc (a ⊔ b))
+Iso-lens {a = a} {b = b} A B =
   ∃ λ (R : Set (a ⊔ b)) →
     (A ≃ (R × B)) ×
     (R → ∥ B ∥)
@@ -65,8 +71,8 @@ Iso-lens {a} {b} A B =
 -- R → ∥ B ∥ function with a requirement that the remainder function
 -- should be surjective.
 
-Iso-lens′ : ∀ {a b} → Set a → Set b → Set (lsuc (a ⊔ b))
-Iso-lens′ {a} {b} A B =
+Iso-lens′ : Set a → Set b → Set (lsuc (a ⊔ b))
+Iso-lens′ {a = a} {b = b} A B =
   ∃ λ (get       : A → B) →
   ∃ λ (R         : Set (a ⊔ b)) →
   ∃ λ (remainder : A → R) →
@@ -78,7 +84,7 @@ Iso-lens′ {a} {b} A B =
 
 -- Some derived definitions.
 
-module Iso-lens {a b} {A : Set a} {B : Set b} (l : Iso-lens A B) where
+module Iso-lens {A : Set a} {B : Set b} (l : Iso-lens A B) where
 
   -- Remainder type.
 
@@ -159,9 +165,9 @@ module Iso-lens {a b} {A : Set a} {B : Set b} (l : Iso-lens A B) where
 -- Isomorphisms can be converted into lenses.
 
 isomorphism-to-lens :
-  ∀ {a b} {A : Set a} {B : Set b} {R : Set (a ⊔ b)} →
+  {A : Set a} {B : Set b} {R : Set (a ⊔ b)} →
   A ↔ R × B → Iso-lens A B
-isomorphism-to-lens {A = A} {B} {R} iso =
+isomorphism-to-lens {A = A} {B = B} {R = R} iso =
 
   (R × ∥ B ∥) ,
 
@@ -178,13 +184,13 @@ isomorphism-to-lens {A = A} {B} {R} iso =
 -- Equality of Iso-lenses is isomorphic to certain pairs.
 
 equality-characterisation₀ :
-  ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
+  {l₁ l₂ : Iso-lens A B} →
   let open Iso-lens in
   l₁ ≡ l₂
     ↔
   ∃ λ (p : R l₁ ≡ R l₂) →
     subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂
-equality-characterisation₀ {A = A} {B} {l₁} {l₂} =
+equality-characterisation₀ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
   l₁ ≡ l₂                                                    ↝⟨ inverse Bij.Σ-≡,≡↔≡ ⟩
 
   (∃ λ (p : R l₁ ≡ R l₂) →
@@ -208,7 +214,7 @@ equality-characterisation₀ {A = A} {B} {l₁} {l₂} =
 -- univalence).
 
 equality-characterisation₁ :
-  ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
+  {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
   let open Iso-lens in
   Univalence (a ⊔ b) →
   l₁ ≡ l₂
@@ -232,8 +238,8 @@ equality-characterisation₁ {A = A} {B} {l₁} {l₂} univ =
   where
   open Iso-lens
 
-  resp : ∀ {X Y} → X ≃ Y → A ≃ (X × B) → A ≃ (Y × B)
-  resp {X} {Y} X≃Y A≃X×B =
+  resp : X ≃ Y → A ≃ (X × B) → A ≃ (Y × B)
+  resp {X = X} {Y = Y} X≃Y A≃X×B =
     A      ↝⟨ A≃X×B ⟩
     X × B  ↝⟨ X≃Y ×-cong F.id ⟩□
     Y × B  □
@@ -242,7 +248,7 @@ equality-characterisation₁ {A = A} {B} {l₁} {l₂} univ =
 -- univalence).
 
 equality-characterisation₂ :
-  ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
+  {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
   let open Iso-lens in
   Univalence (a ⊔ b) →
   l₁ ≡ l₂
@@ -266,7 +272,7 @@ equality-characterisation₂ {l₁ = l₁} {l₂} univ =
 -- univalence).
 
 equality-characterisation₃ :
-  ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
+  {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
   let open Iso-lens in
   Univalence (a ⊔ b) →
   l₁ ≡ l₂
@@ -298,7 +304,7 @@ equality-characterisation₃ {l₁ = l₁} {l₂} univ =
 -- univalence).
 
 equality-characterisation₄ :
-  ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
+  {A : Set a} {B : Set b} {l₁ l₂ : Iso-lens A B} →
   let open Iso-lens in
   Univalence (a ⊔ b) →
   l₁ ≡ l₂
@@ -326,7 +332,6 @@ equality-characterisation₄ {l₁ = l₁} {l₂} univ =
 
 getters-equal-if-setters-equal :
   let open Iso-lens in
-  ∀ {a b} {A : Set a} {B : Set b} →
   (l₁ l₂ : Iso-lens A B) →
   (∀ a b → set l₁ a b ≡ set l₂ a b) →
   (∀ a   → get l₁ a   ≡ get l₂ a)
@@ -350,7 +355,7 @@ getters-equal-if-setters-equal l₁ l₂ setters-equal a =
 -- are equal if their setters are equal (assuming univalence).
 
 lenses-equal-if-setters-equal :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   (∥ B ∥ → B) →
   (l₁ l₂ : Iso-lens A B) →
@@ -413,9 +418,6 @@ lenses-equal-if-setters-equal {A = A} {B = B}
 -- A generalised variant of Iso-lens preserves bijections.
 
 Iso-lens-cong′ :
-  ∀ {r}
-    {a₁ b₁} {A₁ : Set a₁} {B₁ : Set b₁}
-    {a₂ b₂} {A₂ : Set a₂} {B₂ : Set b₂} →
   A₁ ↔ A₂ → B₁ ↔ B₂ →
   (∃ λ (R : Set r) → A₁ ≃ (R × B₁) × (R → ∥ B₁ ∥)) ↔
   (∃ λ (R : Set r) → A₂ ≃ (R × B₂) × (R → ∥ B₂ ∥))
@@ -428,7 +430,7 @@ Iso-lens-cong′ A₁↔A₂ B₁↔B₂ =
 -- Iso-lens preserves level-preserving bijections.
 
 Iso-lens-cong :
-  ∀ {a b} {A₁ A₂ : Set a} {B₁ B₂ : Set b} →
+  {A₁ A₂ : Set a} {B₁ B₂ : Set b} →
   A₁ ↔ A₂ → B₁ ↔ B₂ →
   Iso-lens A₁ B₁ ↔ Iso-lens A₂ B₂
 Iso-lens-cong = Iso-lens-cong′
@@ -437,11 +439,11 @@ Iso-lens-cong = Iso-lens-cong′
 -- (assuming univalence).
 
 lens-to-proposition↔get :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   Is-proposition B →
   Iso-lens A B ↔ (A → B)
-lens-to-proposition↔get {b = b} {A} {B} univ B-prop =
+lens-to-proposition↔get {b = b} {A = A} {B = B} univ B-prop =
   (∃ λ R → A ≃ (R × B) × (R → ∥ B ∥))  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ →
                                              ∥∥↔ B-prop) ⟩
   (∃ λ R → A ≃ (R × B) × (R → B))      ↝⟨ (∃-cong λ _ →
@@ -461,7 +463,7 @@ lens-to-proposition↔get {b = b} {A} {B} univ B-prop =
 -- (assuming univalence).
 
 lens-to-contractible↔⊤ :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   Contractible B →
   Iso-lens A B ↔ ⊤
@@ -474,7 +476,7 @@ lens-to-contractible↔⊤ {A = A} {B} univ cB =
 -- Iso-lens A ⊥ is isomorphic to ¬ A (assuming univalence).
 
 lens-to-⊥↔¬ :
-  ∀ {a b} {A : Set a} →
+  {A : Set a} →
   Univalence (a ⊔ b) →
   Iso-lens A (⊥ {ℓ = b}) ↔ ¬ A
 lens-to-⊥↔¬ {A = A} univ =
@@ -486,7 +488,7 @@ lens-to-⊥↔¬ {A = A} univ =
 -- Contractible B (assuming univalence).
 
 lens-from-contractible↔codomain-contractible :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   Contractible A →
   Iso-lens A B ↔ Contractible B
@@ -513,7 +515,7 @@ lens-from-contractible↔codomain-contractible {A = A} {B} univ cA =
 -- Iso-lens ⊥ B is isomorphic to the unit type (assuming univalence).
 
 lens-from-⊥↔⊤ :
-  ∀ {a b} {B : Set b} →
+  {B : Set b} →
   Univalence (a ⊔ b) →
   Iso-lens (⊥ {ℓ = a}) B ↔ ⊤
 lens-from-⊥↔⊤ {B = B} univ =
@@ -551,7 +553,6 @@ lens-from-⊥↔⊤ {B = B} univ =
 -- Bijection-lens ⊥ ⊥ is isomorphic to Set something.
 
 Bijection-lens-⊥-⊥↔Set :
-  ∀ {a b} →
   Bijection-lens (⊥ {ℓ = a}) (⊥ {ℓ = b}) ↔ Set (a ⊔ b)
 Bijection-lens-⊥-⊥↔Set =
   Bijection-lens ⊥ ⊥     ↔⟨ (∃-cong λ _ → Eq.↔↔≃ ext (mono₁ 1 ⊥-propositional)) ⟩
@@ -570,10 +571,10 @@ Bijection-lens-⊥-⊥↔Set =
 -- Capriotti.)
 
 Higher-lens↔Iso-lens :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   Higher-lens A B ↔ Iso-lens A B
-Higher-lens↔Iso-lens {a} {b} {A} {B} univ =
+Higher-lens↔Iso-lens {a = a} {b = b} {A = A} {B = B} univ =
 
   (∃ λ (g : A → B) → ∃ λ (H : Pow a ∥ B ∥) →
      (g ⁻¹_) ≡ H ⊚ ∣_∣)                                            ↔⟨ Σ-cong lemma₂ (λ _ → ∃-cong (lemma₃ _)) ⟩
@@ -660,7 +661,7 @@ Higher-lens↔Iso-lens {a} {b} {A} {B} univ =
 -- Iso-lens A B is isomorphic to Iso-lens′ A B.
 
 Iso-lens↔Iso-lens′ :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {A : Set a} {B : Set b} →
   Iso-lens A B ↔ Iso-lens′ A B
 Iso-lens↔Iso-lens′ {A = A} {B} =
 
@@ -722,7 +723,7 @@ Iso-lens↔Iso-lens′ {A = A} {B} =
 -- Iso-lens A B (assuming univalence).
 
 Bijection-lens↠Iso-lens :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   Bijection-lens A B ↠ Iso-lens A B
 Bijection-lens↠Iso-lens {A = A} {B} univ = record
@@ -742,7 +743,6 @@ Bijection-lens↠Iso-lens {A = A} {B} univ = record
 -- direction, not even for sets (assuming univalence).
 
 ¬Iso-lens↠Bijection-lens :
-  ∀ {a b} →
   Univalence (a ⊔ b) →
   ¬ ({A : Set a} {B : Set b} →
      Is-set A → Is-set B →
@@ -793,7 +793,7 @@ Bijection-lens↠Iso-lens {A = A} {B} univ = record
 private
 
   module Iso-lens↔Traditional-lens
-    {a b} {A : Set a} {B : Set b}
+    {A : Set a} {B : Set b}
     (A-set : Is-set A)
     where
 
@@ -961,10 +961,9 @@ private
 -- Iso-lens A B to Traditional.Lens A B.
 
 Iso-lens↠Traditional-lens :
-  ∀ {a b} {A : Set a} {B : Set b} →
   Is-set A →
   Iso-lens A B ↠ Traditional.Lens A B
-Iso-lens↠Traditional-lens {A = A} {B} A-set = record
+Iso-lens↠Traditional-lens {A = A} {B = B} A-set = record
   { logical-equivalence = record
     { to   = Iso-lens.traditional-lens
     ; from = Iso-lens↔Traditional-lens.from A-set unit
@@ -976,7 +975,7 @@ Iso-lens↠Traditional-lens {A = A} {B} A-set = record
 -- Iso-lens A B are isomorphic (assuming univalence).
 
 Iso-lens↔Traditional-lens :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   Is-set A →
   Iso-lens A B ↔ Traditional.Lens A B
@@ -987,7 +986,7 @@ Iso-lens↔Traditional-lens univ A-set =
 -- Higher-lens A B are isomorphic (assuming univalence).
 
 Higher-lens↔Traditional-lens :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   Is-set A →
   Higher-lens A B ↔ Traditional.Lens A B
@@ -1003,11 +1002,10 @@ Higher-lens↔Traditional-lens {A = A} {B} univ A-set =
 -- "Algebras and Update Strategies" by Johnson, Rosebrugh and Wood.
 
 Iso-lens⇔Traditional-lens :
-  ∀ {a b} {A : Set a} {B : Set b} →
   Is-set B →
   B →
   Iso-lens A B ⇔ Traditional.Lens A B
-Iso-lens⇔Traditional-lens {A = A} {B} B-set b₀ = record
+Iso-lens⇔Traditional-lens {B = B} {A = A} B-set b₀ = record
   { to   = Iso-lens.traditional-lens
   ; from = from
   }
@@ -1048,9 +1046,8 @@ Iso-lens⇔Traditional-lens {A = A} {B} B-set b₀ = record
 -- the codomain also has h-level n.
 
 h-level-respects-lens-from-inhabited :
-  ∀ {n a b} {A : Set a} {B : Set b} →
   Iso-lens A B → A → H-level n A → H-level n B
-h-level-respects-lens-from-inhabited {n} {A = A} {B} l a =
+h-level-respects-lens-from-inhabited {A = A} {B = B} {n = n} l a =
   H-level n A        ↝⟨ H-level.respects-surjection (_≃_.surjection equiv) n ⟩
   H-level n (R × B)  ↝⟨ proj₂-closure (remainder a) n ⟩□
   H-level n B        □
@@ -1061,7 +1058,6 @@ h-level-respects-lens-from-inhabited {n} {A = A} {B} l a =
 -- univalence).
 
 ¬-h-level-respects-lens :
-  ∀ {a b} →
   Univalence (a ⊔ b) →
   ¬ (∀ n {A : Set a} {B : Set b} →
      Iso-lens A B → H-level n A → H-level n B)
@@ -1077,10 +1073,9 @@ h-level-respects-lens-from-inhabited {n} {A = A} {B} l a =
 
 lens-from-proposition-to-non-set :
   Univalence (# 0) →
-  ∀ {a b} →
   ∃ λ (A : Set a) → ∃ λ (B : Set (lsuc lzero ⊔ b)) →
   Iso-lens A B × Is-proposition A × ¬ Is-set B
-lens-from-proposition-to-non-set univ {b = b} =
+lens-from-proposition-to-non-set {b = b} univ =
   ⊥ ,
   ↑ b Set ,
   (⊥ ,
@@ -1093,7 +1088,6 @@ lens-from-proposition-to-non-set univ {b = b} =
 -- Iso-lenses with contractible domains have contractible codomains.
 
 contractible-to-contractible :
-  ∀ {a b} {A : Set a} {B : Set b} →
   Iso-lens A B → Contractible A → Contractible B
 contractible-to-contractible l c =
   h-level-respects-lens-from-inhabited l (proj₁ c) c
@@ -1102,9 +1096,8 @@ contractible-to-contractible l c =
 -- remainder type is also contractible.
 
 domain-contractible⇒remainder-contractible :
-  ∀ {a b} {A : Set a} {B : Set b} →
   (l : Iso-lens A B) → Contractible A → Contractible (Iso-lens.R l)
-domain-contractible⇒remainder-contractible {A = A} {B} l =
+domain-contractible⇒remainder-contractible {A = A} {B = B} l =
   Contractible A                   ↔⟨ H-level-cong {k₂ = equivalence} ext 0 equiv ⟩
   Contractible (R × B)             ↔⟨ Contractible-commutes-with-× {k = bijection} ext ⟩
   Contractible R × Contractible B  ↝⟨ proj₁ ⟩□
@@ -1116,11 +1109,10 @@ domain-contractible⇒remainder-contractible {A = A} {B} l =
 -- type also has h-level n.
 
 remainder-has-same-h-level-as-domain :
-  ∀ {a b} {A : Set a} {B : Set b} →
   (l : Iso-lens A B) → ∀ n → H-level n A → H-level n (Iso-lens.R l)
 remainder-has-same-h-level-as-domain l zero =
   domain-contractible⇒remainder-contractible l
-remainder-has-same-h-level-as-domain {A = A} {B} l (suc n) h =
+remainder-has-same-h-level-as-domain {A = A} {B = B} l (suc n) h =
   [inhabited⇒+]⇒+ n λ r →
                              $⟨ h ⟩
     H-level (1 + n) A        ↝⟨ H-level.respects-surjection (_≃_.surjection equiv) (1 + n) ⟩
@@ -1155,7 +1147,7 @@ remainder-has-same-h-level-as-domain {A = A} {B} l (suc n) h =
 -- Contractible is closed under Iso-lens A (assuming univalence).
 
 Contractible-closed-codomain :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   Contractible B → Contractible (Iso-lens A B)
 Contractible-closed-codomain {A = A} {B} univ cB =
@@ -1167,7 +1159,7 @@ Contractible-closed-codomain {A = A} {B} univ cB =
 -- (assuming univalence).
 
 Is-proposition-closed-codomain :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   Is-proposition B → Is-proposition (Iso-lens A B)
 Is-proposition-closed-codomain {A = A} {B} univ B-prop =
@@ -1184,7 +1176,7 @@ private
   -- (assuming univalence).
 
   domain-1+-remainder-equivalence-0+⇒lens-1+ :
-    ∀ {a b} {A : Set a} {B : Set b} →
+    {A : Set a} {B : Set b} →
     Univalence (a ⊔ b) →
     ∀ n →
     H-level (1 + n) A →
@@ -1206,10 +1198,10 @@ private
 -- (assuming univalence).
 
 Is-proposition-closed-domain :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   Is-proposition A → Is-proposition (Iso-lens A B)
-Is-proposition-closed-domain {b = b} {A} {B} univ A-prop =
+Is-proposition-closed-domain {b = b} {A = A} {B = B} univ A-prop =
                                           $⟨ R₁≃R₂ ⟩
   (∀ l₁ l₂ → R l₁ ≃ R l₂)                 ↝⟨ (λ hyp l₁ l₂ → propositional⇒inhabited⇒contractible
                                                               (Eq.left-closure ext 0 (R-prop l₁))
@@ -1243,7 +1235,7 @@ Is-proposition-closed-domain {b = b} {A} {B} univ A-prop =
 -- An alternative proof.
 
 Is-proposition-closed-domain′ :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   Is-proposition A → Is-proposition (Iso-lens A B)
 Is-proposition-closed-domain′ {A = A} {B} univ A-prop =
@@ -1261,7 +1253,7 @@ Is-proposition-closed-domain′ {A = A} {B} univ A-prop =
 -- Iso-lens A B is not?
 
 Is-set-closed-domain :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   Is-set A → Is-set (Iso-lens A B)
 Is-set-closed-domain {A = A} {B} univ A-set =
@@ -1279,7 +1271,7 @@ Is-set-closed-domain {A = A} {B} univ A-set =
 -- stronger.
 
 domain-0+⇒lens-1+ :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   ∀ n → H-level n A → H-level (1 + n) (Iso-lens A B)
 domain-0+⇒lens-1+ {A = A} {B} univ n hA =
@@ -1295,7 +1287,7 @@ domain-0+⇒lens-1+ {A = A} {B} univ n hA =
 -- An alternative proof.
 
 domain-0+⇒lens-1+′ :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   ∀ n → H-level n A → H-level (1 + n) (Iso-lens A B)
 domain-0+⇒lens-1+′ {A = A} {B} univ n hA =
@@ -1336,7 +1328,6 @@ domain-0+⇒lens-1+′ {A = A} {B} univ n hA =
 -- Σ-type.
 
 no-first-projection-lens :
-  ∀ {a b} →
   ∃ λ (A : Set a) → ∃ λ (B : A → Set b) →
     ¬ Iso-lens (Σ A B) A
 no-first-projection-lens =
@@ -1352,7 +1343,7 @@ module Iso-lens-combinators where
   -- function is required to be the identity (assuming univalence).
 
   id-unique :
-    ∀ {a} {A : Set a} →
+    {A : Set a} →
     Univalence a →
     (l₁ l₂ : ∃ λ (l : Iso-lens A A) →
                  ∀ a → Iso-lens.get l a ≡ a) →
@@ -1429,7 +1420,7 @@ module Iso-lens-combinators where
 
   ∘-unique :
     let open Iso-lens in
-    ∀ {a b c} {A : Set a} {B : Set b} {C : Set c} →
+    {A : Set a} {C : Set c} →
     Univalence (a ⊔ c) →
     (∥ C ∥ → C) →
     (comp₁ comp₂ :
@@ -1450,8 +1441,7 @@ module Iso-lens-combinators where
 
   -- Identity lens.
 
-  id : ∀ {a} {A : Set a} →
-       Iso-lens A A
+  id : Iso-lens A A
   id {A = A} =
     isomorphism-to-lens
       (A          ↝⟨ inverse $ drop-⊤-left-× (λ _ → Bij.↑↔) ⟩□
@@ -1469,7 +1459,7 @@ module Iso-lens-combinators where
   infix 9 ⟨_,_⟩_∘_
 
   ⟨_,_⟩_∘_ :
-    ∀ a b {c} {A : Set (a ⊔ b ⊔ c)} {B : Set (b ⊔ c)} {C : Set c} →
+    ∀ a b {A : Set (a ⊔ b ⊔ c)} {B : Set (b ⊔ c)} {C : Set c} →
     Iso-lens B C → Iso-lens A B → Iso-lens A C
   ⟨_,_⟩_∘_ _ _ {A = A} {B} {C} l₁ l₂ =
     (R l₂ × R l₁) ,
@@ -1484,9 +1474,9 @@ module Iso-lens-combinators where
   infixr 9 _∘_
 
   _∘_ :
-    ∀ {a b c} {A : Set (a ⊔ b ⊔ c)} {B : Set (b ⊔ c)} {C : Set c} →
+    {A : Set (a ⊔ b ⊔ c)} {B : Set (b ⊔ c)} {C : Set c} →
     Iso-lens B C → Iso-lens A B → Iso-lens A C
-  _∘_ {a} {b} l₁ l₂ = ⟨ a , b ⟩ l₁ ∘ l₂
+  _∘_ {a = a} {b = b} l₁ l₂ = ⟨ a , b ⟩ l₁ ∘ l₂
 
   -- Other definitions of composition match ⟨_,_⟩_∘_, if the codomain
   -- type is inhabited whenever it is merely inhabited, and the
@@ -1495,7 +1485,7 @@ module Iso-lens-combinators where
 
   composition≡∘ :
     let open Iso-lens in
-    ∀ {a b c} {A : Set (a ⊔ b ⊔ c)} {B : Set (b ⊔ c)} {C : Set c} →
+    {A : Set (a ⊔ b ⊔ c)} {B : Set (b ⊔ c)} {C : Set c} →
     Univalence (a ⊔ b ⊔ c) →
     (∥ C ∥ → C) →
     (comp : Iso-lens B C → Iso-lens A B → Iso-lens A C) →
@@ -1509,7 +1499,7 @@ module Iso-lens-combinators where
   -- univalence).
 
   associativity :
-    ∀ a b c {d}
+    ∀ a b c
       {A : Set (a ⊔ b ⊔ c ⊔ d)} {B : Set (b ⊔ c ⊔ d)}
       {C : Set (c ⊔ d)} {D : Set d} →
     Univalence (a ⊔ b ⊔ c ⊔ d) →
@@ -1523,7 +1513,7 @@ module Iso-lens-combinators where
              (Eq.↔⇒≃ (inverse ×-assoc) , λ _ → refl)
 
   left-identity :
-    ∀ a {b} {A : Set (a ⊔ b)} {B : Set b} →
+    ∀ a {A : Set (a ⊔ b)} {B : Set b} →
     Univalence (a ⊔ b) →
     (l : Iso-lens A B) →
     ⟨ a , lzero ⟩ id ∘ l ≡ l
@@ -1551,11 +1541,11 @@ module Iso-lens-combinators where
       }
 
   right-identity :
-    ∀ a {b} {A : Set (a ⊔ b)} {B : Set b} →
+    ∀ a {A : Set (a ⊔ b)} {B : Set b} →
     Univalence (a ⊔ b) →
     (l : Iso-lens A B) →
     ⟨ lzero , a ⟩ l ∘ id ≡ l
-  right-identity a {b} {A} univ l =
+  right-identity _ {A = A} univ l =
     _↔_.from (equality-characterisation₂ univ)
       ( ((↑ _ ⊤ × ∥ A ∥) × R  ↔⟨ drop-⊤-left-× (λ _ → Bij.↑↔) ×-cong F.id ⟩
          ∥ A ∥ × R            ↔⟨ lemma ⟩□

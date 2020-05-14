@@ -20,12 +20,18 @@ open import Univalence-axiom equality-with-J
 
 import Lens.Non-dependent
 
+private
+  variable
+    a b c p         : Level
+    A B C D         : Set a
+    u v x₁ x₂ y₁ y₂ : A
+
 ------------------------------------------------------------------------
 -- Traditional lenses
 
 -- Lenses.
 
-record Lens {a b} (A : Set a) (B : Set b) : Set (a ⊔ b) where
+record Lens (A : Set a) (B : Set b) : Set (a ⊔ b) where
   field
     -- Getter and setter.
     get : A → B
@@ -41,10 +47,13 @@ record Lens {a b} (A : Set a) (B : Set b) : Set (a ⊔ b) where
   modify : (B → B) → A → A
   modify f x = set x (f (get x))
 
+private
+  variable
+    l₁ l₂ : Lens A B
+
 -- The record type above is isomorphic to a nested Σ-type.
 
 Lens-as-Σ :
-  ∀ {a b} {A : Set a} {B : Set b} →
   Lens A B ↔
   ∃ λ (get : A → B) →
   ∃ λ (set : A → B → A) →
@@ -77,7 +86,6 @@ Lens-as-Σ = record
 abstract
 
   equality-characterisation :
-    ∀ {a b} {A : Set a} {B : Set b} {l₁ l₂ : Lens A B} →
     let open Lens in
 
     l₁ ≡ l₂
@@ -101,7 +109,7 @@ abstract
                      ≡
                    set-set l₂ a b₁ b₂)
 
-  equality-characterisation {A = A} {B} {l₁} {l₂} =
+  equality-characterisation {l₁ = l₁} {l₂ = l₂} =
     l₁ ≡ l₂                                                          ↔⟨ Eq.≃-≡ (Eq.↔⇒≃ (inverse Lens-as-Σ)) ⟩
 
     l₁′ ≡ l₂′                                                        ↔⟨ Eq.≃-≡ (Eq.↔⇒≃ (inverse Σ-assoc)) ⟩
@@ -335,7 +343,6 @@ abstract
     abstract
 
       lemma₁ :
-        ∀ {a b c} {A : Set a} {B : Set b} {u v} →
         ∀ (C : A → B → Set c) (eq : u ≡ v) {f g} →
         (subst (λ x → ∀ y → C x y) eq f ≡ g)
           ↔
@@ -347,8 +354,7 @@ abstract
         (∀ y → subst (λ x → C x y) eq (f y) ≡ g y)      □
 
     lemma₂ :
-      ∀ {a b p} {A : Set a} {B : Set b} {x₁ x₂ : A} {y₁ y₂ : B}
-      (P : A × B → Set p) (x₁≡x₂ : x₁ ≡ x₂) (y₁≡y₂ : y₁ ≡ y₂) {p p′} →
+      ∀ (P : A × B → Set p) (x₁≡x₂ : x₁ ≡ x₂) (y₁≡y₂ : y₁ ≡ y₂) {p p′} →
       (subst P (_↔_.to ≡×≡↔≡ (x₁≡x₂ , y₁≡y₂)) p ≡ p′)
         ↔
       (subst (λ x → P (x , y₂)) x₁≡x₂ (subst (λ y → P (x₁ , y)) y₁≡y₂ p)
@@ -362,7 +368,7 @@ module Lens-combinators where
 
   -- Identity lens.
 
-  id : ∀ {a} {A : Set a} → Lens A A
+  id : Lens A A
   id = record
     { get     = λ a      → a
     ; set     = λ _ a    → a
@@ -379,8 +385,7 @@ module Lens-combinators where
 
   infixr 9 _∘_
 
-  _∘_ : ∀ {a b c} {A : Set a} {B : Set b} {C : Set c} →
-        Lens B C → Lens A B → Lens A C
+  _∘_ : Lens B C → Lens A B → Lens A C
   l₁ ∘ l₂ = record
     { get     = λ a → get l₁ (get l₂ a)
     ; set     = λ a c →
@@ -416,8 +421,7 @@ module Lens-combinators where
 
   -- id is a left identity of _∘_.
 
-  left-identity : ∀ {a b} {A : Set a} {B : Set b} →
-                  (l : Lens A B) → id ∘ l ≡ l
+  left-identity : (l : Lens A B) → id ∘ l ≡ l
   left-identity l =
     _↔_.from equality-characterisation
              (refl , refl , lemma₁ , lemma₂ , lemma₃)
@@ -440,8 +444,7 @@ module Lens-combinators where
 
   -- id is a right identity of _∘_.
 
-  right-identity : ∀ {a b} {A : Set a} {B : Set b} →
-                   (l : Lens A B) → l ∘ id ≡ l
+  right-identity : (l : Lens A B) → l ∘ id ≡ l
   right-identity l =
     _↔_.from equality-characterisation
              (refl , refl , lemma₁ , lemma₂ , lemma₃)
@@ -465,7 +468,6 @@ module Lens-combinators where
   -- _∘_ is associative.
 
   associativity :
-    ∀ {a b c d} {A : Set a} {B : Set b} {C : Set c} {D : Set d} →
     (l₁ : Lens C D) (l₂ : Lens B C) (l₃ : Lens A B) →
     l₁ ∘ (l₂ ∘ l₃) ≡ (l₁ ∘ l₂) ∘ l₃
   associativity l₁ l₂ l₃ =
@@ -663,10 +665,9 @@ module Lens-combinators where
 -- (A → B) × ((a : A) → a ≡ a).
 
 lens-to-proposition↔ :
-  ∀ {a b} {A : Set a} {B : Set b} →
   Is-proposition B →
   Lens A B ↔ (A → B) × ((a : A) → a ≡ a)
-lens-to-proposition↔ {A = A} {B} B-prop =
+lens-to-proposition↔ {B = B} {A = A} B-prop =
   Lens A B                                                          ↝⟨ Lens-as-Σ ⟩
 
   (∃ λ (get : A → B) →
@@ -741,9 +742,7 @@ lens-to-proposition↔ {A = A} {B} B-prop =
 
 -- Lens A ⊤ is isomorphic to (a : A) → a ≡ a.
 
-lens-to-⊤↔ :
-  ∀ {a} {A : Set a} →
-  Lens A ⊤ ↔ ((a : A) → a ≡ a)
+lens-to-⊤↔ : Lens A ⊤ ↔ ((a : A) → a ≡ a)
 lens-to-⊤↔ {A = A} =
   Lens A ⊤                     ↝⟨ lens-to-proposition↔ (mono₁ 0 ⊤-contractible) ⟩
   (A → ⊤) × ((a : A) → a ≡ a)  ↝⟨ drop-⊤-left-× (λ _ → →-right-zero) ⟩□
@@ -751,10 +750,8 @@ lens-to-⊤↔ {A = A} =
 
 -- Lens A ⊥ is isomorphic to ¬ A.
 
-lens-to-⊥↔ :
-  ∀ {a b} {A : Set a} →
-  Lens A (⊥ {ℓ = b}) ↔ ¬ A
-lens-to-⊥↔ {a} {b} {A} =
+lens-to-⊥↔ : Lens A (⊥ {ℓ = b}) ↔ ¬ A
+lens-to-⊥↔ {A = A} =
   Lens A ⊥                     ↝⟨ lens-to-proposition↔ ⊥-propositional ⟩
   (A → ⊥) × ((a : A) → a ≡ a)  ↝⟨ →-cong ext F.id (Bij.⊥↔uninhabited ⊥-elim)
                                     ×-cong
@@ -777,9 +774,7 @@ lens-to-⊥↔ {a} {b} {A} =
 
 -- Iso-lens ⊥ B is isomorphic to the unit type.
 
-lens-from-⊥↔⊤ :
-  ∀ {a b} {B : Set b} →
-  Lens (⊥ {ℓ = a}) B ↔ ⊤
+lens-from-⊥↔⊤ : Lens (⊥ {ℓ = a}) B ↔ ⊤
 lens-from-⊥↔⊤ =
   _⇔_.to contractible⇔↔⊤ $
     record
@@ -804,9 +799,8 @@ lens-from-⊥↔⊤ =
 -- then the codomain also has h-level n.
 
 h-level-respects-lens-from-inhabited :
-  ∀ n {a b} {A : Set a} {B : Set b} →
-  Lens A B → A → H-level n A → H-level n B
-h-level-respects-lens-from-inhabited n {A = A} {B} l a =
+  ∀ n → Lens A B → A → H-level n A → H-level n B
+h-level-respects-lens-from-inhabited {A = A} {B = B} n l a =
   H-level n A  ↝⟨ H-level.respects-surjection surj n ⟩
   H-level n B  □
   where
@@ -826,7 +820,6 @@ h-level-respects-lens-from-inhabited n {A = A} {B} l a =
 -- Lenses with contractible domains have contractible codomains.
 
 contractible-to-contractible :
-  ∀ {a b} {A : Set a} {B : Set b} →
   Lens A B → Contractible A → Contractible B
 contractible-to-contractible l c =
   h-level-respects-lens-from-inhabited _ l (proj₁ c) c
@@ -835,7 +828,6 @@ contractible-to-contractible l c =
 -- that A is inhabited), then Lens a b also has h-level n.
 
 lens-preserves-h-level :
-  ∀ {a b} {A : Set a} {B : Set b} →
   ∀ n → H-level n A → (A → H-level n B) →
   H-level n (Lens A B)
 lens-preserves-h-level n hA hB =
@@ -858,7 +850,6 @@ lens-preserves-h-level n hA hB =
 -- If A has positive h-level n, then Lens A B also has h-level n.
 
 lens-preserves-h-level-of-domain :
-  ∀ {a b} {A : Set a} {B : Set b} →
   ∀ n → H-level (1 + n) A → H-level (1 + n) (Lens A B)
 lens-preserves-h-level-of-domain n hA =
   [inhabited⇒+]⇒+ n λ l →
@@ -872,12 +863,12 @@ lens-preserves-h-level-of-domain n hA =
   Univalence (# 0) →
   ∃ λ (A : Set₁) → ¬ Is-proposition (Lens A ⊤)
 ¬-lens-to-⊤-propositional univ =
-  A , (
-  Is-proposition (Lens A ⊤)         ↝⟨ H-level.respects-surjection (_↔_.surjection lens-to-⊤↔) 1 ⟩
-  Is-proposition ((a : A) → a ≡ a)  ↝⟨ proj₂ $ ¬-type-of-refl-propositional ext univ ⟩□
-  ⊥₀                                □)
+  A′ , (
+  Is-proposition (Lens A′ ⊤)         ↝⟨ H-level.respects-surjection (_↔_.surjection lens-to-⊤↔) 1 ⟩
+  Is-proposition ((a : A′) → a ≡ a)  ↝⟨ proj₂ $ ¬-type-of-refl-propositional ext univ ⟩□
+  ⊥₀                                 □)
   where
-  A = _
+  A′ = _
 
 ------------------------------------------------------------------------
 -- An existence result
@@ -886,7 +877,6 @@ lens-preserves-h-level-of-domain n hA =
 -- Σ-type.
 
 no-first-projection-lens :
-  ∀ {a b} →
   ∃ λ (A : Set a) → ∃ λ (B : A → Set b) →
     ¬ Lens (Σ A B) A
 no-first-projection-lens =

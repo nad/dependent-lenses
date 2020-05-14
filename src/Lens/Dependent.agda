@@ -41,17 +41,21 @@ open import Univalence-axiom equality-with-J
 
 open import Lens.Non-dependent.Alternative as ND using (Iso-lens)
 
+private
+  variable
+    a b b₁ b₂ b₃ c r r₁ r₂ r₃ : Level
+    A                         : Set a
+
 ------------------------------------------------------------------------
 -- Dependent lenses with "remainder types" visible in the type
 
 -- If Lens₃ A R B is inhabited, then a value of type A can be split up
 -- into a "remainder" r of type R and a value of type B r.
 
-Lens₃ : ∀ {a r b} → Set a → (R : Set r) → (R → Set b) → Set _
+Lens₃ : Set a → (R : Set r) → (R → Set b) → Set _
 Lens₃ A R B = A ≃ Σ R B
 
-module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
-             (lens : Lens₃ A R B) where
+module Lens₃ {R : Set r} {B : R → Set b} (lens : Lens₃ A R B) where
 
   open _≃_
 
@@ -140,7 +144,7 @@ module Lens₃ {a r b} {A : Set a} {R : Set r} {B : R → Set b}
 
 -- Identity lens.
 
-id₃ : ∀ {a} {A : Set a} → Lens₃ A ⊤ (λ _ → A)
+id₃ : Lens₃ A ⊤ (λ _ → A)
 id₃ {A = A} =
   A      ↔⟨ inverse ×-left-identity ⟩□
   ⊤ × A  □
@@ -149,11 +153,11 @@ id₃ {A = A} =
 
 infixr 9 _₃∘₃_
 
-_₃∘₃_ : ∀ {a r₁ b₁ r₂ b₂} {A : Set a} {R₁ : Set r₁} {B₁ : R₁ → Set b₁}
-          {R₂ : R₁ → Set r₂} {B₂ : (r : R₁) → R₂ r → Set b₂} →
+_₃∘₃_ : {R₁ : Set r₁} {B₁ : R₁ → Set b₁}
+        {R₂ : R₁ → Set r₂} {B₂ : (r : R₁) → R₂ r → Set b₂} →
         (∀ {r} → Lens₃ (B₁ r) (R₂ r) (B₂ r)) → Lens₃ A R₁ B₁ →
         Lens₃ A (Σ R₁ R₂) (uncurry B₂)
-_₃∘₃_ {A = A} {R₁} {B₁} {R₂} {B₂} l₁ l₂ =
+_₃∘₃_ {A = A} {R₁ = R₁} {B₁ = B₁} {R₂ = R₂} {B₂ = B₂} l₁ l₂ =
   A                             ↔⟨ l₂ ⟩
   Σ R₁ B₁                       ↔⟨ ∃-cong (λ _ → l₁) ⟩
   Σ R₁ (λ r → Σ (R₂ r) (B₂ r))  ↔⟨ Σ-assoc ⟩□
@@ -165,7 +169,7 @@ _₃∘₃_ {A = A} {R₁} {B₁} {R₂} {B₂} l₁ l₂ =
 -- id₃ and _₃∘₃_ form a kind of monoid.
 
 left-identity₃ :
-  ∀ {a r b} {A : Set a} {R : Set r} {B : R → Set b} →
+  {R : Set r} {B : R → Set b} →
   (l : Lens₃ A R B) →
   id₃ ₃∘₃ l
     ≡
@@ -175,7 +179,7 @@ left-identity₃ :
 left-identity₃ _ = Eq.lift-equality ext refl
 
 right-identity₃ :
-  ∀ {a r b} {A : Set a} {R : Set r} {B : R → Set b} →
+  {R : Set r} {B : R → Set b} →
   (l : Lens₃ A R B) →
   l ₃∘₃ id₃
     ≡
@@ -185,11 +189,10 @@ right-identity₃ :
 right-identity₃ _ = Eq.lift-equality ext refl
 
 associativity₃ :
-  ∀ {a r₁ b₁ r₂ b₂ r₃ b₃}
-    {A : Set a} {R₁ : Set r₁} {B₁ : R₁ → Set b₁}
-    {R₂ : R₁ → Set r₂} {B₂ : (r₁ : R₁) → R₂ r₁ → Set b₂}
-    {R₃ : (r₁ : R₁) → R₂ r₁ → Set r₃}
-    {B₃ : (r₁ : R₁) (r₂ : R₂ r₁) → R₃ r₁ r₂ → Set b₃} →
+  {R₁ : Set r₁} {B₁ : R₁ → Set b₁}
+  {R₂ : R₁ → Set r₂} {B₂ : (r₁ : R₁) → R₂ r₁ → Set b₂}
+  {R₃ : (r₁ : R₁) → R₂ r₁ → Set r₃}
+  {B₃ : (r₁ : R₁) (r₂ : R₂ r₁) → R₃ r₁ r₂ → Set b₃} →
   (l₁ : ∀ {r₁ r₂} → Lens₃ (B₂ r₁ r₂) (R₃ r₁ r₂) (B₃ r₁ r₂))
   (l₂ : ∀ {r} → Lens₃ (B₁ r) (R₂ r) (B₂ r))
   (l₃ : Lens₃ A R₁ B₁) →
@@ -205,8 +208,8 @@ associativity₃ _ _ _ = Eq.lift-equality ext refl
 
 -- One definition.
 
-Lens : ∀ {a b} (A : Set a) → (A → Set b) → Set (lsuc (a ⊔ b))
-Lens {a} {b} A B =
+Lens : (A : Set a) → (A → Set b) → Set (lsuc (a ⊔ b))
+Lens {a = a} {b = b} A B =
   ∃ λ (R : Set (a ⊔ b)) →
   ∃ λ (B′ : R → Set b) →
   ∃ λ (lens : Lens₃ A R B′) →
@@ -217,8 +220,8 @@ Lens {a} {b} A B =
 -- An alternative definition. This definition is pointwise isomorphic
 -- to the previous one, see Lens↔Lens′ below.
 
-Lens′ : ∀ {a b} (A : Set a) → (A → Set b) → Set (lsuc (a ⊔ b))
-Lens′ {a} {b} A B =
+Lens′ : (A : Set a) → (A → Set b) → Set (lsuc (a ⊔ b))
+Lens′ {a = a} {b = b} A B =
   ∃ λ (get : (a : A) → B a) →
   ∃ λ (R : Set (a ⊔ b)) →
   ∃ λ (remainder : A → R) →
@@ -229,7 +232,7 @@ Lens′ {a} {b} A B =
   Eq.Is-equivalence {B = ∃ B′}
                     (λ a → remainder a , subst P.id variant (get a))
 
-module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
+module Lens {A : Set a} {B : A → Set b} (l : Lens A B) where
 
   -- The remainder type: what remains of A when B is removed
   -- (roughly).
@@ -536,7 +539,7 @@ module Lens {a b} {A : Set a} {B : A → Set b} (l : Lens A B) where
 -- codomain's universe, codomain-set-≃ is equal to the identity.
 
 codomain-set-≃≡id :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {B : Set b} →
   Is-set (Set b) →
   (l : Lens A (λ _ → B)) →
   ∀ {a b} → Lens.codomain-set-≃ l {a = a} {b = b} ≡ Eq.id
@@ -555,7 +558,7 @@ codomain-set-≃≡id uip l =
 -- univalence).
 
 Lens-cong :
-  ∀ {a b} {A₁ A₂ : Set a} {B₁ : A₁ → Set b} {B₂ : A₂ → Set b} →
+  {A₁ A₂ : Set a} {B₁ : A₁ → Set b} {B₂ : A₂ → Set b} →
   Univalence b →
   (A₁≃A₂ : A₁ ≃ A₂) →
   (∀ a → B₁ a ≃ B₂ (_≃_.to A₁≃A₂ a)) →
@@ -589,12 +592,12 @@ Lens-cong {A₁ = A₁} {A₂} {B₁} {B₂} univ A₁≃A₂ B₁≃B₂ =
 -- (x : A) → B x (assuming univalence).
 
 lens-to-proposition↔get :
-  ∀ {a b} {A : Set a} {B : A → Set b} →
+  {A : Set a} {B : A → Set b} →
   Univalence (a ⊔ b) →
   Univalence b →
   (∀ x → Is-proposition (B x)) →
   Lens A B ↔ ((x : A) → B x)
-lens-to-proposition↔get {b = b} {A} {B} univ₁ univ₂ B-prop =
+lens-to-proposition↔get {b = b} {A = A} {B = B} univ₁ univ₂ B-prop =
   (∃ λ (R : Set _) →
    ∃ λ (B′ : R → Set _) →
    ∃ λ (lens : A ≃ Σ R B′) →
@@ -785,7 +788,7 @@ lens-to-proposition↔get {b = b} {A} {B} univ₁ univ₂ B-prop =
 -- (assuming univalence).
 
 lens-to-contractible↔⊤ :
-  ∀ {a b} {A : Set a} {B : A → Set b} →
+  {A : Set a} {B : A → Set b} →
   Univalence (a ⊔ b) →
   Univalence b →
   (∀ x → Contractible (B x)) →
@@ -800,7 +803,7 @@ lens-to-contractible↔⊤ {A = A} {B} univ₁ univ₂ cB =
 -- Lens A (const ⊥) is isomorphic to ¬ A (assuming univalence).
 
 lens-to-⊥↔¬ :
-  ∀ {a b} {A : Set a} →
+  {A : Set a} →
   Univalence (a ⊔ b) →
   Univalence b →
   Lens A (const (⊥ {ℓ = b})) ↔ ¬ A
@@ -821,11 +824,11 @@ lens-to-⊥↔¬ {A = A} univ₁ univ₂ =
 -- be changed so that it can be proved?
 
 non-dependent-lenses-isomorphic :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {B : Set b} →
   (∀ {B′} → Is-proposition (B′ ≡ B)) →
   ∃ λ (iso : Lens A (const B) ↔ Iso-lens A B) →
     ∀ {l a} → Lens.get l a ≡ ND.Iso-lens.get (_↔_.to iso l) a
-non-dependent-lenses-isomorphic {a} {A = A} {B} ≡B-prop =
+non-dependent-lenses-isomorphic {A = A} {B = B} ≡B-prop =
   (Lens A (const B)  ↝⟨ ∃-cong lemma ⟩□
    Iso-lens A B      □)
   , λ {l a} →
@@ -917,7 +920,7 @@ non-dependent-lenses-isomorphic {a} {A = A} {B} ≡B-prop =
 -- holds for B.
 
 non-dependent-lenses-isomorphic-UIP :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  {B : Set b} →
   Is-set (Set b) →
   ∃ λ (iso : Lens A (const B) ↔ Iso-lens A B) →
     ∀ {l a} → Lens.get l a ≡ ND.Iso-lens.get (_↔_.to iso l) a
@@ -926,9 +929,9 @@ non-dependent-lenses-isomorphic-UIP uip =
 
 -- Lens and Lens′ are pointwise isomorphic.
 
-Lens↔Lens′ : ∀ {a b} {A : Set a} {B : A → Set b} →
+Lens↔Lens′ : {A : Set a} {B : A → Set b} →
              Lens A B ↔ Lens′ A B
-Lens↔Lens′ {a} {b} {A} {B} =
+Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
   (∃ λ (R : Set (a ⊔ b)) →
    ∃ λ (B′ : R → Set b) →
    ∃ λ (lens : Lens₃ A R B′) →
@@ -1144,7 +1147,7 @@ Lens↔Lens′ {a} {b} {A} {B} =
 -- Conversion from Lens₃ to Lens.
 
 Lens₃-to-Lens :
-  ∀ {a b} {A : Set a} {R : Set (a ⊔ b)} {B : R → Set b} →
+  {A : Set a} {R : Set (a ⊔ b)} {B : R → Set b} →
   (l : Lens₃ A R B) →
   Lens A (B ⊚ Lens₃.remainder l)
 Lens₃-to-Lens {A = A} {R} {B} l =
@@ -1160,10 +1163,10 @@ Lens₃-to-Lens {A = A} {R} {B} l =
 -- A variant of Lens₃-to-Lens.
 
 Lens₃-to-Lens′ :
-  ∀ {a r b} {A : Set (a ⊔ r)} {R : Set r} {B : R → Set b} →
+  {A : Set (a ⊔ r)} {R : Set r} {B : R → Set b} →
   (l : Lens₃ A R B) →
   Lens A (B ⊚ Lens₃.remainder l)
-Lens₃-to-Lens′ {a} {b = b} {A} {R} {B} l =
+Lens₃-to-Lens′ {a = a} {b = b} {A = A} {R = R} {B = B} l =
   Lens₃-to-Lens
     (A                                       ↝⟨ l ⟩
      Σ R B                                   ↝⟨ Σ-cong (inverse Bij.↑↔) (λ _ → F.id) ⟩□
@@ -1171,8 +1174,7 @@ Lens₃-to-Lens′ {a} {b = b} {A} {R} {B} l =
 
 -- Identity lens.
 
-id : ∀ {a} {A : Set a} →
-     Lens A (λ _ → A)
+id : Lens A (λ _ → A)
 id {A = A} = Lens₃-to-Lens′
   (A      ↔⟨ inverse ×-left-identity ⟩□
    ⊤ × A  □)
@@ -1184,8 +1186,8 @@ id {A = A} = Lens₃-to-Lens′
 infixr 9 _∘₃_
 
 _∘₃_ :
-  ∀ {a b c} {A : Set (a ⊔ b ⊔ c)} {R : Set (a ⊔ b ⊔ c)}
-    {B : R → Set (b ⊔ c)} {C : {r : R} → B r → Set c} →
+  {A : Set (a ⊔ b ⊔ c)} {R : Set (a ⊔ b ⊔ c)}
+  {B : R → Set (b ⊔ c)} {C : {r : R} → B r → Set c} →
   (∀ {r} → Lens (B r) C) → (l₂ : Lens₃ A R B) →
   Lens A (C ⊚ Lens₃.get l₂)
 _∘₃_ {R = R} l₁ l₂ =
@@ -1203,8 +1205,7 @@ _∘₃_ {R = R} l₁ l₂ =
 
 infixr 9 _⨾_
 
-_⨾_ : ∀ {a b c}
-        {A : Set (a ⊔ b ⊔ c)} {B : A → Set (b ⊔ c)} {C : A → Set c} →
+_⨾_ : {A : Set (a ⊔ b ⊔ c)} {B : A → Set (b ⊔ c)} {C : A → Set c} →
       (l₁ : Lens A B) →
       let open Lens l₁; open _≃_ lens in
       (∀ {r} → Lens (B′ r) (λ b′ → C (from (r , b′)))) →
