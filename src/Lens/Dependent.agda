@@ -166,7 +166,7 @@ _₃∘₃_ {A = A} {R₁ = R₁} {B₁ = B₁} {R₂ = R₂} {B₂ = B₂} l₁
 ------------------------------------------------------------------------
 -- Some Lens₃ properties
 
--- id₃ and _₃∘₃_ form a kind of monoid.
+-- id₃ and _₃∘₃_ form a kind of precategory.
 
 left-identity₃ :
   {R : Set r} {B : R → Set b} →

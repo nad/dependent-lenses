@@ -1495,7 +1495,7 @@ module Iso-lens-combinators where
   composition≡∘ univ ∥C∥→C comp set-comp =
     ∘-unique univ ∥C∥→C (comp , set-comp) (_ , λ _ _ _ _ → refl)
 
-  -- Identity and composition form a kind of monoid (assuming
+  -- Identity and composition form a kind of precategory (assuming
   -- univalence).
 
   associativity :
