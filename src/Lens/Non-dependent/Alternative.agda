@@ -382,28 +382,43 @@ lenses-equal-if-setters-equal {A = A} {B = B}
     R l₂ × B  ↔⟨ ×-comm ⟩□
     B × R l₂  □
 
+  to-BR≃BR :
+    ∀ b b′ r →
+    to BR≃BR (b , r) ≡ (b , remainder l₂ (from (equiv l₁) (r , b′)))
+  to-BR≃BR b b′ r =
+    swap (to (equiv l₂) (from (equiv l₁) (swap (b , r))))      ≡⟨ cong swap lemma ⟩
+    swap (swap (b , remainder l₂ (from (equiv l₁) (r , b′))))  ≡⟨⟩
+    b , remainder l₂ (from (equiv l₁) (r , b′))                ∎
+    where
+    lemma =
+      to (equiv l₂) (from (equiv l₁) (swap (b , r)))             ≡⟨⟩
+
+      to (equiv l₂) (from (equiv l₁) (r , b))                    ≡⟨ cong (λ r → to (equiv l₂) (from (equiv l₁) (proj₁ r , b))) $ sym $
+                                                                    right-inverse-of (equiv l₁) _ ⟩
+      to (equiv l₂) (from (equiv l₁)
+        (proj₁ (to (equiv l₁) (from (equiv l₁) (r , b′))) , b))  ≡⟨⟩
+
+      to (equiv l₂) (set l₁ (from (equiv l₁) (r , b′)) b)        ≡⟨ cong (to (equiv l₂)) $ setters-equal _ _ ⟩
+
+      to (equiv l₂) (set l₂ (from (equiv l₁) (r , b′)) b)        ≡⟨⟩
+
+      to (equiv l₂) (from (equiv l₂)
+        (remainder l₂ (from (equiv l₁) (r , b′)) , b))           ≡⟨ right-inverse-of (equiv l₂) _ ⟩
+
+      remainder l₂ (from (equiv l₁) (r , b′)) , b                ≡⟨⟩
+
+      swap (b , remainder l₂ (from (equiv l₁) (r , b′)))         ∎
+
   f : R l₁ → R l₂
   f r = remainder l₂ (from (equiv l₁) (r , ∥B∥→B (inhabited l₁ r)))
 
   id-f≃ : Eq.Is-equivalence (Σ-map P.id f)
   id-f≃ = Eq.respects-extensional-equality
-    (λ { (b , r) → cong (uncurry λ x y → (y , x)) (
-         let b′ = ∥B∥→B (inhabited l₁ r) in
-
-         to (equiv l₂) (from (equiv l₁) (r , b))                    ≡⟨ cong (λ p → to (equiv l₂) (from (equiv l₁) (proj₁ p , b))) $
-                                                                         sym $ right-inverse-of (equiv l₁) _ ⟩
-         to (equiv l₂) (from (equiv l₁)
-           (proj₁ (to (equiv l₁) (from (equiv l₁) (r , b′))) , b))  ≡⟨⟩
-
-         to (equiv l₂) (set l₁ (from (equiv l₁) (r , b′)) b)        ≡⟨ cong (to (equiv l₂)) $ setters-equal _ _ ⟩
-
-         to (equiv l₂) (set l₂ (from (equiv l₁) (r , b′)) b)        ≡⟨⟩
-
-         to (equiv l₂)
-            (from (equiv l₂)
-                  (remainder l₂ (from (equiv l₁) (r , b′)) , b))    ≡⟨ right-inverse-of (equiv l₂) _ ⟩∎
-
-         (remainder l₂ (from (equiv l₁) (r , b′)) , b)              ∎) })
+    (λ (b , r) →
+       to BR≃BR (b , r)                                                 ≡⟨ to-BR≃BR _ _ _ ⟩
+       b , remainder l₂ (from (equiv l₁) (r , ∥B∥→B (inhabited l₁ r)))  ≡⟨⟩
+       b , f r                                                          ≡⟨⟩
+       Σ-map P.id f (b , r)                                             ∎)
     (is-equivalence BR≃BR)
 
   f≃ : Eq.Is-equivalence f
