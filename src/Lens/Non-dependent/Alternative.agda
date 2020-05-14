@@ -1135,7 +1135,7 @@ remainder-has-same-h-level-as-domain {A = A} {B} l (suc n) h =
 -- contractibility of Iso-lens A B (assuming univalence).
 
 ¬-Contractible-closed-domain :
-  ∀ {a b} {A : Set a} {B : Set b} →
+  ∀ {a b} →
   Univalence (a ⊔ b) →
   ¬ ({A : Set a} {B : Set b} →
      Contractible A → Contractible (Iso-lens A B))
