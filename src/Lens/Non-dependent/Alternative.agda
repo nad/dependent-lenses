@@ -1360,9 +1360,9 @@ module Iso-lens-combinators where
   id-unique :
     {A : Set a} →
     Univalence a →
-    (l₁ l₂ : ∃ λ (l : Iso-lens A A) →
-                 ∀ a → Iso-lens.get l a ≡ a) →
-    proj₁ l₁ ≡ proj₁ l₂
+    ((l₁ , _) (l₂ , _) :
+       ∃ λ (l : Iso-lens A A) → ∀ a → Iso-lens.get l a ≡ a) →
+    l₁ ≡ l₂
   id-unique {A = A} univ l₁ l₂ =
     _↔_.from (equality-characterisation₃ univ)
       ( R₁≃R₂
@@ -1374,8 +1374,8 @@ module Iso-lens-combinators where
       )
     where
     remainder-propositional :
-      (l : ∃ λ (l : Iso-lens A A) → ∀ a → Iso-lens.get l a ≡ a) →
-      Is-proposition (Iso-lens.R (proj₁ l))
+      ((l , _) : ∃ λ (l : Iso-lens A A) → ∀ a → Iso-lens.get l a ≡ a) →
+      Is-proposition (Iso-lens.R l)
     remainder-propositional (l , get≡id) =
       [inhabited⇒+]⇒+ 0 λ r →
         Trunc.rec
@@ -1438,11 +1438,11 @@ module Iso-lens-combinators where
     {A : Set a} {C : Set c} →
     Univalence (a ⊔ c) →
     (∥ C ∥ → C) →
-    (comp₁ comp₂ :
+    ((comp₁ , _) (comp₂ , _) :
        ∃ λ (comp : Iso-lens B C → Iso-lens A B → Iso-lens A C) →
          ∀ l₁ l₂ a c →
            set (comp l₁ l₂) a c ≡ set l₂ a (set l₁ (get l₂ a) c)) →
-    proj₁ comp₁ ≡ proj₁ comp₂
+    comp₁ ≡ comp₂
   ∘-unique {A = A} {C = C} univ ∥C∥→C
            (comp₁ , set₁) (comp₂ , set₂) =
     ⟨ext⟩ λ l₁ → ⟨ext⟩ λ l₂ →
