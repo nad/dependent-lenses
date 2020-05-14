@@ -1458,9 +1458,10 @@ module Iso-lens-combinators where
 
   id : Iso-lens A A
   id {A = A} =
-    isomorphism-to-lens
-      (A          ↝⟨ inverse $ drop-⊤-left-× (λ _ → Bij.↑↔) ⟩□
-       ↑ _ ⊤ × A  □)
+    ∥ A ∥ ,
+    (A          ↔⟨ inverse ∥∥×↔ ⟩□
+     ∥ A ∥ × A  □) ,
+    P.id
 
   -- Composition of lenses.
   --
@@ -1534,9 +1535,8 @@ module Iso-lens-combinators where
     ⟨ a , lzero ⟩ id ∘ l ≡ l
   left-identity _ {B = B} univ l =
     _↔_.from (equality-characterisation₂ univ)
-      ( (R × ↑ _ ⊤ × ∥ B ∥  ↔⟨ F.id ×-cong drop-⊤-left-× (λ _ → Bij.↑↔) ⟩
-         R × ∥ B ∥          ↔⟨ lemma ⟩□
-         R                  □)
+      ( (R × ∥ B ∥  ↔⟨ lemma ⟩□
+         R          □)
       , λ _ → refl
       )
     where
@@ -1562,9 +1562,8 @@ module Iso-lens-combinators where
     ⟨ lzero , a ⟩ l ∘ id ≡ l
   right-identity _ {A = A} univ l =
     _↔_.from (equality-characterisation₂ univ)
-      ( ((↑ _ ⊤ × ∥ A ∥) × R  ↔⟨ drop-⊤-left-× (λ _ → Bij.↑↔) ×-cong F.id ⟩
-         ∥ A ∥ × R            ↔⟨ lemma ⟩□
-         R                    □)
+      ( (∥ A ∥ × R  ↔⟨ lemma ⟩□
+         R          □)
       , λ _ → refl
       )
     where
