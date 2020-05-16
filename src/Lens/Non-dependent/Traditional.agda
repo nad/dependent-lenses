@@ -871,6 +871,29 @@ lens-preserves-h-level-of-domain n hA =
   A′ = _
 
 ------------------------------------------------------------------------
+-- Another lens isomorphism
+
+-- If A is contractible, then Lens A B is isomorphic to
+-- Contractible B.
+
+lens-from-contractible↔codomain-contractible :
+  Contractible A →
+  Lens A B ↔ Contractible B
+lens-from-contractible↔codomain-contractible cA@(a , irrA) =
+  _≃_.bijection $
+  _↠_.from (Eq.≃↠⇔ (lens-preserves-h-level-of-domain 0 (mono₁ 0 cA))
+                   (H-level-propositional ext 0)) (record
+    { to   = flip contractible-to-contractible cA
+    ; from = λ (b , irrB) → record
+        { get     = λ _ → b
+        ; set     = λ _ _ → a
+        ; get-set = λ _ → irrB
+        ; set-get = irrA
+        ; set-set = λ _ _ _ → irrA a
+        }
+    })
+
+------------------------------------------------------------------------
 -- An existence result
 
 -- There is, in general, no lens for the first projection from a
