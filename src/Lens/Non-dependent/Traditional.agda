@@ -454,16 +454,25 @@ equality-characterisation-for-sets
 
 module Lens-combinators where
 
+  -- If two types are isomorphic, then there is a lens between them.
+
+  ↔→lens :
+    {A : Set a} {B : Set b} →
+    A ↔ B → Lens A B
+  ↔→lens A↔B = record
+    { get     = to
+    ; set     = const from
+    ; get-set = const right-inverse-of
+    ; set-get = left-inverse-of
+    ; set-set = λ _ _ _ → refl
+    }
+    where
+    open _↔_ A↔B
+
   -- Identity lens.
 
   id : Lens A A
-  id = record
-    { get     = λ a      → a
-    ; set     = λ _ a    → a
-    ; get-set = λ _ _    → refl
-    ; set-get = λ _      → refl
-    ; set-set = λ _ _ _  → refl
-    }
+  id = ↔→lens F.id
 
   -- Composition of lenses.
   --
