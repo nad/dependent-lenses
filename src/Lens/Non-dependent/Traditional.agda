@@ -772,7 +772,7 @@ lens-to-⊥↔ {A = A} =
         ⊥-elim (¬a a)
     }
 
--- Iso-lens ⊥ B is isomorphic to the unit type.
+-- Lens ⊥ B is isomorphic to the unit type.
 
 lens-from-⊥↔⊤ : Lens (⊥ {ℓ = a}) B ↔ ⊤
 lens-from-⊥↔⊤ =
