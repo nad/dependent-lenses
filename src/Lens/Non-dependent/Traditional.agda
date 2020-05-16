@@ -11,6 +11,7 @@ open import Logical-equivalence using (module _⇔_)
 open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 
 open import Bijection equality-with-J as Bij using (_↔_)
+open import Category equality-with-J as C using (Category; Precategory)
 open import Equivalence equality-with-J as Eq using (_≃_)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
@@ -1002,3 +1003,162 @@ no-first-projection-lens :
 no-first-projection-lens =
   Lens.Non-dependent.no-first-projection-lens
     Lens contractible-to-contractible
+
+------------------------------------------------------------------------
+-- A category
+
+-- A form of isomorphism between types, expressed using lenses.
+
+infix 4 _≅_
+
+_≅_ : Set a → Set b → Set (a ⊔ b)
+A ≅ B =
+  ∃ λ (l₁ : Lens A B) →
+  ∃ λ (l₂ : Lens B A) →
+    l₁ ∘ l₂ ≡ id ×
+    l₂ ∘ l₁ ≡ id
+  where
+  open Lens-combinators
+
+-- An identity isomorphism.
+
+id≅ : A ≅ A
+id≅ = id , id , left-identity _ , right-identity _
+  where
+  open Lens-combinators
+
+-- An equality characterisation lemma for _≅_ that applies when the
+-- types are sets.
+
+equality-characterisation-for-sets-≅ :
+  let open Lens in
+  {f₁@(l₁₁ , l₂₁ , _) f₂@(l₁₂ , l₂₂ , _) : A ≅ B} →
+  Is-set A → Is-set B →
+  f₁ ≡ f₂ ↔ set l₁₁ ≡ set l₁₂ × set l₂₁ ≡ set l₂₂
+equality-characterisation-for-sets-≅
+  {f₁ = l₁₁ , l₂₁ , eq₁₁ , eq₂₁} {f₂ = l₁₂ , l₂₂ , eq₁₂ , eq₂₂}
+  A-set B-set =
+
+  (l₁₁ , l₂₁ , eq₁₁ , eq₂₁) ≡ (l₁₂ , l₂₂ , eq₁₂ , eq₂₂)      ↔⟨ inverse $ Eq.≃-≡ (from-isomorphism Σ-assoc) ⟩
+  ((l₁₁ , l₂₁) , eq₁₁ , eq₂₁) ≡ ((l₁₂ , l₂₂) , eq₁₂ , eq₂₂)  ↝⟨ inverse $ ignore-propositional-component $
+                                                                ×-closure 1
+                                                                  (lens-preserves-h-level-of-domain 1 B-set)
+                                                                  (lens-preserves-h-level-of-domain 1 A-set) ⟩
+  (l₁₁ , l₂₁) ≡ (l₁₂ , l₂₂)                                  ↝⟨ inverse ≡×≡↔≡ ⟩
+  l₁₁ ≡ l₁₂ × l₂₁ ≡ l₂₂                                      ↝⟨ equality-characterisation-for-sets A-set B-set
+                                                                  ×-cong
+                                                                equality-characterisation-for-sets B-set A-set ⟩□
+  set l₁₁ ≡ set l₁₂ × set l₂₁ ≡ set l₂₂                      □
+  where
+  open Lens
+
+-- For sets A and B there is an equivalence between A ≃ B and A ≅ B.
+
+≃≃≅ :
+  Is-set A → Is-set B →
+  (A ≃ B) ≃ (A ≅ B)
+≃≃≅ {A = A} {B = B} A-set B-set = Eq.↔⇒≃ (record
+  { surjection = record
+    { logical-equivalence = record
+      { to   = λ X≃Y → ↔→lens (_≃_.bijection X≃Y)
+                     , ↔→lens (_≃_.bijection $ inverse X≃Y)
+                     , _↔_.from
+                         (equality-characterisation-for-sets
+                            B-set B-set)
+                         (⟨ext⟩ λ _ → ⟨ext⟩ $ _≃_.right-inverse-of X≃Y)
+                     , _↔_.from
+                         (equality-characterisation-for-sets
+                            A-set A-set)
+                         (⟨ext⟩ λ _ → ⟨ext⟩ $ _≃_.left-inverse-of X≃Y)
+      ; from = λ (l₁ , l₂ , eq₁ , eq₂) → Eq.↔⇒≃ (record
+                 { surjection = record
+                   { logical-equivalence = record
+                     { to   = get l₁
+                     ; from = get l₂
+                     }
+                   ; right-inverse-of = ext⁻¹ $
+                       getters-equal-if-setters-equal (l₁ ∘ l₂) id
+                         (cong set eq₁)
+                 }
+                 ; left-inverse-of = ext⁻¹ $
+                     getters-equal-if-setters-equal (l₂ ∘ l₁) id
+                       (cong set eq₂)
+                 })
+      }
+    ; right-inverse-of = λ (l₁ , l₂ , eq₁ , eq₂) →
+        _↔_.from (equality-characterisation-for-sets-≅ A-set B-set)
+          ( (⟨ext⟩ λ a → ⟨ext⟩ λ b →
+               get l₂ b                                            ≡⟨ sym $ ext⁻¹ (ext⁻¹ (cong set eq₂) _) _ ⟩
+
+               set l₁ (set l₁ a b)
+                 (set l₂ (get l₁ (set l₁ a b)) (get l₂ b))         ≡⟨ set-set l₁ _ _ _ ⟩
+
+               set l₁ a (set l₂ (get l₁ (set l₁ a b)) (get l₂ b))  ≡⟨ cong (λ b′ → set l₁ a (set l₂ b′ (get l₂ b))) $ get-set l₁ _ _ ⟩
+
+               set l₁ a (set l₂ b (get l₂ b))                      ≡⟨ cong (set l₁ a) $ set-get l₂ _ ⟩∎
+
+               set l₁ a b                                          ∎)
+          , (⟨ext⟩ λ b → ⟨ext⟩ λ a →
+               get l₁ a                                            ≡⟨ sym $ ext⁻¹ (ext⁻¹ (cong set eq₁) _) _ ⟩
+
+               set l₂ (set l₂ b a)
+                 (set l₁ (get l₂ (set l₂ b a)) (get l₁ a))         ≡⟨ set-set l₂ _ _ _ ⟩
+
+               set l₂ b (set l₁ (get l₂ (set l₂ b a)) (get l₁ a))  ≡⟨ cong (λ a′ → set l₂ b (set l₁ a′ (get l₁ a))) $ get-set l₂ _ _ ⟩
+
+               set l₂ b (set l₁ a (get l₁ a))                      ≡⟨ cong (set l₂ b) $ set-get l₁ _ ⟩∎
+
+               set l₂ b a                                          ∎)
+          )
+    }
+  ; left-inverse-of = λ _ → Eq.lift-equality ext refl
+  })
+  where
+  open Lens
+  open Lens-combinators
+
+-- The equivalence maps identity to identity.
+
+≃≃≅-id≡id :
+  let open Lens-combinators in
+  (A-set A-set′ : Is-set A) →
+  proj₁ (_≃_.to (≃≃≅ A-set A-set′) F.id) ≡ id
+≃≃≅-id≡id A-set A-set′ =
+  cong proj₁ (
+    _≃_.to (≃≃≅ A-set A-set′) F.id  ≡⟨ _↔_.from (equality-characterisation-for-sets-≅ A-set A-set′) (refl , refl) ⟩∎
+    id≅                             ∎)
+
+-- Lenses between sets with the same universe level form a
+-- precategory.
+
+precategory : Precategory (lsuc a) a
+precategory {a = a} = record
+  { precategory =
+      SET a
+    , (λ (A , A-set) (B , _) →
+           Lens A B
+         , lens-preserves-h-level-of-domain 1 A-set)
+    , id
+    , _∘_
+    , left-identity _
+    , right-identity _
+    , (λ {_ _ _ _ l₁ l₂ l₃} → associativity l₃ l₂ l₁)
+  }
+  where
+  open Lens-combinators
+
+-- Lenses between sets with the same universe level form a
+-- category (assuming univalence).
+
+category :
+  Univalence a →
+  Category (lsuc a) a
+category {a = a} univ =
+  C.precategory-with-SET-to-category
+    ext
+    (λ _ _ → univ)
+    (proj₂ Pre.precategory)
+    (λ (_ , A-set) (_ , B-set) → ≃≃≅ A-set B-set)
+    (λ (_ , A-set) → ≃≃≅-id≡id A-set A-set)
+  where
+  module Pre = C.Precategory precategory
