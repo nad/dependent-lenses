@@ -333,22 +333,15 @@ equality-characterisation₄ {l₁ = l₁} {l₂} univ =
 getters-equal-if-setters-equal :
   let open Iso-lens in
   (l₁ l₂ : Iso-lens A B) →
-  (∀ a b → set l₁ a b ≡ set l₂ a b) →
-  (∀ a   → get l₁ a   ≡ get l₂ a)
-getters-equal-if-setters-equal l₁ l₂ setters-equal a =
-  get l₁ a                           ≡⟨⟩
-  proj₂ (to (equiv l₁) a)            ≡⟨ cong proj₂ $ from-to (equiv l₁) lemma ⟩
-  proj₂ (remainder l₁ a , get l₂ a)  ≡⟨ refl ⟩∎
-  get l₂ a                           ∎
+  set l₁ ≡ set l₂ →
+  get l₁ ≡ get l₂
+getters-equal-if-setters-equal l₁ l₂ setters-equal = ⟨ext⟩ λ a →
+  get l₁ a                      ≡⟨ cong (get l₁) $ sym $ set-get l₂ _ ⟩
+  get l₁ (set l₂ a (get l₂ a))  ≡⟨ cong (λ f → get l₁ (f a (get l₂ a))) $ sym setters-equal ⟩
+  get l₁ (set l₁ a (get l₂ a))  ≡⟨ get-set l₁ _ _ ⟩∎
+  get l₂ a                      ∎
   where
   open Iso-lens
-  open _≃_
-
-  lemma =
-    from (equiv l₁) (remainder l₁ a , get l₂ a)  ≡⟨⟩
-    set l₁ a (get l₂ a)                          ≡⟨ setters-equal _ _ ⟩
-    set l₂ a (get l₂ a)                          ≡⟨ set-get l₂ _ ⟩∎
-    a                                            ∎
 
 -- Let us assume that two lenses have a codomain type that is
 -- inhabited whenever it is merely inhabited. In that case the lenses
@@ -359,17 +352,17 @@ lenses-equal-if-setters-equal :
   Univalence (a ⊔ b) →
   (∥ B ∥ → B) →
   (l₁ l₂ : Iso-lens A B) →
-  (∀ a b → Iso-lens.set l₁ a b ≡ Iso-lens.set l₂ a b) →
+  Iso-lens.set l₁ ≡ Iso-lens.set l₂ →
   l₁ ≡ l₂
 lenses-equal-if-setters-equal {A = A} {B = B}
                               univ ∥B∥→B l₁ l₂ setters-equal =
   _↔_.from (equality-characterisation₃ univ)
     ( R≃R
     , (λ a →
-         remainder l₂ (set l₁ a _)  ≡⟨ cong (remainder l₂) $ setters-equal _ _ ⟩
+         remainder l₂ (set l₁ a _)  ≡⟨ cong (remainder l₂) $ ext⁻¹ (ext⁻¹ setters-equal _) _ ⟩
          remainder l₂ (set l₂ a _)  ≡⟨ remainder-set l₂ _ _ ⟩∎
          remainder l₂ a             ∎)
-    , getters-equal-if-setters-equal l₁ l₂ setters-equal
+    , ext⁻¹ (getters-equal-if-setters-equal l₁ l₂ setters-equal)
     )
   where
   open Iso-lens
@@ -398,7 +391,7 @@ lenses-equal-if-setters-equal {A = A} {B = B}
       to (equiv l₂) (from (equiv l₁)
         (proj₁ (to (equiv l₁) (from (equiv l₁) (r , b′))) , b))  ≡⟨⟩
 
-      to (equiv l₂) (set l₁ (from (equiv l₁) (r , b′)) b)        ≡⟨ cong (to (equiv l₂)) $ setters-equal _ _ ⟩
+      to (equiv l₂) (set l₁ (from (equiv l₁) (r , b′)) b)        ≡⟨ cong (to (equiv l₂)) $ ext⁻¹ (ext⁻¹ setters-equal _) _ ⟩
 
       to (equiv l₂) (set l₂ (from (equiv l₁) (r , b′)) b)        ≡⟨⟩
 
@@ -1447,7 +1440,7 @@ module Iso-lens-combinators where
            (comp₁ , set₁) (comp₂ , set₂) =
     ⟨ext⟩ λ l₁ → ⟨ext⟩ λ l₂ →
       lenses-equal-if-setters-equal univ
-        ∥C∥→C (comp₁ l₁ l₂) (comp₂ l₁ l₂) λ a c →
+        ∥C∥→C (comp₁ l₁ l₂) (comp₂ l₁ l₂) $ ⟨ext⟩ λ a → ⟨ext⟩ λ c →
           set (comp₁ l₁ l₂) a c           ≡⟨ set₁ _ _ _ _ ⟩
           set l₂ a (set l₁ (get l₂ a) c)  ≡⟨ sym $ set₂ _ _ _ _ ⟩∎
           set (comp₂ l₁ l₂) a c           ∎
