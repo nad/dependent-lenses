@@ -362,6 +362,94 @@ abstract
        p′)
     lemma₂ P refl refl = F.id
 
+-- If two lenses have equal setters, then they also have equal
+-- getters.
+
+getters-equal-if-setters-equal :
+  let open Lens in
+  (l₁ l₂ : Lens A B) →
+  set l₁ ≡ set l₂ →
+  get l₁ ≡ get l₂
+getters-equal-if-setters-equal l₁ l₂ setters-equal = ⟨ext⟩ λ a →
+  get l₁ a                      ≡⟨ cong (get l₁) $ sym $ set-get l₂ _ ⟩
+  get l₁ (set l₂ a (get l₂ a))  ≡⟨ cong (λ f → get l₁ (f _ _)) $ sym setters-equal ⟩
+  get l₁ (set l₁ a (get l₂ a))  ≡⟨ get-set l₁ _ _ ⟩∎
+  get l₂ a                      ∎
+  where
+  open Lens
+
+-- An equality characterisation lemma for lenses between sets.
+
+equality-characterisation-for-sets :
+  let open Lens in
+
+  {l₁ l₂ : Lens A B} →
+
+  Is-set A → Is-set B →
+
+  l₁ ≡ l₂
+    ↔
+  set l₁ ≡ set l₂
+equality-characterisation-for-sets
+  {l₁ = l₁} {l₂ = l₂} A-set B-set =
+
+  l₁ ≡ l₂                                                         ↝⟨ equality-characterisation ⟩
+
+  (∃ λ (g : get l₁ ≡ get l₂) →
+   ∃ λ (s : set l₁ ≡ set l₂) →
+     (∀ a b → subst (λ get → get (set l₂ a b) ≡ b) g
+                (subst (λ set → get l₁ (set a b) ≡ b) s
+                   (get-set l₁ a b))
+                ≡
+              get-set l₂ a b)
+       ×
+     (∀ a → subst (λ get → set l₂ a (get a) ≡ a) g
+              (subst (λ set → set a (get l₁ a) ≡ a) s
+                 (set-get l₁ a))
+              ≡
+            set-get l₂ a)
+       ×
+     (∀ a b₁ b₂ → subst (λ set → set (set a b₁) b₂ ≡ set a b₂) s
+                    (set-set l₁ a b₁ b₂)
+                    ≡
+                  set-set l₂ a b₁ b₂))                            ↝⟨ (∃-cong λ _ → ∃-cong λ _ → drop-⊤-left-Σ $ _⇔_.to contractible⇔↔⊤ $
+                                                                      Π-closure ext 0 λ _ →
+                                                                      Π-closure ext 0 λ _ →
+                                                                      +⇒≡ B-set) ⟩
+  (∃ λ (g : get l₁ ≡ get l₂) →
+   ∃ λ (s : set l₁ ≡ set l₂) →
+     (∀ a → subst (λ get → set l₂ a (get a) ≡ a) g
+              (subst (λ set → set a (get l₁ a) ≡ a) s
+                 (set-get l₁ a))
+              ≡
+            set-get l₂ a)
+       ×
+     (∀ a b₁ b₂ → subst (λ set → set (set a b₁) b₂ ≡ set a b₂) s
+                    (set-set l₁ a b₁ b₂)
+                    ≡
+                  set-set l₂ a b₁ b₂))                            ↝⟨ (∃-cong λ _ → ∃-cong λ _ → drop-⊤-left-Σ $ _⇔_.to contractible⇔↔⊤ $
+                                                                      Π-closure ext 0 λ _ →
+                                                                      +⇒≡ A-set) ⟩
+  (∃ λ (g : get l₁ ≡ get l₂) →
+   ∃ λ (s : set l₁ ≡ set l₂) →
+     (∀ a b₁ b₂ → subst (λ set → set (set a b₁) b₂ ≡ set a b₂) s
+                    (set-set l₁ a b₁ b₂)
+                    ≡
+                  set-set l₂ a b₁ b₂))                            ↝⟨ (∃-cong λ _ → drop-⊤-right λ _ → _⇔_.to contractible⇔↔⊤ $
+                                                                      Π-closure ext 0 λ _ →
+                                                                      Π-closure ext 0 λ _ →
+                                                                      Π-closure ext 0 λ _ →
+                                                                      +⇒≡ A-set) ⟩
+
+  get l₁ ≡ get l₂ × set l₁ ≡ set l₂                               ↝⟨ (drop-⊤-left-× λ setters-equal → _⇔_.to contractible⇔↔⊤ $
+                                                                      propositional⇒inhabited⇒contractible
+                                                                        (Π-closure ext 2 λ _ →
+                                                                         B-set)
+                                                                        (getters-equal-if-setters-equal l₁ l₂ setters-equal)) ⟩□
+  set l₁ ≡ set l₂                                                 □
+  where
+  open Lens
+
 -- Combinators.
 
 module Lens-combinators where
