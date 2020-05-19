@@ -983,7 +983,7 @@ private
                                                                           other-singleton-contractible _) ⟩
         (∥ B ∥ × ∃ λ (f : B → R) → Constant f)                      ↝⟨ (∃-cong λ ∥b∥ → constant-function≃∥inhabited∥⇒inhabited (R-set ∥b∥)) ⟩
 
-        (∥ B ∥ × (∥ B ∥ → R))                                       ↔⟨ lemma′ ⟩
+        (∥ B ∥ × (∥ B ∥ → R))                                       ↔⟨ lemma′ ⟩□
 
         R                                                           □
 

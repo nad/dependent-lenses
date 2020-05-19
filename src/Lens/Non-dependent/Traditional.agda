@@ -825,18 +825,15 @@ lens-to-proposition↔ {B = B} {A = A} B-prop =
   (A → B) × (∀ a → a ≡ a)                                           □
 
   where
-  A→B→A↔A→A : (A → B) → (A → B → A) ↔ (A → A)
-  A→B→A↔A→A get =
-    (A → B → A)  ↝⟨ ∀-cong ext (λ a →
-                      drop-⊤-left-Π ext $
-                        _⇔_.to contractible⇔↔⊤ $
-                          propositional⇒inhabited⇒contractible B-prop (get a)) ⟩□
-    (A → A)      □
-
   B↔⊤ : B → B ↔ ⊤
   B↔⊤ b =
     _⇔_.to contractible⇔↔⊤ $
       propositional⇒inhabited⇒contractible B-prop b
+
+  A→B→A↔A→A : (A → B) → (A → B → A) ↔ (A → A)
+  A→B→A↔A→A get =
+    (A → B → A)  ↝⟨ ∀-cong ext (λ a → drop-⊤-left-Π ext $ B↔⊤ (get a)) ⟩□
+    (A → A)      □
 
 -- Lens A ⊤ is isomorphic to (a : A) → a ≡ a.
 
