@@ -60,8 +60,14 @@ Bijection-lens {a = a} {b = b} A B =
 -- (I had previously considered some other variants, when Andrea
 -- Vezzosi suggested that I should look at higher lenses, and that I
 -- could perhaps use R → ∥ B ∥. This worked out nicely.)
+--
+-- For performance reasons η-equality is turned off for this record
+-- type. One can match on the constructor to block evaluation.
 
 record Iso-lens (A : Set a) (B : Set b) : Set (lsuc (a ⊔ b)) where
+  constructor ⟨_,_,_⟩
+  pattern
+  no-eta-equality
   field
     -- Remainder type.
     R : Set (a ⊔ b)
@@ -168,7 +174,7 @@ Iso-lens-as-Σ = record
       }
     ; right-inverse-of = λ _ → refl
     }
-  ; left-inverse-of = λ _ → refl
+  ; left-inverse-of = λ { ⟨ _ , _ , _ ⟩ → refl }
   }
   where
   open Iso-lens
@@ -1500,13 +1506,16 @@ module Iso-lens-combinators where
   -- composition. (I suspect that if Agda had had cumulativity, then
   -- the domain and codomain could have lived in the same universe
   -- without any problems.)
+  --
+  -- The composition operation matches on the lenses to ensure that it
+  -- does not unfold when applied to neutral lenses.
 
   infix 9 ⟨_,_⟩_∘_
 
   ⟨_,_⟩_∘_ :
     ∀ a b {A : Set (a ⊔ b ⊔ c)} {B : Set (b ⊔ c)} {C : Set c} →
     Iso-lens B C → Iso-lens A B → Iso-lens A C
-  ⟨_,_⟩_∘_ _ _ {A = A} {B} {C} l₁ l₂ = record
+  ⟨_,_⟩_∘_ _ _ {A = A} {B} {C} l₁@(⟨ _ , _ , _ ⟩) l₂@(⟨ _ , _ , _ ⟩) = record
     { R         = R l₂ × R l₁
     ; equiv     = A                  ↝⟨ equiv l₂ ⟩
                   R l₂ × B           ↝⟨ F.id ×-cong equiv l₁ ⟩
@@ -1539,7 +1548,8 @@ module Iso-lens-combinators where
        set (comp l₁ l₂) a c ≡ set l₂ a (set l₁ (get l₂ a) c)) →
     comp ≡ ⟨ a , b ⟩_∘_
   composition≡∘ univ ∥C∥→C comp set-comp =
-    ∘-unique univ ∥C∥→C (comp , set-comp) (_ , λ _ _ _ _ → refl)
+    ∘-unique univ ∥C∥→C (comp , set-comp)
+      (_ , λ { ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ _ _ → refl })
 
   -- Identity and composition form a kind of precategory (assuming
   -- univalence).
@@ -1554,7 +1564,7 @@ module Iso-lens-combinators where
     (l₃ : Iso-lens A B) →
     ⟨ a ⊔ b , c ⟩ l₁ ∘ (⟨ a , b ⟩ l₂ ∘ l₃) ≡
     ⟨ a , b ⊔ c ⟩ (⟨ b , c ⟩ l₁ ∘ l₂) ∘ l₃
-  associativity _ _ _ univ _ _ _ =
+  associativity _ _ _ univ ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ =
     _↔_.from (equality-characterisation₂ univ)
              (Eq.↔⇒≃ (inverse ×-assoc) , λ _ → refl)
 
@@ -1563,7 +1573,7 @@ module Iso-lens-combinators where
     Univalence (a ⊔ b) →
     (l : Iso-lens A B) →
     ⟨ a , lzero ⟩ id ∘ l ≡ l
-  left-identity _ {B = B} univ l =
+  left-identity _ {B = B} univ l@(⟨ _ , _ , _ ⟩) =
     _↔_.from (equality-characterisation₂ univ)
       ( (R × ∥ B ∥  ↔⟨ lemma ⟩□
          R          □)
@@ -1590,7 +1600,7 @@ module Iso-lens-combinators where
     Univalence (a ⊔ b) →
     (l : Iso-lens A B) →
     ⟨ lzero , a ⟩ l ∘ id ≡ l
-  right-identity _ {A = A} univ l =
+  right-identity _ {A = A} univ l@(⟨ _ , _ , _ ⟩) =
     _↔_.from (equality-characterisation₂ univ)
       ( (∥ A ∥ × R  ↔⟨ lemma ⟩□
          R          □)
