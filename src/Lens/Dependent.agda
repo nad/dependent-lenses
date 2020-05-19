@@ -1261,7 +1261,7 @@ module No-fully-general-composition-operator
     open _≃_
 
     idL : Iso-lens Bool Bool
-    idL = ND.Iso-lens-combinators.id
+    idL = ND.Iso-lens-combinators.id ⊠
 
     swapL : Iso-lens Bool Bool
     swapL = ND.isomorphism-to-lens

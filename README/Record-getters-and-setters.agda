@@ -323,13 +323,13 @@ module Non-dependent where
 
   x₂ : {A : Set} →
        Lens (Record (R₂ With ″A″ ≔ λ _ → A)) A
-  x₂ = x ∘ r₁
+  x₂ = ⟨ _ , _ ⟩ x ∘ r₁
 
   f₂ : {A : Set} →
        Lens (Record (R₂ With ″A″ ≔ λ _ → A))
             (Record (∅ , ″f″     ∶ (λ _ → A → A)
                        , ″lemma″ ∶ (λ r → ∀ x → (r · ″f″) x ≡ x)))
-  f₂ = f ∘ r₁
+  f₂ = ⟨ _ , _ ⟩ f ∘ r₁
 
   -- It is less obvious how to construct the corresponding lens for
   -- the embedded lemma field.
@@ -352,7 +352,7 @@ module Non-dependent where
     -- signature given above, then we can define the lemma lens using
     -- composition.
 
-    lemma₂ = lemma ∘ r₁₂
+    lemma₂ = ⟨ _ , _ ⟩ lemma ∘ r₁₂
 
     -- However, we cannot define r₁₂.
 
