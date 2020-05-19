@@ -829,7 +829,7 @@ non-dependent-lenses-isomorphic :
   ∃ λ (iso : Lens A (const B) ↔ Iso-lens A B) →
     ∀ {l a} → Lens.get l a ≡ ND.Iso-lens.get (_↔_.to iso l) a
 non-dependent-lenses-isomorphic {A = A} {B = B} ≡B-prop =
-  (Lens A (const B)  ↝⟨ ∃-cong lemma ⟩□
+  (Lens A (const B)  ↝⟨ inverse ND.Iso-lens-as-Σ F.∘ ∃-cong lemma ⟩□
    Iso-lens A B      □)
   , λ {l a} →
     let p = variant l a

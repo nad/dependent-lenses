@@ -61,45 +61,16 @@ Bijection-lens {a = a} {b = b} A B =
 -- Vezzosi suggested that I should look at higher lenses, and that I
 -- could perhaps use R → ∥ B ∥. This worked out nicely.)
 
-Iso-lens : Set a → Set b → Set (lsuc (a ⊔ b))
-Iso-lens {a = a} {b = b} A B =
-  ∃ λ (R : Set (a ⊔ b)) →
-    (A ≃ (R × B)) ×
-    (R → ∥ B ∥)
+record Iso-lens (A : Set a) (B : Set b) : Set (lsuc (a ⊔ b)) where
+  field
+    -- Remainder type.
+    R : Set (a ⊔ b)
 
--- Yet another alternative definition of lenses. This one replaces the
--- R → ∥ B ∥ function with a requirement that the remainder function
--- should be surjective.
+    -- Equivalence.
+    equiv : A ≃ (R × B)
 
-Iso-lens′ : Set a → Set b → Set (lsuc (a ⊔ b))
-Iso-lens′ {a = a} {b = b} A B =
-  ∃ λ (get       : A → B) →
-  ∃ λ (R         : Set (a ⊔ b)) →
-  ∃ λ (remainder : A → R) →
-    Eq.Is-equivalence (λ a → remainder a , get a) ×
-    Surjective remainder
-
-------------------------------------------------------------------------
--- Simple definitions related to Iso-lenses
-
--- Some derived definitions.
-
-module Iso-lens {A : Set a} {B : Set b} (l : Iso-lens A B) where
-
-  -- Remainder type.
-
-  R : Set (a ⊔ b)
-  R = proj₁ l
-
-  -- Equivalence.
-
-  equiv : A ≃ (R × B)
-  equiv = proj₁ (proj₂ l)
-
-  -- The proof of (mere) inhabitance.
-
-  inhabited : R → ∥ B ∥
-  inhabited = proj₂ (proj₂ l)
+    -- The proof of (mere) inhabitance.
+    inhabited : R → ∥ B ∥
 
   -- Remainder.
 
@@ -162,21 +133,59 @@ module Iso-lens {A : Set a} {B : Set b} (l : Iso-lens A B) where
     ; set-set = set-set
     }
 
+-- Yet another alternative definition of lenses. This one replaces the
+-- R → ∥ B ∥ function with a requirement that the remainder function
+-- should be surjective.
+
+Iso-lens′ : Set a → Set b → Set (lsuc (a ⊔ b))
+Iso-lens′ {a = a} {b = b} A B =
+  ∃ λ (get       : A → B) →
+  ∃ λ (R         : Set (a ⊔ b)) →
+  ∃ λ (remainder : A → R) →
+    Eq.Is-equivalence (λ a → remainder a , get a) ×
+    Surjective remainder
+
+------------------------------------------------------------------------
+-- Simple definitions related to Iso-lenses
+
+-- Iso-lens can be expressed as a nested Σ-type.
+
+Iso-lens-as-Σ :
+  {A : Set a} {B : Set b} →
+  Iso-lens A B ↔
+  ∃ λ (R : Set (a ⊔ b)) →
+    (A ≃ (R × B)) ×
+    (R → ∥ B ∥)
+Iso-lens-as-Σ = record
+  { surjection = record
+    { logical-equivalence = record
+      { to   = λ l → R l , equiv l , inhabited l
+      ; from = λ (R , equiv , inhabited) → record
+                 { R         = R
+                 ; equiv     = equiv
+                 ; inhabited = inhabited
+                 }
+      }
+    ; right-inverse-of = λ _ → refl
+    }
+  ; left-inverse-of = λ _ → refl
+  }
+  where
+  open Iso-lens
+
 -- Isomorphisms can be converted into lenses.
 
 isomorphism-to-lens :
   {A : Set a} {B : Set b} {R : Set (a ⊔ b)} →
   A ↔ R × B → Iso-lens A B
-isomorphism-to-lens {A = A} {B = B} {R = R} iso =
-
-  (R × ∥ B ∥) ,
-
-  (A                ↔⟨ iso ⟩
-   R × B            ↔⟨ F.id ×-cong inverse ∥∥×↔ ⟩
-   R × ∥ B ∥ × B    ↔⟨ ×-assoc ⟩□
-   (R × ∥ B ∥) × B  □) ,
-
-  proj₂
+isomorphism-to-lens {A = A} {B = B} {R = R} iso = record
+  { R         = R × ∥ B ∥
+  ; equiv     = A                ↔⟨ iso ⟩
+                R × B            ↔⟨ F.id ×-cong inverse ∥∥×↔ ⟩
+                R × ∥ B ∥ × B    ↔⟨ ×-assoc ⟩□
+                (R × ∥ B ∥) × B  □
+  ; inhabited = proj₂
+  }
 
 ------------------------------------------------------------------------
 -- Equality characterisations for Iso-lenses
@@ -191,24 +200,29 @@ equality-characterisation₀ :
   ∃ λ (p : R l₁ ≡ R l₂) →
     subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂
 equality-characterisation₀ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
-  l₁ ≡ l₂                                                    ↝⟨ inverse Bij.Σ-≡,≡↔≡ ⟩
+  l₁ ≡ l₂                                                     ↔⟨ inverse $ Eq.≃-≡ $ Eq.↔⇒≃ Iso-lens-as-Σ ⟩
+
+  l₁′ ≡ l₂′                                                   ↝⟨ inverse Bij.Σ-≡,≡↔≡ ⟩
 
   (∃ λ (p : R l₁ ≡ R l₂) →
-     subst (λ R → A ≃ (R × B) × (R → ∥ B ∥)) p (proj₂ l₁) ≡
-     proj₂ l₂)                                               ↝⟨ (∃-cong λ _ → inverse $
-                                                                   ignore-propositional-component
-                                                                     (Π-closure ext 1 λ _ →
-                                                                      truncation-is-proposition)) ⟩
+     subst (λ R → A ≃ (R × B) × (R → ∥ B ∥)) p (proj₂ l₁′) ≡
+     proj₂ l₂′)                                               ↝⟨ (∃-cong λ _ → inverse $
+                                                                    ignore-propositional-component
+                                                                      (Π-closure ext 1 λ _ →
+                                                                       truncation-is-proposition)) ⟩
   (∃ λ (p : R l₁ ≡ R l₂) →
      proj₁ (subst (λ R → A ≃ (R × B) × (R → ∥ B ∥))
                   p
-                  (proj₂ l₁)) ≡
-     equiv l₂)                                               ↝⟨ (∃-cong λ p → ≡⇒↝ _ $
-                                                                   cong (λ x → proj₁ x ≡ _) (push-subst-, {y≡z = p} _ _)) ⟩□
+                  (proj₂ l₁′)) ≡
+     equiv l₂)                                                ↝⟨ (∃-cong λ p → ≡⇒↝ _ $
+                                                                    cong (λ x → proj₁ x ≡ _) (push-subst-, {y≡z = p} _ _)) ⟩□
   (∃ λ (p : R l₁ ≡ R l₂) →
-     subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂)      □
+     subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂)       □
   where
   open Iso-lens
+
+  l₁′ = _↔_.to Iso-lens-as-Σ l₁
+  l₂′ = _↔_.to Iso-lens-as-Σ l₂
 
 -- Equality of Iso-lenses is isomorphic to certain pairs (assuming
 -- univalence).
@@ -441,7 +455,11 @@ Iso-lens-cong :
   {A₁ A₂ : Set a} {B₁ B₂ : Set b} →
   A₁ ↔ A₂ → B₁ ↔ B₂ →
   Iso-lens A₁ B₁ ↔ Iso-lens A₂ B₂
-Iso-lens-cong = Iso-lens-cong′
+Iso-lens-cong {A₁ = A₁} {A₂ = A₂} {B₁ = B₁} {B₂ = B₂} A₁↔A₂ B₁↔B₂ =
+  Iso-lens A₁ B₁                          ↝⟨ Iso-lens-as-Σ ⟩
+  (∃ λ R → A₁ ≃ (R × B₁) × (R → ∥ B₁ ∥))  ↝⟨ Iso-lens-cong′ A₁↔A₂ B₁↔B₂ ⟩
+  (∃ λ R → A₂ ≃ (R × B₂) × (R → ∥ B₂ ∥))  ↝⟨ inverse Iso-lens-as-Σ ⟩□
+  Iso-lens A₂ B₂                          □
 
 -- If B is a proposition, then Iso-lens A B is isomorphic to A → B
 -- (assuming univalence).
@@ -452,6 +470,7 @@ lens-to-proposition↔get :
   Is-proposition B →
   Iso-lens A B ↔ (A → B)
 lens-to-proposition↔get {b = b} {A = A} {B = B} univ B-prop =
+  Iso-lens A B                         ↝⟨ Iso-lens-as-Σ ⟩
   (∃ λ R → A ≃ (R × B) × (R → ∥ B ∥))  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ →
                                              ∥∥↔ B-prop) ⟩
   (∃ λ R → A ≃ (R × B) × (R → B))      ↝⟨ (∃-cong λ _ →
@@ -501,6 +520,7 @@ lens-from-contractible↔codomain-contractible :
   Contractible A →
   Iso-lens A B ↔ Contractible B
 lens-from-contractible↔codomain-contractible {A = A} {B} univ cA =
+  Iso-lens A B                                               ↝⟨ Iso-lens-as-Σ ⟩
   (∃ λ R → A ≃ (R × B) × (R → ∥ B ∥))                        ↝⟨ ∃-cong (λ _ →
                                                                   Eq.≃-preserves-bijections ext (_⇔_.to contractible⇔↔⊤ cA) F.id
                                                                     ×-cong
@@ -628,9 +648,11 @@ Higher-lens↔Iso-lens {a = a} {b = b} {A = A} {B = B} univ =
                              B × R                                       ↔⟨ ×-comm ⟩□
                              R × B                                       □)) ⟩
 
-  (∃ λ (R : Set ℓ) → (R → ∥ B ∥) × (A ≃ (R × B)))                  ↝⟨ (∃-cong λ _ → ×-comm) ⟩□
+  (∃ λ (R : Set ℓ) → (R → ∥ B ∥) × (A ≃ (R × B)))                  ↝⟨ (∃-cong λ _ → ×-comm) ⟩
 
-  (∃ λ (R : Set ℓ) → (A ≃ (R × B)) × (R → ∥ B ∥))                  □
+  (∃ λ (R : Set ℓ) → (A ≃ (R × B)) × (R → ∥ B ∥))                  ↝⟨ inverse Iso-lens-as-Σ ⟩□
+
+  Iso-lens A B                                                     □
 
   where
   ℓ = a ⊔ b
@@ -672,6 +694,8 @@ Iso-lens↔Iso-lens′ :
   {A : Set a} {B : Set b} →
   Iso-lens A B ↔ Iso-lens′ A B
 Iso-lens↔Iso-lens′ {A = A} {B} =
+
+  Iso-lens A B                                            ↝⟨ Iso-lens-as-Σ ⟩
 
   (∃ λ (R : Set _) →
      (A ≃ (R × B)) ×
@@ -737,15 +761,17 @@ Bijection-lens↠Iso-lens :
 Bijection-lens↠Iso-lens {A = A} {B} univ = record
   { logical-equivalence = record
     { to   = λ { (R , A↔R×B) → isomorphism-to-lens A↔R×B }
-    ; from = λ { (R , A≃R×B , _) → R , _≃_.bijection A≃R×B }
+    ; from = λ { l → R l , _≃_.bijection (equiv l) }
     }
-  ; right-inverse-of = λ { (R , A≃R×B , inh) →
+  ; right-inverse-of = λ { l →
       _↔_.from (equality-characterisation₂ univ)
-        ( (R × ∥ B ∥  ↔⟨ drop-⊤-right (λ r → inhabited⇒∥∥↔⊤ (inh r)) ⟩□
-           R          □)
+        ( (R l × ∥ B ∥  ↔⟨ drop-⊤-right (λ r → inhabited⇒∥∥↔⊤ (inhabited l r)) ⟩□
+           R l          □)
         , λ _ → refl
         ) }
   }
+  where
+  open Iso-lens
 
 -- However, there is in general no split surjection in the other
 -- direction, not even for sets (assuming univalence).
@@ -860,10 +886,12 @@ private
     from∘to :
       Univalence (a ⊔ b) →
       ∀ u l → from u (Iso-lens.traditional-lens l) ≡ l
-    from∘to univ unit (R , l , inh) =
+    from∘to univ unit l′ =
       _↔_.from (equality-characterisation₄ univ)
                (lemma , λ _ → refl)
       where
+      open Iso-lens l′ renaming (equiv to l)
+
       B-set : (B → R) → ∥ B ∥ → Is-set B
       B-set f =
         rec (H-level-propositional ext 2)
@@ -883,7 +911,7 @@ private
         { surjection = record
           { logical-equivalence = record
             { to   = λ { (∥b∥ , f) → f ∥b∥ }
-            ; from = λ r → inh r , λ _ → r
+            ; from = λ r → inhabited r , λ _ → r
             }
           ; right-inverse-of = λ _ → refl
           }
@@ -1084,14 +1112,17 @@ lens-from-proposition-to-non-set :
   ∃ λ (A : Set a) → ∃ λ (B : Set (lsuc lzero ⊔ b)) →
   Iso-lens A B × Is-proposition A × ¬ Is-set B
 lens-from-proposition-to-non-set {b = b} univ =
-  ⊥ ,
-  ↑ b Set ,
-  (⊥ ,
-   (⊥            ↔⟨ inverse ×-left-zero ⟩□
-    ⊥ × ↑ _ Set  □) ,
-   ⊥-elim) ,
-  ⊥-propositional ,
-  ¬-Set-set univ ⊚ H-level.respects-surjection (_↔_.surjection Bij.↑↔) 2
+    ⊥
+  , ↑ b Set
+  , record
+      { R         = ⊥
+      ; equiv     = ⊥            ↔⟨ inverse ×-left-zero ⟩□
+                    ⊥ × ↑ _ Set  □
+      ; inhabited = ⊥-elim
+      }
+  , ⊥-propositional
+  , ¬-Set-set univ ⊚
+    H-level.respects-surjection (_↔_.surjection Bij.↑↔) 2
 
 -- Iso-lenses with contractible domains have contractible codomains.
 
@@ -1320,7 +1351,7 @@ domain-0+⇒lens-1+′ {A = A} {B} univ n hA =
                                                                 propositional⇒inhabited⇒contractible
                                                                   (H-level-propositional ext n)
                                                                   (remainder-has-same-h-level-as-domain l n hA)) ⟩
-    (∃ λ (l : Iso-lens A B) → H-level n (R l))           ↝⟨ inverse Σ-assoc ⟩
+    (∃ λ (l : Iso-lens A B) → H-level n (R l))           ↝⟨ inverse Σ-assoc F.∘ Σ-cong Iso-lens-as-Σ (λ _ → F.id) ⟩
 
     (∃ λ R → (A ≃ (R × B) × (R → ∥ B ∥)) × H-level n R)  ↝⟨ (∃-cong λ _ → ×-comm) ⟩
 
@@ -1454,11 +1485,12 @@ module Iso-lens-combinators where
   -- Identity lens.
 
   id : Iso-lens A A
-  id {A = A} =
-    ∥ A ∥ ,
-    (A          ↔⟨ inverse ∥∥×↔ ⟩□
-     ∥ A ∥ × A  □) ,
-    P.id
+  id {A = A} = record
+    { R         = ∥ A ∥
+    ; equiv     = A          ↔⟨ inverse ∥∥×↔ ⟩□
+                  ∥ A ∥ × A  □
+    ; inhabited = P.id
+    }
 
   -- Composition of lenses.
   --
@@ -1474,13 +1506,14 @@ module Iso-lens-combinators where
   ⟨_,_⟩_∘_ :
     ∀ a b {A : Set (a ⊔ b ⊔ c)} {B : Set (b ⊔ c)} {C : Set c} →
     Iso-lens B C → Iso-lens A B → Iso-lens A C
-  ⟨_,_⟩_∘_ _ _ {A = A} {B} {C} l₁ l₂ =
-    (R l₂ × R l₁) ,
-    (A                  ↝⟨ equiv l₂ ⟩
-     R l₂ × B           ↝⟨ F.id ×-cong equiv l₁ ⟩
-     R l₂ × (R l₁ × C)  ↔⟨ ×-assoc ⟩□
-     (R l₂ × R l₁) × C  □) ,
-    ∥∥-map (get l₁) ⊚ inhabited l₂ ⊚ proj₁
+  ⟨_,_⟩_∘_ _ _ {A = A} {B} {C} l₁ l₂ = record
+    { R         = R l₂ × R l₁
+    ; equiv     = A                  ↝⟨ equiv l₂ ⟩
+                  R l₂ × B           ↝⟨ F.id ×-cong equiv l₁ ⟩
+                  R l₂ × (R l₁ × C)  ↔⟨ ×-assoc ⟩□
+                  (R l₂ × R l₁) × C  □
+    ; inhabited = ∥∥-map (get l₁) ⊚ inhabited l₂ ⊚ proj₁
+    }
     where
     open Iso-lens
 
