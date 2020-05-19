@@ -1347,6 +1347,44 @@ no-first-projection-lens =
 
 module Iso-lens-combinators where
 
+  -- If the getter function is pointwise equal to the identity
+  -- function, then the remainder type is propositional.
+
+  get≡id→remainder-propositional :
+    (l : Iso-lens A A) →
+    (∀ a → Iso-lens.get l a ≡ a) →
+    Is-proposition (Iso-lens.R l)
+  get≡id→remainder-propositional l get≡id =
+    [inhabited⇒+]⇒+ 0 λ r →
+      Trunc.rec
+        (H-level-propositional ext 1)
+        (λ a r₁ r₂ → cong proj₁ (
+           (r₁ , a)        ≡⟨ sym $ to-lemma a r₁ ⟩
+           _≃_.to equiv a  ≡⟨ to-lemma a r₂ ⟩∎
+           (r₂ , a)        ∎))
+        (inhabited r)
+    where
+    open Iso-lens l
+
+    from-lemma : ∀ r a → _≃_.from equiv (r , a) ≡ a
+    from-lemma r a =
+      _≃_.from equiv (r , a)                                 ≡⟨ cong (λ a′ → _≃_.from equiv (proj₁ a′ , a)) $ sym $
+                                                                  _≃_.right-inverse-of equiv _ ⟩
+      _≃_.from equiv
+        (proj₁ (_≃_.to equiv (_≃_.from equiv (r , a))) , a)  ≡⟨⟩
+
+      set (_≃_.from equiv (r , a)) a                         ≡⟨ sym $ get≡id _ ⟩
+
+      get (set (_≃_.from equiv (r , a)) a)                   ≡⟨ get-set _ _ ⟩∎
+
+      a                                                      ∎
+
+    to-lemma : ∀ a r → _≃_.to equiv a ≡ (r , a)
+    to-lemma a r =
+      _≃_.to equiv a                         ≡⟨ cong (_≃_.to equiv) $ sym $ from-lemma r a ⟩
+      _≃_.to equiv (_≃_.from equiv (r , a))  ≡⟨ _≃_.right-inverse-of equiv (r , a) ⟩∎
+      (r , a)                                ∎
+
   -- The definition of the identity lens is unique, if the get
   -- function is required to be the identity (assuming univalence).
 
@@ -1359,47 +1397,13 @@ module Iso-lens-combinators where
   id-unique {A = A} univ l₁ l₂ =
     _↔_.from (equality-characterisation₃ univ)
       ( R₁≃R₂
-      , (λ _ → remainder-propositional l₂ _ _)
+      , (λ _ → uncurry get≡id→remainder-propositional l₂ _ _)
       , λ a →
           get (proj₁ l₁) a  ≡⟨ proj₂ l₁ a ⟩
           a                 ≡⟨ sym $ proj₂ l₂ a ⟩∎
           get (proj₁ l₂) a  ∎
       )
     where
-    remainder-propositional :
-      ((l , _) : ∃ λ (l : Iso-lens A A) → ∀ a → Iso-lens.get l a ≡ a) →
-      Is-proposition (Iso-lens.R l)
-    remainder-propositional (l , get≡id) =
-      [inhabited⇒+]⇒+ 0 λ r →
-        Trunc.rec
-          (H-level-propositional ext 1)
-          (λ a r₁ r₂ → cong proj₁ (
-             (r₁ , a)        ≡⟨ sym $ to-lemma a r₁ ⟩
-             _≃_.to equiv a  ≡⟨ to-lemma a r₂ ⟩∎
-             (r₂ , a)        ∎))
-          (inhabited r)
-      where
-      open Iso-lens l
-
-      from-lemma : ∀ r a → _≃_.from equiv (r , a) ≡ a
-      from-lemma r a =
-        _≃_.from equiv (r , a)                                 ≡⟨ cong (λ a′ → _≃_.from equiv (proj₁ a′ , a)) $ sym $
-                                                                    _≃_.right-inverse-of equiv _ ⟩
-        _≃_.from equiv
-          (proj₁ (_≃_.to equiv (_≃_.from equiv (r , a))) , a)  ≡⟨⟩
-
-        set (_≃_.from equiv (r , a)) a                         ≡⟨ sym $ get≡id _ ⟩
-
-        get (set (_≃_.from equiv (r , a)) a)                   ≡⟨ get-set _ _ ⟩∎
-
-        a                                                      ∎
-
-      to-lemma : ∀ a r → _≃_.to equiv a ≡ (r , a)
-      to-lemma a r =
-        _≃_.to equiv a                         ≡⟨ cong (_≃_.to equiv) $ sym $ from-lemma r a ⟩
-        _≃_.to equiv (_≃_.from equiv (r , a))  ≡⟨ _≃_.right-inverse-of equiv (r , a) ⟩∎
-        (r , a)                                ∎
-
     open Iso-lens
 
     R→R :
@@ -1407,7 +1411,7 @@ module Iso-lens-combinators where
       R (proj₁ l₁) → R (proj₁ l₂)
     R→R (l₁ , l₁-id) (l₂ , l₂-id) r =
       Trunc.rec
-        (remainder-propositional (l₂ , l₂-id))
+        (get≡id→remainder-propositional l₂ l₂-id)
         (A         ↔⟨ equiv l₂ ⟩
          R l₂ × A  ↝⟨ proj₁ ⟩□
          R l₂      □)
@@ -1415,8 +1419,8 @@ module Iso-lens-combinators where
 
     R₁≃R₂ : R (proj₁ l₁) ≃ R (proj₁ l₂)
     R₁≃R₂ =
-      _↠_.from (Eq.≃↠⇔ (remainder-propositional l₁)
-                       (remainder-propositional l₂))
+      _↠_.from (Eq.≃↠⇔ (uncurry get≡id→remainder-propositional l₁)
+                       (uncurry get≡id→remainder-propositional l₂))
                (record { to   = R→R l₁ l₂
                        ; from = R→R l₂ l₁
                        })
