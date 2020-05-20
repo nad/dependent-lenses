@@ -82,11 +82,11 @@ Lens-as-Σ = record
   where
   open Lens
 
--- Equality characterisation.
-
 abstract
 
-  equality-characterisation :
+  -- An equality characterisation lemma.
+
+  equality-characterisation₁ :
     let open Lens in
 
     l₁ ≡ l₂
@@ -110,7 +110,7 @@ abstract
                      ≡
                    set-set l₂ a b₁ b₂)
 
-  equality-characterisation {l₁ = l₁} {l₂ = l₂} =
+  equality-characterisation₁ {l₁ = l₁} {l₂ = l₂} =
     l₁ ≡ l₂                                                          ↔⟨ Eq.≃-≡ (Eq.↔⇒≃ (inverse Lens-as-Σ)) ⟩
 
     l₁′ ≡ l₂′                                                        ↔⟨ Eq.≃-≡ (Eq.↔⇒≃ (inverse Σ-assoc)) ⟩
@@ -363,6 +363,243 @@ abstract
        p′)
     lemma₂ P refl refl = F.id
 
+  -- Another equality characterisation lemma.
+
+  equality-characterisation₂ :
+    let open Lens in
+
+    l₁ ≡ l₂
+      ↔
+    ∃ λ (g : get l₁ ≡ get l₂) →
+    ∃ λ (s : set l₁ ≡ set l₂) →
+      (∀ a b →
+         trans (sym (cong₂ (λ set get → get (set a b)) s g))
+           (get-set l₁ a b) ≡
+         get-set l₂ a b) ×
+      (∀ a →
+         trans (sym (cong₂ (λ set get → set a (get a)) s g))
+           (set-get l₁ a) ≡
+         set-get l₂ a) ×
+      (∀ a b₁ b₂ →
+         subst (λ set → set (set a b₁) b₂ ≡ set a b₂) s
+           (set-set l₁ a b₁ b₂)
+           ≡
+         set-set l₂ a b₁ b₂)
+
+  equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} =
+    l₁ ≡ l₂                                                          ↝⟨ equality-characterisation₁ ⟩
+
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (s : set l₁ ≡ set l₂) →
+       (∀ a b → subst (λ get → get (set l₂ a b) ≡ b) g
+                  (subst (λ set → get l₁ (set a b) ≡ b) s
+                     (get-set l₁ a b))
+                  ≡
+                get-set l₂ a b)
+         ×
+       (∀ a → subst (λ get → set l₂ a (get a) ≡ a) g
+                (subst (λ set → set a (get l₁ a) ≡ a) s
+                   (set-get l₁ a))
+                ≡
+              set-get l₂ a)
+         ×
+       (∀ a b₁ b₂ → subst (λ set → set (set a b₁) b₂ ≡ set a b₂) s
+                      (set-set l₁ a b₁ b₂)
+                      ≡
+                    set-set l₂ a b₁ b₂))                             ↝⟨ (∃-cong λ g → ∃-cong λ s →
+                                                                         (∀-cong ext λ a → ∀-cong ext λ b → ≡⇒↝ _ $ cong (_≡ _) $
+                                                                          lemma₁ g s a b)
+                                                                           ×-cong
+                                                                         (∀-cong ext λ a → ≡⇒↝ _ $ cong (_≡ _) $
+                                                                          lemma₂ g s a)
+                                                                           ×-cong
+                                                                         F.id) ⟩□
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (s : set l₁ ≡ set l₂) →
+       (∀ a b → trans (sym (cong₂ (λ set get → get (set a b)) s g))
+                  (get-set l₁ a b) ≡
+                get-set l₂ a b) ×
+       (∀ a → trans (sym (cong₂ (λ set get → set a (get a)) s g))
+                (set-get l₁ a) ≡
+              set-get l₂ a) ×
+       (∀ a b₁ b₂ →
+          subst (λ set → set (set a b₁) b₂ ≡ set a b₂) s
+            (set-set l₁ a b₁ b₂)
+            ≡
+          set-set l₂ a b₁ b₂))                                       □
+    where
+    open Lens
+
+    lemma₁ : ∀ _ _ _ _ → _
+    lemma₁ g s a b =
+      subst (λ get → get (set l₂ a b) ≡ b) g
+        (subst (λ set → get l₁ (set a b) ≡ b) s
+           (get-set l₁ a b))                                     ≡⟨ cong (λ eq → subst (λ get → get (set l₂ a b) ≡ b) g eq) $
+                                                                    subst-in-terms-of-trans-and-cong {x≡y = s} {fx≡gx = (get-set l₁ a b)} ⟩
+      subst (λ get → get (set l₂ a b) ≡ b) g
+        (trans (sym (cong (λ set → get l₁ (set a b)) s))
+           (trans (get-set l₁ a b) (cong (const b) s)))          ≡⟨ cong (λ eq → subst (λ get → get (set l₂ a b) ≡ b) g
+                                                                                   (trans (sym (cong (λ set → get l₁ (set a b)) s))
+                                                                                      (trans _ eq))) $
+                                                                    cong-const s ⟩
+      subst (λ get → get (set l₂ a b) ≡ b) g
+        (trans (sym (cong (λ set → get l₁ (set a b)) s))
+           (trans (get-set l₁ a b) refl))                        ≡⟨⟩
+
+      subst (λ get → get (set l₂ a b) ≡ b) g
+        (trans (sym (cong (λ set → get l₁ (set a b)) s))
+           (get-set l₁ a b))                                     ≡⟨ subst-in-terms-of-trans-and-cong {x≡y = g}
+                                                                      {fx≡gx = trans _ (get-set l₁ a b)} ⟩
+      trans (sym (cong (λ get → get (set l₂ a b)) g))
+        (trans (trans (sym (cong (λ set → get l₁ (set a b)) s))
+                  (get-set l₁ a b))
+           (cong (const b) g))                                   ≡⟨ cong (λ eq → trans (sym (cong (λ get → get (set l₂ a b)) g))
+                                                                                   (trans _ eq)) $
+                                                                    cong-const g ⟩
+      trans (sym (cong (λ get → get (set l₂ a b)) g))
+        (trans (trans (sym (cong (λ set → get l₁ (set a b)) s))
+                  (get-set l₁ a b))
+           refl)                                                 ≡⟨⟩
+
+      trans (sym (cong (λ get → get (set l₂ a b)) g))
+        (trans (sym (cong (λ set → get l₁ (set a b)) s))
+           (get-set l₁ a b))                                     ≡⟨ sym $ trans-assoc _ _ (get-set l₁ a b) ⟩
+
+      trans (trans (sym (cong (λ get → get (set l₂ a b)) g))
+               (sym (cong (λ set → get l₁ (set a b)) s)))
+        (get-set l₁ a b)                                         ≡⟨ cong (λ eq → trans eq (get-set l₁ a b)) $ sym $
+                                                                    sym-trans _ (cong (λ get → get (set l₂ a b)) g) ⟩
+      trans (sym (trans (cong (λ set → get l₁ (set a b)) s)
+                    (cong (λ get → get (set l₂ a b)) g)))
+        (get-set l₁ a b)                                         ≡⟨⟩
+
+      trans (sym (cong₂ (λ set get → get (set a b)) s g))
+        (get-set l₁ a b)                                         ∎
+
+    lemma₂ : ∀ _ _ _ → _
+    lemma₂ g s a =
+      subst (λ get → set l₂ a (get a) ≡ a) g
+        (subst (λ set → set a (get l₁ a) ≡ a) s
+           (set-get l₁ a))                                       ≡⟨⟩
+
+      subst (λ get → set l₂ a (get a) ≡ a) g
+        (subst (λ set → set a (get l₁ a) ≡ a) s
+           (set-get l₁ a))                                       ≡⟨ cong (subst (λ get → set l₂ a (get a) ≡ a) g) $
+                                                                    subst-in-terms-of-trans-and-cong {x≡y = s} {fx≡gx = set-get l₁ a} ⟩
+      subst (λ get → set l₂ a (get a) ≡ a) g
+        (trans (sym (cong (λ set → set a (get l₁ a)) s))
+           (trans (set-get l₁ a) (cong (const a) s)))            ≡⟨ cong (λ eq → subst (λ get → set l₂ a (get a) ≡ a) g
+                                                                                    (trans (sym (cong (λ set → set a (get l₁ a)) s))
+                                                                                       (trans _ eq))) $
+                                                                    cong-const s ⟩
+      subst (λ get → set l₂ a (get a) ≡ a) g
+        (trans (sym (cong (λ set → set a (get l₁ a)) s))
+           (trans (set-get l₁ a) refl))                          ≡⟨⟩
+
+      subst (λ get → set l₂ a (get a) ≡ a) g
+        (trans (sym (cong (λ set → set a (get l₁ a)) s))
+           (set-get l₁ a))                                       ≡⟨ subst-in-terms-of-trans-and-cong {x≡y = g}
+                                                                      {fx≡gx = trans (sym (cong (λ set → set a (get l₁ a)) s)) (set-get l₁ a)} ⟩
+      trans (sym (cong (λ get → set l₂ a (get a)) g))
+        (trans (trans (sym (cong (λ set → set a (get l₁ a)) s))
+                  (set-get l₁ a))
+           (cong (const a) g))                                   ≡⟨ cong (λ eq → trans (sym (cong (λ get → set l₂ a (get a)) g)) (trans _ eq)) $
+                                                                    cong-const g ⟩
+      trans (sym (cong (λ get → set l₂ a (get a)) g))
+        (trans (trans (sym (cong (λ set → set a (get l₁ a)) s))
+                  (set-get l₁ a))
+           refl)                                                 ≡⟨⟩
+
+      trans (sym (cong (λ get → set l₂ a (get a)) g))
+        (trans (sym (cong (λ set → set a (get l₁ a)) s))
+           (set-get l₁ a))                                       ≡⟨ sym $ trans-assoc _ _ (set-get l₁ a) ⟩
+
+      trans (trans (sym (cong (λ get → set l₂ a (get a)) g))
+               (sym (cong (λ set → set a (get l₁ a)) s)))
+        (set-get l₁ a)                                           ≡⟨ cong (λ eq → trans eq (set-get l₁ a)) $ sym $
+                                                                    sym-trans _ (cong (λ get → set l₂ a (get a)) g) ⟩
+      trans (sym (trans (cong (λ set → set a (get l₁ a)) s)
+                    (cong (λ get → set l₂ a (get a)) g)))
+        (set-get l₁ a)                                           ≡⟨⟩
+
+      trans (sym (cong₂ (λ set get → set a (get a)) s g))
+        (set-get l₁ a)                                           ∎
+
+  -- And another one.
+
+  equality-characterisation₃ :
+    let open Lens in
+
+    l₁ ≡ l₂
+      ↔
+    ∃ λ (g : get l₁ ≡ get l₂) →
+    ∃ λ (s : set l₁ ≡ set l₂) →
+      (∀ a b →
+         trans (sym (cong₂ (λ set get → get (set a b)) s g))
+           (get-set l₁ a b) ≡
+         get-set l₂ a b) ×
+      (∀ a →
+         trans (sym (cong₂ (λ set get → set a (get a)) s g))
+           (set-get l₁ a) ≡
+         set-get l₂ a) ×
+      (∀ a b₁ b₂ →
+         trans (set-set l₁ a b₁ b₂) (cong (λ set → set a b₂) s) ≡
+         trans (cong (λ set → set (set a b₁) b₂) s)
+           (set-set l₂ a b₁ b₂))
+
+  equality-characterisation₃ {l₁ = l₁} {l₂ = l₂} =
+    l₁ ≡ l₂                                                          ↝⟨ equality-characterisation₂ ⟩
+
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (s : set l₁ ≡ set l₂) →
+       (∀ a b → trans (sym (cong₂ (λ set get → get (set a b)) s g))
+                  (get-set l₁ a b) ≡
+                get-set l₂ a b) ×
+       (∀ a → trans (sym (cong₂ (λ set get → set a (get a)) s g))
+                (set-get l₁ a) ≡
+              set-get l₂ a) ×
+       (∀ a b₁ b₂ →
+          subst (λ set → set (set a b₁) b₂ ≡ set a b₂) s
+            (set-set l₁ a b₁ b₂)
+            ≡
+          set-set l₂ a b₁ b₂))                                       ↝⟨ (∃-cong λ g → ∃-cong λ s → ∃-cong λ _ → ∃-cong λ _ →
+                                                                         ∀-cong ext λ a → ∀-cong ext λ b₁ → ∀-cong ext λ b₂ → ≡⇒↝ _ $
+                                                                         lemma g s a b₁ b₂) ⟩□
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (s : set l₁ ≡ set l₂) →
+       (∀ a b → trans (sym (cong₂ (λ set get → get (set a b)) s g))
+                  (get-set l₁ a b) ≡
+                get-set l₂ a b) ×
+       (∀ a → trans (sym (cong₂ (λ set get → set a (get a)) s g))
+                (set-get l₁ a) ≡
+              set-get l₂ a) ×
+       (∀ a b₁ b₂ →
+          trans (set-set l₁ a b₁ b₂) (cong (λ set → set a b₂) s) ≡
+          trans (cong (λ set → set (set a b₁) b₂) s)
+            (set-set l₂ a b₁ b₂)))                                   □
+    where
+    open Lens
+
+    lemma : ∀ _ _ _ _ _ → _
+    lemma g s a b₁ b₂ =
+      subst (λ set → set (set a b₁) b₂ ≡ set a b₂) s
+        (set-set l₁ a b₁ b₂) ≡
+      set-set l₂ a b₁ b₂                                        ≡⟨ cong (_≡ _) $
+                                                                   subst-in-terms-of-trans-and-cong {x≡y = s} {fx≡gx = set-set l₁ a b₁ b₂} ⟩
+      trans (sym (cong (λ set → set (set a b₁) b₂) s))
+        (trans (set-set l₁ a b₁ b₂)
+           (cong (λ set → set a b₂) s)) ≡
+      set-set l₂ a b₁ b₂                                        ≡⟨ [trans≡]≡[≡trans-symˡ] _ _ _ ⟩
+
+      trans (set-set l₁ a b₁ b₂) (cong (λ set → set a b₂) s) ≡
+      trans (sym (sym (cong (λ set → set (set a b₁) b₂) s)))
+        (set-set l₂ a b₁ b₂)                                    ≡⟨ cong (λ eq → trans _ (cong (λ set → set a b₂) s) ≡
+                                                                                trans eq (set-set l₂ a b₁ b₂)) $
+                                                                   sym-sym (cong (λ set → set (set a b₁) b₂) s) ⟩
+      trans (set-set l₁ a b₁ b₂) (cong (λ set → set a b₂) s) ≡
+      trans (cong (λ set → set (set a b₁) b₂) s)
+        (set-set l₂ a b₁ b₂)                                    ∎
+
 -- If two lenses have equal setters, then they also have equal
 -- getters.
 
@@ -394,7 +631,7 @@ equality-characterisation-for-sets :
 equality-characterisation-for-sets
   {l₁ = l₁} {l₂ = l₂} A-set B-set =
 
-  l₁ ≡ l₂                                                         ↝⟨ equality-characterisation ⟩
+  l₁ ≡ l₂                                                         ↝⟨ equality-characterisation₁ ⟩
 
   (∃ λ (g : get l₁ ≡ get l₂) →
    ∃ λ (s : set l₁ ≡ set l₂) →
@@ -521,7 +758,7 @@ module Lens-combinators where
 
   left-identity : (l : Lens A B) → id ∘ l ≡ l
   left-identity l =
-    _↔_.from equality-characterisation
+    _↔_.from equality-characterisation₁
              (refl , refl , lemma₁ , lemma₂ , lemma₃)
     where
     open Lens l
@@ -544,7 +781,7 @@ module Lens-combinators where
 
   right-identity : (l : Lens A B) → l ∘ id ≡ l
   right-identity l =
-    _↔_.from equality-characterisation
+    _↔_.from equality-characterisation₁
              (refl , refl , lemma₁ , lemma₂ , lemma₃)
     where
     open Lens l
@@ -569,7 +806,7 @@ module Lens-combinators where
     (l₁ : Lens C D) (l₂ : Lens B C) (l₃ : Lens A B) →
     l₁ ∘ (l₂ ∘ l₃) ≡ (l₁ ∘ l₂) ∘ l₃
   associativity l₁ l₂ l₃ =
-    _↔_.from equality-characterisation
+    _↔_.from equality-characterisation₁
              (refl , refl , lemma₁ , lemma₂ , lemma₃)
     where
     open Lens
@@ -879,7 +1116,7 @@ lens-from-⊥↔⊤ =
       ; set-get = λ a → ⊥-elim a
       ; set-set = λ a → ⊥-elim a
       } ,
-    λ l → _↔_.from equality-characterisation
+    λ l → _↔_.from equality-characterisation₁
             ( ⟨ext⟩ (λ a → ⊥-elim a)
             , ⟨ext⟩ (λ a → ⊥-elim a)
             , (λ a → ⊥-elim a)
@@ -1090,7 +1327,7 @@ equality-characterisation-for-sets-≅
     (C≃D : C ≃ D) →
     ↔→lens (_≃_.bijection C≃D) ∘ ↔→lens (_≃_.bijection $ inverse C≃D) ≡
     id
-  lemma C≃D = _↔_.from equality-characterisation
+  lemma C≃D = _↔_.from equality-characterisation₂
     ( ⟨ext⟩ (_≃_.right-inverse-of C≃D)
     , (⟨ext⟩ λ _ → ⟨ext⟩ $ _≃_.right-inverse-of C≃D)
     , lemma₁
@@ -1098,215 +1335,82 @@ equality-characterisation-for-sets-≅
     , lemma₃
     )
     where
-    lemma₁′ : ∀ _ → _
-    lemma₁′ d =
-      cong (_≃_.to C≃D ⊚ _≃_.from C≃D) (_≃_.right-inverse-of C≃D d)  ≡⟨ sym $ cong-∘ _ _ (_≃_.right-inverse-of C≃D _) ⟩
-
-      cong (_≃_.to C≃D)
-        (cong (_≃_.from C≃D) (_≃_.right-inverse-of C≃D _))           ≡⟨ cong (cong (_≃_.to C≃D)) $ _≃_.right-left-lemma C≃D _ ⟩
-
-      cong (_≃_.to C≃D) (_≃_.left-inverse-of C≃D _)                  ≡⟨⟩
-
-      cong (_≃_.to C≃D) (_≃_.right-inverse-of (inverse C≃D) _)       ∎
-
     lemma₁ = λ d₁ d₂ →
-      subst (λ get → get d₂ ≡ d₂)
-        (⟨ext⟩ $ _≃_.right-inverse-of C≃D)
-        (subst
-           (λ set → _≃_.to C≃D (_≃_.from C≃D (set d₁ d₂)) ≡ d₂)
-           (⟨ext⟩ λ _ → ⟨ext⟩ $ _≃_.right-inverse-of C≃D)
-           (trans
-              (cong (_≃_.to C≃D)
-                 (_≃_.right-inverse-of (inverse C≃D) _))
-              (_≃_.right-inverse-of C≃D _)))                     ≡⟨ subst-ext _ _ ⟩
+      let lemma =
+            cong (λ set → _≃_.to C≃D (_≃_.from C≃D (set d₁ d₂)))
+              (⟨ext⟩ λ _ → ⟨ext⟩ $ _≃_.right-inverse-of C≃D)      ≡⟨ cong (cong (λ set → _≃_.to C≃D (_≃_.from C≃D (set d₁ d₂)))) $
+                                                                     ext-const (⟨ext⟩ $ _≃_.right-inverse-of C≃D) ⟩
 
-      subst (_≡ d₂)
-        (_≃_.right-inverse-of C≃D _)
-        (subst
-           (λ set → _≃_.to C≃D (_≃_.from C≃D (set d₁ d₂)) ≡ d₂)
-           (⟨ext⟩ λ _ → ⟨ext⟩ $ _≃_.right-inverse-of C≃D)
-           (trans
-              (cong (_≃_.to C≃D)
-                 (_≃_.right-inverse-of (inverse C≃D) _))
-              (_≃_.right-inverse-of C≃D _)))                     ≡⟨ cong (λ eq →
-                                                                            subst (_≡ d₂) (_≃_.right-inverse-of C≃D _)
-                                                                              (subst (λ set → _≃_.to C≃D (_≃_.from C≃D (set d₁ d₂)) ≡ d₂) eq
-                                                                                 (trans (cong (_≃_.to C≃D) (_≃_.right-inverse-of (inverse C≃D) _))
-                                                                                    (_≃_.right-inverse-of C≃D _)))) $
-                                                                    ext-const (⟨ext⟩ $ _≃_.right-inverse-of C≃D) ⟩
-      subst (_≡ d₂)
-        (_≃_.right-inverse-of C≃D _)
-        (subst
-           (λ set → _≃_.to C≃D (_≃_.from C≃D (set d₁ d₂)) ≡ d₂)
-           (cong const $ ⟨ext⟩ $ _≃_.right-inverse-of C≃D)
-           (trans
-              (cong (_≃_.to C≃D)
-                 (_≃_.right-inverse-of (inverse C≃D) _))
-              (_≃_.right-inverse-of C≃D _)))                     ≡⟨ cong (subst (_≡ d₂) (_≃_.right-inverse-of C≃D _)) $ sym $
-                                                                    subst-∘ _ _ (⟨ext⟩ $ _≃_.right-inverse-of C≃D) ⟩
-      subst (_≡ d₂)
-        (_≃_.right-inverse-of C≃D _)
-        (subst
-           (λ set → _≃_.to C≃D (_≃_.from C≃D (set d₂)) ≡ d₂)
-           (⟨ext⟩ $ _≃_.right-inverse-of C≃D)
-           (trans
-              (cong (_≃_.to C≃D)
-                 (_≃_.right-inverse-of (inverse C≃D) _))
-              (_≃_.right-inverse-of C≃D _)))                     ≡⟨ cong (subst (_≡ d₂) (_≃_.right-inverse-of C≃D _)) $
-                                                                    subst-ext _ _ ⟩
-      subst (_≡ d₂)
-        (_≃_.right-inverse-of C≃D _)
-        (subst (λ d → _≃_.to C≃D (_≃_.from C≃D d) ≡ d₂)
-           (_≃_.right-inverse-of C≃D _)
-           (trans
-              (cong (_≃_.to C≃D)
-                 (_≃_.right-inverse-of (inverse C≃D) _))
-              (_≃_.right-inverse-of C≃D _)))                     ≡⟨ cong (subst (_≡ d₂) (_≃_.right-inverse-of C≃D _)) $
-                                                                    subst-∘ _ _ (_≃_.right-inverse-of C≃D _) ⟩
-      subst (_≡ d₂)
-        (_≃_.right-inverse-of C≃D _)
-        (subst (_≡ d₂)
-           (cong (_≃_.to C≃D ⊚ _≃_.from C≃D)
-              (_≃_.right-inverse-of C≃D _))
-           (trans
-              (cong (_≃_.to C≃D)
-                 (_≃_.right-inverse-of (inverse C≃D) _))
-              (_≃_.right-inverse-of C≃D _)))                     ≡⟨ subst-subst _
-                                                                      (cong (_≃_.to C≃D ⊚ _≃_.from C≃D) (_≃_.right-inverse-of C≃D _))
-                                                                      (_≃_.right-inverse-of C≃D _) _ ⟩
-      subst (_≡ d₂)
-        (trans
-           (cong (_≃_.to C≃D ⊚ _≃_.from C≃D)
-              (_≃_.right-inverse-of C≃D _))
-           (_≃_.right-inverse-of C≃D _))
-        (trans
-           (cong (_≃_.to C≃D)
-              (_≃_.right-inverse-of (inverse C≃D) _))
-           (_≃_.right-inverse-of C≃D _))                         ≡⟨ cong (λ eq → subst (_≡ d₂) eq
-                                                                                   (trans (cong (_≃_.to C≃D)
-                                                                                             (_≃_.right-inverse-of (inverse C≃D) _))
-                                                                                      (_≃_.right-inverse-of C≃D _))) $
-                                                                    sym $ sym-sym (trans (cong (_≃_.to C≃D ⊚ _≃_.from C≃D)
-                                                                                            (_≃_.right-inverse-of C≃D _))
-                                                                                     (_≃_.right-inverse-of C≃D _)) ⟩
-      subst (_≡ d₂)
-        (sym $ sym $ trans
-           (cong (_≃_.to C≃D ⊚ _≃_.from C≃D)
-              (_≃_.right-inverse-of C≃D _))
-           (_≃_.right-inverse-of C≃D _))
-        (trans
-           (cong (_≃_.to C≃D)
-              (_≃_.right-inverse-of (inverse C≃D) _))
-           (_≃_.right-inverse-of C≃D _))                         ≡⟨ subst-trans (sym $ trans (cong (_≃_.to C≃D ⊚ _≃_.from C≃D)
-                                                                                                (_≃_.right-inverse-of C≃D _))
-                                                                                         (_≃_.right-inverse-of C≃D _)) ⟩
-      trans
-        (sym $ trans
-           (cong (_≃_.to C≃D ⊚ _≃_.from C≃D)
-              (_≃_.right-inverse-of C≃D _))
-           (_≃_.right-inverse-of C≃D _))
-        (trans
-           (cong (_≃_.to C≃D)
-              (_≃_.right-inverse-of (inverse C≃D) _))
-           (_≃_.right-inverse-of C≃D _))                         ≡⟨ cong (λ eq → trans (sym $ trans eq (_≃_.right-inverse-of C≃D _))
-                                                                                   (trans (cong (_≃_.to C≃D)
-                                                                                             (_≃_.right-inverse-of (inverse C≃D) _))
-                                                                                      (_≃_.right-inverse-of C≃D _))) $
-                                                                    lemma₁′ _ ⟩
-      trans
-        (sym $ trans
-           (cong (_≃_.to C≃D)
-              (_≃_.right-inverse-of (inverse C≃D) _))
-           (_≃_.right-inverse-of C≃D _))
-        (trans
-           (cong (_≃_.to C≃D)
-              (_≃_.right-inverse-of (inverse C≃D) _))
-           (_≃_.right-inverse-of C≃D _))                         ≡⟨ trans-symˡ (trans (cong (_≃_.to C≃D) (_≃_.right-inverse-of (inverse C≃D) _))
-                                                                                  (_≃_.right-inverse-of C≃D _)) ⟩∎
-      refl                                                       ∎
+            cong (λ set → _≃_.to C≃D (_≃_.from C≃D (set d₁ d₂)))
+              (cong const $ ⟨ext⟩ $ _≃_.right-inverse-of C≃D)     ≡⟨ cong-∘ _ _ (⟨ext⟩ $ _≃_.right-inverse-of C≃D) ⟩
+
+            cong (λ set → _≃_.to C≃D (_≃_.from C≃D (set d₂)))
+              (⟨ext⟩ $ _≃_.right-inverse-of C≃D)                  ≡⟨ sym $ cong-∘ _ _ (⟨ext⟩ $ _≃_.right-inverse-of C≃D) ⟩
+
+            cong (_≃_.to C≃D ⊚ _≃_.from C≃D)
+              (cong (λ set → set d₂)
+                 (⟨ext⟩ $ _≃_.right-inverse-of C≃D))              ≡⟨ cong (cong (_≃_.to C≃D ⊚ _≃_.from C≃D)) $ cong-ext _ ⟩
+
+            cong (_≃_.to C≃D ⊚ _≃_.from C≃D)
+              (_≃_.right-inverse-of C≃D _)                        ≡⟨ sym $ cong-∘ _ _ (_≃_.right-inverse-of C≃D _) ⟩
+
+            cong (_≃_.to C≃D)
+              (cong (_≃_.from C≃D) (_≃_.right-inverse-of C≃D _))  ≡⟨ cong (cong (_≃_.to C≃D)) $ _≃_.right-left-lemma C≃D _ ⟩∎
+
+            cong (_≃_.to C≃D) (_≃_.left-inverse-of C≃D _)         ∎
+      in
+
+      trans (sym
+        (trans (cong (λ set → _≃_.to C≃D (_≃_.from C≃D (set d₁ d₂)))
+                  (⟨ext⟩ λ _ → ⟨ext⟩ $ _≃_.right-inverse-of C≃D))
+           (cong (λ get → get d₂)
+              (⟨ext⟩ $ _≃_.right-inverse-of C≃D))))
+      (trans (cong (_≃_.to C≃D) (_≃_.left-inverse-of C≃D _))
+         (_≃_.right-inverse-of C≃D _))                                ≡⟨ cong₂ (λ p q → trans (sym (trans p q))
+                                                                                          (trans (cong (_≃_.to C≃D) (_≃_.left-inverse-of C≃D _))
+                                                                                             (_≃_.right-inverse-of C≃D _)))
+                                                                           lemma
+                                                                           (cong-ext _) ⟩
+      trans (sym
+        (trans (cong (_≃_.to C≃D) (_≃_.left-inverse-of C≃D _))
+           (_≃_.right-inverse-of C≃D _)))
+      (trans (cong (_≃_.to C≃D) (_≃_.left-inverse-of C≃D _))
+         (_≃_.right-inverse-of C≃D _))                                ≡⟨ trans-symˡ (trans _ (_≃_.right-inverse-of C≃D _)) ⟩∎
+
+      refl                                                            ∎
 
     lemma₂ = λ d →
-      subst (λ get → get d ≡ d)
-        (⟨ext⟩ $ _≃_.right-inverse-of C≃D)
-        (subst
-           (λ set → set d (_≃_.to C≃D (_≃_.from C≃D d)) ≡ d)
-           (⟨ext⟩ λ _ → ⟨ext⟩ $ _≃_.right-inverse-of C≃D)
-           (trans
-              (cong (_≃_.to C≃D) (_≃_.left-inverse-of C≃D _))
-              (_≃_.left-inverse-of (inverse C≃D) _)))          ≡⟨ subst-ext _ _ ⟩
+      let lemma =
+            cong (λ set → set d (_≃_.to C≃D (_≃_.from C≃D d)))
+              (⟨ext⟩ λ _ → ⟨ext⟩ $ _≃_.right-inverse-of C≃D)    ≡⟨ cong (cong (λ set → set d (_≃_.to C≃D (_≃_.from C≃D d)))) $
+                                                                   ext-const (⟨ext⟩ $ _≃_.right-inverse-of C≃D) ⟩
 
-      subst (_≡ d)
-        (_≃_.right-inverse-of C≃D _)
-        (subst
-           (λ set → set d (_≃_.to C≃D (_≃_.from C≃D d)) ≡ d)
-           (⟨ext⟩ λ _ → ⟨ext⟩ $ _≃_.right-inverse-of C≃D)
-           (trans
-              (cong (_≃_.to C≃D) (_≃_.left-inverse-of C≃D _))
-              (_≃_.left-inverse-of (inverse C≃D) _)))          ≡⟨ cong (λ eq →
-                                                                          subst (_≡ d) (_≃_.right-inverse-of C≃D _)
-                                                                            (subst (λ set → set d (_≃_.to C≃D (_≃_.from C≃D d)) ≡ d) eq
-                                                                               (trans (cong (_≃_.to C≃D) (_≃_.left-inverse-of C≃D _))
-                                                                                  (_≃_.left-inverse-of (inverse C≃D) _)))) $
-                                                                  ext-const (⟨ext⟩ $ _≃_.right-inverse-of C≃D) ⟩
-      subst (_≡ d)
-        (_≃_.right-inverse-of C≃D _)
-        (subst
-           (λ set → set d (_≃_.to C≃D (_≃_.from C≃D d)) ≡ d)
-           (cong const $ ⟨ext⟩ $ _≃_.right-inverse-of C≃D)
-           (trans
-              (cong (_≃_.to C≃D) (_≃_.left-inverse-of C≃D _))
-              (_≃_.left-inverse-of (inverse C≃D) _)))          ≡⟨ cong (subst (_≡ d) (_≃_.right-inverse-of C≃D _)) $ sym $
-                                                                  subst-∘ _ _ (⟨ext⟩ $ _≃_.right-inverse-of C≃D) ⟩
-      subst (_≡ d)
-        (_≃_.right-inverse-of C≃D _)
-        (subst
-           (λ set → set (_≃_.to C≃D (_≃_.from C≃D d)) ≡ d)
-           (⟨ext⟩ $ _≃_.right-inverse-of C≃D)
-           (trans
-              (cong (_≃_.to C≃D) (_≃_.left-inverse-of C≃D _))
-              (_≃_.left-inverse-of (inverse C≃D) _)))          ≡⟨ cong (subst (_≡ d) (_≃_.right-inverse-of C≃D _)) $
-                                                                  subst-ext _ _ ⟩
-      subst (_≡ d)
-        (_≃_.right-inverse-of C≃D _)
-        (subst (_≡ d)
-           (_≃_.right-inverse-of C≃D _)
-           (trans
-              (cong (_≃_.to C≃D) (_≃_.left-inverse-of C≃D _))
-              (_≃_.left-inverse-of (inverse C≃D) _)))          ≡⟨ subst-subst _ (_≃_.right-inverse-of C≃D _) (_≃_.right-inverse-of C≃D _) _ ⟩
+            cong (λ set → set d (_≃_.to C≃D (_≃_.from C≃D d)))
+              (cong const $ ⟨ext⟩ $ _≃_.right-inverse-of C≃D)   ≡⟨ cong-∘ _ _ (⟨ext⟩ $ _≃_.right-inverse-of C≃D) ⟩
 
-      subst (_≡ d)
-        (trans (_≃_.right-inverse-of C≃D _)
-           (_≃_.right-inverse-of C≃D _))
+            cong (λ set → set (_≃_.to C≃D (_≃_.from C≃D d)))
+              (⟨ext⟩ $ _≃_.right-inverse-of C≃D)                ≡⟨ cong-ext _ ⟩∎
+
+            _≃_.right-inverse-of C≃D _                          ∎
+      in
+      trans (sym
+        (trans (cong (λ set → set d (_≃_.to C≃D (_≃_.from C≃D d)))
+                  (⟨ext⟩ λ _ → ⟨ext⟩ $ _≃_.right-inverse-of C≃D))
+           (cong (λ get → get d)
+              (⟨ext⟩ $ _≃_.right-inverse-of C≃D))))
         (trans
            (cong (_≃_.to C≃D) (_≃_.left-inverse-of C≃D _))
-           (_≃_.left-inverse-of (inverse C≃D) _))              ≡⟨ cong₂ (λ p q → subst (_≡ d) p (trans q (_≃_.left-inverse-of (inverse C≃D) _)))
-                                                                    (sym $ sym-sym (trans (_≃_.right-inverse-of C≃D _)
-                                                                                      (_≃_.right-inverse-of C≃D _)))
-                                                                    (_≃_.left-right-lemma C≃D _) ⟩
-      subst (_≡ d)
-        (sym $ sym $ trans (_≃_.right-inverse-of C≃D _)
-           (_≃_.right-inverse-of C≃D _))
-        (trans
-           (_≃_.right-inverse-of C≃D _)
-           (_≃_.left-inverse-of (inverse C≃D) _))              ≡⟨ subst-trans (sym $ trans (_≃_.right-inverse-of C≃D _)
-                                                                                       (_≃_.right-inverse-of C≃D _)) ⟩
-      trans
-        (sym $ trans (_≃_.right-inverse-of C≃D _)
-           (_≃_.right-inverse-of C≃D _))
-        (trans
-           (_≃_.right-inverse-of C≃D _)
-           (_≃_.left-inverse-of (inverse C≃D) _))              ≡⟨ cong (λ eq → trans (sym $ trans (_≃_.right-inverse-of C≃D _)
-                                                                                              (_≃_.right-inverse-of C≃D d))
-                                                                                 (trans (_≃_.right-inverse-of C≃D _) eq)) $
-                                                                  Eq.left-inverse-of∘inverse C≃D ⟩
-      trans
-        (sym $ trans (_≃_.right-inverse-of C≃D _)
-           (_≃_.right-inverse-of C≃D _))
-        (trans
-           (_≃_.right-inverse-of C≃D _)
-           (_≃_.right-inverse-of C≃D _))                       ≡⟨ trans-symˡ (trans (_≃_.right-inverse-of C≃D _)
-                                                                                (_≃_.right-inverse-of C≃D _)) ⟩∎
-      refl                                                     ∎
+           (_≃_.left-inverse-of (inverse C≃D) _))                   ≡⟨ cong₂ (λ p q → trans (sym p) q)
+                                                                         (cong₂ trans lemma (cong-ext _))
+                                                                         (cong₂ trans
+                                                                            (_≃_.left-right-lemma C≃D _)
+                                                                            (Eq.left-inverse-of∘inverse C≃D)) ⟩
+      trans (sym (trans (_≃_.right-inverse-of C≃D _)
+                    (_≃_.right-inverse-of C≃D _)))
+        (trans (_≃_.right-inverse-of C≃D _)
+           (_≃_.right-inverse-of C≃D _))                            ≡⟨ trans-symˡ (trans _ (_≃_.right-inverse-of C≃D _)) ⟩∎
+
+      refl                                                          ∎
 
     lemma₃ = λ d d₁ d₂ →
       subst (λ set → set (set d d₁) d₂ ≡ set d d₂)

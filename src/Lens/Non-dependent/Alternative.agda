@@ -877,7 +877,7 @@ private
       open Traditional.Lens l
 
     to∘from : ∀ u l → Iso-lens.traditional-lens (from u l) ≡ l
-    to∘from unit l = _↔_.from Traditional.equality-characterisation
+    to∘from unit l = _↔_.from Traditional.equality-characterisation₁
       ( refl
       , refl
       , (λ a _ → B-set a _ _)
