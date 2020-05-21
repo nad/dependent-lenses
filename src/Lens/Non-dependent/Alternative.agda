@@ -13,6 +13,7 @@ open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 
 open import Bijection equality-with-J as Bij using (_↔_)
 open import Category equality-with-J as C using (Category; Precategory)
+open import Circle equality-with-paths as Circle using (𝕊¹)
 open import Equality.Decidable-UIP equality-with-J
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
@@ -394,19 +395,19 @@ getters-equal-if-setters-equal l₁ l₂ setters-equal = ⟨ext⟩ λ a →
   where
   open Iso-lens
 
--- Let us assume that two lenses have a codomain type that is
--- inhabited whenever it is merely inhabited. In that case the lenses
--- are equal if their setters are equal (assuming univalence).
+-- If the codomain of a lens is inhabited when the remainder type is
+-- inhabited, then this lens is equal to another lens if their setters
+-- are equal (assuming univalence).
 
 lenses-equal-if-setters-equal :
   {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
-  (∥ B ∥ → B) →
   (l₁ l₂ : Iso-lens A B) →
+  (Iso-lens.R l₁ → B) →
   Iso-lens.set l₁ ≡ Iso-lens.set l₂ →
   l₁ ≡ l₂
 lenses-equal-if-setters-equal {A = A} {B = B}
-                              univ ∥B∥→B l₁ l₂ setters-equal =
+                              univ l₁ l₂ f setters-equal =
   _↔_.from (equality-characterisation₃ univ)
     ( R≃R
     , (λ a →
@@ -453,23 +454,27 @@ lenses-equal-if-setters-equal {A = A} {B = B}
 
       swap (b , remainder l₂ (from (equiv l₁) (r , b′)))         ∎
 
-  f : R l₁ → R l₂
-  f r = remainder l₂ (from (equiv l₁) (r , ∥B∥→B (inhabited l₁ r)))
+  g : R l₁ → R l₂
+  g r = remainder l₂ (from (equiv l₁) (r , f r))
 
-  id-f≃ : Eq.Is-equivalence (Σ-map P.id f)
-  id-f≃ = Eq.respects-extensional-equality
+  id-g≃ : Eq.Is-equivalence (Σ-map P.id g)
+  id-g≃ = Eq.respects-extensional-equality
     (λ (b , r) →
-       to BR≃BR (b , r)                                                 ≡⟨ to-BR≃BR _ _ _ ⟩
-       b , remainder l₂ (from (equiv l₁) (r , ∥B∥→B (inhabited l₁ r)))  ≡⟨⟩
-       b , f r                                                          ≡⟨⟩
-       Σ-map P.id f (b , r)                                             ∎)
+       to BR≃BR (b , r)                              ≡⟨ to-BR≃BR _ _ _ ⟩
+       b , remainder l₂ (from (equiv l₁) (r , f r))  ≡⟨⟩
+       b , g r                                       ≡⟨⟩
+       Σ-map P.id g (b , r)                          ∎)
     (is-equivalence BR≃BR)
 
-  f≃ : Eq.Is-equivalence f
-  f≃ r = Eq.drop-Σ-map-id _ id-f≃ (∥B∥→B (inhabited l₂ r)) r
+  g≃ : Eq.Is-equivalence g
+  g≃ r =
+    Trunc.rec
+      (H-level-propositional ext 0)
+      (λ b → Eq.drop-Σ-map-id _ id-g≃ b r)
+      (inhabited l₂ r)
 
   R≃R : R l₁ ≃ R l₂
-  R≃R = Eq.⟨ f , f≃ ⟩
+  R≃R = Eq.⟨ g , g≃ ⟩
 
 -- The functions ≃→lens and ≃→lens′ are pointwise equal (when
 -- applicable, assuming univalence).
@@ -865,20 +870,19 @@ Bijection-lens↠Iso-lens {A = A} {B} univ = record
 -- Traditional.Lens A B (assuming univalence).
 
 ¬Iso-lens↠Traditional-lens :
-  Univalence (# 1) →
-  Univalence (# 0) →
-  ∃ λ (A : Set₁) →
+  Univalence lzero →
+  Univalence a →
+  ∃ λ (A : Set a) →
     ¬ (Iso-lens A ⊤ ↠ Traditional.Lens A ⊤)
-¬Iso-lens↠Traditional-lens univ₁ univ₀ =
+¬Iso-lens↠Traditional-lens univ₀ univ =
   let A = _ in
 
   A ,
-  (λ surj →                               $⟨ _⇔_.from contractible⇔↔⊤ (lens-to-contractible↔⊤ univ₁ ⊤-contractible) ⟩
-     Contractible (Iso-lens A ⊤)          ↝⟨ H-level.respects-surjection surj 0 ⟩
-     Contractible (Traditional.Lens A ⊤)  ↝⟨ H-level.respects-surjection (_↔_.surjection $ Traditional.lens-to-⊤↔) 0 ⟩
-     Contractible ((a : A) → a ≡ a)       ↝⟨ mono₁ 0 ⟩
-     Is-proposition ((a : A) → a ≡ a)     ↝⟨ proj₂ $ ¬-type-of-refl-propositional ext univ₀ ⟩□
-     ⊥                                    □)
+  (λ surj →                                 $⟨ _⇔_.from contractible⇔↔⊤ (lens-to-contractible↔⊤ univ ⊤-contractible) ⟩
+     Contractible (Iso-lens A ⊤)            ↝⟨ H-level.respects-surjection surj 0 ⟩
+     Contractible (Traditional.Lens A ⊤)    ↝⟨ mono₁ 0 ⟩
+     Is-proposition (Traditional.Lens A ⊤)  ↝⟨ proj₂ $ Traditional.¬-lens-to-⊤-propositional univ₀ ⟩□
+     ⊥                                      □)
 
 -- Some lemmas used in Iso-lens↠Traditional-lens and
 -- Iso-lens↔Traditional-lens below.
@@ -1165,22 +1169,25 @@ h-level-respects-lens-from-inhabited {A = A} {B = B} {n = n} l a =
 
 -- In fact, there is an Iso-lens with a proposition as its domain and
 -- a non-set as its codomain (assuming univalence).
+--
+-- (The lemma does not actually use the univalence argument, but
+-- univalence is used by Circle.¬-𝕊¹-set.)
 
 lens-from-proposition-to-non-set :
   Univalence (# 0) →
-  ∃ λ (A : Set a) → ∃ λ (B : Set (lsuc lzero ⊔ b)) →
+  ∃ λ (A : Set a) → ∃ λ (B : Set b) →
   Iso-lens A B × Is-proposition A × ¬ Is-set B
-lens-from-proposition-to-non-set {b = b} univ =
+lens-from-proposition-to-non-set {b = b} _ =
     ⊥
-  , ↑ b Set
+  , ↑ b 𝕊¹
   , record
       { R         = ⊥
-      ; equiv     = ⊥            ↔⟨ inverse ×-left-zero ⟩□
-                    ⊥ × ↑ _ Set  □
+      ; equiv     = ⊥           ↔⟨ inverse ×-left-zero ⟩□
+                    ⊥ × ↑ _ 𝕊¹  □
       ; inhabited = ⊥-elim
       }
   , ⊥-propositional
-  , ¬-Set-set univ ⊚
+  , Circle.¬-𝕊¹-set ⊚
     H-level.respects-surjection (_↔_.surjection Bij.↑↔) 2
 
 -- Iso-lenses with contractible domains have contractible codomains.
@@ -1610,7 +1617,8 @@ module Iso-lens-combinators where
            (comp₁ , set₁) (comp₂ , set₂) =
     ⟨ext⟩ λ l₁ → ⟨ext⟩ λ l₂ →
       lenses-equal-if-setters-equal univ
-        ∥C∥→C (comp₁ l₁ l₂) (comp₂ l₁ l₂) $ ⟨ext⟩ λ a → ⟨ext⟩ λ c →
+        (comp₁ l₁ l₂) (comp₂ l₁ l₂) (∥C∥→C ⊚ inhabited (comp₁ l₁ l₂)) $
+        ⟨ext⟩ λ a → ⟨ext⟩ λ c →
           set (comp₁ l₁ l₂) a c           ≡⟨ set₁ _ _ _ _ ⟩
           set l₂ a (set l₁ (get l₂ a) c)  ≡⟨ sym $ set₂ _ _ _ _ ⟩∎
           set (comp₂ l₁ l₂) a c           ∎
