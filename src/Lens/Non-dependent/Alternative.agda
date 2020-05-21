@@ -195,6 +195,34 @@ isomorphism-to-lens {A = A} {B = B} {R = R} iso = record
   ; inhabited = proj₂
   }
 
+-- Converts equivalences to lenses.
+
+≃→lens :
+  {A : Set a} {B : Set b} →
+  A ≃ B → Iso-lens A B
+≃→lens {a = a} {A = A} {B = B} A≃B = record
+  { R         = ∥ ↑ a B ∥
+  ; equiv     = A              ↝⟨ A≃B ⟩
+                B              ↝⟨ inverse ∥∥×≃ ⟩
+                ∥ B ∥ × B      ↔⟨ ∥∥-cong (inverse Bij.↑↔) ×-cong F.id ⟩□
+                ∥ ↑ a B ∥ × B  □
+  ; inhabited = ∥∥-map lower
+  }
+
+-- Converts equivalences between types with the same universe level to
+-- lenses.
+
+≃→lens′ :
+  {A B : Set a} →
+  A ≃ B → Iso-lens A B
+≃→lens′ {a = a} {A = A} {B = B} A≃B = record
+  { R         = ∥ B ∥
+  ; equiv     = A          ↝⟨ A≃B ⟩
+                B          ↝⟨ inverse ∥∥×≃ ⟩□
+                ∥ B ∥ × B  □
+  ; inhabited = P.id
+  }
+
 ------------------------------------------------------------------------
 -- Equality characterisations for Iso-lenses
 
@@ -441,6 +469,21 @@ lenses-equal-if-setters-equal {A = A} {B = B}
 
   R≃R : R l₁ ≃ R l₂
   R≃R = Eq.⟨ f , f≃ ⟩
+
+-- The functions ≃→lens and ≃→lens′ are pointwise equal (when
+-- applicable, assuming univalence).
+
+≃→lens≡≃→lens′ :
+  {A B : Set a} →
+  Univalence a →
+  (A≃B : A ≃ B) → ≃→lens A≃B ≡ ≃→lens′ A≃B
+≃→lens≡≃→lens′ {A = A} {B = B} univ A≃B =
+  _↔_.from (equality-characterisation₃ univ)
+    ( (∥ ↑ _ B ∥  ↔⟨ ∥∥-cong Bij.↑↔ ⟩□
+       ∥ B ∥      □)
+    , (λ _ → refl)
+    , (λ _ → refl)
+    )
 
 ------------------------------------------------------------------------
 -- Some lens isomorphisms
@@ -1697,21 +1740,8 @@ open B public using () renaming (_≅_ to [_]_≅_)
   from : ∀ bi → A ≃ B → [ bi ] A ≅ B
   from bi A≃B = l , l⁻¹ , l∘l⁻¹≡id bi , l⁻¹∘l≡id bi
     where
-    l = record
-      { R         = ∥ B ∥
-      ; equiv     = A          ↝⟨ A≃B ⟩
-                    B          ↝⟨ inverse ∥∥×≃ ⟩□
-                    ∥ B ∥ × B  □
-      ; inhabited = P.id
-      }
-
-    l⁻¹ = record
-      { R         = ∥ A ∥
-      ; equiv     = B          ↝⟨ inverse A≃B ⟩
-                    A          ↝⟨ inverse ∥∥×≃ ⟩□
-                    ∥ A ∥ × A  □
-      ; inhabited = P.id
-      }
+    l   = ≃→lens′ A≃B
+    l⁻¹ = ≃→lens′ (inverse A≃B)
 
     l∘l⁻¹≡id : ∀ bi → l ∘ l⁻¹ ≡ id bi
     l∘l⁻¹≡id ⊠ = _↔_.from (equality-characterisation₂ univ)
