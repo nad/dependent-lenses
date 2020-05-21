@@ -894,12 +894,8 @@ private
     (A-set : Is-set A)
     where
 
-    -- This function has an extra argument of type Unit to make it
-    -- possible to block its unfolding (in order to improve
-    -- compile-time performance).
-
-    from : Unit → Traditional.Lens A B → Iso-lens A B
-    from unit l = isomorphism-to-lens
+    from : Block "conversion" → Traditional.Lens A B → Iso-lens A B
+    from ⊠ l = isomorphism-to-lens
       {R = ∃ λ (f : B → A) → ∀ b b′ → set (f b) b′ ≡ f b′}
       (record
          { surjection = record
@@ -931,8 +927,8 @@ private
       where
       open Traditional.Lens l
 
-    to∘from : ∀ u l → Iso-lens.traditional-lens (from u l) ≡ l
-    to∘from unit l = _↔_.from Traditional.equality-characterisation₁
+    to∘from : ∀ bc l → Iso-lens.traditional-lens (from bc l) ≡ l
+    to∘from ⊠ l = _↔_.from Traditional.equality-characterisation₁
       ( refl
       , refl
       , (λ a _ → B-set a _ _)
@@ -948,8 +944,8 @@ private
 
     from∘to :
       Univalence (a ⊔ b) →
-      ∀ u l → from u (Iso-lens.traditional-lens l) ≡ l
-    from∘to univ unit l′ =
+      ∀ bc l → from bc (Iso-lens.traditional-lens l) ≡ l
+    from∘to univ ⊠ l′ =
       _↔_.from (equality-characterisation₄ univ)
                (lemma , λ _ → refl)
       where
@@ -1045,29 +1041,30 @@ private
         R                                                           □
 
     iso :
-      Unit →
+      Block "conversion" →
       Univalence (a ⊔ b) →
       Iso-lens A B ↔ Traditional.Lens A B
-    iso u univ = record
+    iso bc univ = record
       { surjection = record
-        { logical-equivalence = record { from = from u }
-        ; right-inverse-of    = to∘from u
+        { logical-equivalence = record { from = from bc }
+        ; right-inverse-of    = to∘from bc
         }
-      ; left-inverse-of = from∘to univ u
+      ; left-inverse-of = from∘to univ bc
       }
 
 -- If the domain A is a set, then there is a split surjection from
 -- Iso-lens A B to Traditional.Lens A B.
 
 Iso-lens↠Traditional-lens :
+  Block "conversion" →
   Is-set A →
   Iso-lens A B ↠ Traditional.Lens A B
-Iso-lens↠Traditional-lens {A = A} {B = B} A-set = record
+Iso-lens↠Traditional-lens {A = A} {B = B} bc A-set = record
   { logical-equivalence = record
     { to   = Iso-lens.traditional-lens
-    ; from = Iso-lens↔Traditional-lens.from A-set unit
+    ; from = Iso-lens↔Traditional-lens.from A-set bc
     }
-  ; right-inverse-of = Iso-lens↔Traditional-lens.to∘from A-set unit
+  ; right-inverse-of = Iso-lens↔Traditional-lens.to∘from A-set bc
   }
 
 -- If the domain A is a set, then Traditional.Lens A B and
@@ -1075,23 +1072,25 @@ Iso-lens↠Traditional-lens {A = A} {B = B} A-set = record
 
 Iso-lens↔Traditional-lens :
   {A : Set a} {B : Set b} →
+  Block "conversion" →
   Univalence (a ⊔ b) →
   Is-set A →
   Iso-lens A B ↔ Traditional.Lens A B
-Iso-lens↔Traditional-lens univ A-set =
-  Iso-lens↔Traditional-lens.iso A-set unit univ
+Iso-lens↔Traditional-lens bc univ A-set =
+  Iso-lens↔Traditional-lens.iso A-set bc univ
 
 -- If the domain A is a set, then Traditional.Lens A B and
 -- Higher-lens A B are isomorphic (assuming univalence).
 
 Higher-lens↔Traditional-lens :
   {A : Set a} {B : Set b} →
+  Block "conversion" →
   Univalence (a ⊔ b) →
   Is-set A →
   Higher-lens A B ↔ Traditional.Lens A B
-Higher-lens↔Traditional-lens {A = A} {B} univ A-set =
+Higher-lens↔Traditional-lens {A = A} {B} bc univ A-set =
   Higher-lens A B       ↝⟨ Higher-lens↔Iso-lens univ ⟩
-  Iso-lens A B          ↝⟨ Iso-lens↔Traditional-lens univ A-set ⟩□
+  Iso-lens A B          ↝⟨ Iso-lens↔Traditional-lens bc univ A-set ⟩□
   Traditional.Lens A B  □
 
 -- If the codomain B is an inhabited set, then Iso-lens A B and
@@ -1460,7 +1459,7 @@ Is-proposition-closed-domain′ :
 Is-proposition-closed-domain′ {A = A} {B} univ A-prop =
                                          $⟨ Traditional.lens-preserves-h-level-of-domain 0 A-prop ⟩
   Is-proposition (Traditional.Lens A B)  ↝⟨ H-level.respects-surjection
-                                              (_↔_.surjection $ inverse $ Iso-lens↔Traditional-lens univ (mono₁ 1 A-prop))
+                                              (_↔_.surjection $ inverse $ Iso-lens↔Traditional-lens ⊠ univ (mono₁ 1 A-prop))
                                               1 ⟩□
   Is-proposition (Iso-lens A B)          □
 
@@ -1478,7 +1477,7 @@ Is-set-closed-domain :
 Is-set-closed-domain {A = A} {B} univ A-set =
                                  $⟨ (λ {_ _} → Traditional.lens-preserves-h-level-of-domain 1 A-set) ⟩
   Is-set (Traditional.Lens A B)  ↝⟨ H-level.respects-surjection
-                                      (_↔_.surjection $ inverse $ Iso-lens↔Traditional-lens univ A-set)
+                                      (_↔_.surjection $ inverse $ Iso-lens↔Traditional-lens ⊠ univ A-set)
                                       2 ⟩□
   Is-set (Iso-lens A B)          □
 
@@ -1625,14 +1624,9 @@ module Iso-lens-combinators where
     where
     open Iso-lens
 
-  -- A type used to block unfolding of id (for performance reasons).
-
-  data Block-id : Set where
-    ⊠ : Block-id
-
   -- Identity lens.
 
-  id : Block-id → Iso-lens A A
+  id : Block "id" → Iso-lens A A
   id {A = A} ⊠ = record
     { R         = ∥ A ∥
     ; equiv     = A          ↔⟨ inverse ∥∥×↔ ⟩□
@@ -1775,12 +1769,12 @@ open Iso-lens-combinators
 -- Isomorphisms expressed using Iso-lens quasi-inverses
 
 private
-  module B {a} (bi : Block-id) =
-    Bi-invertibility equality-with-J (Set a) Iso-lens (id bi) _∘_
-  module BM {a} (bi : Block-id) (univ : Univalence a) = B.More
-    bi
-    (left-identity bi _ univ)
-    (right-identity bi _ univ)
+  module B {a} (b : Block "id") =
+    Bi-invertibility equality-with-J (Set a) Iso-lens (id b) _∘_
+  module BM {a} (b : Block "id") (univ : Univalence a) = B.More
+    b
+    (left-identity b _ univ)
+    (right-identity b _ univ)
     (associativity _ _ _ univ)
 
 -- A form of isomorphism between types, expressed using lenses.
@@ -1789,7 +1783,7 @@ open B public using () renaming (_≅_ to [_]_≅_)
 
 -- Lenses with quasi-inverses can be converted to equivalences.
 
-≅→≃ : ∀ bi → [ bi ] A ≅ B → A ≃ B
+≅→≃ : ∀ b → [ b ] A ≅ B → A ≃ B
 ≅→≃
   ⊠
   (l@(⟨ _ , _ , _ ⟩) , l⁻¹@(⟨ _ , _ , _ ⟩) , l∘l⁻¹≡id , l⁻¹∘l≡id) =
@@ -1806,29 +1800,29 @@ open B public using () renaming (_≅_ to [_]_≅_)
   where
   open Iso-lens
 
--- There is a split surjection from [ bi ] A ≅ B to A ≃ B (assuming
+-- There is a split surjection from [ b ] A ≅ B to A ≃ B (assuming
 -- univalence).
 
 ≅↠≃ :
   {A B : Set a}
-  (bi : Block-id) →
+  (b : Block "id") →
   Univalence a →
-  ([ bi ] A ≅ B) ↠ (A ≃ B)
-≅↠≃ {A = A} {B = B} bi univ = record
+  ([ b ] A ≅ B) ↠ (A ≃ B)
+≅↠≃ {A = A} {B = B} b univ = record
   { logical-equivalence = record
-    { to   = ≅→≃ bi
-    ; from = from bi
+    { to   = ≅→≃ b
+    ; from = from b
     }
-  ; right-inverse-of = ≅→≃∘from bi
+  ; right-inverse-of = ≅→≃∘from b
   }
   where
-  from : ∀ bi → A ≃ B → [ bi ] A ≅ B
-  from bi A≃B = l , l⁻¹ , l∘l⁻¹≡id bi , l⁻¹∘l≡id bi
+  from : ∀ b → A ≃ B → [ b ] A ≅ B
+  from b A≃B = l , l⁻¹ , l∘l⁻¹≡id b , l⁻¹∘l≡id b
     where
     l   = ≃→lens′ A≃B
     l⁻¹ = ≃→lens′ (inverse A≃B)
 
-    l∘l⁻¹≡id : ∀ bi → l ∘ l⁻¹ ≡ id bi
+    l∘l⁻¹≡id : ∀ b → l ∘ l⁻¹ ≡ id b
     l∘l⁻¹≡id ⊠ = _↔_.from (equality-characterisation₂ univ)
       ( (∥ A ∥ × ∥ B ∥  ↝⟨ Eq.⇔→≃
                              (×-closure 1 truncation-is-proposition
@@ -1842,7 +1836,7 @@ open B public using () renaming (_≅_ to [_]_≅_)
                (_≃_.right-inverse-of A≃B _)
       )
 
-    l⁻¹∘l≡id : ∀ bi → l⁻¹ ∘ l ≡ id bi
+    l⁻¹∘l≡id : ∀ b → l⁻¹ ∘ l ≡ id b
     l⁻¹∘l≡id ⊠ = _↔_.from (equality-characterisation₂ univ)
       ( (∥ B ∥ × ∥ A ∥  ↝⟨ Eq.⇔→≃
                              (×-closure 1 truncation-is-proposition
@@ -1856,7 +1850,7 @@ open B public using () renaming (_≅_ to [_]_≅_)
                 (_≃_.left-inverse-of A≃B _)
       )
 
-  ≅→≃∘from : ∀ bi A≃B → ≅→≃ bi (from bi A≃B) ≡ A≃B
+  ≅→≃∘from : ∀ b A≃B → ≅→≃ b (from b A≃B) ≡ A≃B
   ≅→≃∘from ⊠ _ = Eq.lift-equality ext refl
 
 -- See also ≃≃≅ below.
@@ -1872,9 +1866,9 @@ open BM public using (equality-characterisation-≊)
 -- Lenses with left inverses have propositional remainder types.
 
 has-left-inverse→remainder-propositional :
-  (bi : Block-id)
+  (b : Block "id")
   (l : Iso-lens A B) →
-  B.Has-left-inverse bi l →
+  B.Has-left-inverse b l →
   Is-proposition (Iso-lens.R l)
 has-left-inverse→remainder-propositional
   ⊠ l@(⟨ _ , _ , _ ⟩) (l⁻¹@(⟨ _ , _ , _ ⟩) , l⁻¹∘l≡id) =
@@ -1890,9 +1884,9 @@ has-left-inverse→remainder-propositional
 -- Lenses with right inverses have propositional remainder types.
 
 has-right-inverse→remainder-propositional :
-  (bi : Block-id)
+  (b : Block "id")
   (l : Iso-lens A B) →
-  B.Has-right-inverse bi l →
+  B.Has-right-inverse b l →
   Is-proposition (Iso-lens.R l)
 has-right-inverse→remainder-propositional
   ⊠ l@(⟨ _ , _ , _ ⟩) (l⁻¹@(⟨ _ , _ , _ ⟩) , l∘l⁻¹≡id) =
@@ -1905,57 +1899,57 @@ has-right-inverse→remainder-propositional
   where
   open Iso-lens
 
--- There is an equivalence between A ≃ B and [ bi ] A ≊ B (assuming
+-- There is an equivalence between A ≃ B and [ b ] A ≊ B (assuming
 -- univalence).
 
 ≃≃≊ :
   {A B : Set a}
-  (bi : Block-id) →
+  (b : Block "id") →
   Univalence a →
-  (A ≃ B) ≃ ([ bi ] A ≊ B)
-≃≃≊ {A = A} {B = B} bi univ = Eq.↔⇒≃ (record
+  (A ≃ B) ≃ ([ b ] A ≊ B)
+≃≃≊ {A = A} {B = B} b univ = Eq.↔⇒≃ (record
   { surjection = record
     { logical-equivalence = record
-      { to   = to bi
-      ; from = from bi
+      { to   = to b
+      ; from = from b
       }
-    ; right-inverse-of = to∘from bi
+    ; right-inverse-of = to∘from b
     }
-  ; left-inverse-of = from∘to bi
+  ; left-inverse-of = from∘to b
   })
   where
   open Iso-lens
 
-  to : ∀ bi → A ≃ B → [ bi ] A ≊ B
-  to bi = B.≅→≊ bi ⊚ _↠_.from (≅↠≃ bi univ)
+  to : ∀ b → A ≃ B → [ b ] A ≊ B
+  to b = B.≅→≊ b ⊚ _↠_.from (≅↠≃ b univ)
 
-  from : ∀ bi → [ bi ] A ≊ B → A ≃ B
-  from bi = _↠_.to (≅↠≃ bi univ) ⊚ _↠_.from (BM.≅↠≊ bi univ)
+  from : ∀ b → [ b ] A ≊ B → A ≃ B
+  from b = _↠_.to (≅↠≃ b univ) ⊚ _↠_.from (BM.≅↠≊ b univ)
 
-  to∘from : ∀ bi A≊B → to bi (from bi A≊B) ≡ A≊B
-  to∘from bi A≊B =
-    _≃_.from (equality-characterisation-≊ bi univ _ _) $
+  to∘from : ∀ b A≊B → to b (from b A≊B) ≡ A≊B
+  to∘from b A≊B =
+    _≃_.from (equality-characterisation-≊ b univ _ _) $
     _↔_.from (equality-characterisation₃ univ)
-      ( ∥B∥≃R  bi A≊B
-      , lemma₁ bi A≊B
-      , lemma₂ bi A≊B
+      ( ∥B∥≃R  b A≊B
+      , lemma₁ b A≊B
+      , lemma₂ b A≊B
       )
     where
-    l′ : ∀ bi (A≊B : [ bi ] A ≊ B) → Iso-lens A B
-    l′ bi A≊B = proj₁ (to bi (from bi A≊B))
+    l′ : ∀ b (A≊B : [ b ] A ≊ B) → Iso-lens A B
+    l′ b A≊B = proj₁ (to b (from b A≊B))
 
-    ∥B∥≃R : ∀ bi (A≊B@(l , _) : [ bi ] A ≊ B) → ∥ B ∥ ≃ R l
-    ∥B∥≃R bi (l , (l-inv@(l⁻¹ , _) , _)) = Eq.⇔→≃
+    ∥B∥≃R : ∀ b (A≊B@(l , _) : [ b ] A ≊ B) → ∥ B ∥ ≃ R l
+    ∥B∥≃R b (l , (l-inv@(l⁻¹ , _) , _)) = Eq.⇔→≃
       truncation-is-proposition
       R-prop
       (Trunc.rec R-prop (remainder l ⊚ get l⁻¹))
       (inhabited l)
       where
-      R-prop = has-left-inverse→remainder-propositional bi l l-inv
+      R-prop = has-left-inverse→remainder-propositional b l l-inv
 
     lemma₁ :
-      ∀ bi (A≊B@(l , _) : [ bi ] A ≊ B) a →
-      _≃_.to (∥B∥≃R bi A≊B) (remainder (l′ bi A≊B) a) ≡ remainder l a
+      ∀ b (A≊B@(l , _) : [ b ] A ≊ B) a →
+      _≃_.to (∥B∥≃R b A≊B) (remainder (l′ b A≊B) a) ≡ remainder l a
     lemma₁
       ⊠
       ( l@(⟨ _ , _ , _ ⟩)
@@ -1968,16 +1962,16 @@ has-right-inverse→remainder-propositional
       remainder l a                    ∎
 
     lemma₂ :
-      ∀ bi (A≊B@(l , _) : [ bi ] A ≊ B) a →
-      get (l′ bi A≊B) a ≡ get l a
+      ∀ b (A≊B@(l , _) : [ b ] A ≊ B) a →
+      get (l′ b A≊B) a ≡ get l a
     lemma₂ ⊠
       (⟨ _ , _ , _ ⟩ , (⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) _ =
       refl
 
   from∘to :
-    ∀ bi A≃B →
-    _↠_.to (≅↠≃ bi univ) (_↠_.from (BM.≅↠≊ bi univ)
-      (B.≅→≊ bi (_↠_.from (≅↠≃ bi univ) A≃B))) ≡
+    ∀ b A≃B →
+    _↠_.to (≅↠≃ b univ) (_↠_.from (BM.≅↠≊ b univ)
+      (B.≅→≊ b (_↠_.from (≅↠≃ b univ) A≃B))) ≡
     A≃B
   from∘to ⊠ _ = Eq.lift-equality ext refl
 
@@ -1986,14 +1980,14 @@ has-right-inverse→remainder-propositional
 
 Is-bi-invertible→Is-equivalence-get :
   {A : Set a}
-  (bi : Block-id) →
+  (b : Block "id") →
   Univalence a →
   (l : Iso-lens A B) →
-  B.Is-bi-invertible bi l → Is-equivalence (Iso-lens.get l)
+  B.Is-bi-invertible b l → Is-equivalence (Iso-lens.get l)
 Is-bi-invertible→Is-equivalence-get
-  bi@⊠ univ l@(⟨ _ , _ , _ ⟩)
+  b@⊠ univ l@(⟨ _ , _ , _ ⟩)
   is-bi-inv@((⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
-  _≃_.is-equivalence (_≃_.from (≃≃≊ bi univ) (l , is-bi-inv))
+  _≃_.is-equivalence (_≃_.from (≃≃≊ b univ) (l , is-bi-inv))
 
 -- If l is a lens between types in the same universe, and the codomain
 -- of l is inhabited when its remainder type is inhabited, then there
@@ -2002,63 +1996,63 @@ Is-bi-invertible→Is-equivalence-get
 
 Is-bi-invertible≃Is-equivalence-get :
   {A B : Set a}
-  (bi : Block-id) →
+  (b : Block "id") →
   Univalence a →
   (l : Iso-lens A B) →
   (Iso-lens.R l → B) →
-  B.Is-bi-invertible bi l ≃ Is-equivalence (Iso-lens.get l)
-Is-bi-invertible≃Is-equivalence-get bi univ l f = Eq.⇔→≃
-  (BM.Is-bi-invertible-propositional bi univ l)
+  B.Is-bi-invertible b l ≃ Is-equivalence (Iso-lens.get l)
+Is-bi-invertible≃Is-equivalence-get b univ l f = Eq.⇔→≃
+  (BM.Is-bi-invertible-propositional b univ l)
   (Eq.propositional ext _)
-  (Is-bi-invertible→Is-equivalence-get bi univ l)
+  (Is-bi-invertible→Is-equivalence-get b univ l)
   (λ is-equiv →
 
      let l′ = ≃→lens′ Eq.⟨ get l , is-equiv ⟩ in
 
-                               $⟨ proj₂ (_≃_.to (≃≃≊ bi univ) Eq.⟨ _ , is-equiv ⟩) ⟩
-     B.Is-bi-invertible bi l′  ↝⟨ subst (B.Is-bi-invertible bi) (sym $ get-equivalence→≡≃→lens′ univ l is-equiv f) ⟩□
-     B.Is-bi-invertible bi l   □)
+                              $⟨ proj₂ (_≃_.to (≃≃≊ b univ) Eq.⟨ _ , is-equiv ⟩) ⟩
+     B.Is-bi-invertible b l′  ↝⟨ subst (B.Is-bi-invertible b) (sym $ get-equivalence→≡≃→lens′ univ l is-equiv f) ⟩□
+     B.Is-bi-invertible b l   □)
   where
   open Iso-lens
 
--- If A is a set, then there is an equivalence between [ bi ] A ≊ B
--- and [ bi ] A ≅ B (assuming univalence).
+-- If A is a set, then there is an equivalence between [ b ] A ≊ B and
+-- [ b ] A ≅ B (assuming univalence).
 
 ≊≃≅ :
   {A B : Set a}
-  (bi : Block-id) →
+  (b : Block "id") →
   Univalence a →
   Is-set A →
-  ([ bi ] A ≊ B) ≃ ([ bi ] A ≅ B)
-≊≃≅ bi univ A-set =
+  ([ b ] A ≊ B) ≃ ([ b ] A ≅ B)
+≊≃≅ b univ A-set =
   ∃-cong λ _ →
     BM.Is-bi-invertible≃Has-quasi-inverse-domain
-      bi univ
+      b univ
       (Is-set-closed-domain univ A-set)
 
 ------------------------------------------------------------------------
 -- A category
 
 -- If A is a set, then there is an equivalence between A ≃ B and
--- [ bi ] A ≅ B (assuming univalence).
+-- [ b ] A ≅ B (assuming univalence).
 
 ≃≃≅ :
   {A B : Set a}
-  (bi : Block-id) →
+  (b : Block "≃≃≅") →
   Univalence a →
   Is-set A →
-  (A ≃ B) ≃ ([ bi ] A ≅ B)
-≃≃≅ {A = A} {B = B} bi univ A-set =
-  A ≃ B         ↝⟨ ≃≃≊ bi univ ⟩
-  [ bi ] A ≊ B  ↝⟨ ≊≃≅ bi univ A-set ⟩□
-  [ bi ] A ≅ B  □
+  (A ≃ B) ≃ ([ b ] A ≅ B)
+≃≃≅ {A = A} {B = B} b@⊠ univ A-set =
+  A ≃ B        ↝⟨ ≃≃≊ b univ ⟩
+  [ b ] A ≊ B  ↝⟨ ≊≃≅ b univ A-set ⟩□
+  [ b ] A ≅ B  □
 
 -- The equivalence ≃≃≅ maps identity to identity.
 
 ≃≃≅-id≡id :
   {A : Set a}
-  (bi : Block-id) (univ : Univalence a) (A-set : Is-set A) →
-  proj₁ (_≃_.to (≃≃≅ bi univ A-set) F.id) ≡ id bi
+  (b : Block "≃≃≅") (univ : Univalence a) (A-set : Is-set A) →
+  proj₁ (_≃_.to (≃≃≅ b univ A-set) F.id) ≡ id b
 ≃≃≅-id≡id ⊠ univ A-set =
   _↔_.from (equality-characterisation₂ univ)
     (F.id , λ _ → refl)
@@ -2066,35 +2060,43 @@ Is-bi-invertible≃Is-equivalence-get bi univ l f = Eq.⇔→≃
 -- Lenses between sets in the same universe form a precategory
 -- (assuming univalence).
 
-precategory :
-  Block-id →
-  Univalence a →
-  Precategory (lsuc a) (lsuc a)
-precategory {a = a} bi univ = record
-  { precategory =
+private
+
+  precategory′ :
+    Block "id" →
+    Univalence a →
+    C.Precategory′ (lsuc a) (lsuc a)
+  precategory′ {a = a} b univ =
       SET a
     , (λ (A , A-set) (B , _) →
            Iso-lens A B
          , Is-set-closed-domain univ A-set)
-    , id bi
+    , id b
     , _∘_
-    , left-identity bi lzero univ _
-    , right-identity bi lzero univ _
+    , left-identity b lzero univ _
+    , right-identity b lzero univ _
     , (λ {_ _ _ _ l₁ l₂ l₃} →
          associativity lzero lzero lzero univ l₃ l₂ l₁)
-  }
+
+precategory :
+  Block "precategory" →
+  Univalence a →
+  Precategory (lsuc a) (lsuc a)
+precategory ⊠ univ .C.Precategory.precategory =
+  block λ b → precategory′ b univ
 
 -- Lenses between sets in the same universe form a category
 -- (assuming univalence).
 
 category :
-  Block-id →
+  Block "category" →
   Univalence a →
   Category (lsuc a) (lsuc a)
-category bi univ =
+category ⊠ univ =
+  block λ b →
   C.precategory-with-SET-to-category
     ext
     (λ _ _ → univ)
-    (proj₂ $ Precategory.precategory $ precategory bi univ)
-    (λ (_ , A-set) _ → ≃≃≅ bi univ A-set)
-    (λ (_ , A-set) → ≃≃≅-id≡id bi univ A-set)
+    (proj₂ $ precategory′ b univ)
+    (λ (_ , A-set) _ → ≃≃≅ b univ A-set)
+    (λ (_ , A-set) → ≃≃≅-id≡id b univ A-set)
