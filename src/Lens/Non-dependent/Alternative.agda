@@ -14,7 +14,8 @@ open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 open import Bijection equality-with-J as Bij using (_↔_)
 open import Category equality-with-J as C using (Category; Precategory)
 open import Equality.Decidable-UIP equality-with-J
-open import Equivalence equality-with-J as Eq using (_≃_; module _≃_)
+open import Equivalence equality-with-J as Eq
+  using (_≃_; Is-equivalence)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
@@ -1219,6 +1220,82 @@ remainder-has-same-h-level-as-domain {A = A} {B = B} l (suc n) h =
     H-level (1 + n) R        □
   where
   open Iso-lens l
+
+-- If the getter function is an equivalence and there is a function
+-- from the remainder type to the codomain, then the remainder type is
+-- propositional.
+
+get-equivalence→remainder-propositional :
+  (l : Iso-lens A B) →
+  Is-equivalence (Iso-lens.get l) →
+  (Iso-lens.R l → B) →
+  Is-proposition (Iso-lens.R l)
+get-equivalence→remainder-propositional l is-equiv f r₁ r₂ =
+  r₁                       ≡⟨ lemma _ ⟩
+  remainder (from A≃B b′)  ≡⟨ sym $ lemma _ ⟩∎
+  r₂                       ∎
+  where
+  open _≃_
+  open Iso-lens l
+
+  b′ = f r₁
+
+  A≃B = Eq.⟨ _ , is-equiv ⟩
+
+  lemma : ∀ r → r ≡ remainder (from A≃B b′)
+  lemma r =
+    r                                                              ≡⟨ cong proj₁ $ sym $ right-inverse-of equiv _ ⟩
+    proj₁ (to equiv (from equiv (r , b′)))                         ≡⟨ cong (proj₁ ⊚ to equiv) $ sym $ left-inverse-of A≃B _ ⟩
+    proj₁ (to equiv (from A≃B (to A≃B (from equiv (r , b′)))))     ≡⟨⟩
+    remainder (from A≃B (proj₂ (to equiv (from equiv (r , b′)))))  ≡⟨ cong (remainder ⊚ from A≃B ⊚ proj₂) $ right-inverse-of equiv _ ⟩∎
+    remainder (from A≃B b′)                                        ∎
+
+-- When the conditions of the previous lemma are satisfied the lens is
+-- equal to a lens formed using the equivalence (assuming univalence).
+
+get-equivalence→≡≃→lens :
+  {A : Set a} {B : Set b} →
+  Univalence (a ⊔ b) →
+  (l : Iso-lens A B) →
+  (eq : Is-equivalence (Iso-lens.get l)) →
+  (Iso-lens.R l → B) →
+  l ≡ ≃→lens Eq.⟨ Iso-lens.get l , eq ⟩
+get-equivalence→≡≃→lens {A = A} {B = B} univ l eq f =
+  _↔_.from (equality-characterisation₃ univ)
+    ( R≃∥B∥
+    , (λ _ → truncation-is-proposition _ _)
+    , (λ _ → refl)
+    )
+  where
+  open Iso-lens
+
+  A≃B : A ≃ B
+  A≃B = Eq.⟨ _ , eq ⟩
+
+  R≃∥B∥ : R l ≃ ∥ ↑ _ B ∥
+  R≃∥B∥ = Eq.⇔→≃
+    R-prop
+    truncation-is-proposition
+    (∥∥-map lift ⊚ inhabited l)
+    (Trunc.rec R-prop (remainder l ⊚ _≃_.from A≃B ⊚ lower))
+    where
+    R-prop = get-equivalence→remainder-propositional l eq f
+
+-- A variant of get-equivalence→≡≃→lens.
+
+get-equivalence→≡≃→lens′ :
+  {A B : Set a} →
+  Univalence a →
+  (l : Iso-lens A B) →
+  (eq : Is-equivalence (Iso-lens.get l)) →
+  (Iso-lens.R l → B) →
+  l ≡ ≃→lens′ Eq.⟨ Iso-lens.get l , eq ⟩
+get-equivalence→≡≃→lens′ {A = A} {B = B} univ l eq f =
+  l            ≡⟨ get-equivalence→≡≃→lens univ _ _ f ⟩
+  ≃→lens A≃B   ≡⟨ ≃→lens≡≃→lens′ univ _ ⟩∎
+  ≃→lens′ A≃B  ∎
+  where
+  A≃B = Eq.⟨ Iso-lens.get l , eq ⟩
 
 -- If the getter function is pointwise equal to the identity
 -- function, then the remainder type is propositional.
