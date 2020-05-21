@@ -1981,6 +1981,46 @@ has-right-inverse→remainder-propositional
     A≃B
   from∘to ⊠ _ = Eq.lift-equality ext refl
 
+-- The getter function of a bi-invertible lens is an equivalence
+-- (assuming univalence).
+
+Is-bi-invertible→Is-equivalence-get :
+  {A : Set a}
+  (bi : Block-id) →
+  Univalence a →
+  (l : Iso-lens A B) →
+  B.Is-bi-invertible bi l → Is-equivalence (Iso-lens.get l)
+Is-bi-invertible→Is-equivalence-get
+  bi@⊠ univ l@(⟨ _ , _ , _ ⟩)
+  is-bi-inv@((⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
+  _≃_.is-equivalence (_≃_.from (≃≃≊ bi univ) (l , is-bi-inv))
+
+-- If l is a lens between types in the same universe, and the codomain
+-- of l is inhabited when its remainder type is inhabited, then there
+-- is an equivalence between "l is bi-invertible" and "the getter of l
+-- is an equivalence" (assuming univalence).
+
+Is-bi-invertible≃Is-equivalence-get :
+  {A B : Set a}
+  (bi : Block-id) →
+  Univalence a →
+  (l : Iso-lens A B) →
+  (Iso-lens.R l → B) →
+  B.Is-bi-invertible bi l ≃ Is-equivalence (Iso-lens.get l)
+Is-bi-invertible≃Is-equivalence-get bi univ l f = Eq.⇔→≃
+  (BM.Is-bi-invertible-propositional bi univ l)
+  (Eq.propositional ext _)
+  (Is-bi-invertible→Is-equivalence-get bi univ l)
+  (λ is-equiv →
+
+     let l′ = ≃→lens′ Eq.⟨ get l , is-equiv ⟩ in
+
+                               $⟨ proj₂ (_≃_.to (≃≃≊ bi univ) Eq.⟨ _ , is-equiv ⟩) ⟩
+     B.Is-bi-invertible bi l′  ↝⟨ subst (B.Is-bi-invertible bi) (sym $ get-equivalence→≡≃→lens′ univ l is-equiv f) ⟩□
+     B.Is-bi-invertible bi l   □)
+  where
+  open Iso-lens
+
 -- If A is a set, then there is an equivalence between [ bi ] A ≊ B
 -- and [ bi ] A ≅ B (assuming univalence).
 
