@@ -32,9 +32,9 @@ import Lens.Non-dependent.Traditional as Traditional
 
 private
   variable
-    a b c d r           : Level
-    A A₁ A₂ B B₁ B₂ X Y : Set a
-    n                   : ℕ
+    a b c d r             : Level
+    A A₁ A₂ B B₁ B₂ C X Y : Set a
+    n                     : ℕ
 
 ------------------------------------------------------------------------
 -- Alternative formulations of lenses
@@ -2100,3 +2100,62 @@ category ⊠ univ =
     (proj₂ $ precategory′ b univ)
     (λ (_ , A-set) _ → ≃≃≅ b univ A-set)
     (λ (_ , A-set) → ≃≃≅-id≡id b univ A-set)
+
+-- The precategory defined here is equal to the one defined in
+-- Traditional, if the latter one is lifted (assuming univalence).
+
+precategory≡precategory :
+  (b : Block "precategory") →
+  Univalence (lsuc a) →
+  (univ : Univalence a) →
+  precategory b univ ≡
+  C.lift-precategory-Hom _ Traditional.precategory
+precategory≡precategory ⊠ univ⁺ univ =
+  block λ b →
+  _↔_.to (C.equality-characterisation-Precategory ext univ⁺ univ⁺)
+    ( F.id
+    , (λ (X , X-set) (Y , _) →
+         Iso-lens X Y                ↔⟨ Iso-lens↔Traditional-lens b univ X-set ⟩
+         Traditional.Lens X Y        ↔⟨ inverse Bij.↑↔ ⟩□
+         ↑ _ (Traditional.Lens X Y)  □)
+    , (λ (_ , X-set) → cong lift $ _↔_.from
+         (Traditional.equality-characterisation-for-sets X-set)
+         refl)
+    , (λ (_ , X-set) (_ , Y-set) _ (lift l₁) (lift l₂) →
+         cong lift (∘-lemma b X-set Y-set l₁ l₂))
+    )
+  where
+  ∘-lemma :
+    ∀ b (A-set : Is-set A) (B-set : Is-set B)
+    (l₁ : Traditional.Lens B C) (l₂ : Traditional.Lens A B) →
+    Iso-lens.traditional-lens
+      (Iso-lens↔Traditional-lens.from B-set b l₁ ∘
+       Iso-lens↔Traditional-lens.from A-set b l₂) ≡
+    l₁ Traditional.Lens-combinators.∘ l₂
+  ∘-lemma ⊠ A-set _ _ _ =
+    _↔_.from (Traditional.equality-characterisation-for-sets A-set)
+      refl
+
+-- The category defined here is equal to the one defined in
+-- Traditional, if the latter one is lifted (assuming univalence).
+
+category≡category :
+  (b : Block "category") →
+  Univalence (lsuc a) →
+  (univ : Univalence a) →
+  category b univ ≡
+  C.lift-category-Hom _ (Traditional.category univ)
+category≡category b univ⁺ univ =
+  _↔_.from (C.≡↔precategory≡precategory ext)
+    (Category.precategory (category b univ)                  ≡⟨ lemma b ⟩
+
+     precategory b univ                                      ≡⟨ precategory≡precategory b univ⁺ univ ⟩∎
+
+     Category.precategory
+       (C.lift-category-Hom _ (Traditional.category univ))  ∎)
+  where
+  lemma :
+    ∀ b →
+    Category.precategory (category b univ) ≡
+    precategory b univ
+  lemma ⊠ = refl
