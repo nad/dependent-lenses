@@ -1263,6 +1263,182 @@ module Lens-combinators where
                              (trans (z c₂″)
                                     (cong g (trans (cong h u) v)))))  ∎
 
+  -- The function ≃→lens maps equivalences where the forward direction
+  -- is Lens.get l to l if some coherence properties hold. (Perhaps
+  -- the second coherence property can be simplified in some way.)
+
+  ≃→lens-get :
+    ∀ (l : Lens A B) is-equiv →
+    let open Lens
+        A≃B = Eq.⟨ get l , is-equiv ⟩
+    in
+    (∀ a → get-set l a (get l a) ≡ cong (get l) (set-get l a)) →
+    (∀ a b₁ b₂ →
+     cong (λ set → set (set a b₁) b₂)
+       (⟨ext⟩ λ a → ⟨ext⟩ λ b →
+        trans (cong (_≃_.from A≃B) (sym (get-set l a b)))
+          (_≃_.left-inverse-of A≃B _)) ≡
+     trans (trans (cong (_≃_.from A≃B) (sym (get-set l a b₂)))
+              (_≃_.left-inverse-of A≃B _))
+       (sym (set-set l a b₁ b₂))) →
+    ≃→lens A≃B ≡ l
+  ≃→lens-get l is-equiv coh₁ coh₂ =
+    _↔_.from equality-characterisation₃
+      ( g
+      , s
+      , lemma₁
+      , lemma₂
+      , lemma₃
+      )
+    where
+    open Lens
+
+    A≃B = Eq.⟨ get l , is-equiv ⟩
+
+    g = refl {x = get l}
+
+    s = ⟨ext⟩ λ a → ⟨ext⟩ λ b → _≃_.to-from A≃B (
+      get l (set l a b)  ≡⟨ get-set l a b ⟩∎
+      b                  ∎)
+
+    s-lemma :
+      ∀ a b →
+      cong (λ set → set a b) s ≡
+      trans (cong (_≃_.from A≃B) (sym (get-set l a b)))
+        (_≃_.left-inverse-of A≃B _)
+    s-lemma a b =
+      cong (λ set → set a b)
+        (⟨ext⟩ λ a → ⟨ext⟩ λ b →
+         trans (cong (_≃_.from A≃B) (sym (get-set l a b)))
+           (_≃_.left-inverse-of A≃B _))                        ≡⟨ sym $ cong-∘ _ _ (⟨ext⟩ λ a → ⟨ext⟩ λ b →
+                                                                                    trans _ (_≃_.left-inverse-of A≃B _)) ⟩
+      cong (_$ b)
+        (cong (_$ a)
+           (⟨ext⟩ λ a → ⟨ext⟩ λ b →
+            trans (cong (_≃_.from A≃B) (sym (get-set l a b)))
+              (_≃_.left-inverse-of A≃B _)))                    ≡⟨ cong (cong (_$ b)) $
+                                                                  cong-ext (λ a → ⟨ext⟩ λ b → trans _ (_≃_.left-inverse-of A≃B _)) ⟩
+      cong (_$ b)
+        (⟨ext⟩ λ b →
+         trans (cong (_≃_.from A≃B) (sym (get-set l a b)))
+           (_≃_.left-inverse-of A≃B _))                        ≡⟨ cong-ext (λ b → trans _ (_≃_.left-inverse-of A≃B _)) ⟩∎
+
+      trans (cong (_≃_.from A≃B) (sym (get-set l a b)))
+        (_≃_.left-inverse-of A≃B _)                            ∎
+
+    lemma₁ = λ a b →
+      let lem =
+            cong (λ set → get l (set a b)) s                           ≡⟨ sym $ cong-∘ _ _ s ⟩
+
+            cong (get l) (cong (λ set → set a b) s)                    ≡⟨ cong (cong (get l)) $ s-lemma _ _ ⟩
+
+            cong (get l)
+              (trans (cong (_≃_.from A≃B) (sym (get-set l a b)))
+                 (_≃_.left-inverse-of A≃B _))                          ≡⟨ cong-trans _ _ (_≃_.left-inverse-of A≃B _) ⟩
+
+            trans (cong (get l)
+                     (cong (_≃_.from A≃B) (sym (get-set l a b))))
+              (cong (get l) (_≃_.left-inverse-of A≃B _))               ≡⟨ cong₂ trans
+                                                                            (cong-∘ _ _ (sym (get-set l a b)))
+                                                                            (_≃_.left-right-lemma A≃B _) ⟩∎
+            trans (cong (get l ⊚ _≃_.from A≃B) (sym (get-set l a b)))
+              (_≃_.right-inverse-of A≃B _)                             ∎
+      in
+      trans (sym (cong₂ (λ set get → get (set a b)) s g))
+        (_≃_.right-inverse-of A≃B _)                                ≡⟨⟩
+
+      trans (sym (cong (λ set → get l (set a b)) s))
+        (_≃_.right-inverse-of A≃B _)                                ≡⟨ cong (λ eq → trans (sym eq) (_≃_.right-inverse-of A≃B _)) lem ⟩
+
+      trans (sym
+        (trans (cong (get l ⊚ _≃_.from A≃B) (sym (get-set l a b)))
+           (_≃_.right-inverse-of A≃B _)))
+        (_≃_.right-inverse-of A≃B _)                                ≡⟨ elim¹
+                                                                         (λ eq → trans (sym (trans (cong (get l ⊚ _≃_.from A≃B) (sym eq))
+                                                                                               (_≃_.right-inverse-of A≃B _)))
+                                                                                   (_≃_.right-inverse-of A≃B _) ≡ eq) (
+        trans (sym
+          (trans (cong (get l ⊚ _≃_.from A≃B) (sym refl))
+             (_≃_.right-inverse-of A≃B _)))
+          (_≃_.right-inverse-of A≃B _)                                     ≡⟨⟩
+
+        trans (sym (trans refl (_≃_.right-inverse-of A≃B _)))
+          (_≃_.right-inverse-of A≃B _)                                     ≡⟨ cong (λ eq → trans (sym eq) (_≃_.right-inverse-of A≃B _)) $
+                                                                              trans-reflˡ (_≃_.right-inverse-of A≃B _) ⟩
+        trans (sym (_≃_.right-inverse-of A≃B _))
+          (_≃_.right-inverse-of A≃B _)                                     ≡⟨ trans-symˡ (_≃_.right-inverse-of A≃B _) ⟩∎
+
+        refl                                                               ∎)
+                                                                         _ ⟩∎
+      get-set l a b                                                 ∎
+
+    lemma₂ = λ a →
+      trans (sym (cong₂ (λ set get → set a (get a)) s g))
+         (_≃_.left-inverse-of A≃B _)                                     ≡⟨⟩
+
+      trans (sym (cong (λ set → set a (get l a)) s))
+         (_≃_.left-inverse-of A≃B _)                                     ≡⟨ cong (λ eq → trans (sym eq) (_≃_.left-inverse-of A≃B _)) $
+                                                                            s-lemma _ _ ⟩
+      trans (sym
+        (trans (cong (_≃_.from A≃B) (sym (get-set l a (get l a))))
+           (_≃_.left-inverse-of A≃B _)))
+         (_≃_.left-inverse-of A≃B _)                                     ≡⟨ cong (λ eq → trans (sym (trans (cong (_≃_.from A≃B) (sym eq))
+                                                                                                       (_≃_.left-inverse-of A≃B _)))
+                                                                                           (_≃_.left-inverse-of A≃B _)) $
+                                                                            coh₁ _ ⟩
+      trans (sym
+        (trans (cong (_≃_.from A≃B) (sym (cong (get l) (set-get l a))))
+           (_≃_.left-inverse-of A≃B _)))
+         (_≃_.left-inverse-of A≃B _)                                     ≡⟨ elim¹
+                                                                              (λ eq → trans (sym
+                                                                                        (trans (cong (_≃_.from A≃B) (sym (cong (get l) eq)))
+                                                                                           (_≃_.left-inverse-of A≃B _)))
+                                                                                         (_≃_.left-inverse-of A≃B _) ≡ eq) (
+        trans (sym
+          (trans (cong (_≃_.from A≃B) (sym (cong (get l) refl)))
+             (_≃_.left-inverse-of A≃B _)))
+           (_≃_.left-inverse-of A≃B _)                                          ≡⟨⟩
+
+        trans (sym (trans refl (_≃_.left-inverse-of A≃B _)))
+           (_≃_.left-inverse-of A≃B _)                                          ≡⟨ cong (λ eq → trans (sym eq) (_≃_.left-inverse-of A≃B _)) $
+                                                                                   trans-reflˡ (_≃_.left-inverse-of A≃B _) ⟩
+        trans (sym (_≃_.left-inverse-of A≃B _))
+           (_≃_.left-inverse-of A≃B _)                                          ≡⟨ trans-symˡ (_≃_.left-inverse-of A≃B _) ⟩∎
+
+        refl                                                                    ∎)
+                                                                              _ ⟩
+      set-get l a                                                        ∎
+
+    lemma₃ = λ a b₁ b₂ →
+      let lem =
+            cong (λ set → set (set a b₁) b₂) s                           ≡⟨⟩
+
+            cong (λ set → set (set a b₁) b₂)
+              (⟨ext⟩ λ a → ⟨ext⟩ λ b →
+               trans (cong (_≃_.from A≃B) (sym (get-set l a b)))
+                 (_≃_.left-inverse-of A≃B _))                            ≡⟨ coh₂ _ _ _ ⟩
+
+            trans (trans (cong (_≃_.from A≃B) (sym (get-set l a b₂)))
+                     (_≃_.left-inverse-of A≃B _))
+              (sym (set-set l a b₁ b₂))                                  ≡⟨ cong (λ eq → trans eq (sym (set-set l a b₁ b₂))) $ sym $
+                                                                            s-lemma _ _ ⟩∎
+            trans (cong (λ set → set a b₂) s) (sym (set-set l a b₁ b₂))  ∎
+      in
+      trans refl (cong (λ set → set a b₂) s)                               ≡⟨ trans-reflˡ (cong (λ set → set a b₂) s) ⟩
+
+      cong (λ set → set a b₂) s                                            ≡⟨⟩
+
+      trans (cong (λ set → set a b₂) s) refl                               ≡⟨ cong (trans _) $ sym $ trans-symˡ (set-set l a b₁ b₂) ⟩
+
+      trans (cong (λ set → set a b₂) s)
+        (trans (sym (set-set l a b₁ b₂))
+           (set-set l a b₁ b₂))                                            ≡⟨ sym $ trans-assoc _ _ (set-set l a b₁ b₂) ⟩
+
+      trans (trans (cong (λ set → set a b₂) s) (sym (set-set l a b₁ b₂)))
+        (set-set l a b₁ b₂)                                                ≡⟨ cong (λ eq → trans eq (set-set l a b₁ b₂)) $ sym
+                                                                              lem ⟩∎
+      trans (cong (λ set → set (set a b₁) b₂) s) (set-set l a b₁ b₂)       ∎
+
 ------------------------------------------------------------------------
 -- Isomorphisms expressed using lens quasi-inverses
 
