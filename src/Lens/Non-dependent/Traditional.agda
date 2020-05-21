@@ -14,7 +14,8 @@ import Bi-invertibility
 open import Bijection equality-with-J as Bij using (_↔_)
 open import Category equality-with-J as C using (Category; Precategory)
 import Circle equality-with-paths as Circle
-open import Equivalence equality-with-J as Eq using (_≃_)
+open import Equivalence equality-with-J as Eq
+  using (_≃_; Is-equivalence)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
@@ -1456,7 +1457,7 @@ private
 
 -- A form of isomorphism between types, expressed using lenses.
 
-open B public using (_≅_)
+open B public using (_≅_; Has-quasi-inverse)
 
 -- There is a split surjection from A ≅ B to A ≃ B.
 
@@ -1695,6 +1696,107 @@ equality-characterisation-for-sets-≅
     id , id , left-identity _ , right-identity _  ∎)
   where
   open Lens-combinators
+
+-- There is not necessarily a split surjection from
+-- Is-equivalence (Lens.get l) to Has-quasi-inverse l, if l is a lens
+-- between types in the same universe (assuming univalence).
+--
+-- (The lemma does not actually use the univalence argument, but
+-- univalence is used by Circle.¬-type-of-refl-propositional.)
+
+¬Is-equivalence↠Has-quasi-inverse :
+  Univalence a →
+  ¬ ({A B : Set a}
+     (l : Lens A B) →
+     Is-equivalence (Lens.get l) ↠ Has-quasi-inverse l)
+¬Is-equivalence↠Has-quasi-inverse _ surj =                       $⟨ ⊤-contractible ⟩
+  Contractible ⊤                                                 ↝⟨ H-level.respects-surjection lemma₁ 0 ⟩
+
+  Contractible
+    (∃ λ (g : P.id ≡ P.id) →
+     ∃ λ (s : const P.id ≡ const P.id) →
+       (∀ x y →
+          sym (cong₂ (λ set get → get (set x y)) s g) ≡ refl) ×
+       (∀ x →
+          sym (cong₂ (λ set get → set x (get x)) s g) ≡ refl) ×
+       (∀ x y z →
+          trans refl (cong (λ set → set x z) s) ≡
+          cong (λ set → set (set x y) z) s))                     ↝⟨ flip proj₁-closure 0
+                                                                      (λ g → cong const (sym g)
+                                                                           , lemma₂ g , (λ x → lemma₂ g x x) , lemma₃ g) ⟩
+
+  Contractible (P.id ≡ P.id)                                     ↝⟨ H-level-cong _ 0 $ inverse $ Eq.extensionality-isomorphism ext ⟩
+
+  Contractible ((x : X) → x ≡ x)                                 ↝⟨ mono₁ 0 ⟩
+
+  Is-proposition ((x : X) → x ≡ x)                               ↝⟨ ¬-prop ⟩□
+
+  ⊥                                                              □
+  where
+  open Lens-combinators
+
+  X,¬-prop = Circle.¬-type-of-refl-propositional
+  X        = proj₁ X,¬-prop
+  ¬-prop   = proj₂ X,¬-prop
+
+  lemma₁ =
+    ⊤                                                                 ↔⟨ inverse $ _⇔_.to contractible⇔↔⊤ $
+                                                                         propositional⇒inhabited⇒contractible
+                                                                           (Eq.propositional ext _)
+                                                                           (_≃_.is-equivalence Eq.id) ⟩
+
+    Is-equivalence (P.id {A = X})                                     ↝⟨ surj id ⟩
+
+    Has-quasi-inverse id                                              ↔⟨ BM.Has-quasi-inverse≃id≡id-domain
+                                                                           (id , left-identity _ , right-identity _) ⟩
+
+    id ≡ id                                                           ↔⟨ equality-characterisation₃ ⟩
+
+    (∃ λ (g : P.id ≡ P.id) →
+     ∃ λ (s : const P.id ≡ const P.id) →
+       (∀ x y →
+          trans (sym (cong₂ (λ set get → get (set x y)) s g)) refl ≡
+          refl) ×
+       (∀ x →
+          trans (sym (cong₂ (λ set get → set x (get x)) s g)) refl ≡
+          refl) ×
+       (∀ x y z →
+         trans refl (cong (λ set → set x z) s) ≡
+         trans (cong (λ set → set (set x y) z) s) refl))              ↔⟨⟩
+
+    (∃ λ (g : P.id ≡ P.id) →
+     ∃ λ (s : const P.id ≡ const P.id) →
+       (∀ x y →
+          sym (cong₂ (λ set get → get (set x y)) s g) ≡ refl) ×
+       (∀ x →
+          sym (cong₂ (λ set get → set x (get x)) s g) ≡ refl) ×
+       (∀ x y z →
+         trans refl (cong (λ set → set x z) s) ≡
+         cong (λ set → set (set x y) z) s))                           □
+
+  lemma₂ : (g : P.id ≡ P.id) (x y : X) → _
+  lemma₂ g x y =
+    sym (cong₂ (λ set get → get (set x y)) (cong const (sym g)) g)  ≡⟨⟩
+
+    sym (trans (cong (λ set → set x y) (cong const (sym g)))
+           (cong (λ get → get y) g))                                ≡⟨ cong (λ eq → sym (trans eq (cong (λ get → get y) g))) $
+                                                                       cong-∘ _ _ (sym g) ⟩
+    sym (trans (cong (λ set → set y) (sym g))
+           (cong (λ get → get y) g))                                ≡⟨ cong (λ eq → sym (trans eq (cong (λ get → get y) g))) $ cong-sym (_$ y) g ⟩
+
+    sym (trans (sym $ cong (λ set → set y) g)
+           (cong (λ get → get y) g))                                ≡⟨ cong sym $ trans-symˡ (cong (λ get → get y) g) ⟩
+
+    sym refl                                                        ≡⟨⟩
+
+    refl                                                            ∎
+
+  lemma₃ : (g : P.id ≡ P.id) (x y z : X) → _
+  lemma₃ g x y z =
+    trans refl (cong (λ set → set x z) (cong const (sym g)))  ≡⟨ trans-reflˡ (cong (λ set → set x z) (cong const (sym g))) ⟩
+    cong (λ set → set x z) (cong const (sym g))               ≡⟨ cong-∘ _ _ (sym g) ⟩
+    cong (λ set → set z) (sym g)                              ≡⟨ sym $ cong-∘ _ _ (sym g) ⟩∎
+    cong (λ set → set (set x y) z) (cong const (sym g))       ∎
 
 ------------------------------------------------------------------------
 -- A category
