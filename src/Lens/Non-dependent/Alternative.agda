@@ -1704,30 +1704,43 @@ module Iso-lens-combinators where
     where
     open Iso-lens
 
-  -- There is an equivalence between A ≃ B and [ bi ] A ≊ B (assuming
+  -- Lenses with quasi-inverses can be converted to equivalences.
+
+  ≅→≃ : ∀ bi → [ bi ] A ≅ B → A ≃ B
+  ≅→≃
+    ⊠
+    (l@(⟨ _ , _ , _ ⟩) , l⁻¹@(⟨ _ , _ , _ ⟩) , l∘l⁻¹≡id , l⁻¹∘l≡id) =
+    Eq.↔⇒≃ (record
+      { surjection = record
+        { logical-equivalence = record
+          { to   = get l
+          ; from = get l⁻¹
+          }
+        ; right-inverse-of = λ b → cong (λ l → get l b) l∘l⁻¹≡id
+        }
+      ; left-inverse-of = λ a → cong (λ l → get l a) l⁻¹∘l≡id
+      })
+    where
+    open Iso-lens
+
+  -- There is a split surjection from [ bi ] A ≅ B to A ≃ B (assuming
   -- univalence).
 
-  ≃≃≊ :
+  ≅↠≃ :
     {A B : Set a}
     (bi : Block-id) →
     Univalence a →
-    (A ≃ B) ≃ ([ bi ] A ≊ B)
-  ≃≃≊ {A = A} {B = B} bi univ = Eq.↔⇒≃ (record
-    { surjection = record
-      { logical-equivalence = record
-        { to   = to″ bi
-        ; from = from″ bi
-        }
-      ; right-inverse-of = to″∘from″ bi
+    ([ bi ] A ≅ B) ↠ (A ≃ B)
+  ≅↠≃ {A = A} {B = B} bi univ = record
+    { logical-equivalence = record
+      { to   = ≅→≃ bi
+      ; from = from bi
       }
-    ; left-inverse-of = from″∘to″ bi
-    })
+    ; right-inverse-of = ≅→≃∘from bi
+    }
     where
-    open _≃_
-    open Iso-lens
-
-    to′ : ∀ bi → A ≃ B → [ bi ] A ≅ B
-    to′ bi A≃B = l , l⁻¹ , l∘l⁻¹≡id bi , l⁻¹∘l≡id bi
+    from : ∀ bi → A ≃ B → [ bi ] A ≅ B
+    from bi A≃B = l , l⁻¹ , l∘l⁻¹≡id bi , l⁻¹∘l≡id bi
       where
       l = record
         { R         = ∥ B ∥
@@ -1773,29 +1786,38 @@ module Iso-lens-combinators where
                   (_≃_.left-inverse-of A≃B _)
         )
 
-    to″ : ∀ bi → A ≃ B → [ bi ] A ≊ B
-    to″ bi = ≅→≊ bi ⊚ to′ bi
+    ≅→≃∘from : ∀ bi A≃B → ≅→≃ bi (from bi A≃B) ≡ A≃B
+    ≅→≃∘from ⊠ _ = Eq.lift-equality ext refl
 
-    from′ : ∀ bi → [ bi ] A ≅ B → A ≃ B
-    from′
-      ⊠
-      (l@(⟨ _ , _ , _ ⟩) , l⁻¹@(⟨ _ , _ , _ ⟩) , l∘l⁻¹≡id , l⁻¹∘l≡id) =
-      Eq.↔⇒≃ (record
-        { surjection = record
-          { logical-equivalence = record
-            { to   = get l
-            ; from = get l⁻¹
-            }
-          ; right-inverse-of = λ b → cong (λ l → get l b) l∘l⁻¹≡id
-          }
-        ; left-inverse-of = λ a → cong (λ l → get l a) l⁻¹∘l≡id
-        })
+  -- There is an equivalence between A ≃ B and [ bi ] A ≊ B (assuming
+  -- univalence).
 
-    from″ : ∀ bi → [ bi ] A ≊ B → A ≃ B
-    from″ bi = from′ bi ⊚ _↠_.from (≅↠≊ bi univ)
+  ≃≃≊ :
+    {A B : Set a}
+    (bi : Block-id) →
+    Univalence a →
+    (A ≃ B) ≃ ([ bi ] A ≊ B)
+  ≃≃≊ {A = A} {B = B} bi univ = Eq.↔⇒≃ (record
+    { surjection = record
+      { logical-equivalence = record
+        { to   = to bi
+        ; from = from bi
+        }
+      ; right-inverse-of = to∘from bi
+      }
+    ; left-inverse-of = from∘to bi
+    })
+    where
+    open Iso-lens
 
-    to″∘from″ : ∀ bi A≊B → to″ bi (from″ bi A≊B) ≡ A≊B
-    to″∘from″ bi A≊B =
+    to : ∀ bi → A ≃ B → [ bi ] A ≊ B
+    to bi = ≅→≊ bi ⊚ _↠_.from (≅↠≃ bi univ)
+
+    from : ∀ bi → [ bi ] A ≊ B → A ≃ B
+    from bi = _↠_.to (≅↠≃ bi univ) ⊚ _↠_.from (≅↠≊ bi univ)
+
+    to∘from : ∀ bi A≊B → to bi (from bi A≊B) ≡ A≊B
+    to∘from bi A≊B =
       _≃_.from (equality-characterisation-≊ bi univ _ _) $
       _↔_.from (equality-characterisation₃ univ)
         ( ∥B∥≃R  bi A≊B
@@ -1804,7 +1826,7 @@ module Iso-lens-combinators where
         )
       where
       l′ : ∀ bi (A≊B : [ bi ] A ≊ B) → Iso-lens A B
-      l′ bi A≊B = proj₁ (to″ bi (from″ bi A≊B))
+      l′ bi A≊B = proj₁ (to bi (from bi A≊B))
 
       ∥B∥≃R : ∀ bi (A≊B@(l , _) : [ bi ] A ≊ B) → ∥ B ∥ ≃ R l
       ∥B∥≃R bi (l , (l-inv@(l⁻¹ , _) , _)) = Eq.⇔→≃
@@ -1836,10 +1858,12 @@ module Iso-lens-combinators where
         (⟨ _ , _ , _ ⟩ , (⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) _ =
         refl
 
-    from″∘to″ :
+    from∘to :
       ∀ bi A≃B →
-      from′ bi (_↠_.from (≅↠≊ bi univ) (≅→≊ bi (to′ bi A≃B))) ≡ A≃B
-    from″∘to″ ⊠ _ = Eq.lift-equality ext refl
+      _↠_.to (≅↠≃ bi univ) (_↠_.from (≅↠≊ bi univ)
+        (≅→≊ bi (_↠_.from (≅↠≃ bi univ) A≃B))) ≡
+      A≃B
+    from∘to ⊠ _ = Eq.lift-equality ext refl
 
   -- If A is a set, then there is an equivalence between [ bi ] A ≊ B
   -- and [ bi ] A ≅ B (assuming univalence).
