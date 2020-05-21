@@ -10,6 +10,7 @@ open import Equality.Propositional.Cubical
 open import Logical-equivalence using (module _⇔_)
 open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 
+import Bi-invertibility
 open import Bijection equality-with-J as Bij using (_↔_)
 open import Category equality-with-J as C using (Category; Precategory)
 open import Equivalence equality-with-J as Eq using (_≃_)
@@ -52,6 +53,9 @@ private
   variable
     l₁ l₂ : Lens A B
 
+------------------------------------------------------------------------
+-- Some lemmas
+
 -- The record type above is isomorphic to a nested Σ-type.
 
 Lens-as-Σ :
@@ -81,6 +85,230 @@ Lens-as-Σ = record
   }
   where
   open Lens
+
+-- If two lenses have equal setters, then they also have equal
+-- getters.
+
+getters-equal-if-setters-equal :
+  let open Lens in
+  (l₁ l₂ : Lens A B) →
+  set l₁ ≡ set l₂ →
+  get l₁ ≡ get l₂
+getters-equal-if-setters-equal l₁ l₂ setters-equal = ⟨ext⟩ λ a →
+  get l₁ a                      ≡⟨ cong (get l₁) $ sym $ set-get l₂ _ ⟩
+  get l₁ (set l₂ a (get l₂ a))  ≡⟨ cong (λ f → get l₁ (f _ _)) $ sym setters-equal ⟩
+  get l₁ (set l₁ a (get l₂ a))  ≡⟨ get-set l₁ _ _ ⟩∎
+  get l₂ a                      ∎
+  where
+  open Lens
+
+------------------------------------------------------------------------
+-- Some lens isomorphisms
+
+-- If B is a proposition, then Lens a b is isomorphic to
+-- (A → B) × ((a : A) → a ≡ a).
+
+lens-to-proposition↔ :
+  Is-proposition B →
+  Lens A B ↔ (A → B) × ((a : A) → a ≡ a)
+lens-to-proposition↔ {B = B} {A = A} B-prop =
+  Lens A B                                                          ↝⟨ Lens-as-Σ ⟩
+
+  (∃ λ (get : A → B) →
+   ∃ λ (set : A → B → A) →
+     (∀ a b → get (set a b) ≡ b) ×
+     (∀ a → set a (get a) ≡ a) ×
+     (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂))                    ↝⟨ (∃-cong λ get → ∃-cong λ set → ∃-cong λ _ → ∃-cong λ _ →
+                                                                        ∀-cong ext λ a → ∀-cong ext λ b₁ → ∀-cong ext λ b₂ →
+                                                                          ≡⇒↝ _ (
+       (set (set a b₁)                         b₂ ≡ set a b₂)               ≡⟨ cong (λ b → set (set a b) b₂ ≡ _) (B-prop _ _) ⟩
+       (set (set a (get a))                    b₂ ≡ set a b₂)               ≡⟨ cong (λ b → set (set a (get a)) b ≡ _) (B-prop _ _) ⟩
+       (set (set a (get a)) (get (set a (get a))) ≡ set a b₂)               ≡⟨ cong (λ b → _ ≡ set a b) (B-prop _ _) ⟩∎
+       (set (set a (get a)) (get (set a (get a))) ≡ set a (get a))          ∎)) ⟩
+
+  (∃ λ (get : A → B) →
+   ∃ λ (set : A → B → A) →
+     (∀ a b → get (set a b) ≡ b) ×
+     (∀ a → set a (get a) ≡ a) ×
+     (∀ a → B → B →
+        set (set a (get a)) (get (set a (get a))) ≡
+        set a (get a)))                                             ↝⟨ (∃-cong λ get →
+                                                                        Σ-cong (A→B→A↔A→A get) λ set →
+                                                                          drop-⊤-left-× λ _ →
+                                                                            _⇔_.to contractible⇔↔⊤ $
+                                                                              Π-closure ext 0 λ _ →
+                                                                              Π-closure ext 0 λ _ →
+                                                                              +⇒≡ B-prop) ⟩
+  ((A → B) ×
+   ∃ λ (f : A → A) →
+     (∀ a → f a ≡ a) ×
+     (∀ a → B → B → f (f a) ≡ f a))                                 ↝⟨ (∃-cong λ get → ∃-cong λ _ → ∃-cong λ _ →
+                                                                        ∀-cong ext λ a →
+                                                                          drop-⊤-left-Π ext (B↔⊤ (get a))) ⟩
+  ((A → B) ×
+   ∃ λ (f : A → A) →
+     (∀ a → f a ≡ a) ×
+     (∀ a → B → f (f a) ≡ f a))                                     ↝⟨ (∃-cong λ get → ∃-cong λ _ → ∃-cong λ _ →
+                                                                        ∀-cong ext λ a →
+                                                                          drop-⊤-left-Π ext (B↔⊤ (get a))) ⟩
+  ((A → B) ×
+   ∃ λ (f : A → A) →
+     (∀ a → f a ≡ a) ×
+     (∀ a → f (f a) ≡ f a))                                         ↝⟨ (∃-cong λ _ → ∃-cong λ f →
+                                                                        Σ-cong (Eq.extensionality-isomorphism ext) λ f≡id →
+                                                                        ∀-cong ext λ a →
+                                                                        ≡⇒↝ _ (cong₂ _≡_ (trans (f≡id (f a)) (f≡id a)) (f≡id a ))) ⟩
+  ((A → B) ×
+   ∃ λ (f : A → A) →
+     f ≡ P.id ×
+     (∀ a → a ≡ a))                                                 ↝⟨ (∃-cong λ _ → Σ-assoc) ⟩
+
+  (A → B) ×
+  (∃ λ (f : A → A) → f ≡ P.id) ×
+  (∀ a → a ≡ a)                                                     ↝⟨ (∃-cong λ _ → drop-⊤-left-× λ _ →
+                                                                          _⇔_.to contractible⇔↔⊤ $
+                                                                            singleton-contractible _) ⟩□
+  (A → B) × (∀ a → a ≡ a)                                           □
+
+  where
+  B↔⊤ : B → B ↔ ⊤
+  B↔⊤ b =
+    _⇔_.to contractible⇔↔⊤ $
+      propositional⇒inhabited⇒contractible B-prop b
+
+  A→B→A↔A→A : (A → B) → (A → B → A) ↔ (A → A)
+  A→B→A↔A→A get =
+    (A → B → A)  ↝⟨ ∀-cong ext (λ a → drop-⊤-left-Π ext $ B↔⊤ (get a)) ⟩□
+    (A → A)      □
+
+-- Lens A ⊤ is isomorphic to (a : A) → a ≡ a.
+
+lens-to-⊤↔ : Lens A ⊤ ↔ ((a : A) → a ≡ a)
+lens-to-⊤↔ {A = A} =
+  Lens A ⊤                     ↝⟨ lens-to-proposition↔ (mono₁ 0 ⊤-contractible) ⟩
+  (A → ⊤) × ((a : A) → a ≡ a)  ↝⟨ drop-⊤-left-× (λ _ → →-right-zero) ⟩□
+  ((a : A) → a ≡ a)            □
+
+-- Lens A ⊥ is isomorphic to ¬ A.
+
+lens-to-⊥↔ : Lens A (⊥ {ℓ = b}) ↔ ¬ A
+lens-to-⊥↔ {A = A} =
+  Lens A ⊥                     ↝⟨ lens-to-proposition↔ ⊥-propositional ⟩
+  (A → ⊥) × ((a : A) → a ≡ a)  ↝⟨ →-cong ext F.id (Bij.⊥↔uninhabited ⊥-elim)
+                                    ×-cong
+                                  F.id ⟩
+  ¬ A × ((a : A) → a ≡ a)      ↝⟨ drop-⊤-right lemma ⟩□
+  ¬ A                          □
+  where
+  lemma : ¬ A → ((a : A) → a ≡ a) ↔ ⊤
+  lemma ¬a = record
+    { surjection = record
+      { logical-equivalence = record
+        { to   = _
+        ; from = λ _ _ → refl
+        }
+      ; right-inverse-of = λ _ → refl
+      }
+    ; left-inverse-of = λ eq → ⟨ext⟩ λ a →
+        ⊥-elim (¬a a)
+    }
+
+-- See also lens-from-⊥↔⊤ and
+-- lens-from-contractible↔codomain-contractible below.
+
+------------------------------------------------------------------------
+-- Some lens results related to h-levels
+
+-- If the domain of a lens is inhabited and has h-level n,
+-- then the codomain also has h-level n.
+
+h-level-respects-lens-from-inhabited :
+  ∀ n → Lens A B → A → H-level n A → H-level n B
+h-level-respects-lens-from-inhabited {A = A} {B = B} n l a =
+  H-level n A  ↝⟨ H-level.respects-surjection surj n ⟩
+  H-level n B  □
+  where
+  open Lens l
+
+  surj : A ↠ B
+  surj = record
+    { logical-equivalence = record
+      { to   = get
+      ; from = set a
+      }
+    ; right-inverse-of = λ b →
+        get (set a b)  ≡⟨ get-set a b ⟩∎
+        b              ∎
+    }
+
+-- Lenses with contractible domains have contractible codomains.
+
+contractible-to-contractible :
+  Lens A B → Contractible A → Contractible B
+contractible-to-contractible l c =
+  h-level-respects-lens-from-inhabited _ l (proj₁ c) c
+
+-- If A and B have h-level n (where, in the case of B, one can assume
+-- that A is inhabited), then Lens a b also has h-level n.
+
+lens-preserves-h-level :
+  ∀ n → H-level n A → (A → H-level n B) →
+  H-level n (Lens A B)
+lens-preserves-h-level n hA hB =
+  H-level.respects-surjection (_↔_.surjection (inverse Lens-as-Σ)) n $
+  Σ-closure n (Π-closure ext n λ a →
+               hB a) λ _ →
+  Σ-closure n (Π-closure ext n λ _ →
+               Π-closure ext n λ _ →
+               hA) λ _ →
+  ×-closure n (Π-closure ext n λ a →
+               Π-closure ext n λ _ →
+               +⇒≡ $ mono₁ n (hB a)) $
+  ×-closure n (Π-closure ext n λ _ →
+               +⇒≡ $ mono₁ n hA)
+              (Π-closure ext n λ _ →
+               Π-closure ext n λ _ →
+               Π-closure ext n λ _ →
+               +⇒≡ $ mono₁ n hA)
+
+-- If A has positive h-level n, then Lens A B also has h-level n.
+
+lens-preserves-h-level-of-domain :
+  ∀ n → H-level (1 + n) A → H-level (1 + n) (Lens A B)
+lens-preserves-h-level-of-domain n hA =
+  [inhabited⇒+]⇒+ n λ l →
+    lens-preserves-h-level (1 + n) hA λ a →
+      h-level-respects-lens-from-inhabited _ l a hA
+
+-- There is a type A such that Lens A ⊤ is not propositional (assuming
+-- univalence).
+
+¬-lens-to-⊤-propositional :
+  Univalence (# 0) →
+  ∃ λ (A : Set₁) → ¬ Is-proposition (Lens A ⊤)
+¬-lens-to-⊤-propositional univ =
+  A′ , (
+  Is-proposition (Lens A′ ⊤)         ↝⟨ H-level.respects-surjection (_↔_.surjection lens-to-⊤↔) 1 ⟩
+  Is-proposition ((a : A′) → a ≡ a)  ↝⟨ proj₂ $ ¬-type-of-refl-propositional ext univ ⟩□
+  ⊥₀                                 □)
+  where
+  A′ = _
+
+------------------------------------------------------------------------
+-- An existence result
+
+-- There is, in general, no lens for the first projection from a
+-- Σ-type.
+
+no-first-projection-lens :
+  ∃ λ (A : Set a) → ∃ λ (B : A → Set b) →
+    ¬ Lens (Σ A B) A
+no-first-projection-lens =
+  Lens.Non-dependent.no-first-projection-lens
+    Lens contractible-to-contractible
+
+------------------------------------------------------------------------
+-- Some equality characterisation lemmas
 
 abstract
 
@@ -600,22 +828,6 @@ abstract
       trans (cong (λ set → set (set a b₁) b₂) s)
         (set-set l₂ a b₁ b₂)                                    ∎
 
--- If two lenses have equal setters, then they also have equal
--- getters.
-
-getters-equal-if-setters-equal :
-  let open Lens in
-  (l₁ l₂ : Lens A B) →
-  set l₁ ≡ set l₂ →
-  get l₁ ≡ get l₂
-getters-equal-if-setters-equal l₁ l₂ setters-equal = ⟨ext⟩ λ a →
-  get l₁ a                      ≡⟨ cong (get l₁) $ sym $ set-get l₂ _ ⟩
-  get l₁ (set l₂ a (get l₂ a))  ≡⟨ cong (λ f → get l₁ (f _ _)) $ sym setters-equal ⟩
-  get l₁ (set l₁ a (get l₂ a))  ≡⟨ get-set l₁ _ _ ⟩∎
-  get l₂ a                      ∎
-  where
-  open Lens
-
 -- An equality characterisation lemma for lenses between sets.
 
 equality-characterisation-for-sets :
@@ -688,7 +900,51 @@ equality-characterisation-for-sets
   where
   open Lens
 
--- Combinators.
+------------------------------------------------------------------------
+-- More lens isomorphisms
+
+-- Lens ⊥ B is isomorphic to the unit type.
+
+lens-from-⊥↔⊤ : Lens (⊥ {ℓ = a}) B ↔ ⊤
+lens-from-⊥↔⊤ =
+  _⇔_.to contractible⇔↔⊤ $
+    record
+      { get = ⊥-elim
+      ; set = ⊥-elim
+      ; get-set = λ a → ⊥-elim a
+      ; set-get = λ a → ⊥-elim a
+      ; set-set = λ a → ⊥-elim a
+      } ,
+    λ l → _↔_.from equality-characterisation₁
+            ( ⟨ext⟩ (λ a → ⊥-elim a)
+            , ⟨ext⟩ (λ a → ⊥-elim a)
+            , (λ a → ⊥-elim a)
+            , (λ a → ⊥-elim a)
+            , (λ a → ⊥-elim a)
+            )
+
+-- If A is contractible, then Lens A B is isomorphic to
+-- Contractible B.
+
+lens-from-contractible↔codomain-contractible :
+  Contractible A →
+  Lens A B ↔ Contractible B
+lens-from-contractible↔codomain-contractible cA@(a , irrA) =
+  _≃_.bijection $
+  _↠_.from (Eq.≃↠⇔ (lens-preserves-h-level-of-domain 0 (mono₁ 0 cA))
+                   (H-level-propositional ext 0)) (record
+    { to   = flip contractible-to-contractible cA
+    ; from = λ (b , irrB) → record
+        { get     = λ _ → b
+        ; set     = λ _ _ → a
+        ; get-set = λ _ → irrB
+        ; set-get = irrA
+        ; set-set = λ _ _ _ → irrA a
+        }
+    })
+
+------------------------------------------------------------------------
+-- Lens combinators
 
 module Lens-combinators where
 
@@ -994,297 +1250,18 @@ module Lens-combinators where
                                     (cong g (trans (cong h u) v)))))  ∎
 
 ------------------------------------------------------------------------
--- Some lens isomorphisms
+-- Isomorphisms expressed using lens quasi-inverses
 
--- If B is a proposition, then Lens a b is isomorphic to
--- (A → B) × ((a : A) → a ≡ a).
+private
 
-lens-to-proposition↔ :
-  Is-proposition B →
-  Lens A B ↔ (A → B) × ((a : A) → a ≡ a)
-lens-to-proposition↔ {B = B} {A = A} B-prop =
-  Lens A B                                                          ↝⟨ Lens-as-Σ ⟩
-
-  (∃ λ (get : A → B) →
-   ∃ λ (set : A → B → A) →
-     (∀ a b → get (set a b) ≡ b) ×
-     (∀ a → set a (get a) ≡ a) ×
-     (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂))                    ↝⟨ (∃-cong λ get → ∃-cong λ set → ∃-cong λ _ → ∃-cong λ _ →
-                                                                        ∀-cong ext λ a → ∀-cong ext λ b₁ → ∀-cong ext λ b₂ →
-                                                                          ≡⇒↝ _ (
-       (set (set a b₁)                         b₂ ≡ set a b₂)               ≡⟨ cong (λ b → set (set a b) b₂ ≡ _) (B-prop _ _) ⟩
-       (set (set a (get a))                    b₂ ≡ set a b₂)               ≡⟨ cong (λ b → set (set a (get a)) b ≡ _) (B-prop _ _) ⟩
-       (set (set a (get a)) (get (set a (get a))) ≡ set a b₂)               ≡⟨ cong (λ b → _ ≡ set a b) (B-prop _ _) ⟩∎
-       (set (set a (get a)) (get (set a (get a))) ≡ set a (get a))          ∎)) ⟩
-
-  (∃ λ (get : A → B) →
-   ∃ λ (set : A → B → A) →
-     (∀ a b → get (set a b) ≡ b) ×
-     (∀ a → set a (get a) ≡ a) ×
-     (∀ a → B → B →
-        set (set a (get a)) (get (set a (get a))) ≡
-        set a (get a)))                                             ↝⟨ (∃-cong λ get →
-                                                                        Σ-cong (A→B→A↔A→A get) λ set →
-                                                                          drop-⊤-left-× λ _ →
-                                                                            _⇔_.to contractible⇔↔⊤ $
-                                                                              Π-closure ext 0 λ _ →
-                                                                              Π-closure ext 0 λ _ →
-                                                                              +⇒≡ B-prop) ⟩
-  ((A → B) ×
-   ∃ λ (f : A → A) →
-     (∀ a → f a ≡ a) ×
-     (∀ a → B → B → f (f a) ≡ f a))                                 ↝⟨ (∃-cong λ get → ∃-cong λ _ → ∃-cong λ _ →
-                                                                        ∀-cong ext λ a →
-                                                                          drop-⊤-left-Π ext (B↔⊤ (get a))) ⟩
-  ((A → B) ×
-   ∃ λ (f : A → A) →
-     (∀ a → f a ≡ a) ×
-     (∀ a → B → f (f a) ≡ f a))                                     ↝⟨ (∃-cong λ get → ∃-cong λ _ → ∃-cong λ _ →
-                                                                        ∀-cong ext λ a →
-                                                                          drop-⊤-left-Π ext (B↔⊤ (get a))) ⟩
-  ((A → B) ×
-   ∃ λ (f : A → A) →
-     (∀ a → f a ≡ a) ×
-     (∀ a → f (f a) ≡ f a))                                         ↝⟨ (∃-cong λ _ → ∃-cong λ f →
-                                                                        Σ-cong (Eq.extensionality-isomorphism ext) λ f≡id →
-                                                                        ∀-cong ext λ a →
-                                                                        ≡⇒↝ _ (cong₂ _≡_ (trans (f≡id (f a)) (f≡id a)) (f≡id a ))) ⟩
-  ((A → B) ×
-   ∃ λ (f : A → A) →
-     f ≡ P.id ×
-     (∀ a → a ≡ a))                                                 ↝⟨ (∃-cong λ _ → Σ-assoc) ⟩
-
-  (A → B) ×
-  (∃ λ (f : A → A) → f ≡ P.id) ×
-  (∀ a → a ≡ a)                                                     ↝⟨ (∃-cong λ _ → drop-⊤-left-× λ _ →
-                                                                          _⇔_.to contractible⇔↔⊤ $
-                                                                            singleton-contractible _) ⟩□
-  (A → B) × (∀ a → a ≡ a)                                           □
-
-  where
-  B↔⊤ : B → B ↔ ⊤
-  B↔⊤ b =
-    _⇔_.to contractible⇔↔⊤ $
-      propositional⇒inhabited⇒contractible B-prop b
-
-  A→B→A↔A→A : (A → B) → (A → B → A) ↔ (A → A)
-  A→B→A↔A→A get =
-    (A → B → A)  ↝⟨ ∀-cong ext (λ a → drop-⊤-left-Π ext $ B↔⊤ (get a)) ⟩□
-    (A → A)      □
-
--- Lens A ⊤ is isomorphic to (a : A) → a ≡ a.
-
-lens-to-⊤↔ : Lens A ⊤ ↔ ((a : A) → a ≡ a)
-lens-to-⊤↔ {A = A} =
-  Lens A ⊤                     ↝⟨ lens-to-proposition↔ (mono₁ 0 ⊤-contractible) ⟩
-  (A → ⊤) × ((a : A) → a ≡ a)  ↝⟨ drop-⊤-left-× (λ _ → →-right-zero) ⟩□
-  ((a : A) → a ≡ a)            □
-
--- Lens A ⊥ is isomorphic to ¬ A.
-
-lens-to-⊥↔ : Lens A (⊥ {ℓ = b}) ↔ ¬ A
-lens-to-⊥↔ {A = A} =
-  Lens A ⊥                     ↝⟨ lens-to-proposition↔ ⊥-propositional ⟩
-  (A → ⊥) × ((a : A) → a ≡ a)  ↝⟨ →-cong ext F.id (Bij.⊥↔uninhabited ⊥-elim)
-                                    ×-cong
-                                  F.id ⟩
-  ¬ A × ((a : A) → a ≡ a)      ↝⟨ drop-⊤-right lemma ⟩□
-  ¬ A                          □
-  where
-  lemma : ¬ A → ((a : A) → a ≡ a) ↔ ⊤
-  lemma ¬a = record
-    { surjection = record
-      { logical-equivalence = record
-        { to   = _
-        ; from = λ _ _ → refl
-        }
-      ; right-inverse-of = λ _ → refl
-      }
-    ; left-inverse-of = λ eq → ⟨ext⟩ λ a →
-        ⊥-elim (¬a a)
-    }
-
--- Lens ⊥ B is isomorphic to the unit type.
-
-lens-from-⊥↔⊤ : Lens (⊥ {ℓ = a}) B ↔ ⊤
-lens-from-⊥↔⊤ =
-  _⇔_.to contractible⇔↔⊤ $
-    record
-      { get = ⊥-elim
-      ; set = ⊥-elim
-      ; get-set = λ a → ⊥-elim a
-      ; set-get = λ a → ⊥-elim a
-      ; set-set = λ a → ⊥-elim a
-      } ,
-    λ l → _↔_.from equality-characterisation₁
-            ( ⟨ext⟩ (λ a → ⊥-elim a)
-            , ⟨ext⟩ (λ a → ⊥-elim a)
-            , (λ a → ⊥-elim a)
-            , (λ a → ⊥-elim a)
-            , (λ a → ⊥-elim a)
-            )
-
-------------------------------------------------------------------------
--- Some lens results related to h-levels
-
--- If the domain of a lens is inhabited and has h-level n,
--- then the codomain also has h-level n.
-
-h-level-respects-lens-from-inhabited :
-  ∀ n → Lens A B → A → H-level n A → H-level n B
-h-level-respects-lens-from-inhabited {A = A} {B = B} n l a =
-  H-level n A  ↝⟨ H-level.respects-surjection surj n ⟩
-  H-level n B  □
-  where
-  open Lens l
-
-  surj : A ↠ B
-  surj = record
-    { logical-equivalence = record
-      { to   = get
-      ; from = set a
-      }
-    ; right-inverse-of = λ b →
-        get (set a b)  ≡⟨ get-set a b ⟩∎
-        b              ∎
-    }
-
--- Lenses with contractible domains have contractible codomains.
-
-contractible-to-contractible :
-  Lens A B → Contractible A → Contractible B
-contractible-to-contractible l c =
-  h-level-respects-lens-from-inhabited _ l (proj₁ c) c
-
--- If A and B have h-level n (where, in the case of B, one can assume
--- that A is inhabited), then Lens a b also has h-level n.
-
-lens-preserves-h-level :
-  ∀ n → H-level n A → (A → H-level n B) →
-  H-level n (Lens A B)
-lens-preserves-h-level n hA hB =
-  H-level.respects-surjection (_↔_.surjection (inverse Lens-as-Σ)) n $
-  Σ-closure n (Π-closure ext n λ a →
-               hB a) λ _ →
-  Σ-closure n (Π-closure ext n λ _ →
-               Π-closure ext n λ _ →
-               hA) λ _ →
-  ×-closure n (Π-closure ext n λ a →
-               Π-closure ext n λ _ →
-               +⇒≡ $ mono₁ n (hB a)) $
-  ×-closure n (Π-closure ext n λ _ →
-               +⇒≡ $ mono₁ n hA)
-              (Π-closure ext n λ _ →
-               Π-closure ext n λ _ →
-               Π-closure ext n λ _ →
-               +⇒≡ $ mono₁ n hA)
-
--- If A has positive h-level n, then Lens A B also has h-level n.
-
-lens-preserves-h-level-of-domain :
-  ∀ n → H-level (1 + n) A → H-level (1 + n) (Lens A B)
-lens-preserves-h-level-of-domain n hA =
-  [inhabited⇒+]⇒+ n λ l →
-    lens-preserves-h-level (1 + n) hA λ a →
-      h-level-respects-lens-from-inhabited _ l a hA
-
--- There is a type A such that Lens A ⊤ is not propositional (assuming
--- univalence).
-
-¬-lens-to-⊤-propositional :
-  Univalence (# 0) →
-  ∃ λ (A : Set₁) → ¬ Is-proposition (Lens A ⊤)
-¬-lens-to-⊤-propositional univ =
-  A′ , (
-  Is-proposition (Lens A′ ⊤)         ↝⟨ H-level.respects-surjection (_↔_.surjection lens-to-⊤↔) 1 ⟩
-  Is-proposition ((a : A′) → a ≡ a)  ↝⟨ proj₂ $ ¬-type-of-refl-propositional ext univ ⟩□
-  ⊥₀                                 □)
-  where
-  A′ = _
-
-------------------------------------------------------------------------
--- Another lens isomorphism
-
--- If A is contractible, then Lens A B is isomorphic to
--- Contractible B.
-
-lens-from-contractible↔codomain-contractible :
-  Contractible A →
-  Lens A B ↔ Contractible B
-lens-from-contractible↔codomain-contractible cA@(a , irrA) =
-  _≃_.bijection $
-  _↠_.from (Eq.≃↠⇔ (lens-preserves-h-level-of-domain 0 (mono₁ 0 cA))
-                   (H-level-propositional ext 0)) (record
-    { to   = flip contractible-to-contractible cA
-    ; from = λ (b , irrB) → record
-        { get     = λ _ → b
-        ; set     = λ _ _ → a
-        ; get-set = λ _ → irrB
-        ; set-get = irrA
-        ; set-set = λ _ _ _ → irrA a
-        }
-    })
-
-------------------------------------------------------------------------
--- An existence result
-
--- There is, in general, no lens for the first projection from a
--- Σ-type.
-
-no-first-projection-lens :
-  ∃ λ (A : Set a) → ∃ λ (B : A → Set b) →
-    ¬ Lens (Σ A B) A
-no-first-projection-lens =
-  Lens.Non-dependent.no-first-projection-lens
-    Lens contractible-to-contractible
-
-------------------------------------------------------------------------
--- A category
+  module B {a} =
+    Bi-invertibility
+      equality-with-J (Set a) Lens
+      Lens-combinators.id Lens-combinators._∘_
 
 -- A form of isomorphism between types, expressed using lenses.
 
-infix 4 _≅_
-
-_≅_ : Set a → Set b → Set (a ⊔ b)
-A ≅ B =
-  ∃ λ (l₁ : Lens A B) →
-  ∃ λ (l₂ : Lens B A) →
-    l₁ ∘ l₂ ≡ id ×
-    l₂ ∘ l₁ ≡ id
-  where
-  open Lens-combinators
-
--- An identity isomorphism.
-
-id≅ : A ≅ A
-id≅ = id , id , left-identity _ , right-identity _
-  where
-  open Lens-combinators
-
--- An equality characterisation lemma for _≅_ that applies when the
--- types are sets.
-
-equality-characterisation-for-sets-≅ :
-  let open Lens in
-  {f₁@(l₁₁ , l₂₁ , _) f₂@(l₁₂ , l₂₂ , _) : A ≅ B} →
-  Is-set A → Is-set B →
-  f₁ ≡ f₂ ↔ set l₁₁ ≡ set l₁₂ × set l₂₁ ≡ set l₂₂
-equality-characterisation-for-sets-≅
-  {f₁ = l₁₁ , l₂₁ , eq₁₁ , eq₂₁} {f₂ = l₁₂ , l₂₂ , eq₁₂ , eq₂₂}
-  A-set B-set =
-
-  (l₁₁ , l₂₁ , eq₁₁ , eq₂₁) ≡ (l₁₂ , l₂₂ , eq₁₂ , eq₂₂)      ↔⟨ inverse $ Eq.≃-≡ (from-isomorphism Σ-assoc) ⟩
-  ((l₁₁ , l₂₁) , eq₁₁ , eq₂₁) ≡ ((l₁₂ , l₂₂) , eq₁₂ , eq₂₂)  ↝⟨ inverse $ ignore-propositional-component $
-                                                                ×-closure 1
-                                                                  (lens-preserves-h-level-of-domain 1 B-set)
-                                                                  (lens-preserves-h-level-of-domain 1 A-set) ⟩
-  (l₁₁ , l₂₁) ≡ (l₁₂ , l₂₂)                                  ↝⟨ inverse ≡×≡↔≡ ⟩
-  l₁₁ ≡ l₁₂ × l₂₁ ≡ l₂₂                                      ↝⟨ equality-characterisation-for-sets A-set B-set
-                                                                  ×-cong
-                                                                equality-characterisation-for-sets B-set A-set ⟩□
-  set l₁₁ ≡ set l₁₂ × set l₂₁ ≡ set l₂₂                      □
-  where
-  open Lens
+open B public using (_≅_)
 
 -- There is a split surjection from A ≅ B to A ≃ B.
 
@@ -1473,6 +1450,31 @@ equality-characterisation-for-sets-≅
 
       refl                                               ∎
 
+-- An equality characterisation lemma for _≅_ that applies when the
+-- types are sets.
+
+equality-characterisation-for-sets-≅ :
+  let open Lens in
+  {f₁@(l₁₁ , l₂₁ , _) f₂@(l₁₂ , l₂₂ , _) : A ≅ B} →
+  Is-set A → Is-set B →
+  f₁ ≡ f₂ ↔ set l₁₁ ≡ set l₁₂ × set l₂₁ ≡ set l₂₂
+equality-characterisation-for-sets-≅
+  {f₁ = l₁₁ , l₂₁ , eq₁₁ , eq₂₁} {f₂ = l₁₂ , l₂₂ , eq₁₂ , eq₂₂}
+  A-set B-set =
+
+  (l₁₁ , l₂₁ , eq₁₁ , eq₂₁) ≡ (l₁₂ , l₂₂ , eq₁₂ , eq₂₂)      ↔⟨ inverse $ Eq.≃-≡ (from-isomorphism Σ-assoc) ⟩
+  ((l₁₁ , l₂₁) , eq₁₁ , eq₂₁) ≡ ((l₁₂ , l₂₂) , eq₁₂ , eq₂₂)  ↝⟨ inverse $ ignore-propositional-component $
+                                                                ×-closure 1
+                                                                  (lens-preserves-h-level-of-domain 1 B-set)
+                                                                  (lens-preserves-h-level-of-domain 1 A-set) ⟩
+  (l₁₁ , l₂₁) ≡ (l₁₂ , l₂₂)                                  ↝⟨ inverse ≡×≡↔≡ ⟩
+  l₁₁ ≡ l₁₂ × l₂₁ ≡ l₂₂                                      ↝⟨ equality-characterisation-for-sets A-set B-set
+                                                                  ×-cong
+                                                                equality-characterisation-for-sets B-set A-set ⟩□
+  set l₁₁ ≡ set l₁₂ × set l₂₁ ≡ set l₂₂                      □
+  where
+  open Lens
+
 -- For sets A and B there is an equivalence between A ≃ B and A ≅ B.
 
 ≃≃≅ :
@@ -1510,7 +1512,8 @@ equality-characterisation-for-sets-≅
   open Lens
   open Lens-combinators
 
--- The equivalence maps identity to identity.
+-- The equivalence maps identity to an isomorphism for which the first
+-- projection is the identity.
 
 ≃≃≅-id≡id :
   let open Lens-combinators in
@@ -1518,8 +1521,13 @@ equality-characterisation-for-sets-≅
   proj₁ (_≃_.to (≃≃≅ A-set A-set′) F.id) ≡ id
 ≃≃≅-id≡id A-set A-set′ =
   cong proj₁ (
-    _≃_.to (≃≃≅ A-set A-set′) F.id  ≡⟨ _↔_.from (equality-characterisation-for-sets-≅ A-set A-set′) (refl , refl) ⟩∎
-    id≅                             ∎)
+    _≃_.to (≃≃≅ A-set A-set′) F.id                ≡⟨ _↔_.from (equality-characterisation-for-sets-≅ A-set A-set′) (refl , refl) ⟩∎
+    id , id , left-identity _ , right-identity _  ∎)
+  where
+  open Lens-combinators
+
+------------------------------------------------------------------------
+-- A category
 
 -- Lenses between sets with the same universe level form a
 -- precategory.
