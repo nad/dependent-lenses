@@ -759,6 +759,13 @@ Iso-lens↔Iso-lens′ {A = A} {B} =
     (∃ λ { (r′ , _) → r′ ≡ r })  ↝⟨ (inverse $ Σ-cong Eq.⟨ _ , eq ⟩ λ _ → F.id) ⟩□
     (∃ λ a → remainder a ≡ r)    □
 
+-- The remainder function of an Iso-lens is surjective.
+
+remainder-surjective :
+  (l : Iso-lens A B) → Surjective (Iso-lens.remainder l)
+remainder-surjective l =
+  proj₂ $ proj₂ $ proj₂ $ proj₂ $ _↔_.to Iso-lens↔Iso-lens′ l
+
 -- There is a split surjection from Bijections-lens A B to
 -- Iso-lens A B (assuming univalence).
 
