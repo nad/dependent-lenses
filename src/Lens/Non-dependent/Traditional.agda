@@ -970,6 +970,13 @@ module Lens-combinators where
     where
     open _↔_ A↔B
 
+  -- If two types are equivalent, then there is a lens between them.
+
+  ≃→lens :
+    {A : Set a} {B : Set b} →
+    A ≃ B → Lens A B
+  ≃→lens = ↔→lens ⊚ _≃_.bijection
+
   -- Identity lens.
 
   id : Lens A A
@@ -1294,17 +1301,15 @@ open B public using (_≅_)
                    getters-equal-if-setters-equal (l₂ ∘ l₁) id
                      (cong set eq₂)
                })
-    ; from = λ A≃B → ↔→lens (_≃_.bijection A≃B)
-                   , ↔→lens (_≃_.bijection $ inverse A≃B)
+    ; from = λ A≃B → ≃→lens A≃B
+                   , ≃→lens (inverse A≃B)
                    , lemma A≃B
-                   , (↔→lens (_≃_.bijection $ inverse A≃B) ∘
-                      ↔→lens (_≃_.bijection A≃B)                      ≡⟨ cong (λ A≃B′ → ↔→lens (_≃_.bijection $ inverse A≃B) ∘
-                                                                                        ↔→lens (_≃_.bijection A≃B′)) $
-                                                                         sym $ Eq.inverse-involutive ext _ ⟩
-                      ↔→lens (_≃_.bijection $ inverse A≃B) ∘
-                      ↔→lens (_≃_.bijection $ inverse $ inverse A≃B)  ≡⟨ lemma (inverse A≃B) ⟩∎
+                   , (≃→lens (inverse A≃B) ∘ ≃→lens A≃B  ≡⟨ cong (λ A≃B′ → ≃→lens (inverse A≃B) ∘ ≃→lens A≃B′) $
+                                                            sym $ Eq.inverse-involutive ext _ ⟩
+                      ≃→lens (inverse A≃B) ∘
+                      ≃→lens (inverse $ inverse A≃B)     ≡⟨ lemma (inverse A≃B) ⟩∎
 
-                      id                                              ∎)
+                      id                                 ∎)
     }
   ; right-inverse-of = λ _ → Eq.lift-equality ext refl
   }
@@ -1313,9 +1318,7 @@ open B public using (_≅_)
   open Lens-combinators
 
   lemma :
-    (C≃D : C ≃ D) →
-    ↔→lens (_≃_.bijection C≃D) ∘ ↔→lens (_≃_.bijection $ inverse C≃D) ≡
-    id
+    (C≃D : C ≃ D) → ≃→lens C≃D ∘ ≃→lens (inverse C≃D) ≡ id
   lemma C≃D = _↔_.from equality-characterisation₂
     ( ⟨ext⟩ (_≃_.right-inverse-of C≃D)
     , (⟨ext⟩ λ _ → ⟨ext⟩ $ _≃_.right-inverse-of C≃D)
