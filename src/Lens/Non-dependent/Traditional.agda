@@ -13,6 +13,7 @@ open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 import Bi-invertibility
 open import Bijection equality-with-J as Bij using (_↔_)
 open import Category equality-with-J as C using (Category; Precategory)
+import Circle equality-with-paths as Circle
 open import Equivalence equality-with-J as Eq using (_≃_)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
@@ -248,28 +249,28 @@ contractible-to-contractible :
 contractible-to-contractible l c =
   h-level-respects-lens-from-inhabited _ l (proj₁ c) c
 
--- If A and B have h-level n (where, in the case of B, one can assume
--- that A is inhabited), then Lens a b also has h-level n.
+-- If A and B have h-level n given the assumption that A is inhabited,
+-- then Lens A B also has h-level n.
 
 lens-preserves-h-level :
-  ∀ n → H-level n A → (A → H-level n B) →
+  ∀ n → (A → H-level n A) → (A → H-level n B) →
   H-level n (Lens A B)
 lens-preserves-h-level n hA hB =
   H-level.respects-surjection (_↔_.surjection (inverse Lens-as-Σ)) n $
   Σ-closure n (Π-closure ext n λ a →
                hB a) λ _ →
-  Σ-closure n (Π-closure ext n λ _ →
+  Σ-closure n (Π-closure ext n λ a →
                Π-closure ext n λ _ →
-               hA) λ _ →
+               hA a) λ _ →
   ×-closure n (Π-closure ext n λ a →
                Π-closure ext n λ _ →
                +⇒≡ $ mono₁ n (hB a)) $
-  ×-closure n (Π-closure ext n λ _ →
-               +⇒≡ $ mono₁ n hA)
-              (Π-closure ext n λ _ →
+  ×-closure n (Π-closure ext n λ a →
+               +⇒≡ $ mono₁ n (hA a))
+              (Π-closure ext n λ a →
                Π-closure ext n λ _ →
                Π-closure ext n λ _ →
-               +⇒≡ $ mono₁ n hA)
+               +⇒≡ $ mono₁ n (hA a))
 
 -- If A has positive h-level n, then Lens A B also has h-level n.
 
@@ -277,19 +278,22 @@ lens-preserves-h-level-of-domain :
   ∀ n → H-level (1 + n) A → H-level (1 + n) (Lens A B)
 lens-preserves-h-level-of-domain n hA =
   [inhabited⇒+]⇒+ n λ l →
-    lens-preserves-h-level (1 + n) hA λ a →
+    lens-preserves-h-level (1 + n) (λ _ → hA) λ a →
       h-level-respects-lens-from-inhabited _ l a hA
 
 -- There is a type A such that Lens A ⊤ is not propositional (assuming
 -- univalence).
+--
+-- (The lemma does not actually use the univalence argument, but
+-- univalence is used by Circle.¬-type-of-refl-propositional.)
 
 ¬-lens-to-⊤-propositional :
   Univalence (# 0) →
-  ∃ λ (A : Set₁) → ¬ Is-proposition (Lens A ⊤)
-¬-lens-to-⊤-propositional univ =
+  ∃ λ (A : Set a) → ¬ Is-proposition (Lens A ⊤)
+¬-lens-to-⊤-propositional _ =
   A′ , (
   Is-proposition (Lens A′ ⊤)         ↝⟨ H-level.respects-surjection (_↔_.surjection lens-to-⊤↔) 1 ⟩
-  Is-proposition ((a : A′) → a ≡ a)  ↝⟨ proj₂ $ ¬-type-of-refl-propositional ext univ ⟩□
+  Is-proposition ((a : A′) → a ≡ a)  ↝⟨ proj₂ $ Circle.¬-type-of-refl-propositional ⟩□
   ⊥₀                                 □)
   where
   A′ = _
@@ -828,20 +832,20 @@ abstract
       trans (cong (λ set → set (set a b₁) b₂) s)
         (set-set l₂ a b₁ b₂)                                    ∎
 
--- An equality characterisation lemma for lenses between sets.
+-- An equality characterisation lemma for lenses from sets.
 
 equality-characterisation-for-sets :
   let open Lens in
 
   {l₁ l₂ : Lens A B} →
 
-  Is-set A → Is-set B →
+  Is-set A →
 
   l₁ ≡ l₂
     ↔
   set l₁ ≡ set l₂
 equality-characterisation-for-sets
-  {l₁ = l₁} {l₂ = l₂} A-set B-set =
+  {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} A-set =
 
   l₁ ≡ l₂                                                         ↝⟨ equality-characterisation₁ ⟩
 
@@ -863,9 +867,9 @@ equality-characterisation-for-sets
                     (set-set l₁ a b₁ b₂)
                     ≡
                   set-set l₂ a b₁ b₂))                            ↝⟨ (∃-cong λ _ → ∃-cong λ _ → drop-⊤-left-Σ $ _⇔_.to contractible⇔↔⊤ $
+                                                                      Π-closure ext 0 λ a →
                                                                       Π-closure ext 0 λ _ →
-                                                                      Π-closure ext 0 λ _ →
-                                                                      +⇒≡ B-set) ⟩
+                                                                      +⇒≡ (B-set a)) ⟩
   (∃ λ (g : get l₁ ≡ get l₂) →
    ∃ λ (s : set l₁ ≡ set l₂) →
      (∀ a → subst (λ get → set l₂ a (get a) ≡ a) g
@@ -893,12 +897,15 @@ equality-characterisation-for-sets
 
   get l₁ ≡ get l₂ × set l₁ ≡ set l₂                               ↝⟨ (drop-⊤-left-× λ setters-equal → _⇔_.to contractible⇔↔⊤ $
                                                                       propositional⇒inhabited⇒contractible
-                                                                        (Π-closure ext 2 λ _ →
-                                                                         B-set)
+                                                                        (Π-closure ext 2 λ a →
+                                                                         B-set a)
                                                                         (getters-equal-if-setters-equal l₁ l₂ setters-equal)) ⟩□
   set l₁ ≡ set l₂                                                 □
   where
   open Lens
+
+  B-set : A → Is-set B
+  B-set a = h-level-respects-lens-from-inhabited 2 l₁ a A-set
 
 ------------------------------------------------------------------------
 -- More lens isomorphisms
@@ -1258,6 +1265,11 @@ private
     Bi-invertibility
       equality-with-J (Set a) Lens
       Lens-combinators.id Lens-combinators._∘_
+  module BM {a} =
+    B.More {a = a}
+      Lens-combinators.left-identity
+      Lens-combinators.right-identity
+      Lens-combinators.associativity
 
 -- A form of isomorphism between types, expressed using lenses.
 
@@ -1450,63 +1462,42 @@ open B public using (_≅_)
 
       refl                                               ∎
 
--- An equality characterisation lemma for _≅_ that applies when the
--- types are sets.
+-- An equality characterisation lemma for A ≅ B that applies when A is
+-- a set.
 
 equality-characterisation-for-sets-≅ :
   let open Lens in
-  {f₁@(l₁₁ , l₂₁ , _) f₂@(l₁₂ , l₂₂ , _) : A ≅ B} →
-  Is-set A → Is-set B →
-  f₁ ≡ f₂ ↔ set l₁₁ ≡ set l₁₂ × set l₂₁ ≡ set l₂₂
+  {f₁@(l₁₁ , _) f₂@(l₁₂ , _) : A ≅ B} →
+  Is-set A →
+  f₁ ≡ f₂ ↔ set l₁₁ ≡ set l₁₂
 equality-characterisation-for-sets-≅
-  {f₁ = l₁₁ , l₂₁ , eq₁₁ , eq₂₁} {f₂ = l₁₂ , l₂₂ , eq₁₂ , eq₂₂}
-  A-set B-set =
-
-  (l₁₁ , l₂₁ , eq₁₁ , eq₂₁) ≡ (l₁₂ , l₂₂ , eq₁₂ , eq₂₂)      ↔⟨ inverse $ Eq.≃-≡ (from-isomorphism Σ-assoc) ⟩
-  ((l₁₁ , l₂₁) , eq₁₁ , eq₂₁) ≡ ((l₁₂ , l₂₂) , eq₁₂ , eq₂₂)  ↝⟨ inverse $ ignore-propositional-component $
-                                                                ×-closure 1
-                                                                  (lens-preserves-h-level-of-domain 1 B-set)
-                                                                  (lens-preserves-h-level-of-domain 1 A-set) ⟩
-  (l₁₁ , l₂₁) ≡ (l₁₂ , l₂₂)                                  ↝⟨ inverse ≡×≡↔≡ ⟩
-  l₁₁ ≡ l₁₂ × l₂₁ ≡ l₂₂                                      ↝⟨ equality-characterisation-for-sets A-set B-set
-                                                                  ×-cong
-                                                                equality-characterisation-for-sets B-set A-set ⟩□
-  set l₁₁ ≡ set l₁₂ × set l₂₁ ≡ set l₂₂                      □
+  {f₁ = f₁@(l₁₁ , _)} {f₂ = f₂@(l₁₂ , _)} A-set =
+  f₁ ≡ f₂            ↔⟨ BM.equality-characterisation-≅-domain (lens-preserves-h-level-of-domain 1 A-set) _ _ ⟩
+  l₁₁ ≡ l₁₂          ↝⟨ equality-characterisation-for-sets A-set ⟩□
+  set l₁₁ ≡ set l₁₂  □
   where
   open Lens
 
--- For sets A and B there is an equivalence between A ≃ B and A ≅ B.
+-- If A is a set, then there is an equivalence between A ≃ B and A ≅ B.
 
 ≃≃≅ :
-  Is-set A → Is-set B →
+  Is-set A →
   (A ≃ B) ≃ (A ≅ B)
-≃≃≅ {A = A} {B = B} A-set B-set = Eq.↔⇒≃ $ inverse (record
+≃≃≅ {A = A} {B = B} A-set = Eq.↔⇒≃ $ inverse (record
   { surjection      = ≅↠≃
   ; left-inverse-of = λ (l₁ , l₂ , eq₁ , eq₂) →
-      _↔_.from (equality-characterisation-for-sets-≅ A-set B-set)
-        ( (⟨ext⟩ λ a → ⟨ext⟩ λ b →
-             get l₂ b                                            ≡⟨ sym $ ext⁻¹ (ext⁻¹ (cong set eq₂) _) _ ⟩
+      _↔_.from (equality-characterisation-for-sets-≅ A-set) $
+      ⟨ext⟩ λ a → ⟨ext⟩ λ b →
+        get l₂ b                                            ≡⟨ sym $ ext⁻¹ (ext⁻¹ (cong set eq₂) _) _ ⟩
 
-             set l₁ (set l₁ a b)
-               (set l₂ (get l₁ (set l₁ a b)) (get l₂ b))         ≡⟨ set-set l₁ _ _ _ ⟩
+        set l₁ (set l₁ a b)
+          (set l₂ (get l₁ (set l₁ a b)) (get l₂ b))         ≡⟨ set-set l₁ _ _ _ ⟩
 
-             set l₁ a (set l₂ (get l₁ (set l₁ a b)) (get l₂ b))  ≡⟨ cong (λ b′ → set l₁ a (set l₂ b′ (get l₂ b))) $ get-set l₁ _ _ ⟩
+        set l₁ a (set l₂ (get l₁ (set l₁ a b)) (get l₂ b))  ≡⟨ cong (λ b′ → set l₁ a (set l₂ b′ (get l₂ b))) $ get-set l₁ _ _ ⟩
 
-             set l₁ a (set l₂ b (get l₂ b))                      ≡⟨ cong (set l₁ a) $ set-get l₂ _ ⟩∎
+        set l₁ a (set l₂ b (get l₂ b))                      ≡⟨ cong (set l₁ a) $ set-get l₂ _ ⟩∎
 
-             set l₁ a b                                          ∎)
-        , (⟨ext⟩ λ b → ⟨ext⟩ λ a →
-             get l₁ a                                            ≡⟨ sym $ ext⁻¹ (ext⁻¹ (cong set eq₁) _) _ ⟩
-
-             set l₂ (set l₂ b a)
-               (set l₁ (get l₂ (set l₂ b a)) (get l₁ a))         ≡⟨ set-set l₂ _ _ _ ⟩
-
-             set l₂ b (set l₁ (get l₂ (set l₂ b a)) (get l₁ a))  ≡⟨ cong (λ a′ → set l₂ b (set l₁ a′ (get l₁ a))) $ get-set l₂ _ _ ⟩
-
-             set l₂ b (set l₁ a (get l₁ a))                      ≡⟨ cong (set l₂ b) $ set-get l₁ _ ⟩∎
-
-             set l₂ b a                                          ∎)
-        )
+        set l₁ a b                                          ∎
   })
   where
   open Lens
@@ -1517,11 +1508,11 @@ equality-characterisation-for-sets-≅
 
 ≃≃≅-id≡id :
   let open Lens-combinators in
-  (A-set A-set′ : Is-set A) →
-  proj₁ (_≃_.to (≃≃≅ A-set A-set′) F.id) ≡ id
-≃≃≅-id≡id A-set A-set′ =
+  (A-set : Is-set A) →
+  proj₁ (_≃_.to (≃≃≅ A-set) F.id) ≡ id
+≃≃≅-id≡id A-set =
   cong proj₁ (
-    _≃_.to (≃≃≅ A-set A-set′) F.id                ≡⟨ _↔_.from (equality-characterisation-for-sets-≅ A-set A-set′) (refl , refl) ⟩∎
+    _≃_.to (≃≃≅ A-set) F.id                       ≡⟨ _↔_.from (equality-characterisation-for-sets-≅ A-set) refl ⟩∎
     id , id , left-identity _ , right-identity _  ∎)
   where
   open Lens-combinators
@@ -1559,7 +1550,7 @@ category {a = a} univ =
     ext
     (λ _ _ → univ)
     (proj₂ Pre.precategory)
-    (λ (_ , A-set) (_ , B-set) → ≃≃≅ A-set B-set)
-    (λ (_ , A-set) → ≃≃≅-id≡id A-set A-set)
+    (λ (_ , A-set) _ → ≃≃≅ A-set)
+    (λ (_ , A-set) → ≃≃≅-id≡id A-set)
   where
   module Pre = C.Precategory precategory
