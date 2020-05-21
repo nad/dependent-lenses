@@ -1799,6 +1799,63 @@ equality-characterisation-for-sets-≅
     cong (λ set → set (set x y) z) (cong const (sym g))       ∎
 
 ------------------------------------------------------------------------
+-- Isomorphisms expressed using bi-invertibility for lenses
+
+-- A form of isomorphism between types, expressed using lenses.
+
+open B public using (_≊_; Is-bi-invertible)
+
+-- There is a split surjection from A ≊ B to A ≃ B.
+
+≊↠≃ : (A ≊ B) ↠ (A ≃ B)
+≊↠≃ = record
+  { logical-equivalence = record
+    { to   = _↠_.to ≅↠≃ ⊚ _↠_.from BM.≅↠≊
+    ; from = _↠_.to BM.≅↠≊ ⊚ _↠_.from ≅↠≃
+    }
+  ; right-inverse-of = λ _ → Eq.lift-equality ext refl
+  }
+
+-- If A is a set, then there is an equivalence between A ≊ B and
+-- A ≃ B.
+
+≃≃≊ : Is-set A → (A ≃ B) ≃ (A ≊ B)
+≃≃≊ {A = A} {B = B} A-set =
+  A ≃ B  ↝⟨ ≃≃≅ A-set ⟩
+  A ≅ B  ↝⟨ inverse $ BM.≊≃≅-domain (lens-preserves-h-level-of-domain 1 A-set) ⟩□
+  A ≊ B  □
+
+-- An equality characterisation lemma for A ≊ B that applies when A is
+-- a set.
+
+equality-characterisation-for-sets-≊ :
+  let open Lens in
+  {f₁@(l₁₁ , _) f₂@(l₁₂ , _) : A ≊ B} →
+  Is-set A →
+  f₁ ≡ f₂ ↔ set l₁₁ ≡ set l₁₂
+equality-characterisation-for-sets-≊
+  {f₁ = f₁@(l₁₁ , _)} {f₂ = f₂@(l₁₂ , _)} A-set =
+  f₁ ≡ f₂            ↔⟨ BM.equality-characterisation-≊ _ _ ⟩
+  l₁₁ ≡ l₁₂          ↝⟨ equality-characterisation-for-sets A-set ⟩□
+  set l₁₁ ≡ set l₁₂  □
+  where
+  open Lens
+
+-- The equivalence ≃≃≊ maps identity to an isomorphism for which the
+-- first projection is the identity.
+
+≃≃≊-id≡id :
+  let open Lens-combinators in
+  (A-set : Is-set A) →
+  proj₁ (_≃_.to (≃≃≊ A-set) F.id) ≡ id
+≃≃≊-id≡id A-set =
+  cong proj₁ (
+    _≃_.to (≃≃≊ A-set) F.id                                ≡⟨ _↔_.from (equality-characterisation-for-sets-≊ A-set) refl ⟩∎
+    id , (id , right-identity _) , (id , left-identity _)  ∎)
+  where
+  open Lens-combinators
+
+------------------------------------------------------------------------
 -- A category
 
 -- Lenses between sets with the same universe level form a
