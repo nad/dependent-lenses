@@ -554,8 +554,7 @@ codomain-set-≃≡id uip l =
 ------------------------------------------------------------------------
 -- Some lens isomorphisms
 
--- Iso-lens preserves level-preserving equivalences (assuming
--- univalence).
+-- Lens preserves level-preserving equivalences (assuming univalence).
 
 Lens-cong :
   {A₁ A₂ : Set a} {B₁ : A₁ → Set b} {B₂ : A₂ → Set b} →
