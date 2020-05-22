@@ -1853,6 +1853,76 @@ open B public using () renaming (_≅_ to [_]_≅_)
   ≅→≃∘from : ∀ b A≃B → ≅→≃ b (from b A≃B) ≡ A≃B
   ≅→≃∘from ⊠ _ = Eq.lift-equality ext refl
 
+-- There is not necessarily a split surjection from
+-- Is-equivalence (Iso-lens.get l) to B.Has-quasi-inverse l, if l is a
+-- lens between types in the same universe, even if the codomain of l
+-- is required to be inhabited when its remainder type is inhabited
+-- (assuming univalence).
+
+¬Is-equivalence-get↠Has-quasi-inverse :
+  (b : Block "id") →
+  Univalence a →
+  ¬ ({A B : Set a}
+     (l : Iso-lens A B) →
+     (Iso-lens.R l → B) →
+     Is-equivalence (Iso-lens.get l) ↠ B.Has-quasi-inverse b l)
+¬Is-equivalence-get↠Has-quasi-inverse b univ surj =
+                                    $⟨ ⊤-contractible ⟩
+  Contractible ⊤                    ↝⟨ H-level.respects-surjection lemma₃ 0 ⟩
+  Contractible ((z : Z) → z ≡ z)    ↝⟨ mono₁ 0 ⟩
+  Is-proposition ((z : Z) → z ≡ z)  ↝⟨ ¬-prop ⟩□
+  ⊥                                 □
+  where
+  open Iso-lens
+
+  Z,¬-prop = Circle.¬-type-of-refl-propositional
+  Z        = proj₁ Z,¬-prop
+  ¬-prop   = proj₂ Z,¬-prop
+
+  lemma₂ :
+    ∀ b →
+    (∃ λ (eq : R (id b) ≃ R (id b)) →
+       (∀ z → _≃_.to eq (remainder (id b) z) ≡ remainder (id b) z)
+         ×
+       ((z : Z) → get (id b) z ≡ get (id b) z)) ≃
+    ((z : Z) → z ≡ z)
+  lemma₂ ⊠ =
+    (∃ λ (eq : ∥ Z ∥ ≃ ∥ Z ∥) →
+       ((z : Z) → _≃_.to eq ∣ z ∣ ≡ ∣ z ∣)
+         ×
+       ((z : Z) → z ≡ z))                   ↔⟨ (∃-cong λ _ → drop-⊤-left-Σ $ _⇔_.to contractible⇔↔⊤ $
+                                                Π-closure ext 0 λ _ →
+                                                +⇒≡ truncation-is-proposition) ⟩
+
+    (∥ Z ∥ ≃ ∥ Z ∥) × ((z : Z) → z ≡ z)     ↔⟨ drop-⊤-left-Σ $ _⇔_.to contractible⇔↔⊤ $
+                                               propositional⇒inhabited⇒contractible
+                                                 (Eq.left-closure ext 0 truncation-is-proposition)
+                                                 F.id ⟩□
+    ((z : Z) → z ≡ z)                       □
+
+  lemma₃ =
+    ⊤                                                               ↔⟨ inverse $ _⇔_.to contractible⇔↔⊤ $
+                                                                       propositional⇒inhabited⇒contractible
+                                                                         (Eq.propositional ext _)
+                                                                         (_≃_.is-equivalence Eq.id) ⟩
+
+    Is-equivalence P.id                                             ↔⟨ ≡⇒↝ equivalence $ cong Is-equivalence $
+                                                                       unblock b (λ b → _ ≡ get (id b)) refl ⟩
+
+    Is-equivalence (get (id b))                                     ↝⟨ surj (id b) (λ _ → lift Circle.base) ⟩
+
+    B.Has-quasi-inverse b (id b)                                    ↔⟨ BM.Has-quasi-inverse≃id≡id-domain b univ
+                                                                         (id b , left-identity b _ univ _ , right-identity b _ univ _) ⟩
+
+    id b ≡ id b                                                     ↔⟨ equality-characterisation₃ univ ⟩
+
+    (∃ λ (eq : R (id b) ≃ R (id b)) →
+       (∀ z → _≃_.to eq (remainder (id b) z) ≡ remainder (id b) z)
+         ×
+       (∀ z → get (id b) z ≡ get (id b) z))                         ↔⟨ lemma₂ b ⟩□
+
+    ((z : Z) → z ≡ z)                                               □
+
 -- See also ≃≃≅ below.
 
 ------------------------------------------------------------------------
