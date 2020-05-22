@@ -11,7 +11,10 @@ module README where
 
 import Lens.Non-dependent
 import Lens.Non-dependent.Traditional
-import Lens.Non-dependent.Alternative
+import Lens.Non-dependent.Higher
+import Lens.Non-dependent.Higher.Capriotti
+import Lens.Non-dependent.Higher.Surjective-remainder
+import Lens.Non-dependent.Bijection
 
 -- Dependent lenses.
 

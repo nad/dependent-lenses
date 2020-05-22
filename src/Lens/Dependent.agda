@@ -39,7 +39,7 @@ open import H-level.Truncation.Propositional equality-with-paths
 open import Surjection equality-with-J using (module _↠_)
 open import Univalence-axiom equality-with-J
 
-open import Lens.Non-dependent.Alternative as ND using (Iso-lens)
+import Lens.Non-dependent.Higher as ND
 
 private
   variable
@@ -826,11 +826,11 @@ lens-to-⊥↔¬ {A = A} univ₁ univ₂ =
 non-dependent-lenses-isomorphic :
   {B : Set b} →
   (∀ {B′} → Is-proposition (B′ ≡ B)) →
-  ∃ λ (iso : Lens A (const B) ↔ Iso-lens A B) →
-    ∀ {l a} → Lens.get l a ≡ ND.Iso-lens.get (_↔_.to iso l) a
+  ∃ λ (iso : Lens A (const B) ↔ ND.Lens A B) →
+    ∀ {l a} → Lens.get l a ≡ ND.Lens.get (_↔_.to iso l) a
 non-dependent-lenses-isomorphic {A = A} {B = B} ≡B-prop =
-  (Lens A (const B)  ↝⟨ inverse ND.Iso-lens-as-Σ F.∘ ∃-cong lemma ⟩□
-   Iso-lens A B      □)
+  (Lens A (const B)  ↝⟨ inverse ND.Lens-as-Σ F.∘ ∃-cong lemma ⟩□
+   ND.Lens A B       □)
   , λ {l a} →
     let p = variant l a
         q = Trunc.rec
@@ -922,8 +922,8 @@ non-dependent-lenses-isomorphic {A = A} {B = B} ≡B-prop =
 non-dependent-lenses-isomorphic-UIP :
   {B : Set b} →
   Is-set (Set b) →
-  ∃ λ (iso : Lens A (const B) ↔ Iso-lens A B) →
-    ∀ {l a} → Lens.get l a ≡ ND.Iso-lens.get (_↔_.to iso l) a
+  ∃ λ (iso : Lens A (const B) ↔ ND.Lens A B) →
+    ∀ {l a} → Lens.get l a ≡ ND.Lens.get (_↔_.to iso l) a
 non-dependent-lenses-isomorphic-UIP uip =
   non-dependent-lenses-isomorphic uip
 
@@ -1245,37 +1245,37 @@ module No-fully-general-composition-operator
       ∀ a → get′ l₃ a ≡ get′ (l₂ a) (get′ l₁ a)
 
   -- However, this specification is unsatisfiable in the non-dependent
-  -- case (for Iso-lenses).
+  -- case (for ND.Lens).
 
   no-corresponding-non-dependent-composition-operator :
-    let open ND.Iso-lens in
+    let open ND.Lens in
     ¬ ({A B C : Set}
-       (l₁ : Iso-lens A B)
-       (l₂ : A → Iso-lens B C) →
-       ∃ λ (l₃ : Iso-lens A C) →
+       (l₁ : ND.Lens A B)
+       (l₂ : A → ND.Lens B C) →
+       ∃ λ (l₃ : ND.Lens A C) →
          ∀ a → get l₃ a ≡ get (l₂ a) (get l₁ a))
   no-corresponding-non-dependent-composition-operator comp =
     contradiction
     where
-    open ND.Iso-lens
+    open ND.Lens
     open _≃_
 
-    idL : Iso-lens Bool Bool
-    idL = ND.Iso-lens-combinators.id ⊠
+    idL : ND.Lens Bool Bool
+    idL = ND.Lens-combinators.id ⊠
 
-    swapL : Iso-lens Bool Bool
+    swapL : ND.Lens Bool Bool
     swapL = ND.isomorphism-to-lens
       (Bool      ↔⟨ swap ⟩
        Bool      ↔⟨ inverse ×-left-identity ⟩□
        ⊤ × Bool  □)
 
-    l₁ : Iso-lens Bool Bool
+    l₁ : ND.Lens Bool Bool
     l₁ = idL
 
-    l₂ : Bool → Iso-lens Bool Bool
+    l₂ : Bool → ND.Lens Bool Bool
     l₂ = if_then idL else swapL
 
-    l₃ : Iso-lens Bool Bool
+    l₃ : ND.Lens Bool Bool
     l₃ = proj₁ (comp l₁ l₂)
 
     get-constant : ∀ b → get l₃ b ≡ true
@@ -1290,31 +1290,31 @@ module No-fully-general-composition-operator
 
   -- Thus it is also unsatisfiable if non-dependent dependent lenses
   -- are isomorphic (in a certain sense) to the corresponding
-  -- Iso-lenses.
+  -- non-dependent lenses.
 
   no-composition-operator :
     ({A B : Set} →
-     ∃ λ (iso : Lens′ A (λ _ → B) ↔ Iso-lens A B) →
-       ∀ {l a} → get′ l a ≡ ND.Iso-lens.get (_↔_.to iso l) a) →
+     ∃ λ (iso : Lens′ A (λ _ → B) ↔ ND.Lens A B) →
+       ∀ {l a} → get′ l a ≡ ND.Lens.get (_↔_.to iso l) a) →
     ¬ Type-of-composition
-  no-composition-operator Lens↔Iso-lens comp =
+  no-composition-operator Lens↔Lens comp =
     no-corresponding-non-dependent-composition-operator
       (λ l₁ l₂ →
          let l₃ , get-l₃ = comp (from l₁) (λ a → from (l₂ a))
          in
          to l₃ , λ a →
-           get (to l₃) a                                  ≡⟨ sym $ proj₂ Lens↔Iso-lens ⟩
+           get (to l₃) a                                  ≡⟨ sym $ proj₂ Lens↔Lens ⟩
            get′ l₃ a                                      ≡⟨ get-l₃ a ⟩
-           get′ (from (l₂ a)) (get′ (from l₁) a)          ≡⟨ cong (get′ (from (l₂ a))) (proj₂ Lens↔Iso-lens) ⟩
-           get′ (from (l₂ a)) (get (to (from l₁)) a)      ≡⟨ proj₂ Lens↔Iso-lens ⟩
+           get′ (from (l₂ a)) (get′ (from l₁) a)          ≡⟨ cong (get′ (from (l₂ a))) (proj₂ Lens↔Lens) ⟩
+           get′ (from (l₂ a)) (get (to (from l₁)) a)      ≡⟨ proj₂ Lens↔Lens ⟩
            get (to (from (l₂ a))) (get (to (from l₁)) a)  ≡⟨ cong₂ (λ l₁ l₂ → get l₁ (get l₂ a))
                                                                    (right-inverse-of _)
                                                                    (right-inverse-of _) ⟩∎
            get (l₂ a) (get l₁ a)                          ∎)
     where
-    open ND.Iso-lens
-    open module Lens↔Iso-lens {A B : Set} =
-      _↔_ (proj₁ (Lens↔Iso-lens {A = A} {B = B}))
+    open ND.Lens
+    open module Lens↔Lens {A B : Set} =
+      _↔_ (proj₁ (Lens↔Lens {A = A} {B = B}))
 
 -- In the presence of UIP for Set it is impossible to define a fully
 -- general composition operator.
