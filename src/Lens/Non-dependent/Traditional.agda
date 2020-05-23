@@ -14,6 +14,7 @@ import Bi-invertibility
 open import Bijection equality-with-J as Bij using (_↔_)
 open import Category equality-with-J as C using (Category; Precategory)
 open import Circle equality-with-paths as Circle using (𝕊¹)
+open import Equality.Tactic equality-with-J hiding (module Eq)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
@@ -1812,7 +1813,7 @@ equality-characterisation-for-sets-≅
 
 -- A form of isomorphism between types, expressed using lenses.
 
-open B public using (_≊_; Is-bi-invertible)
+open B public using (_≊_; Is-bi-invertible; Has-right-inverse)
 
 -- There is a split surjection from A ≊ B to A ≃ B.
 
@@ -1984,6 +1985,261 @@ bi-invertible-but-not-coherent _ =
                                                                            ⟨ext⟩ (λ _ → ext-refl) ⟩∎
          cong {x = const P.id}
               (λ set → set (set x y) z) (⟨ext⟩ (⟨ext⟩ ⊚ λ _ _ → refl))  ∎)
+    )
+
+-- If the getter function is an equivalence, then the lens has a right
+-- inverse.
+
+Is-equivalence-get→Has-right-inverse :
+  (l : Lens A B) →
+  Is-equivalence (Lens.get l) → Has-right-inverse l
+Is-equivalence-get→Has-right-inverse {A = A} {B = B} l is-equiv =
+  l⁻¹ , l∘l⁻¹≡id
+  where
+  open Lens
+  open Lens-combinators
+
+  A≃B = Eq.⟨ get l , is-equiv ⟩
+
+  open _≃_ A≃B
+
+  -- Note that the set-get and set-set proofs have been "obfuscated".
+  -- They could have been shorter, but then it might not have been
+  -- possible to prove l∘l⁻¹≡id.
+
+  l⁻¹ = record
+    { get     = from
+    ; set     = λ _ → get l
+    ; get-set = λ _ → left-inverse-of
+    ; set-get = λ b →
+                  get l (from b)                           ≡⟨ sym $ cong (get l) $ set-get l _ ⟩
+                  get l (set l (from b) (get l (from b)))  ≡⟨ get-set l _ _ ⟩
+                  get l (from b)                           ≡⟨ right-inverse-of _ ⟩∎
+                  b                                        ∎
+    ; set-set = λ b a₁ a₂ →
+        let set′ : B → A → B
+            set′ = λ b a → get l (set l (from b) (get l a))
+        in
+        get l a₂                                              ≡⟨ sym (get-set l _ _) ⟩
+
+        set′ b a₂                                             ≡⟨ sym (cong (get l) (set-set l _ _ _)) ⟩
+
+        get l (set l (set l (from b) (get l a₁)) (get l a₂))  ≡⟨ sym (cong (get l) (cong (λ a → set l a (get l a₂)) (left-inverse-of _))) ⟩
+
+        set′ (set′ b a₁) a₂                                   ≡⟨ cong (λ set → set (set b (get l a₁)) (get l a₂))
+                                                                   (⟨ext⟩ (⟨ext⟩ ⊚ get-set l ⊚ from)) ⟩∎
+        get l a₂                                              ∎
+    }
+
+  l∘l⁻¹≡id = _↔_.from equality-characterisation₄
+    ( right-inverse-of
+    , get-set l ⊚ from
+    , (λ b₁ b₂ →
+         trans (sym (trans (cong (get l ⊚ from) (get-set l _ _))
+                       (right-inverse-of _)))
+           (trans (cong (get l) $ get-set l⁻¹ b₁ _)
+              (get-set l _ _))                                      ≡⟨⟩
+
+         trans (sym (trans (cong (get l ⊚ from) (get-set l _ _))
+                       (right-inverse-of _)))
+           (trans (cong (get l) $ left-inverse-of _)
+              (get-set l _ _))                                      ≡⟨ cong (λ eq → trans (sym (trans (cong (get l ⊚ from)
+                                                                                                         (get-set l _ _))
+                                                                                                  (right-inverse-of _)))
+                                                                                      (trans eq (get-set l _ _))) $
+                                                                       left-right-lemma _ ⟩
+         trans (sym (trans (cong (get l ⊚ from) (get-set l _ _))
+                       (right-inverse-of _)))
+           (trans (right-inverse-of _)
+              (get-set l _ _))                                      ≡⟨ cong (λ f → trans (sym (trans (cong (get l ⊚ from)
+                                                                                                 (get-set l _ _)) (f b₂)))
+                                                                                     (trans (f (get l (set l (from b₁) b₂)))
+                                                                                        (get-set l _ _))) $ sym $
+                                                                       _≃_.left-inverse-of (Eq.extensionality-isomorphism bad-ext)
+                                                                         right-inverse-of ⟩
+         trans (sym (trans (cong (get l ⊚ from) (get-set l _ _))
+                       (ext⁻¹ (⟨ext⟩ right-inverse-of) _)))
+           (trans (ext⁻¹ (⟨ext⟩ right-inverse-of) _)
+              (get-set l _ _))                                      ≡⟨ elim₁
+                                                                         (λ {f} eq → trans (sym (trans (cong f (get-set l (from b₁) b₂))
+                                                                                                   (ext⁻¹ eq _)))
+                                                                                       (trans (ext⁻¹ eq _) (get-set l _ _)) ≡
+                                                                                     refl)
+                                                                         (
+             trans (sym (trans (cong P.id (get-set l _ _))
+                           (ext⁻¹ (refl {x = P.id}) _)))
+               (trans (ext⁻¹ (refl {x = P.id}) _) (get-set l _ _))         ≡⟨⟩
+
+             trans (sym (cong P.id (get-set l _ _)))
+               (trans refl (get-set l _ _))                                ≡⟨ cong₂ (λ p q → trans (sym p) q)
+                                                                                (sym $ cong-id (get-set l _ _))
+                                                                                (trans-reflˡ (get-set l _ _)) ⟩
+             trans (sym (get-set l _ _))
+               (get-set l _ _)                                             ≡⟨ trans-symˡ (get-set l _ _) ⟩∎
+
+             refl                                                          ∎)
+                                                                         (⟨ext⟩ right-inverse-of) ⟩
+         refl                                                       ∎)
+    , (λ b →
+         trans (sym (trans (get-set l _ _)
+                       (cong P.id (right-inverse-of _))))
+           (trans (cong (get l) $ set-get l _)
+              (set-get l⁻¹ _))                             ≡⟨⟩
+
+         trans (sym (trans (get-set l _ _)
+                       (cong P.id (right-inverse-of _))))
+           (trans (cong (get l) $ set-get l _)
+              (trans (sym $ cong (get l) $ set-get l _)
+                 (trans (get-set l _ _)
+                    (right-inverse-of _))))                ≡⟨ cong (trans _) $
+                                                              trans--[trans-sym] _ (trans _ (right-inverse-of _)) ⟩
+         trans (sym (trans (get-set l _ _)
+                       (cong P.id (right-inverse-of _))))
+           (trans (get-set l _ _) (right-inverse-of _))    ≡⟨ cong (λ eq → trans (sym (trans (get-set l _ _) eq))
+                                                                             (trans (get-set l _ _) (right-inverse-of _))) $ sym $
+                                                              cong-id (right-inverse-of _) ⟩
+         trans (sym (trans (get-set l _ _)
+                       (right-inverse-of _)))
+           (trans (get-set l _ _) (right-inverse-of _))    ≡⟨ trans-symˡ (trans _ (right-inverse-of _)) ⟩∎
+
+         refl                                              ∎)
+    , (λ b b₁ b₂ →
+
+         let set′ : B → B → B
+             set′ = λ b b′ → get l (set l (from b) b′)
+
+             b′ = set′ b b₁
+
+             p : ∀ b₁ b₂ → set′ (set′ b b₁) b₂ ≡ b₂
+             p b₁ b₂ = trans
+               (trans (cong (get l)
+                         (cong (λ a → set l a b₂)
+                            (left-inverse-of _)))
+                  (cong (get l) (set-set l _ _ _)))
+               (get-set l _ _)
+         in
+
+         trans (set-set (l ∘ l⁻¹) b b₁ b₂) (get-set l (from b) b₂)       ≡⟨⟩
+
+         trans (trans (set-set l⁻¹ _ _ _)
+                  (cong (get l)
+                     (trans (cong (λ a → set l a b₂) (get-set l⁻¹ b _))
+                        (set-set l (from b) b₁ b₂))))
+           (get-set l (from b) b₂)                                       ≡⟨⟩
+
+         trans (trans
+           (trans (sym (get-set l _ _))
+              (trans (sym (cong (get l) (set-set l _ _ _)))
+                 (trans (sym (cong (get l)
+                                (cong (λ a → set l a (set′ b′ b₂))
+                                   (left-inverse-of _))))
+                    (cong (λ set → set (set b b′) (set′ b′ b₂))
+                       (⟨ext⟩ (⟨ext⟩ ⊚ get-set l ⊚ from))))))
+           (cong (get l)
+              (trans (cong (λ a → set l a b₂)
+                        (left-inverse-of _))
+                 (set-set l (from b) b₁ b₂))))
+           (get-set l (from b) b₂)                                       ≡⟨ prove
+                                                                              (Trans (Trans
+                                                                                 (Trans (Sym (Lift (get-set l _ _)))
+                                                                                    (Trans (Sym (Lift (cong (get l) (set-set l _ _ _))))
+                                                                                       (Trans (Sym (Lift (cong (get l)
+                                                                                                            (cong (λ a → set l a (set′ b′ b₂))
+                                                                                                               (left-inverse-of _)))))
+                                                                                          (Lift (cong (λ set → set (set b b′) (set′ b′ b₂))
+                                                                                                   (⟨ext⟩ (⟨ext⟩ ⊚ get-set l ⊚ from)))))))
+                                                                                 (Lift (cong (get l)
+                                                                                          (trans (cong (λ a → set l a b₂)
+                                                                                                    (left-inverse-of _))
+                                                                                             (set-set l (from b) b₁ b₂)))))
+                                                                                 (Lift (get-set l (from b) b₂)))
+                                                                              (Trans
+                                                                                 (Trans (Sym
+                                                                                    (Trans (Trans (Lift (cong (get l)
+                                                                                                           (cong (λ a → set l a (set′ b′ b₂))
+                                                                                                              (left-inverse-of _))))
+                                                                                              (Lift (cong (get l) (set-set l _ _ _))))
+                                                                                       (Lift (get-set l _ _))))
+                                                                                    (Lift (cong (λ set → set (set b b′) (set′ b′ b₂))
+                                                                                            (⟨ext⟩ (⟨ext⟩ ⊚ get-set l ⊚ from)))))
+                                                                                 (Trans
+                                                                                    (Lift (cong (get l)
+                                                                                             (trans (cong (λ a → set l a b₂)
+                                                                                                       (left-inverse-of _))
+                                                                                                (set-set l (from b) b₁ b₂))))
+                                                                                    (Lift (get-set l (from b) b₂))))
+                                                                              refl ⟩
+         trans
+           (trans (sym
+              (trans (trans (cong (get l)
+                               (cong (λ a → set l a (set′ b′ b₂))
+                                  (left-inverse-of _)))
+                        (cong (get l) (set-set l _ _ _)))
+                 (get-set l _ _)))
+              (cong (λ set → set (set b b′) (set′ b′ b₂))
+                 (⟨ext⟩ (⟨ext⟩ ⊚ get-set l ⊚ from))))
+           (trans
+              (cong (get l)
+                 (trans (cong (λ a → set l a b₂)
+                           (left-inverse-of _))
+                    (set-set l (from b) b₁ b₂)))
+              (get-set l (from b) b₂))                                   ≡⟨ cong (λ eq → trans (trans (sym
+                                                                                           (trans (trans (cong (get l)
+                                                                                                            (cong (λ a → set l a (set′ b′ b₂))
+                                                                                                               (left-inverse-of _)))
+                                                                                                     (cong (get l) (set-set l _ _ _)))
+                                                                                              (get-set l _ _)))
+                                                                                           (cong (λ set → set (set b b′) (set′ b′ b₂))
+                                                                                              (⟨ext⟩ (⟨ext⟩ ⊚ get-set l ⊚ from))))
+                                                                                           (trans eq (get-set l (from b) b₂))) $
+                                                                            cong-trans _ _ (set-set l (from b) b₁ b₂) ⟩
+         trans
+           (trans (sym
+              (trans (trans (cong (get l)
+                               (cong (λ a → set l a (set′ b′ b₂))
+                                  (left-inverse-of _)))
+                        (cong (get l) (set-set l (from b) b′ _)))
+                 (get-set l _ _)))
+              (cong (λ set → set (set b b′) (set′ b′ b₂))
+                 (⟨ext⟩ (⟨ext⟩ ⊚ get-set l ⊚ from))))
+           (trans
+              (trans (cong (get l) (cong (λ a → set l a b₂)
+                                      (left-inverse-of _)))
+                 (cong (get l) (set-set l (from b) b₁ b₂)))
+              (get-set l (from b) b₂))                                   ≡⟨⟩
+
+         trans
+           (trans (sym (p b′ (set′ b′ b₂)))
+              (cong (λ set → set (set b b′) (set′ b′ b₂))
+                 (⟨ext⟩ (⟨ext⟩ ⊚ get-set l ⊚ from))))
+           (p b₁ b₂)                                                     ≡⟨ elim₁
+                                                                              (λ {set′} (eq : set′ ≡ const P.id) →
+                                                                                 (p : ∀ b₁ b₂ → set′ (set′ b b₁) b₂ ≡ b₂) →
+                                                                                 trans (trans (sym (p (set′ b b₁) (set′ (set′ b b₁) b₂)))
+                                                                                          (cong (λ set → set (set b (set′ b b₁))
+                                                                                                             (set′ (set′ b b₁) b₂))
+                                                                                             eq))
+                                                                                   (p b₁ b₂) ≡
+                                                                                 cong (λ set → set (set b b₁) b₂) eq)
+                                                                              (λ p →
+             trans (trans (sym (p b₁ b₂))
+                       (cong (λ set → set (set b b₁) b₂)
+                          (refl {x = const P.id})))
+               (p b₁ b₂)                                                         ≡⟨⟩
+
+             trans (sym (p b₁ b₂)) (p b₁ b₂)                                     ≡⟨ trans-symˡ (p b₁ b₂) ⟩
+
+             refl                                                                ≡⟨⟩
+
+             cong (λ set → set (set b b₁) b₂) (refl {x = const P.id})            ∎)
+                                                                              (⟨ext⟩ (⟨ext⟩ ⊚ get-set l ⊚ from))
+                                                                              p ⟩
+         cong (λ set → set (set b b₁) b₂)
+           (⟨ext⟩ (⟨ext⟩ ⊚ get-set l ⊚ from))                            ≡⟨⟩
+
+         trans (cong (λ set → set (set b b₁) b₂)
+                  (⟨ext⟩ (⟨ext⟩ ⊚ get-set l ⊚ from)))
+           refl                                                          ∎)
     )
 
 ------------------------------------------------------------------------
