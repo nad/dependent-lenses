@@ -798,6 +798,106 @@ abstract
       trans (cong (λ set → set (set a b₁) b₂) s)
         (set-set l₂ a b₁ b₂)                                    ∎
 
+  -- And yet another one.
+
+  equality-characterisation₄ :
+    let open Lens in
+
+    l₁ ≡ l₂
+      ↔
+    ∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
+    ∃ λ (s : ∀ a b → set l₁ a b ≡ set l₂ a b) →
+      (∀ a b →
+         trans (sym (trans (cong (get l₁) (s a b))
+                       (g (set l₂ a b))))
+           (get-set l₁ a b) ≡
+         get-set l₂ a b) ×
+      (∀ a →
+         trans (sym (trans (s a (get l₁ a))
+                       (cong (set l₂ a) (g a))))
+           (set-get l₁ a) ≡
+         set-get l₂ a) ×
+      (∀ a b₁ b₂ →
+         trans (set-set l₁ a b₁ b₂) (s a b₂) ≡
+         trans (cong (λ set → set (set a b₁) b₂) (⟨ext⟩ (⟨ext⟩ ⊚ s)))
+           (set-set l₂ a b₁ b₂))
+
+  equality-characterisation₄ {l₁ = l₁} {l₂ = l₂} =
+    l₁ ≡ l₂                                                             ↝⟨ equality-characterisation₃ ⟩
+
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (s : set l₁ ≡ set l₂) →
+       (∀ a b → trans (sym (cong₂ (λ set get → get (set a b)) s g))
+                  (get-set l₁ a b) ≡
+                get-set l₂ a b) ×
+       (∀ a → trans (sym (cong₂ (λ set get → set a (get a)) s g))
+                (set-get l₁ a) ≡
+              set-get l₂ a) ×
+       (∀ a b₁ b₂ →
+          trans (set-set l₁ a b₁ b₂) (cong (λ set → set a b₂) s) ≡
+          trans (cong (λ set → set (set a b₁) b₂) s)
+            (set-set l₂ a b₁ b₂)))                                      ↝⟨ (Σ-cong (inverse $ Eq.extensionality-isomorphism ext) λ g →
+                                                                            Σ-cong (inverse $
+                                                                                    Eq.extensionality-isomorphism ext F.∘
+                                                                                    ∀-cong ext λ _ → Eq.extensionality-isomorphism ext) λ s →
+                                                                            (∀-cong ext λ a → ∀-cong ext λ b →
+                                                                             ≡⇒↝ _ $ cong (λ eq → trans (sym eq) (get-set l₁ a b) ≡ _) (
+        cong₂ (λ set get → get (set a b)) s g                                  ≡⟨⟩
+
+        trans (cong (λ set → get l₁ (set a b)) s)
+          (cong (λ get → get (set l₂ a b)) g)                                  ≡⟨ cong (λ eq → trans eq (ext⁻¹ g (set l₂ a b))) $ sym $
+                                                                                  cong-∘ _ _ s ⟩
+        trans (cong (get l₁ ⊚ (_$ b)) (ext⁻¹ s a))
+          (ext⁻¹ g (set l₂ a b))                                               ≡⟨ cong (λ eq → trans eq (ext⁻¹ g (set l₂ a b))) $ sym $
+                                                                                  cong-∘ _ _ (ext⁻¹ s a) ⟩∎
+        trans (cong (get l₁) (ext⁻¹ (ext⁻¹ s a) b))
+          (ext⁻¹ g (set l₂ a b))                                               ∎))
+                                                                              ×-cong
+                                                                            (∀-cong ext λ a →
+                                                                             ≡⇒↝ _ $ cong (λ eq → trans (sym eq) (set-get l₁ a) ≡ _) (
+        cong₂ (λ set get → set a (get a)) s g                                  ≡⟨⟩
+
+        trans (cong (λ set → set a (get l₁ a)) s)
+          (cong (λ get → set l₂ a (get a)) g)                                  ≡⟨ sym $ cong₂ trans (cong-∘ _ _ s) (cong-∘ _ _ g) ⟩
+
+        trans (ext⁻¹ (ext⁻¹ s a) (get l₁ a))
+          (cong (set l₂ a) (ext⁻¹ g a))                                        ∎))
+                                                                              ×-cong
+                                                                            ∀-cong ext λ a → ∀-cong ext λ b₁ → ∀-cong ext λ b₂ →
+                                                                             ≡⇒↝ _ $
+                                                                             cong₂ (λ p q → trans _ p ≡
+                                                                                            trans (cong (λ set → set (set a b₁) b₂) q)
+                                                                                              (set-set l₂ a b₁ b₂)) (
+        cong (λ set → set a b₂) s                                              ≡⟨ sym $ cong-∘ _ _ s ⟩∎
+
+        ext⁻¹ (ext⁻¹ s a) b₂                                                   ∎)
+                                                                               (
+        s                                                                      ≡⟨ sym $ _≃_.right-inverse-of
+                                                                                          (Eq.extensionality-isomorphism bad-ext) _ ⟩
+        ⟨ext⟩ (ext⁻¹ s)                                                        ≡⟨ (cong ⟨ext⟩ $ ⟨ext⟩ λ _ → sym $
+                                                                                   _≃_.right-inverse-of
+                                                                                     (Eq.extensionality-isomorphism bad-ext) _) ⟩∎
+        ⟨ext⟩ (⟨ext⟩ ⊚ ext⁻¹ ⊚ ext⁻¹ s)                                        ∎)) ⟩□
+
+    (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
+     ∃ λ (s : ∀ a b → set l₁ a b ≡ set l₂ a b) →
+       (∀ a b →
+          trans (sym (trans (cong (get l₁) (s a b))
+                        (g (set l₂ a b))))
+            (get-set l₁ a b) ≡
+          get-set l₂ a b) ×
+       (∀ a →
+          trans (sym (trans (s a (get l₁ a))
+                        (cong (set l₂ a) (g a))))
+            (set-get l₁ a) ≡
+          set-get l₂ a) ×
+       (∀ a b₁ b₂ →
+          trans (set-set l₁ a b₁ b₂) (s a b₂) ≡
+          trans (cong (λ set → set (set a b₁) b₂) (⟨ext⟩ (⟨ext⟩ ⊚ s)))
+            (set-set l₂ a b₁ b₂)))                                      □
+    where
+    open Lens
+
 -- An equality characterisation lemma for lenses from sets.
 
 equality-characterisation-for-sets :
@@ -1249,7 +1349,7 @@ module Lens-combinators where
        (sym (set-set l a b₁ b₂))) →
     ≃→lens A≃B ≡ l
   ≃→lens-get l is-equiv coh₁ coh₂ =
-    _↔_.from equality-characterisation₃
+    _↔_.from equality-characterisation₄
       ( g
       , s
       , lemma₁
@@ -1261,42 +1361,15 @@ module Lens-combinators where
 
     A≃B = Eq.⟨ get l , is-equiv ⟩
 
-    g = refl {x = get l}
+    g = λ _ → refl
 
-    s = ⟨ext⟩ λ a → ⟨ext⟩ λ b → _≃_.to-from A≃B (
+    s = λ a b → _≃_.to-from A≃B (
       get l (set l a b)  ≡⟨ get-set l a b ⟩∎
       b                  ∎)
 
-    s-lemma :
-      ∀ a b →
-      cong (λ set → set a b) s ≡
-      trans (cong (_≃_.from A≃B) (sym (get-set l a b)))
-        (_≃_.left-inverse-of A≃B _)
-    s-lemma a b =
-      cong (λ set → set a b)
-        (⟨ext⟩ λ a → ⟨ext⟩ λ b →
-         trans (cong (_≃_.from A≃B) (sym (get-set l a b)))
-           (_≃_.left-inverse-of A≃B _))                        ≡⟨ sym $ cong-∘ _ _ (⟨ext⟩ λ a → ⟨ext⟩ λ b →
-                                                                                    trans _ (_≃_.left-inverse-of A≃B _)) ⟩
-      cong (_$ b)
-        (cong (_$ a)
-           (⟨ext⟩ λ a → ⟨ext⟩ λ b →
-            trans (cong (_≃_.from A≃B) (sym (get-set l a b)))
-              (_≃_.left-inverse-of A≃B _)))                    ≡⟨ cong (cong (_$ b)) $
-                                                                  cong-ext (λ a → ⟨ext⟩ λ b → trans _ (_≃_.left-inverse-of A≃B _)) ⟩
-      cong (_$ b)
-        (⟨ext⟩ λ b →
-         trans (cong (_≃_.from A≃B) (sym (get-set l a b)))
-           (_≃_.left-inverse-of A≃B _))                        ≡⟨ cong-ext (λ b → trans _ (_≃_.left-inverse-of A≃B _)) ⟩∎
-
-      trans (cong (_≃_.from A≃B) (sym (get-set l a b)))
-        (_≃_.left-inverse-of A≃B _)                            ∎
-
     lemma₁ = λ a b →
       let lem =
-            cong (λ set → get l (set a b)) s                           ≡⟨ sym $ cong-∘ _ _ s ⟩
-
-            cong (get l) (cong (λ set → set a b) s)                    ≡⟨ cong (cong (get l)) $ s-lemma _ _ ⟩
+            cong (get l) (s a b)                                       ≡⟨⟩
 
             cong (get l)
               (trans (cong (_≃_.from A≃B) (sym (get-set l a b)))
@@ -1310,10 +1383,10 @@ module Lens-combinators where
             trans (cong (get l ⊚ _≃_.from A≃B) (sym (get-set l a b)))
               (_≃_.right-inverse-of A≃B _)                             ∎
       in
-      trans (sym (cong₂ (λ set get → get (set a b)) s g))
+      trans (sym (trans (cong (get l) (s a b)) (g (set l a b))))
         (_≃_.right-inverse-of A≃B _)                                ≡⟨⟩
 
-      trans (sym (cong (λ set → get l (set a b)) s))
+      trans (sym (cong (get l) (s a b)))
         (_≃_.right-inverse-of A≃B _)                                ≡⟨ cong (λ eq → trans (sym eq) (_≃_.right-inverse-of A≃B _)) lem ⟩
 
       trans (sym
@@ -1339,12 +1412,9 @@ module Lens-combinators where
       get-set l a b                                                 ∎
 
     lemma₂ = λ a →
-      trans (sym (cong₂ (λ set get → set a (get a)) s g))
+      trans (sym (trans (s a (get l a)) (cong (set l a) (g a))))
          (_≃_.left-inverse-of A≃B _)                                     ≡⟨⟩
 
-      trans (sym (cong (λ set → set a (get l a)) s))
-         (_≃_.left-inverse-of A≃B _)                                     ≡⟨ cong (λ eq → trans (sym eq) (_≃_.left-inverse-of A≃B _)) $
-                                                                            s-lemma _ _ ⟩
       trans (sym
         (trans (cong (_≃_.from A≃B) (sym (get-set l a (get l a))))
            (_≃_.left-inverse-of A≃B _)))
@@ -1376,34 +1446,21 @@ module Lens-combinators where
       set-get l a                                                        ∎
 
     lemma₃ = λ a b₁ b₂ →
-      let lem =
-            cong (λ set → set (set a b₁) b₂) s                           ≡⟨⟩
+      trans refl (s a b₂)                                                  ≡⟨ trans-reflˡ (s a b₂) ⟩
 
-            cong (λ set → set (set a b₁) b₂)
-              (⟨ext⟩ λ a → ⟨ext⟩ λ b →
-               trans (cong (_≃_.from A≃B) (sym (get-set l a b)))
-                 (_≃_.left-inverse-of A≃B _))                            ≡⟨ coh₂ _ _ _ ⟩
+      s a b₂                                                               ≡⟨⟩
 
-            trans (trans (cong (_≃_.from A≃B) (sym (get-set l a b₂)))
-                     (_≃_.left-inverse-of A≃B _))
-              (sym (set-set l a b₁ b₂))                                  ≡⟨ cong (λ eq → trans eq (sym (set-set l a b₁ b₂))) $ sym $
-                                                                            s-lemma _ _ ⟩∎
-            trans (cong (λ set → set a b₂) s) (sym (set-set l a b₁ b₂))  ∎
-      in
-      trans refl (cong (λ set → set a b₂) s)                               ≡⟨ trans-reflˡ (cong (λ set → set a b₂) s) ⟩
+      trans (s a b₂) refl                                                  ≡⟨ cong (trans _) $ sym $ trans-symˡ (set-set l a b₁ b₂) ⟩
 
-      cong (λ set → set a b₂) s                                            ≡⟨⟩
-
-      trans (cong (λ set → set a b₂) s) refl                               ≡⟨ cong (trans _) $ sym $ trans-symˡ (set-set l a b₁ b₂) ⟩
-
-      trans (cong (λ set → set a b₂) s)
+      trans (s a b₂)
         (trans (sym (set-set l a b₁ b₂))
            (set-set l a b₁ b₂))                                            ≡⟨ sym $ trans-assoc _ _ (set-set l a b₁ b₂) ⟩
 
-      trans (trans (cong (λ set → set a b₂) s) (sym (set-set l a b₁ b₂)))
-        (set-set l a b₁ b₂)                                                ≡⟨ cong (λ eq → trans eq (set-set l a b₁ b₂)) $ sym
-                                                                              lem ⟩∎
-      trans (cong (λ set → set (set a b₁) b₂) s) (set-set l a b₁ b₂)       ∎
+      trans (trans (s a b₂) (sym (set-set l a b₁ b₂)))
+        (set-set l a b₁ b₂)                                                ≡⟨ cong (λ eq → trans eq (set-set l a b₁ b₂)) $
+                                                                              sym $ coh₂ _ _ _ ⟩∎
+      trans (cong (λ set → set (set a b₁) b₂) (⟨ext⟩ (⟨ext⟩ ⊚ s)))
+        (set-set l a b₁ b₂)                                                ∎
 
 ------------------------------------------------------------------------
 -- Isomorphisms expressed using lens quasi-inverses
@@ -1674,29 +1731,17 @@ equality-characterisation-for-sets-≅
   ¬ ({A B : Set a}
      (l : Lens A B) →
      Is-equivalence (Lens.get l) ↠ Has-quasi-inverse l)
-¬Is-equivalence↠Has-quasi-inverse _ surj =                       $⟨ ⊤-contractible ⟩
-  Contractible ⊤                                                 ↝⟨ H-level.respects-surjection lemma₁ 0 ⟩
+¬Is-equivalence↠Has-quasi-inverse _ surj =      $⟨ ⊤-contractible ⟩
+  Contractible ⊤                                ↝⟨ H-level.respects-surjection lemma₁ 0 ⟩
 
-  Contractible
-    (∃ λ (g : P.id ≡ P.id) →
-     ∃ λ (s : const P.id ≡ const P.id) →
-       (∀ x y →
-          sym (cong₂ (λ set get → get (set x y)) s g) ≡ refl) ×
-       (∀ x →
-          sym (cong₂ (λ set get → set x (get x)) s g) ≡ refl) ×
-       (∀ x y z →
-          trans refl (cong (λ set → set x z) s) ≡
-          cong (λ set → set (set x y) z) s))                     ↝⟨ flip proj₁-closure 0
-                                                                      (λ g → cong const (sym g)
-                                                                           , lemma₂ g , (λ x → lemma₂ g x x) , lemma₃ g) ⟩
+  Contractible (∃ λ (g : (x : X) → x ≡ x) → _)  ↝⟨ flip proj₁-closure 0
+                                                     (λ g → (λ _ x → sym (g x)) , lemma₂ g , lemma₃ g , lemma₄ g) ⟩
 
-  Contractible (P.id ≡ P.id)                                     ↝⟨ H-level-cong _ 0 $ inverse $ Eq.extensionality-isomorphism ext ⟩
+  Contractible ((x : X) → x ≡ x)                ↝⟨ mono₁ 0 ⟩
 
-  Contractible ((x : X) → x ≡ x)                                 ↝⟨ mono₁ 0 ⟩
+  Is-proposition ((x : X) → x ≡ x)              ↝⟨ ¬-prop ⟩□
 
-  Is-proposition ((x : X) → x ≡ x)                               ↝⟨ ¬-prop ⟩□
-
-  ⊥                                                              □
+  ⊥                                             □
   where
   open Lens-combinators
 
@@ -1705,63 +1750,62 @@ equality-characterisation-for-sets-≅
   ¬-prop   = proj₂ X,¬-prop
 
   lemma₁ =
-    ⊤                                                                 ↔⟨ inverse $ _⇔_.to contractible⇔↔⊤ $
-                                                                         propositional⇒inhabited⇒contractible
-                                                                           (Eq.propositional ext _)
-                                                                           (_≃_.is-equivalence Eq.id) ⟩
+    ⊤                                                                ↔⟨ inverse $ _⇔_.to contractible⇔↔⊤ $
+                                                                        propositional⇒inhabited⇒contractible
+                                                                          (Eq.propositional ext _)
+                                                                          (_≃_.is-equivalence Eq.id) ⟩
 
-    Is-equivalence (P.id {A = X})                                     ↝⟨ surj id ⟩
+    Is-equivalence (P.id {A = X})                                    ↝⟨ surj id ⟩
 
-    Has-quasi-inverse id                                              ↔⟨ BM.Has-quasi-inverse≃id≡id-domain
-                                                                           (id , left-identity _ , right-identity _) ⟩
+    Has-quasi-inverse id                                             ↔⟨ BM.Has-quasi-inverse≃id≡id-domain
+                                                                          (id , left-identity _ , right-identity _) ⟩
 
-    id ≡ id                                                           ↔⟨ equality-characterisation₃ ⟩
+    id ≡ id                                                          ↔⟨ equality-characterisation₄ ⟩
 
-    (∃ λ (g : P.id ≡ P.id) →
-     ∃ λ (s : const P.id ≡ const P.id) →
+    (∃ λ (g : ∀ x → x ≡ x) →
+     ∃ λ (s : X → ∀ x → x ≡ x) →
        (∀ x y →
-          trans (sym (cong₂ (λ set get → get (set x y)) s g)) refl ≡
+          trans (sym (trans (cong P.id (s x y)) (g y))) refl ≡
           refl) ×
        (∀ x →
-          trans (sym (cong₂ (λ set get → set x (get x)) s g)) refl ≡
+          trans (sym (trans (s x x) (cong P.id (g x)))) refl ≡
           refl) ×
        (∀ x y z →
-         trans refl (cong (λ set → set x z) s) ≡
-         trans (cong (λ set → set (set x y) z) s) refl))              ↔⟨⟩
+         trans refl (s x z) ≡
+         trans (cong (λ set → set (set x y) z) (⟨ext⟩ (⟨ext⟩ ⊚ s)))
+           refl))                                                    ↔⟨⟩
 
-    (∃ λ (g : P.id ≡ P.id) →
-     ∃ λ (s : const P.id ≡ const P.id) →
+    (∃ λ (g : ∀ x → x ≡ x) →
+     ∃ λ (s : X → ∀ x → x ≡ x) →
        (∀ x y →
-          sym (cong₂ (λ set get → get (set x y)) s g) ≡ refl) ×
+          sym (trans (cong P.id (s x y)) (g y)) ≡ refl) ×
        (∀ x →
-          sym (cong₂ (λ set get → set x (get x)) s g) ≡ refl) ×
+          sym (trans (s x x) (cong P.id (g x))) ≡ refl) ×
        (∀ x y z →
-         trans refl (cong (λ set → set x z) s) ≡
-         cong (λ set → set (set x y) z) s))                           □
+         trans refl (s x z) ≡
+         cong (λ set → set (set x y) z) (⟨ext⟩ (⟨ext⟩ ⊚ s))))        □
 
-  lemma₂ : (g : P.id ≡ P.id) (x y : X) → _
+  lemma₂ : (g : ∀ x → x ≡ x) (x y : X) → _
   lemma₂ g x y =
-    sym (cong₂ (λ set get → get (set x y)) (cong const (sym g)) g)  ≡⟨⟩
+    sym (trans (cong P.id (sym (g y))) (g y))  ≡⟨ cong (λ eq → sym (trans eq (g y))) $ sym $ cong-id _ ⟩
+    sym (trans (sym (g y)) (g y))              ≡⟨ cong sym $ trans-symˡ (g y) ⟩
+    sym refl                                   ≡⟨⟩
+    refl                                       ∎
 
-    sym (trans (cong (λ set → set x y) (cong const (sym g)))
-           (cong (λ get → get y) g))                                ≡⟨ cong (λ eq → sym (trans eq (cong (λ get → get y) g))) $
-                                                                       cong-∘ _ _ (sym g) ⟩
-    sym (trans (cong (λ set → set y) (sym g))
-           (cong (λ get → get y) g))                                ≡⟨ cong (λ eq → sym (trans eq (cong (λ get → get y) g))) $ cong-sym (_$ y) g ⟩
+  lemma₃ : (g : ∀ x → x ≡ x) (x : X) → _
+  lemma₃ g x =
+    sym (trans (sym (g x)) (cong P.id (g x)))  ≡⟨ cong (λ eq → sym (trans (sym (g x)) eq)) $ sym $ cong-id (g x) ⟩
+    sym (trans (sym (g x)) (g x))              ≡⟨ cong sym $ trans-symˡ (g x) ⟩
+    sym refl                                   ≡⟨⟩
+    refl                                       ∎
 
-    sym (trans (sym $ cong (λ set → set y) g)
-           (cong (λ get → get y) g))                                ≡⟨ cong sym $ trans-symˡ (cong (λ get → get y) g) ⟩
-
-    sym refl                                                        ≡⟨⟩
-
-    refl                                                            ∎
-
-  lemma₃ : (g : P.id ≡ P.id) (x y z : X) → _
-  lemma₃ g x y z =
-    trans refl (cong (λ set → set x z) (cong const (sym g)))  ≡⟨ trans-reflˡ (cong (λ set → set x z) (cong const (sym g))) ⟩
-    cong (λ set → set x z) (cong const (sym g))               ≡⟨ cong-∘ _ _ (sym g) ⟩
-    cong (λ set → set z) (sym g)                              ≡⟨ sym $ cong-∘ _ _ (sym g) ⟩∎
-    cong (λ set → set (set x y) z) (cong const (sym g))       ∎
+  lemma₄ : (g : ∀ x → x ≡ x) (x y z : X) → _
+  lemma₄ g x y z =
+    trans refl (sym (g z))                                         ≡⟨ trans-reflˡ (sym (g z)) ⟩
+    sym (g z)                                                      ≡⟨ sym $ cong-ext (sym ⊚ g) ⟩
+    cong (_$ z) (⟨ext⟩ (sym ⊚ g))                                  ≡⟨ sym $ cong-∘ _ _ (⟨ext⟩ (sym ⊚ g)) ⟩
+    cong (λ set → set (set x y) z) (cong const (⟨ext⟩ (sym ⊚ g)))  ≡⟨ cong (cong (λ set → set (set x y) z)) $ sym $ ext-const (⟨ext⟩ (sym ⊚ g)) ⟩∎
+    cong (λ set → set (set x y) z) (⟨ext⟩ λ _ → ⟨ext⟩ (sym ⊚ g))   ∎
 
 ------------------------------------------------------------------------
 -- Isomorphisms expressed using bi-invertibility for lenses
