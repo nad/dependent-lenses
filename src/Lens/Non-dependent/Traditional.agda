@@ -13,7 +13,7 @@ open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 import Bi-invertibility
 open import Bijection equality-with-J as Bij using (_↔_)
 open import Category equality-with-J as C using (Category; Precategory)
-import Circle equality-with-paths as Circle
+open import Circle equality-with-paths as Circle using (𝕊¹)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
@@ -1871,6 +1871,120 @@ Is-bi-invertible→Is-equivalence-get :
   Is-bi-invertible l → Is-equivalence (Lens.get l)
 Is-bi-invertible→Is-equivalence-get l is-bi-inv =
   _≃_.is-equivalence (_↠_.to ≊↠≃ (l , is-bi-inv))
+
+-- There is a bi-invertible lens which does not satisfy a certain
+-- coherence law (assuming univalence).
+--
+-- (The lemma does not actually use the univalence argument, but
+-- univalence is used by Circle.¬-type-of-refl-propositional.)
+
+bi-invertible-but-not-coherent :
+  Univalence lzero →
+  ∃ λ (A : Set) →
+  ∃ λ (l : Lens A A) →
+    let open Lens l in
+    Is-bi-invertible l ×
+    ¬ (∀ a → get-set a (get a) ≡ cong get (set-get a))
+bi-invertible-but-not-coherent _ =
+    𝕊¹
+  , l
+  , B.Has-quasi-inverse→Is-bi-invertible l
+      (l⁻¹ , l∘l⁻¹≡id , l⁻¹∘l≡id)
+  , (((x : 𝕊¹) → proj₁ Circle.∃≢refl x ≡ refl)  ↔⟨ Eq.extensionality-isomorphism ext ⟩
+     proj₁ Circle.∃≢refl ≡ (λ _ → refl)         ↝⟨ proj₂ Circle.∃≢refl ⟩□
+     ⊥                                          □)
+  where
+  open Lens
+  open Lens-combinators
+
+  l : Lens 𝕊¹ 𝕊¹
+  l = record
+    { get     = P.id
+    ; set     = const P.id
+    ; get-set = λ _ → proj₁ Circle.∃≢refl
+    ; set-get = λ _ → refl
+    ; set-set = λ _ _ _ → refl
+    }
+
+  l⁻¹ = record
+    { get     = P.id
+    ; set     = const P.id
+    ; get-set = λ _ → sym ⊚ proj₁ Circle.∃≢refl
+    ; set-get = λ _ → refl
+    ; set-set = λ _ _ _ → refl
+    }
+
+  l∘l⁻¹≡id : l ∘ l⁻¹ ≡ id
+  l∘l⁻¹≡id = _↔_.from equality-characterisation₄
+    ( (λ _ → refl)
+    , (λ _ _ → refl)
+    , (λ x y →
+         trans refl (get-set (l ∘ l⁻¹) x y)               ≡⟨ trans-reflˡ (get-set (l ∘ l⁻¹) x y) ⟩
+
+         get-set (l ∘ l⁻¹) x y                            ≡⟨⟩
+
+         trans (cong P.id $ sym $ proj₁ Circle.∃≢refl y)
+           (proj₁ Circle.∃≢refl y)                        ≡⟨ cong (λ eq → trans eq (proj₁ Circle.∃≢refl y)) $ sym $
+                                                             cong-id (sym $ proj₁ Circle.∃≢refl y) ⟩
+         trans (sym $ proj₁ Circle.∃≢refl y)
+           (proj₁ Circle.∃≢refl y)                        ≡⟨ trans-symˡ (proj₁ Circle.∃≢refl y) ⟩∎
+
+         refl                                             ∎)
+    , (λ _ → refl)
+    , (λ x y z →
+         trans (set-set (l ∘ l⁻¹) x y z) refl                           ≡⟨⟩
+
+         trans refl (cong P.id (cong (λ _ → z) (get-set l⁻¹ x y)))      ≡⟨ cong (λ eq → trans refl (cong P.id eq)) $
+                                                                           cong-const (get-set l⁻¹ x y) ⟩
+
+         trans refl (cong P.id refl)                                    ≡⟨⟩
+
+         refl                                                           ≡⟨⟩
+
+         cong {x = const P.id}
+              (λ set → set (set x y) z) refl                            ≡⟨ cong (cong (λ set → set (set x y) z)) $ sym $ ext-refl ⟩
+
+         cong (λ set → set (set x y) z) (⟨ext⟩ λ _ → refl)              ≡⟨ cong (cong (λ set → set (set x y) z) ⊚ ⟨ext⟩) $ sym $
+                                                                           ⟨ext⟩ (λ _ → ext-refl) ⟩∎
+         cong {x = const P.id}
+              (λ set → set (set x y) z) (⟨ext⟩ (⟨ext⟩ ⊚ λ _ _ → refl))  ∎)
+    )
+
+  l⁻¹∘l≡id : l⁻¹ ∘ l ≡ id
+  l⁻¹∘l≡id = _↔_.from equality-characterisation₄
+    ( (λ _ → refl)
+    , (λ _ _ → refl)
+    , (λ x y →
+         trans (sym (trans (cong P.id refl) refl))
+           (trans (cong P.id (proj₁ Circle.∃≢refl y))
+              (sym $ proj₁ Circle.∃≢refl y))                          ≡⟨ trans-reflˡ (trans _ (sym $ proj₁ Circle.∃≢refl y)) ⟩
+
+         trans (cong P.id (proj₁ Circle.∃≢refl y))
+           (sym $ proj₁ Circle.∃≢refl y)                              ≡⟨ cong (λ eq → trans eq (sym $ proj₁ Circle.∃≢refl y)) $ sym $
+                                                                         cong-id (proj₁ Circle.∃≢refl y) ⟩
+
+         trans (proj₁ Circle.∃≢refl y) (sym $ proj₁ Circle.∃≢refl y)  ≡⟨ trans-symʳ (proj₁ Circle.∃≢refl y) ⟩∎
+
+         refl                                                         ∎)
+    , (λ _ → refl)
+    , (λ x y z →
+         trans (set-set (l⁻¹ ∘ l) x y z) refl                           ≡⟨⟩
+
+         trans refl (cong P.id (cong (λ _ → z) (get-set l x y)))        ≡⟨ cong (λ eq → trans refl (cong P.id eq)) $
+                                                                           cong-const (get-set l x y) ⟩
+
+         trans refl (cong P.id refl)                                    ≡⟨⟩
+
+         refl                                                           ≡⟨⟩
+
+         cong {x = const P.id}
+              (λ set → set (set x y) z) refl                            ≡⟨ cong (cong (λ set → set (set x y) z)) $ sym $ ext-refl ⟩
+
+         cong (λ set → set (set x y) z) (⟨ext⟩ λ _ → refl)              ≡⟨ cong (cong (λ set → set (set x y) z) ⊚ ⟨ext⟩) $ sym $
+                                                                           ⟨ext⟩ (λ _ → ext-refl) ⟩∎
+         cong {x = const P.id}
+              (λ set → set (set x y) z) (⟨ext⟩ (⟨ext⟩ ⊚ λ _ _ → refl))  ∎)
+    )
 
 ------------------------------------------------------------------------
 -- A category
