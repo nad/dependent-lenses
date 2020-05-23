@@ -1864,6 +1864,14 @@ equality-characterisation-for-sets-≊
   where
   open Lens-combinators
 
+-- The getter function of a bi-invertible lens is an equivalence.
+
+Is-bi-invertible→Is-equivalence-get :
+  (l : Lens A B) →
+  Is-bi-invertible l → Is-equivalence (Lens.get l)
+Is-bi-invertible→Is-equivalence-get l is-bi-inv =
+  _≃_.is-equivalence (_↠_.to ≊↠≃ (l , is-bi-inv))
+
 ------------------------------------------------------------------------
 -- A category
 
