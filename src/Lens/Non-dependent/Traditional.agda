@@ -2290,6 +2290,38 @@ bi-invertible-but-not-coherent _ =
               (λ set → set (set x y) z) (⟨ext⟩ (⟨ext⟩ ⊚ λ _ _ → refl))  ∎)
     )
 
+-- There are two bi-invertible lenses with the same getter that are
+-- not equal (assuming univalence).
+
+bi-invertible-with-same-getter-but-not-equal :
+  Univalence lzero →
+  ∃ λ (A : Set) →
+  ∃ λ (l₁ : Lens A A) →
+  ∃ λ (l₂ : Lens A A) →
+    Is-bi-invertible l₁ ×
+    Is-bi-invertible l₂ ×
+    Lens.get l₁ ≡ Lens.get l₂ ×
+    l₁ ≢ l₂
+bi-invertible-with-same-getter-but-not-equal univ =
+  let A , l , bi-inv , not-coherent =
+        bi-invertible-but-not-coherent univ
+  in
+    A
+  , l
+  , id
+  , bi-inv
+  , ((id , right-identity id) , (id , left-identity id))
+  , refl
+  , (l ≡ id                                                      ↝⟨ (λ eq → subst (λ l → ∀ a → get-set l a (get l a) ≡
+                                                                                               cong (get l) (set-get l a))
+                                                                                  (sym eq)
+                                                                                  (λ _ → refl)) ⟩
+     (∀ a → get-set l a (get l a) ≡ cong (get l) (set-get l a))  ↝⟨ not-coherent ⟩□
+     ⊥                                                           □)
+  where
+  open Lens
+  open Lens-combinators
+
 -- If the getter function is an equivalence, then the lens is
 -- bi-invertible.
 
