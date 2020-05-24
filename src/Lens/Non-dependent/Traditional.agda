@@ -1347,6 +1347,136 @@ module Lens-combinators where
                              (trans (z c₂″)
                                     (cong g (trans (cong h u) v)))))  ∎
 
+  -- An equality characterisation lemma that can be used when one of
+  -- the lenses is the identity.
+
+  equality-characterisation-id :
+    {l : Lens A A} → let open Lens l in
+
+    l ≡ id
+      ↔
+    ∃ λ (g : ∀ a → get a ≡ a) →
+    ∃ λ (s : ∀ a b → set a b ≡ b) →
+      (∀ a b → get-set a b ≡ trans (cong get (s a b)) (g b)) ×
+      (∀ a → set-get a ≡ trans (s a (get a)) (g a)) ×
+      (∀ a b₁ b₂ →
+         trans (set-set a b₁ b₂) (s a b₂) ≡
+         cong (λ set → set (set a b₁) b₂) (⟨ext⟩ (⟨ext⟩ ⊚ s)))
+  equality-characterisation-id {l = l} =
+    l ≡ id                                                              ↝⟨ equality-characterisation₄ ⟩
+
+    (∃ λ (g : ∀ a → get a ≡ a) →
+     ∃ λ (s : ∀ a b → set a b ≡ b) →
+       (∀ a b →
+          trans (sym (trans (cong get (s a b)) (g b))) (get-set a b) ≡
+          refl) ×
+       (∀ a →
+          trans (sym (trans (s a (get a)) (cong P.id (g a))))
+            (set-get a) ≡
+          refl) ×
+       (∀ a b₁ b₂ →
+          trans (set-set a b₁ b₂) (s a b₂) ≡
+          trans (cong (λ set → set (set a b₁) b₂) (⟨ext⟩ (⟨ext⟩ ⊚ s)))
+            refl))                                                      ↝⟨ (∃-cong λ g → ∃-cong λ _ → ∃-cong λ _ → ×-cong₁ λ _ → ∀-cong ext λ _ →
+                                                                            ≡⇒↝ _ $ cong (λ eq → trans (sym (trans _ eq)) (set-get _) ≡ _) $ sym $
+                                                                            cong-id (g _)) ⟩
+    (∃ λ (g : ∀ a → get a ≡ a) →
+     ∃ λ (s : ∀ a b → set a b ≡ b) →
+       (∀ a b →
+          trans (sym (trans (cong get (s a b)) (g b))) (get-set a b) ≡
+          refl) ×
+       (∀ a →
+          trans (sym (trans (s a (get a)) (g a))) (set-get a) ≡
+          refl) ×
+       (∀ a b₁ b₂ →
+          trans (set-set a b₁ b₂) (s a b₂) ≡
+          cong (λ set → set (set a b₁) b₂) (⟨ext⟩ (⟨ext⟩ ⊚ s))))        ↝⟨ (∃-cong λ g → ∃-cong λ s →
+                                                                            (∀-cong ext λ _ → ∀-cong ext λ _ →
+                                                                             ≡-comm F.∘ ≡⇒↝ _ (sym $ [trans≡]≡[≡trans-symˡ] _ _ _) F.∘ ≡-comm)
+                                                                              ×-cong
+                                                                            (∀-cong ext λ _ →
+                                                                             ≡-comm F.∘ ≡⇒↝ _ (sym $ [trans≡]≡[≡trans-symˡ] _ _ _) F.∘ ≡-comm)
+                                                                              ×-cong
+                                                                            F.id) ⟩□
+    (∃ λ (g : ∀ a → get a ≡ a) →
+     ∃ λ (s : ∀ a b → set a b ≡ b) →
+       (∀ a b → get-set a b ≡ trans (cong get (s a b)) (g b)) ×
+       (∀ a → set-get a ≡ trans (s a (get a)) (g a)) ×
+       (∀ a b₁ b₂ →
+          trans (set-set a b₁ b₂) (s a b₂) ≡
+          cong (λ set → set (set a b₁) b₂) (⟨ext⟩ (⟨ext⟩ ⊚ s))))        □
+    where
+    open Lens l
+
+  -- A lemma that can be used to show that a lens with a constant
+  -- setter (such as the ones produced by getter-equivalence→lens
+  -- below) is equal to the identity lens.
+
+  constant-setter→≡id :
+    {l′ : ∃ λ (get : A → A) →
+          ∃ λ (set : A → A) →
+            (A → ∀ a → get (set a) ≡ a) ×
+            (∀ a → set (get a) ≡ a) ×
+            (A → A → ∀ a → set a ≡ set a)} →
+
+    let l   = _↔_.from Lens-as-Σ (Σ-map P.id (Σ-map const P.id) l′)
+        set = proj₁ (proj₂ l′)
+        open Lens l hiding (set)
+    in
+
+    (∃ λ (g : ∀ a → get a ≡ a) →
+     ∃ λ (s : ∀ a → set a ≡ a) →
+       (∀ a₁ a₂ → get-set a₁ a₂ ≡ trans (cong get (s a₂)) (g a₂)) ×
+       (∀ a → set-get a ≡ trans (s (get a)) (g a)) ×
+       (∀ a a₁ a₂ → set-set a a₁ a₂ ≡ refl)) →
+    l ≡ id
+  constant-setter→≡id {A = A} {l′ = l′} =
+    (∃ λ (g : ∀ a → get a ≡ a) →
+     ∃ λ (s : ∀ a → set a ≡ a) →
+       (∀ a₁ a₂ → get-set a₁ a₂ ≡ trans (cong get (s a₂)) (g a₂)) ×
+       (∀ a → set-get a ≡ trans (s (get a)) (g a)) ×
+       (∀ a a₁ a₂ → set-set a a₁ a₂ ≡ refl))                            ↝⟨ (Σ-map P.id $ Σ-map P.id λ {s} → Σ-map P.id $ Σ-map P.id λ hyp a a₁ a₂ →
+
+        trans (set-set a a₁ a₂) (s a₂)                                        ≡⟨ cong (λ eq → trans eq (s a₂)) $ hyp _ _ _ ⟩
+        trans refl (s a₂)                                                     ≡⟨ trans-reflˡ (s _) ⟩∎
+        s a₂                                                                  ∎) ⟩
+
+    (∃ λ (g : ∀ a → get a ≡ a) →
+     ∃ λ (s : ∀ a → set a ≡ a) →
+       (∀ a₁ a₂ → get-set a₁ a₂ ≡ trans (cong get (s a₂)) (g a₂)) ×
+       (∀ a → set-get a ≡ trans (s (get a)) (g a)) ×
+       (∀ a a₁ a₂ → trans (set-set a a₁ a₂) (s a₂) ≡ s a₂))             ↔⟨ (∃-cong λ _ → ∃-cong λ s → ∃-cong λ _ → ∃-cong λ _ →
+                                                                            ∀-cong ext λ a → ∀-cong ext λ a₁ → ∀-cong ext λ a₂ →
+                                                                            ≡⇒↝ equivalence $ cong (trans _ (s _) ≡_) (
+        s a₂                                                                  ≡⟨ sym $ cong-ext s ⟩
+        cong (λ set → set a₂) (⟨ext⟩ s)                                       ≡⟨ sym $ cong-∘ _ _ (⟨ext⟩ s) ⟩
+        cong (λ set → set (set a a₁) a₂) (cong const (⟨ext⟩ s))               ≡⟨ cong (cong (λ set → set (set a a₁) a₂)) $ sym $
+                                                                                 ext-const (⟨ext⟩ s) ⟩∎
+        cong (λ set → set (set a a₁) a₂) (⟨ext⟩ λ _ → ⟨ext⟩ s)                ∎)) ⟩
+
+    (∃ λ (g : ∀ a → get a ≡ a) →
+     ∃ λ (s : ∀ a → set a ≡ a) →
+       (∀ a₁ a₂ → get-set a₁ a₂ ≡ trans (cong get (s a₂)) (g a₂)) ×
+       (∀ a → set-get a ≡ trans (s (get a)) (g a)) ×
+       (∀ a a₁ a₂ →
+          trans (set-set a a₁ a₂) (s a₂) ≡
+          cong (λ set → set (set a a₁) a₂) (⟨ext⟩ λ _ → ⟨ext⟩ s)))      ↝⟨ Σ-map P.id (Σ-map const P.id) ⟩
+
+    (∃ λ (g : ∀ a → get a ≡ a) →
+     ∃ λ (s : A → ∀ a → set a ≡ a) →
+       (∀ a₁ a₂ → get-set a₁ a₂ ≡ trans (cong get (s a₁ a₂)) (g a₂)) ×
+       (∀ a → set-get a ≡ trans (s a (get a)) (g a)) ×
+       (∀ a a₁ a₂ →
+          trans (set-set a a₁ a₂) (s a a₂) ≡
+          cong (λ set → set (set a a₁) a₂) (⟨ext⟩ (⟨ext⟩ ⊚ s))))        ↔⟨ inverse equality-characterisation-id ⟩□
+
+    l″ ≡ id                                                             □
+    where
+    l″  = _↔_.from Lens-as-Σ (Σ-map P.id (Σ-map const P.id) l′)
+    set = proj₁ (proj₂ l′)
+
+    open Lens l″ hiding (set)
+
   -- The function ≃→lens maps equivalences where the forward direction
   -- is Lens.get l to l if some coherence properties hold. (Perhaps
   -- the second coherence property can be simplified in some way.)
