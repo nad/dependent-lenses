@@ -357,6 +357,23 @@ equality-characterisation₄ {l₁ = l₁} {l₂} univ =
 ------------------------------------------------------------------------
 -- More lens equalities
 
+-- If the forward direction of an equivalence is Lens.get l, then the
+-- setter of l can be expressed using the other direction of the
+-- equivalence.
+
+from≡set :
+  ∀ (l : Lens A B) is-equiv →
+  let open Lens
+      A≃B = Eq.⟨ get l , is-equiv ⟩
+  in
+  ∀ a b → _≃_.from A≃B b ≡ set l a b
+from≡set l is-equiv a b =
+  _≃_.to-from Eq.⟨ get , is-equiv ⟩ (
+    get (set a b)  ≡⟨ get-set _ _ ⟩∎
+    b              ∎)
+  where
+  open Lens l
+
 -- If two lenses have equal setters, then they also have equal
 -- getters.
 
