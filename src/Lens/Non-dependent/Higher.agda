@@ -390,25 +390,27 @@ getters-equal-if-setters-equal l₁ l₂ setters-equal = ⟨ext⟩ λ a →
   where
   open Lens
 
--- If the codomain of a lens is inhabited when the remainder type is
--- inhabited, then this lens is equal to another lens if their setters
--- are equal (assuming univalence).
+-- A generalisation of lenses-equal-if-setters-equal (which is defined
+-- below).
 
-lenses-equal-if-setters-equal :
-  {A : Set a} {B : Set b} →
-  Univalence (a ⊔ b) →
-  (l₁ l₂ : Lens A B) →
-  (Lens.R l₁ → B) →
+lenses-equal-if-setters-equal′ :
+  let open Lens in
+  {A : Set a} {B : Set b}
+  (univ : Univalence (a ⊔ b))
+  (l₁ l₂ : Lens A B)
+  (f : R l₁ → R l₂) →
+  (B → ∀ r →
+   ∃ λ b′ → remainder l₂ (_≃_.from (equiv l₁) (r , b′)) ≡ f r) →
+  (∀ a → f (remainder l₁ a) ≡ remainder l₂ a) →
   Lens.set l₁ ≡ Lens.set l₂ →
   l₁ ≡ l₂
-lenses-equal-if-setters-equal {A = A} {B = B}
-                              univ l₁ l₂ f setters-equal =
+lenses-equal-if-setters-equal′
+   {A = A} {B = B} univ l₁ l₂
+   f ∃≡f f-remainder≡remainder setters-equal =
+
   _↔_.from (equality-characterisation₃ univ)
     ( R≃R
-    , (λ a →
-         remainder l₂ (set l₁ a _)  ≡⟨ cong (remainder l₂) $ ext⁻¹ (ext⁻¹ setters-equal _) _ ⟩
-         remainder l₂ (set l₂ a _)  ≡⟨ remainder-set l₂ _ _ ⟩∎
-         remainder l₂ a             ∎)
+    , f-remainder≡remainder
     , ext⁻¹ (getters-equal-if-setters-equal l₁ l₂ setters-equal)
     )
   where
@@ -449,27 +451,87 @@ lenses-equal-if-setters-equal {A = A} {B = B}
 
       swap (b , remainder l₂ (from (equiv l₁) (r , b′)))         ∎
 
-  g : R l₁ → R l₂
-  g r = remainder l₂ (from (equiv l₁) (r , f r))
-
-  id-g≃ : Eq.Is-equivalence (Σ-map P.id g)
-  id-g≃ = Eq.respects-extensional-equality
+  id-f≃ : Eq.Is-equivalence (Σ-map P.id f)
+  id-f≃ = Eq.respects-extensional-equality
     (λ (b , r) →
-       to BR≃BR (b , r)                              ≡⟨ to-BR≃BR _ _ _ ⟩
-       b , remainder l₂ (from (equiv l₁) (r , f r))  ≡⟨⟩
-       b , g r                                       ≡⟨⟩
-       Σ-map P.id g (b , r)                          ∎)
+       let b′ , ≡fr = ∃≡f b r in
+       to BR≃BR (b , r)                             ≡⟨ to-BR≃BR _ _ _ ⟩
+       b , remainder l₂ (from (equiv l₁) (r , b′))  ≡⟨ cong (b ,_) ≡fr ⟩
+       b , f r                                      ≡⟨⟩
+       Σ-map P.id f (b , r)                         ∎)
     (is-equivalence BR≃BR)
 
-  g≃ : Eq.Is-equivalence g
-  g≃ r =
+  f≃ : Eq.Is-equivalence f
+  f≃ r =
     Trunc.rec
       (H-level-propositional ext 0)
-      (λ b → Eq.drop-Σ-map-id _ id-g≃ b r)
+      (λ b → Eq.drop-Σ-map-id _ id-f≃ b r)
       (inhabited l₂ r)
 
   R≃R : R l₁ ≃ R l₂
-  R≃R = Eq.⟨ g , g≃ ⟩
+  R≃R = Eq.⟨ f , f≃ ⟩
+
+-- If the codomain of a lens is inhabited when the remainder type is
+-- inhabited, then this lens is equal to another lens if their
+-- setters are equal (assuming univalence).
+
+lenses-equal-if-setters-equal :
+  {A : Set a} {B : Set b} →
+  Univalence (a ⊔ b) →
+  (l₁ l₂ : Lens A B) →
+  (Lens.R l₁ → B) →
+  Lens.set l₁ ≡ Lens.set l₂ →
+  l₁ ≡ l₂
+lenses-equal-if-setters-equal univ l₁ l₂ inh setters-equal =
+  lenses-equal-if-setters-equal′
+    univ l₁ l₂ f
+    (λ _ r →
+         inh r
+       , (remainder l₂ (_≃_.from (equiv l₁) (r , inh r))  ≡⟨⟩
+          f r                                             ∎))
+    (λ a →
+       f (remainder l₁ a)                              ≡⟨⟩
+       remainder l₂ (set l₁ a (inh (remainder l₁ a)))  ≡⟨ cong (remainder l₂) $ ext⁻¹ (ext⁻¹ setters-equal _) _ ⟩
+       remainder l₂ (set l₂ a (inh (remainder l₁ a)))  ≡⟨ remainder-set l₂ _ _ ⟩∎
+       remainder l₂ a                                  ∎)
+    setters-equal
+  where
+  open Lens
+
+  f : R l₁ → R l₂
+  f r = remainder l₂ (_≃_.from (equiv l₁) (r , inh r))
+
+-- If a lens has a propositional remainder type, then this lens is
+-- equal to another lens if their setters are equal (assuming
+-- univalence).
+
+lenses-equal-if-setters-equal-and-remainder-propositional :
+  {A : Set a} {B : Set b} →
+  Univalence (a ⊔ b) →
+  (l₁ l₂ : Lens A B) →
+  Is-proposition (Lens.R l₂) →
+  Lens.set l₁ ≡ Lens.set l₂ →
+  l₁ ≡ l₂
+lenses-equal-if-setters-equal-and-remainder-propositional
+  univ l₁ l₂ R₂-prop =
+
+  lenses-equal-if-setters-equal′
+    univ l₁ l₂ f
+    (λ b r →
+         b
+       , (remainder l₂ (_≃_.from (equiv l₁) (r , b))  ≡⟨ R₂-prop _ _ ⟩∎
+          f r                                         ∎))
+    (λ a →
+       f (remainder l₁ a)  ≡⟨ R₂-prop _ _ ⟩
+       remainder l₂ a      ∎)
+  where
+  open Lens
+
+  f : R l₁ → R l₂
+  f r =
+    Trunc.rec R₂-prop
+      (λ b → remainder l₂ (_≃_.from (equiv l₁) (r , b)))
+      (inhabited l₁ r)
 
 -- The functions ≃→lens and ≃→lens′ are pointwise equal (when
 -- applicable, assuming univalence).
@@ -485,6 +547,45 @@ lenses-equal-if-setters-equal {A = A} {B = B}
     , (λ _ → refl)
     , (λ _ → refl)
     )
+
+-- If the getter of a lens is an equivalence, then the lens formed
+-- using the equivalence (using ≃→lens) is equal to the lens (assuming
+-- univalence).
+
+get-equivalence→≡≃→lens :
+  {A : Set a} {B : Set b} →
+  Univalence (a ⊔ b) →
+  (l : Lens A B) →
+  (eq : Is-equivalence (Lens.get l)) →
+  l ≡ ≃→lens Eq.⟨ Lens.get l , eq ⟩
+get-equivalence→≡≃→lens {A = A} {B = B} univ l eq =
+  lenses-equal-if-setters-equal-and-remainder-propositional
+    univ l (≃→lens Eq.⟨ Lens.get l , eq ⟩)
+    truncation-is-proposition
+    (⟨ext⟩ λ a → ⟨ext⟩ λ b →
+     set l a b             ≡⟨ sym $ from≡set l eq a b ⟩
+     _≃_.from A≃B b        ≡⟨⟩
+     set (≃→lens A≃B) a b  ∎)
+  where
+  open Lens
+
+  A≃B : A ≃ B
+  A≃B = Eq.⟨ _ , eq ⟩
+
+-- A variant of get-equivalence→≡≃→lens.
+
+get-equivalence→≡≃→lens′ :
+  {A B : Set a} →
+  Univalence a →
+  (l : Lens A B) →
+  (eq : Is-equivalence (Lens.get l)) →
+  l ≡ ≃→lens′ Eq.⟨ Lens.get l , eq ⟩
+get-equivalence→≡≃→lens′ {A = A} {B = B} univ l eq =
+  l            ≡⟨ get-equivalence→≡≃→lens univ _ _ ⟩
+  ≃→lens A≃B   ≡⟨ ≃→lens≡≃→lens′ univ _ ⟩∎
+  ≃→lens′ A≃B  ∎
+  where
+  A≃B = Eq.⟨ Lens.get l , eq ⟩
 
 ------------------------------------------------------------------------
 -- Some lens isomorphisms
@@ -1008,53 +1109,6 @@ get-equivalence→remainder-propositional l is-equiv f r₁ r₂ =
     proj₁ (to equiv (from A≃B (to A≃B (from equiv (r , b′)))))     ≡⟨⟩
     remainder (from A≃B (proj₂ (to equiv (from equiv (r , b′)))))  ≡⟨ cong (remainder ⊚ from A≃B ⊚ proj₂) $ right-inverse-of equiv _ ⟩∎
     remainder (from A≃B b′)                                        ∎
-
--- When the conditions of the previous lemma are satisfied the lens is
--- equal to a lens formed using the equivalence (assuming univalence).
-
-get-equivalence→≡≃→lens :
-  {A : Set a} {B : Set b} →
-  Univalence (a ⊔ b) →
-  (l : Lens A B) →
-  (eq : Is-equivalence (Lens.get l)) →
-  (Lens.R l → B) →
-  l ≡ ≃→lens Eq.⟨ Lens.get l , eq ⟩
-get-equivalence→≡≃→lens {A = A} {B = B} univ l eq f =
-  _↔_.from (equality-characterisation₃ univ)
-    ( R≃∥B∥
-    , (λ _ → truncation-is-proposition _ _)
-    , (λ _ → refl)
-    )
-  where
-  open Lens
-
-  A≃B : A ≃ B
-  A≃B = Eq.⟨ _ , eq ⟩
-
-  R≃∥B∥ : R l ≃ ∥ ↑ _ B ∥
-  R≃∥B∥ = Eq.⇔→≃
-    R-prop
-    truncation-is-proposition
-    (∥∥-map lift ⊚ inhabited l)
-    (Trunc.rec R-prop (remainder l ⊚ _≃_.from A≃B ⊚ lower))
-    where
-    R-prop = get-equivalence→remainder-propositional l eq f
-
--- A variant of get-equivalence→≡≃→lens.
-
-get-equivalence→≡≃→lens′ :
-  {A B : Set a} →
-  Univalence a →
-  (l : Lens A B) →
-  (eq : Is-equivalence (Lens.get l)) →
-  (Lens.R l → B) →
-  l ≡ ≃→lens′ Eq.⟨ Lens.get l , eq ⟩
-get-equivalence→≡≃→lens′ {A = A} {B = B} univ l eq f =
-  l            ≡⟨ get-equivalence→≡≃→lens univ _ _ f ⟩
-  ≃→lens A≃B   ≡⟨ ≃→lens≡≃→lens′ univ _ ⟩∎
-  ≃→lens′ A≃B  ∎
-  where
-  A≃B = Eq.⟨ Lens.get l , eq ⟩
 
 -- If the getter function is pointwise equal to the identity
 -- function, then the remainder type is propositional.
@@ -1819,9 +1873,8 @@ Is-bi-invertible≃Is-equivalence-get :
   (b : Block "id") →
   Univalence a →
   (l : Lens A B) →
-  (Lens.R l → B) →
   B.Is-bi-invertible b l ≃ Is-equivalence (Lens.get l)
-Is-bi-invertible≃Is-equivalence-get b univ l f = Eq.⇔→≃
+Is-bi-invertible≃Is-equivalence-get b univ l = Eq.⇔→≃
   (BM.Is-bi-invertible-propositional b univ l)
   (Eq.propositional ext _)
   (Is-bi-invertible→Is-equivalence-get b univ l)
@@ -1830,7 +1883,7 @@ Is-bi-invertible≃Is-equivalence-get b univ l f = Eq.⇔→≃
      let l′ = ≃→lens′ Eq.⟨ get l , is-equiv ⟩ in
 
                               $⟨ proj₂ (_≃_.to (≃≃≊ b univ) Eq.⟨ _ , is-equiv ⟩) ⟩
-     B.Is-bi-invertible b l′  ↝⟨ subst (B.Is-bi-invertible b) (sym $ get-equivalence→≡≃→lens′ univ l is-equiv f) ⟩□
+     B.Is-bi-invertible b l′  ↝⟨ subst (B.Is-bi-invertible b) (sym $ get-equivalence→≡≃→lens′ univ l is-equiv) ⟩□
      B.Is-bi-invertible b l   □)
   where
   open Lens
