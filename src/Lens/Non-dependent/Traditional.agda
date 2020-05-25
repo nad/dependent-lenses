@@ -2168,6 +2168,14 @@ equality-characterisation-for-sets-≊
   where
   open Lens-combinators
 
+-- The right-to-left direction of ≃≃≊ maps bi-invertible lenses to
+-- their getter functions.
+
+to-from-≃≃≊≡get :
+  (A-set : Is-set A) (A≊B@(l , _) : A ≊ B) →
+  _≃_.to (_≃_.from (≃≃≊ A-set) A≊B) ≡ Lens.get l
+to-from-≃≃≊≡get _ _ = refl
+
 -- The getter function of a bi-invertible lens is an equivalence.
 
 Is-bi-invertible→Is-equivalence-get :
@@ -2321,6 +2329,38 @@ bi-invertible-with-same-getter-but-not-equal univ =
   where
   open Lens
   open Lens-combinators
+
+-- There is in general no equivalence between equivalences and
+-- bi-invertible lenses, if the right-to-left direction of the
+-- equivalence is required to map bi-invertible lenses to their getter
+-- functions (assuming univalence).
+
+¬≃≃≊ :
+  Univalence lzero →
+  ∃ λ (A : Set) →
+  ¬ ∃ λ (≃≃≊ : (A ≃ A) ≃ (A ≊ A)) →
+      (A≊A@(l , _) : A ≊ A) →
+      _≃_.to (_≃_.from ≃≃≊ A≊A) ≡ Lens.get l
+¬≃≃≊ univ =
+  let A , l₁ , l₂ , bi-inv₁ , bi-inv₂ , getters-equal , l₁≢l₂ =
+        bi-invertible-with-same-getter-but-not-equal univ
+  in
+    A
+  , (λ (≃≃≊ , hyp) →                           $⟨ getters-equal ⟩
+
+       Lens.get l₁ ≡ Lens.get l₂               ↝⟨ (λ eq → trans (hyp _) (trans eq (sym (hyp _)))) ⟩
+
+       _≃_.to (_≃_.from ≃≃≊ (l₁ , bi-inv₁)) ≡
+       _≃_.to (_≃_.from ≃≃≊ (l₂ , bi-inv₂))    ↝⟨ Eq.lift-equality ext ⟩
+
+       _≃_.from ≃≃≊ (l₁ , bi-inv₁) ≡
+       _≃_.from ≃≃≊ (l₂ , bi-inv₂)             ↔⟨ Eq.≃-≡ (inverse ≃≃≊) ⟩
+
+       (l₁ , bi-inv₁) ≡ (l₂ , bi-inv₂)         ↝⟨ cong proj₁ ⟩
+
+       l₁ ≡ l₂                                 ↝⟨ l₁≢l₂ ⟩□
+
+       ⊥                                       □)
 
 -- If the getter function is an equivalence, then the lens is
 -- bi-invertible.
