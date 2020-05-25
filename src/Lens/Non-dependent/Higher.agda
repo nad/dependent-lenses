@@ -1081,34 +1081,35 @@ remainder-has-same-h-level-as-domain {A = A} {B = B} l (suc n) h =
   where
   open Lens l
 
--- If the getter function is an equivalence and there is a function
--- from the remainder type to the codomain, then the remainder type is
--- propositional.
+-- If the getter function is an equivalence, then the remainder type
+-- is propositional.
 
 get-equivalence→remainder-propositional :
   (l : Lens A B) →
   Is-equivalence (Lens.get l) →
-  (Lens.R l → B) →
   Is-proposition (Lens.R l)
-get-equivalence→remainder-propositional l is-equiv f r₁ r₂ =
-  r₁                       ≡⟨ lemma _ ⟩
-  remainder (from A≃B b′)  ≡⟨ sym $ lemma _ ⟩∎
-  r₂                       ∎
+get-equivalence→remainder-propositional l is-equiv =
+  [inhabited⇒+]⇒+ 0 λ r →
+    Trunc.rec
+      (H-level-propositional ext 1)
+      (λ b r₁ r₂ →
+         r₁                      ≡⟨ lemma _ _ ⟩
+         remainder (from A≃B b)  ≡⟨ sym $ lemma _ _ ⟩∎
+         r₂                      ∎)
+      (inhabited r)
   where
   open _≃_
   open Lens l
 
-  b′ = f r₁
-
   A≃B = Eq.⟨ _ , is-equiv ⟩
 
-  lemma : ∀ r → r ≡ remainder (from A≃B b′)
-  lemma r =
-    r                                                              ≡⟨ cong proj₁ $ sym $ right-inverse-of equiv _ ⟩
-    proj₁ (to equiv (from equiv (r , b′)))                         ≡⟨ cong (proj₁ ⊚ to equiv) $ sym $ left-inverse-of A≃B _ ⟩
-    proj₁ (to equiv (from A≃B (to A≃B (from equiv (r , b′)))))     ≡⟨⟩
-    remainder (from A≃B (proj₂ (to equiv (from equiv (r , b′)))))  ≡⟨ cong (remainder ⊚ from A≃B ⊚ proj₂) $ right-inverse-of equiv _ ⟩∎
-    remainder (from A≃B b′)                                        ∎
+  lemma : ∀ b r → r ≡ remainder (from A≃B b)
+  lemma b r =
+    r                                                             ≡⟨ cong proj₁ $ sym $ right-inverse-of equiv _ ⟩
+    proj₁ (to equiv (from equiv (r , b)))                         ≡⟨ cong (proj₁ ⊚ to equiv) $ sym $ left-inverse-of A≃B _ ⟩
+    proj₁ (to equiv (from A≃B (to A≃B (from equiv (r , b)))))     ≡⟨⟩
+    remainder (from A≃B (proj₂ (to equiv (from equiv (r , b)))))  ≡⟨ cong (remainder ⊚ from A≃B ⊚ proj₂) $ right-inverse-of equiv _ ⟩∎
+    remainder (from A≃B b)                                        ∎
 
 -- If the getter function is pointwise equal to the identity
 -- function, then the remainder type is propositional.
