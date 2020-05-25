@@ -2227,12 +2227,10 @@ bi-invertible-but-not-coherent _ =
     }
 
   l∘l⁻¹≡id : l ∘ l⁻¹ ≡ id
-  l∘l⁻¹≡id = _↔_.from equality-characterisation₄
+  l∘l⁻¹≡id = constant-setter→≡id
     ( (λ _ → refl)
-    , (λ _ _ → refl)
+    , (λ _ → refl)
     , (λ x y →
-         trans refl (get-set (l ∘ l⁻¹) x y)               ≡⟨ trans-reflˡ (get-set (l ∘ l⁻¹) x y) ⟩
-
          get-set (l ∘ l⁻¹) x y                            ≡⟨⟩
 
          trans (cong P.id $ sym $ proj₁ Circle.∃≢refl y)
@@ -2244,32 +2242,19 @@ bi-invertible-but-not-coherent _ =
          refl                                             ∎)
     , (λ _ → refl)
     , (λ x y z →
-         trans (set-set (l ∘ l⁻¹) x y z) refl                           ≡⟨⟩
-
-         trans refl (cong P.id (cong (λ _ → z) (get-set l⁻¹ x y)))      ≡⟨ cong (λ eq → trans refl (cong P.id eq)) $
-                                                                           cong-const (get-set l⁻¹ x y) ⟩
-
-         trans refl (cong P.id refl)                                    ≡⟨⟩
-
-         refl                                                           ≡⟨⟩
-
-         cong {x = const P.id}
-              (λ set → set (set x y) z) refl                            ≡⟨ cong (cong (λ set → set (set x y) z)) $ sym $ ext-refl ⟩
-
-         cong (λ set → set (set x y) z) (⟨ext⟩ λ _ → refl)              ≡⟨ cong (cong (λ set → set (set x y) z) ⊚ ⟨ext⟩) $ sym $
-                                                                           ⟨ext⟩ (λ _ → ext-refl) ⟩∎
-         cong {x = const P.id}
-              (λ set → set (set x y) z) (⟨ext⟩ (⟨ext⟩ ⊚ λ _ _ → refl))  ∎)
+         set-set (l ∘ l⁻¹) x y z                                    ≡⟨⟩
+         trans refl (cong P.id (cong (λ _ → z) (get-set l⁻¹ x y)))  ≡⟨ cong (λ eq → trans refl (cong P.id eq)) $
+                                                                       cong-const (get-set l⁻¹ x y) ⟩
+         trans refl (cong P.id refl)                                ≡⟨⟩
+         refl                                                       ∎)
     )
 
   l⁻¹∘l≡id : l⁻¹ ∘ l ≡ id
-  l⁻¹∘l≡id = _↔_.from equality-characterisation₄
+  l⁻¹∘l≡id = constant-setter→≡id
     ( (λ _ → refl)
-    , (λ _ _ → refl)
+    , (λ _ → refl)
     , (λ x y →
-         trans (sym (trans (cong P.id refl) refl))
-           (trans (cong P.id (proj₁ Circle.∃≢refl y))
-              (sym $ proj₁ Circle.∃≢refl y))                          ≡⟨ trans-reflˡ (trans _ (sym $ proj₁ Circle.∃≢refl y)) ⟩
+         get-set (l⁻¹ ∘ l) x y                                        ≡⟨⟩
 
          trans (cong P.id (proj₁ Circle.∃≢refl y))
            (sym $ proj₁ Circle.∃≢refl y)                              ≡⟨ cong (λ eq → trans eq (sym $ proj₁ Circle.∃≢refl y)) $ sym $
@@ -2280,22 +2265,11 @@ bi-invertible-but-not-coherent _ =
          refl                                                         ∎)
     , (λ _ → refl)
     , (λ x y z →
-         trans (set-set (l⁻¹ ∘ l) x y z) refl                           ≡⟨⟩
-
-         trans refl (cong P.id (cong (λ _ → z) (get-set l x y)))        ≡⟨ cong (λ eq → trans refl (cong P.id eq)) $
-                                                                           cong-const (get-set l x y) ⟩
-
-         trans refl (cong P.id refl)                                    ≡⟨⟩
-
-         refl                                                           ≡⟨⟩
-
-         cong {x = const P.id}
-              (λ set → set (set x y) z) refl                            ≡⟨ cong (cong (λ set → set (set x y) z)) $ sym $ ext-refl ⟩
-
-         cong (λ set → set (set x y) z) (⟨ext⟩ λ _ → refl)              ≡⟨ cong (cong (λ set → set (set x y) z) ⊚ ⟨ext⟩) $ sym $
-                                                                           ⟨ext⟩ (λ _ → ext-refl) ⟩∎
-         cong {x = const P.id}
-              (λ set → set (set x y) z) (⟨ext⟩ (⟨ext⟩ ⊚ λ _ _ → refl))  ∎)
+         set-set (l⁻¹ ∘ l) x y z                                  ≡⟨⟩
+         trans refl (cong P.id (cong (λ _ → z) (get-set l x y)))  ≡⟨ cong (λ eq → trans refl (cong P.id eq)) $
+                                                                     cong-const (get-set l x y) ⟩
+         trans refl (cong P.id refl)                              ≡⟨⟩
+         refl                                                     ∎)
     )
 
 -- There are two bi-invertible lenses with the same getter that are
