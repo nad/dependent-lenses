@@ -1850,6 +1850,18 @@ has-right-inverse→remainder-propositional
     A≃B
   from∘to ⊠ _ = Eq.lift-equality ext refl
 
+-- The right-to-left direction of ≃≃≊ maps bi-invertible lenses to
+-- their getter functions.
+
+to-from-≃≃≊≡get :
+  (b : Block "id")
+  (univ : Univalence a)
+  (A≊B@(l , _) : [ b ] A ≊ B) →
+  _≃_.to (_≃_.from (≃≃≊ b univ) A≊B) ≡ Lens.get l
+to-from-≃≃≊≡get
+  ⊠ _ (⟨ _ , _ , _ ⟩ , (⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
+  refl
+
 -- The getter function of a bi-invertible lens is an equivalence
 -- (assuming univalence).
 
