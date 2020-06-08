@@ -125,7 +125,7 @@ from≡set l is-equiv a b =
 ------------------------------------------------------------------------
 -- Some lens isomorphisms
 
--- If B is a proposition, then Lens a b is isomorphic to
+-- If B is a proposition, then Lens A B is isomorphic to
 -- (A → B) × ((a : A) → a ≡ a).
 
 lens-to-proposition↔ :
