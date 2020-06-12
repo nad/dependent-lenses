@@ -1461,14 +1461,15 @@ module Lens-combinators where
   ⟨_,_⟩_∘_ :
     ∀ a b {A : Set (a ⊔ b ⊔ c)} {B : Set (b ⊔ c)} {C : Set c} →
     Lens B C → Lens A B → Lens A C
-  ⟨_,_⟩_∘_ _ _ {A = A} {B} {C} l₁@(⟨ _ , _ , _ ⟩) l₂@(⟨ _ , _ , _ ⟩) = record
-    { R         = R l₂ × R l₁
-    ; equiv     = A                  ↝⟨ equiv l₂ ⟩
-                  R l₂ × B           ↝⟨ F.id ×-cong equiv l₁ ⟩
-                  R l₂ × (R l₁ × C)  ↔⟨ ×-assoc ⟩□
-                  (R l₂ × R l₁) × C  □
-    ; inhabited = ∥∥-map (get l₁) ⊚ inhabited l₂ ⊚ proj₁
-    }
+  ⟨_,_⟩_∘_ _ _ {A = A} {B} {C} l₁@(⟨ _ , _ , _ ⟩) l₂@(⟨ _ , _ , _ ⟩) =
+    record
+      { R         = R l₂ × R l₁
+      ; equiv     = A                  ↝⟨ equiv l₂ ⟩
+                    R l₂ × B           ↝⟨ F.id ×-cong equiv l₁ ⟩
+                    R l₂ × (R l₁ × C)  ↔⟨ ×-assoc ⟩□
+                    (R l₂ × R l₁) × C  □
+      ; inhabited = ∥∥-map (get l₁) ⊚ inhabited l₂ ⊚ proj₁
+      }
     where
     open Lens
 
