@@ -1451,6 +1451,18 @@ module Lens-combinators where
                              (trans (z c₂″)
                                     (cong g (trans (cong h u) v)))))  ∎
 
+  -- Every lens of type Lens A A that satisfies a certain right
+  -- identity law is equal to the identity lens.
+
+  id-unique :
+    (id′ : Lens A A) →
+    ((l : Lens A A) → l ∘ id′ ≡ l) →
+    id′ ≡ id
+  id-unique id′ right-identity =
+    id′       ≡⟨ sym $ left-identity _ ⟩
+    id ∘ id′  ≡⟨ right-identity _ ⟩∎
+    id        ∎
+
   -- An equality characterisation lemma that can be used when one of
   -- the lenses is the identity.
 
