@@ -471,18 +471,18 @@ lenses-equal-if-setters-equal′
   R≃R : R l₁ ≃ R l₂
   R≃R = Eq.⟨ f , f≃ ⟩
 
--- If the codomain of a lens is inhabited when the remainder type is
--- inhabited, then this lens is equal to another lens if their
--- setters are equal (assuming univalence).
+-- If the codomain of a lens is inhabited when it is merely inhabited
+-- and the remainder type is inhabited, then this lens is equal to
+-- another lens if their setters are equal (assuming univalence).
 
 lenses-equal-if-setters-equal :
   {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   (l₁ l₂ : Lens A B) →
-  (Lens.R l₁ → B) →
+  (Lens.R l₁ → ∥ B ∥ → B) →
   Lens.set l₁ ≡ Lens.set l₂ →
   l₁ ≡ l₂
-lenses-equal-if-setters-equal univ l₁ l₂ inh setters-equal =
+lenses-equal-if-setters-equal {B = B} univ l₁ l₂ inh′ setters-equal =
   lenses-equal-if-setters-equal′
     univ l₁ l₂ f
     (λ _ r →
@@ -497,6 +497,9 @@ lenses-equal-if-setters-equal univ l₁ l₂ inh setters-equal =
     setters-equal
   where
   open Lens
+
+  inh : Lens.R l₁ → B
+  inh r = inh′ r (inhabited l₁ r)
 
   f : R l₁ → R l₂
   f r = remainder l₂ (_≃_.from (equiv l₁) (r , inh r))
@@ -1423,7 +1426,7 @@ module Lens-combinators where
            (comp₁ , set₁) (comp₂ , set₂) =
     ⟨ext⟩ λ l₁ → ⟨ext⟩ λ l₂ →
       lenses-equal-if-setters-equal univ
-        (comp₁ l₁ l₂) (comp₂ l₁ l₂) (∥C∥→C ⊚ inhabited (comp₁ l₁ l₂)) $
+        (comp₁ l₁ l₂) (comp₂ l₁ l₂) (λ _ → ∥C∥→C) $
         ⟨ext⟩ λ a → ⟨ext⟩ λ c →
           set (comp₁ l₁ l₂) a c           ≡⟨ set₁ _ _ _ _ ⟩
           set l₂ a (set l₁ (get l₂ a) c)  ≡⟨ sym $ set₂ _ _ _ _ ⟩∎
