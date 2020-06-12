@@ -1067,10 +1067,6 @@ module Lens-combinators where
   id = ↔→lens F.id
 
   -- Composition of lenses.
-  --
-  -- Note that composition can be defined in several different ways. I
-  -- don't know if these definitions are equal (if we require that the
-  -- three composition laws below must hold).
 
   infixr 9 _∘_
 
@@ -1105,6 +1101,114 @@ module Lens-combinators where
         set l₂ a             (set l₁ (get l₂ (set l₂ a b₁)) c₂)  ≡⟨ cong (set l₂ a) lemma ⟩∎
         set l₂ a             b₂                                  ∎
     }
+    where
+    open Lens
+
+  -- Note that composition can be defined in several different ways.
+  -- Here is one alternative implementation.
+
+  infixr 9 _∘′_
+
+  _∘′_ : Lens B C → Lens A B → Lens A C
+  l₁ ∘′ l₂ = record (l₁ ∘ l₂)
+    { set-set = λ a c₁ c₂ →
+        let b₁ = set l₁ (get l₂ a) c₁
+            b₂ = set l₁ (get l₂ a) c₂
+
+            lemma =
+              set l₁ (get l₂ (set l₂ a b₁))  c₂  ≡⟨ cong (λ x → set l₁ x c₂) $ get-set l₂ a b₁ ⟩
+              set l₁ b₁                      c₂  ≡⟨⟩
+              set l₁ (set l₁ (get l₂ a) c₁)  c₂  ≡⟨ set-set l₁ (get l₂ a) c₁ c₂ ⟩∎
+              set l₁ (get l₂ a)              c₂  ∎
+
+        in
+        set l₂ (set l₂ a b₁) (set l₁ (get l₂ (set l₂ a b₁)) c₂)  ≡⟨ cong (set l₂ (set l₂ a b₁)) lemma ⟩
+        set l₂ (set l₂ a b₁) b₂                                  ≡⟨ set-set l₂ a b₁ _ ⟩∎
+        set l₂ a             b₂                                  ∎
+    }
+    where
+    open Lens
+
+  -- This implementation is pointwise equal to the other one. However,
+  -- I don't know if there is some other definition that is distinct
+  -- from these two (if we require that the definitions are
+  -- polymorphic and that the three composition laws below hold).
+
+  ∘≡∘′ : l₁ ∘ l₂ ≡ l₁ ∘′ l₂
+  ∘≡∘′ {l₁ = l₁} {l₂ = l₂} = _↔_.from equality-characterisation₄
+    ( (λ _ → refl)
+    , (λ _ _ → refl)
+    , (λ a c →
+         trans (sym (trans (cong (get (l₁ ∘ l₂)) refl) refl))
+           (get-set (l₁ ∘ l₂) a c)                             ≡⟨⟩
+
+         trans refl (get-set (l₁ ∘ l₂) a c)                    ≡⟨ trans-reflˡ _ ⟩
+
+         get-set (l₁ ∘ l₂) a c                                 ≡⟨⟩
+
+         get-set (l₁ ∘′ l₂) a c                                ∎)
+    , (λ a →
+         trans (sym (trans refl (cong (set (l₁ ∘′ l₂) a) refl)))
+           (set-get (l₁ ∘ l₂) a)                                  ≡⟨⟩
+
+         trans refl (set-get (l₁ ∘ l₂) a)                         ≡⟨ trans-reflˡ _ ⟩
+
+         set-get (l₁ ∘ l₂) a                                      ≡⟨⟩
+
+         set-get (l₁ ∘′ l₂) a                                     ∎)
+    , (λ a c₁ c₂ →
+         let b₁ = set l₁ (get l₂ a) c₁
+             b₂ = set l₁ (get l₂ a) c₂
+             a′ = set l₂ a b₁
+             b′ = set l₁ (get l₂ a′) c₂
+
+             eq : b′ ≡ b₂
+             eq = trans (cong (λ x → set l₁ x c₂)
+                           (get-set l₂ a b₁))
+                    (set-set l₁ (get l₂ a) c₁ c₂)
+         in
+         trans (set-set (l₁ ∘ l₂) a c₁ c₂) refl                  ≡⟨⟩
+
+         set-set (l₁ ∘ l₂) a c₁ c₂                               ≡⟨⟩
+
+         trans (set-set l₂ a b₁ b′) (cong (set l₂ a) eq)         ≡⟨ elim¹
+                                                                      (λ {b₂} eq → trans (set-set l₂ a b₁ b′) (cong (set l₂ a) eq) ≡
+                                                                                   trans (cong (set l₂ a′) eq) (set-set l₂ a b₁ b₂))
+                                                                      (
+             trans (set-set l₂ a b₁ b′) (cong (set l₂ a) refl)         ≡⟨⟩
+             set-set l₂ a b₁ b′                                        ≡⟨ sym $ trans-reflˡ _ ⟩
+             trans refl (set-set l₂ a b₁ b′)                           ≡⟨⟩
+             trans (cong (set l₂ a′) refl) (set-set l₂ a b₁ b′)        ∎)
+                                                                      eq ⟩
+         trans (cong (set l₂ a′) eq) (set-set l₂ a b₁ b₂)        ≡⟨⟩
+
+         set-set (l₁ ∘′ l₂) a c₁ c₂                              ≡⟨ sym $ trans-reflˡ _ ⟩
+
+         trans refl (set-set (l₁ ∘′ l₂) a c₁ c₂)                 ≡⟨ cong (flip trans (set-set (l₁ ∘′ l₂) a c₁ c₂)) $ sym $
+                                                                    cong-refl {x = set (l₁ ∘ l₂)} (λ set → set (set a c₁) c₂) ⟩
+         trans (cong {x = set (l₁ ∘ l₂)}
+                  (λ set → set (set a c₁) c₂) refl)
+           (set-set (l₁ ∘′ l₂) a c₁ c₂)                          ≡⟨ cong (λ eq → trans (cong {x = set (l₁ ∘ l₂)}
+                                                                                          (λ set → set (set a c₁) c₂) eq)
+                                                                                   (set-set (l₁ ∘′ l₂) a c₁ c₂)) $ sym $
+                                                                    ext-refl ⟩
+         trans (cong {x = set (l₁ ∘ l₂)}
+                  (λ set → set (set a c₁) c₂)
+                  (⟨ext⟩ λ _ → refl))
+           (set-set (l₁ ∘′ l₂) a c₁ c₂)                          ≡⟨ (cong (λ eq → trans (cong {x = set (l₁ ∘ l₂)}
+                                                                                           (λ set → set (set a c₁) c₂) (⟨ext⟩ eq))
+                                                                                    (set-set (l₁ ∘′ l₂) a c₁ c₂)) $ sym $ ⟨ext⟩ λ _ →
+                                                                     ext-refl) ⟩
+         trans (cong {x = set (l₁ ∘ l₂)}
+                  (λ set → set (set a c₁) c₂)
+                  (⟨ext⟩ λ _ → ⟨ext⟩ λ _ → refl))
+           (set-set (l₁ ∘′ l₂) a c₁ c₂)                          ≡⟨⟩
+
+         trans (cong {x = set (l₁ ∘ l₂)}
+                  (λ set → set (set a c₁) c₂)
+                  (⟨ext⟩ (⟨ext⟩ ⊚ λ _ _ → refl)))
+           (set-set (l₁ ∘′ l₂) a c₁ c₂)                          ∎)
+    )
     where
     open Lens
 
