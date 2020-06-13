@@ -2334,7 +2334,7 @@ Is-bi-invertible→Is-equivalence-get l is-bi-inv =
 -- coherence law (assuming univalence).
 --
 -- (The lemma does not actually use the univalence argument, but
--- univalence is used by Circle.¬-type-of-refl-propositional.)
+-- univalence is used by Circle.∃≢refl.)
 
 bi-invertible-but-not-coherent :
   Univalence lzero →
