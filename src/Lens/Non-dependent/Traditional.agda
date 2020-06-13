@@ -1901,6 +1901,22 @@ private
 
 open B public using (_≅_; Has-quasi-inverse)
 
+-- An equality characterisation lemma for A ≅ B that applies when A is
+-- a set.
+
+equality-characterisation-for-sets-≅ :
+  let open Lens in
+  {f₁@(l₁₁ , _) f₂@(l₁₂ , _) : A ≅ B} →
+  Is-set A →
+  f₁ ≡ f₂ ↔ set l₁₁ ≡ set l₁₂
+equality-characterisation-for-sets-≅
+  {f₁ = f₁@(l₁₁ , _)} {f₂ = f₂@(l₁₂ , _)} A-set =
+  f₁ ≡ f₂            ↔⟨ BM.equality-characterisation-≅-domain (lens-preserves-h-level-of-domain 1 A-set) _ _ ⟩
+  l₁₁ ≡ l₁₂          ↝⟨ equality-characterisation-for-sets A-set ⟩□
+  set l₁₁ ≡ set l₁₂  □
+  where
+  open Lens
+
 -- There is a split surjection from A ≅ B to A ≃ B.
 
 ≅↠≃ : (A ≅ B) ↠ (A ≃ B)
@@ -2084,22 +2100,6 @@ open B public using (_≅_; Has-quasi-inverse)
 
       refl                                               ∎
 
--- An equality characterisation lemma for A ≅ B that applies when A is
--- a set.
-
-equality-characterisation-for-sets-≅ :
-  let open Lens in
-  {f₁@(l₁₁ , _) f₂@(l₁₂ , _) : A ≅ B} →
-  Is-set A →
-  f₁ ≡ f₂ ↔ set l₁₁ ≡ set l₁₂
-equality-characterisation-for-sets-≅
-  {f₁ = f₁@(l₁₁ , _)} {f₂ = f₂@(l₁₂ , _)} A-set =
-  f₁ ≡ f₂            ↔⟨ BM.equality-characterisation-≅-domain (lens-preserves-h-level-of-domain 1 A-set) _ _ ⟩
-  l₁₁ ≡ l₁₂          ↝⟨ equality-characterisation-for-sets A-set ⟩□
-  set l₁₁ ≡ set l₁₂  □
-  where
-  open Lens
-
 -- If A is a set, then there is an equivalence between A ≃ B and A ≅ B.
 
 ≃≃≅ :
@@ -2234,6 +2234,22 @@ equality-characterisation-for-sets-≅
 
 open B public using (_≊_; Is-bi-invertible)
 
+-- An equality characterisation lemma for A ≊ B that applies when A is
+-- a set.
+
+equality-characterisation-for-sets-≊ :
+  let open Lens in
+  {f₁@(l₁₁ , _) f₂@(l₁₂ , _) : A ≊ B} →
+  Is-set A →
+  f₁ ≡ f₂ ↔ set l₁₁ ≡ set l₁₂
+equality-characterisation-for-sets-≊
+  {f₁ = f₁@(l₁₁ , _)} {f₂ = f₂@(l₁₂ , _)} A-set =
+  f₁ ≡ f₂            ↔⟨ BM.equality-characterisation-≊ _ _ ⟩
+  l₁₁ ≡ l₁₂          ↝⟨ equality-characterisation-for-sets A-set ⟩□
+  set l₁₁ ≡ set l₁₂  □
+  where
+  open Lens
+
 -- There is a split surjection from A ≊ B to A ≃ B.
 
 ≊↠≃ : (A ≊ B) ↠ (A ≃ B)
@@ -2253,22 +2269,6 @@ open B public using (_≊_; Is-bi-invertible)
   A ≃ B  ↝⟨ ≃≃≅ A-set ⟩
   A ≅ B  ↝⟨ inverse $ BM.≊≃≅-domain (lens-preserves-h-level-of-domain 1 A-set) ⟩□
   A ≊ B  □
-
--- An equality characterisation lemma for A ≊ B that applies when A is
--- a set.
-
-equality-characterisation-for-sets-≊ :
-  let open Lens in
-  {f₁@(l₁₁ , _) f₂@(l₁₂ , _) : A ≊ B} →
-  Is-set A →
-  f₁ ≡ f₂ ↔ set l₁₁ ≡ set l₁₂
-equality-characterisation-for-sets-≊
-  {f₁ = f₁@(l₁₁ , _)} {f₂ = f₂@(l₁₂ , _)} A-set =
-  f₁ ≡ f₂            ↔⟨ BM.equality-characterisation-≊ _ _ ⟩
-  l₁₁ ≡ l₁₂          ↝⟨ equality-characterisation-for-sets A-set ⟩□
-  set l₁₁ ≡ set l₁₂  □
-  where
-  open Lens
 
 -- The equivalence ≃≃≊ maps identity to an isomorphism for which the
 -- first projection is the identity.
