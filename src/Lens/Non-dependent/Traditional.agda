@@ -2100,6 +2100,26 @@ equality-characterisation-for-sets-≅
 
       refl                                               ∎
 
+-- The right-to-left direction of ≅↠≃ maps identity to an isomorphism
+-- for which the first projection is the identity.
+
+≅↠≃-id≡id :
+  let open Lens-combinators in
+  proj₁ (_↠_.from ≅↠≃ F.id) ≡ id {A = A}
+≅↠≃-id≡id = constant-setter→≡id
+  ( (λ _ → refl)
+  , (λ _ → refl)
+  , (λ _ _ → refl)
+  , (λ a →
+       _≃_.left-inverse-of F.id a               ≡⟨ sym $ _≃_.right-left-lemma F.id _ ⟩
+       cong P.id (_≃_.right-inverse-of F.id a)  ≡⟨⟩
+       refl                                     ≡⟨⟩
+       trans refl refl                          ∎)
+  , (λ _ _ _ → refl)
+  )
+  where
+  open Lens-combinators
+
 -- If A is a set, then there is an equivalence between A ≃ B and A ≅ B.
 
 ≃≃≅ :
@@ -2132,12 +2152,7 @@ equality-characterisation-for-sets-≅
   let open Lens-combinators in
   (A-set : Is-set A) →
   proj₁ (_≃_.to (≃≃≅ A-set) F.id) ≡ id
-≃≃≅-id≡id A-set =
-  cong proj₁ (
-    _≃_.to (≃≃≅ A-set) F.id                       ≡⟨ _↔_.from (equality-characterisation-for-sets-≅ A-set) refl ⟩∎
-    id , id , left-identity _ , right-identity _  ∎)
-  where
-  open Lens-combinators
+≃≃≅-id≡id _ = ≅↠≃-id≡id
 
 -- There is not necessarily a split surjection from
 -- Is-equivalence (Lens.get l) to Has-quasi-inverse l, if l is a lens
@@ -2261,6 +2276,26 @@ equality-characterisation-for-sets-≊
   ; right-inverse-of = λ _ → Eq.lift-equality ext refl
   }
 
+-- The right-to-left direction maps identity to an isomorphism for
+-- which the first projection is the identity.
+
+≊↠≃-id≡id :
+  let open Lens-combinators in
+  proj₁ (_↠_.from ≊↠≃ F.id) ≡ id {A = A}
+≊↠≃-id≡id = constant-setter→≡id
+  ( (λ _ → refl)
+  , (λ _ → refl)
+  , (λ _ _ → refl)
+  , (λ a →
+       _≃_.left-inverse-of F.id a               ≡⟨ sym $ _≃_.right-left-lemma F.id _ ⟩
+       cong P.id (_≃_.right-inverse-of F.id a)  ≡⟨⟩
+       refl                                     ≡⟨⟩
+       trans refl refl                          ∎)
+  , (λ _ _ _ → refl)
+  )
+  where
+  open Lens-combinators
+
 -- If A is a set, then there is an equivalence between A ≊ B and
 -- A ≃ B.
 
@@ -2277,12 +2312,7 @@ equality-characterisation-for-sets-≊
   let open Lens-combinators in
   (A-set : Is-set A) →
   proj₁ (_≃_.to (≃≃≊ A-set) F.id) ≡ id
-≃≃≊-id≡id A-set =
-  cong proj₁ (
-    _≃_.to (≃≃≊ A-set) F.id                                ≡⟨ _↔_.from (equality-characterisation-for-sets-≊ A-set) refl ⟩∎
-    id , (id , right-identity _) , (id , left-identity _)  ∎)
-  where
-  open Lens-combinators
+≃≃≊-id≡id _ = ≊↠≃-id≡id
 
 -- The right-to-left direction of ≃≃≊ maps bi-invertible lenses to
 -- their getter functions.
