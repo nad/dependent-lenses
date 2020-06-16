@@ -654,6 +654,60 @@ lens-to-proposition↔get {b = b} {A = A} {B = B} univ B-prop =
   (∃ λ R → A ≃ R) × (A → B)            ↝⟨ (drop-⊤-left-× λ _ → other-singleton-with-≃-↔-⊤ {b = b} ext univ) ⟩□
   (A → B)                              □
 
+_ :
+  {A : Set a} {B : Set b}
+  (univ : Univalence (a ⊔ b))
+  (prop : Is-proposition B)
+  (l : Lens A B) →
+  _↔_.to (lens-to-proposition↔get univ prop) l ≡
+  rec prop P.id ⊚ Lens.inhabited l ⊚ Lens.remainder l
+_ = λ _ _ _ → refl
+
+-- A variant of the previous result.
+
+lens-to-proposition≃get :
+  {A : Set a} {B : Set b} →
+  Univalence (a ⊔ b) →
+  Is-proposition B →
+  Lens A B ≃ (A → B)
+lens-to-proposition≃get {b = b} {A = A} {B = B} univ prop = Eq.↔→≃
+  get
+  from
+  (λ _ → refl)
+  (λ l →
+     let lemma =
+           ↑ b A    ↔⟨ Bij.↑↔ ⟩
+           A        ↝⟨ equiv l ⟩
+           R l × B  ↔⟨ (drop-⊤-right λ r → _⇔_.to contractible⇔↔⊤ $
+                        Trunc.rec
+                          (Contractible-propositional ext)
+                          (propositional⇒inhabited⇒contractible prop)
+                          (inhabited l r)) ⟩□
+           R l      □
+     in
+     _↔_.from (equality-characterisation₂ univ)
+        (lemma , λ _ → refl))
+  where
+  open Lens
+
+  from = λ get → record
+    { R         = ↑ b A
+    ; equiv     = A          ↔⟨ inverse Bij.↑↔ ⟩
+                  ↑ b A      ↔⟨ (inverse $ drop-⊤-right {k = bijection} λ (lift a) →
+                                 _⇔_.to contractible⇔↔⊤ $
+                                 propositional⇒inhabited⇒contractible prop (get a)) ⟩□
+                  ↑ b A × B  □
+    ; inhabited = ∣_∣ ⊚ get ⊚ lower
+    }
+
+_ :
+  {A : Set a} {B : Set b}
+  (univ : Univalence (a ⊔ b))
+  (prop : Is-proposition B)
+  (l : Lens A B) →
+  _≃_.to (lens-to-proposition≃get univ prop) l ≡ Lens.get l
+_ = λ _ _ _ → refl
+
 -- If B is contractible, then Lens A B is isomorphic to ⊤ (assuming
 -- univalence).
 
