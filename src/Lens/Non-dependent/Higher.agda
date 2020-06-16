@@ -1281,36 +1281,10 @@ get≡id→remainder-propositional :
   (l : Lens A A) →
   (∀ a → Lens.get l a ≡ a) →
   Is-proposition (Lens.R l)
-get≡id→remainder-propositional l get≡id =
-  [inhabited⇒+]⇒+ 0 λ r →
-    Trunc.rec
-      (H-level-propositional ext 1)
-      (λ a r₁ r₂ → cong proj₁ (
-         (r₁ , a)        ≡⟨ sym $ to-lemma a r₁ ⟩
-         _≃_.to equiv a  ≡⟨ to-lemma a r₂ ⟩∎
-         (r₂ , a)        ∎))
-      (inhabited r)
-  where
-  open Lens l
-
-  from-lemma : ∀ r a → _≃_.from equiv (r , a) ≡ a
-  from-lemma r a =
-    _≃_.from equiv (r , a)                                 ≡⟨ cong (λ a′ → _≃_.from equiv (proj₁ a′ , a)) $ sym $
-                                                                _≃_.right-inverse-of equiv _ ⟩
-    _≃_.from equiv
-      (proj₁ (_≃_.to equiv (_≃_.from equiv (r , a))) , a)  ≡⟨⟩
-
-    set (_≃_.from equiv (r , a)) a                         ≡⟨ sym $ get≡id _ ⟩
-
-    get (set (_≃_.from equiv (r , a)) a)                   ≡⟨ get-set _ _ ⟩∎
-
-    a                                                      ∎
-
-  to-lemma : ∀ a r → _≃_.to equiv a ≡ (r , a)
-  to-lemma a r =
-    _≃_.to equiv a                         ≡⟨ cong (_≃_.to equiv) $ sym $ from-lemma r a ⟩
-    _≃_.to equiv (_≃_.from equiv (r , a))  ≡⟨ _≃_.right-inverse-of equiv (r , a) ⟩∎
-    (r , a)                                ∎
+get≡id→remainder-propositional l =
+  (∀ a → Lens.get l a ≡ a)     ↝⟨ (λ hyp → Eq.respects-extensional-equality (sym ⊚ hyp) (_≃_.is-equivalence F.id)) ⟩
+  Is-equivalence (Lens.get l)  ↝⟨ get-equivalence→remainder-propositional l ⟩□
+  Is-proposition (Lens.R l)    □
 
 -- It is not necessarily the case that contractibility of A implies
 -- contractibility of Lens A B (assuming univalence).
