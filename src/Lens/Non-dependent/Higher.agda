@@ -23,6 +23,7 @@ open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional equality-with-paths
   as Trunc
 import Nat equality-with-J as Nat
+open import Preimage equality-with-J using (_⁻¹_)
 open import Surjection equality-with-J using (_↠_)
 open import Univalence-axiom equality-with-J
 
@@ -1063,6 +1064,100 @@ contractible-to-contractible :
   Lens A B → Contractible A → Contractible B
 contractible-to-contractible l c =
   h-level-respects-lens-from-inhabited l (proj₁ c) c
+
+-- The remainder type of a lens l : Lens A B is, for every b : B,
+-- equivalent to the preimage of the getter with respect to b.
+--
+-- This result was pointed out to me by Andrea Vezzosi.
+
+remainder≃get⁻¹ :
+  (l : Lens A B) (b : B) → Lens.R l ≃ Lens.get l ⁻¹ b
+remainder≃get⁻¹ l b = Eq.↔→≃
+  (λ r → _≃_.from equiv (r , b)
+       , (get (_≃_.from equiv (r , b))                   ≡⟨⟩
+          proj₂ (_≃_.to equiv (_≃_.from equiv (r , b)))  ≡⟨ cong proj₂ $ _≃_.right-inverse-of equiv _ ⟩∎
+          b                                              ∎))
+  (λ (a , _) → remainder a)
+  (λ (a , get-a≡b) →
+     let lemma =
+           cong get
+             (trans (cong (set a) (sym get-a≡b))
+                (_≃_.left-inverse-of equiv _))                           ≡⟨ cong-trans _ _ (_≃_.left-inverse-of equiv _) ⟩
+
+           trans (cong get (cong (set a) (sym get-a≡b)))
+             (cong get (_≃_.left-inverse-of equiv _))                    ≡⟨ cong₂ trans
+                                                                              (cong-∘ _ _ (sym get-a≡b))
+                                                                              (sym $ cong-∘ _ _ (_≃_.left-inverse-of equiv _)) ⟩
+           trans (cong (get ⊚ set a) (sym get-a≡b))
+             (cong proj₂ (cong (_≃_.to equiv)
+                            (_≃_.left-inverse-of equiv _)))              ≡⟨ cong₂ (λ p q → trans p (cong proj₂ q))
+                                                                              (cong-sym _ get-a≡b)
+                                                                              (_≃_.left-right-lemma equiv _) ⟩
+           trans (sym (cong (get ⊚ set a) get-a≡b))
+             (cong proj₂ (_≃_.right-inverse-of equiv _))                 ≡⟨ sym $ sym-sym _ ⟩
+
+           sym (sym (trans (sym (cong (get ⊚ set a) get-a≡b))
+                       (cong proj₂ (_≃_.right-inverse-of equiv _))))     ≡⟨ cong sym $
+                                                                            sym-trans _ (cong proj₂ (_≃_.right-inverse-of equiv _)) ⟩
+           sym (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
+                  (sym (sym (cong (get ⊚ set a) get-a≡b))))              ≡⟨ cong (λ eq → sym (trans _ eq)) $
+                                                                            sym-sym (cong (get ⊚ set a) get-a≡b) ⟩∎
+           sym (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
+                  (cong (get ⊚ set a) get-a≡b))                          ∎
+     in
+     Σ-≡,≡→≡
+       (_≃_.from equiv (remainder a , b)  ≡⟨⟩
+        set a b                           ≡⟨ cong (set a) (sym get-a≡b) ⟩
+        set a (get a)                     ≡⟨ set-get a ⟩∎
+        a                                 ∎)
+       (subst (λ a → get a ≡ b)
+          (trans (cong (set a) (sym get-a≡b)) (set-get a))
+          (cong proj₂ $ _≃_.right-inverse-of equiv (remainder a , b))  ≡⟨⟩
+
+        subst (λ a → get a ≡ b)
+          (trans (cong (set a) (sym get-a≡b))
+             (_≃_.left-inverse-of equiv _))
+          (cong proj₂ $ _≃_.right-inverse-of equiv _)                    ≡⟨ subst-∘ _ _ (trans _ (_≃_.left-inverse-of equiv _)) ⟩
+
+        subst (_≡ b)
+          (cong get
+             (trans (cong (set a) (sym get-a≡b))
+                (_≃_.left-inverse-of equiv _)))
+          (cong proj₂ $ _≃_.right-inverse-of equiv _)                    ≡⟨ cong (λ eq → subst (_≡ b) eq
+                                                                                           (cong proj₂ $ _≃_.right-inverse-of equiv _))
+                                                                            lemma ⟩
+        subst (_≡ b)
+          (sym (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
+                  (cong (get ⊚ set a) get-a≡b)))
+          (cong proj₂ $ _≃_.right-inverse-of equiv _)                    ≡⟨ subst-trans (trans _ (cong (get ⊚ set a) get-a≡b)) ⟩
+
+        trans
+          (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
+             (cong (get ⊚ set a) get-a≡b))
+          (cong proj₂ $ _≃_.right-inverse-of equiv _)                    ≡⟨ elim¹
+                                                                              (λ eq → trans
+                                                                                        (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
+                                                                                           (cong (get ⊚ set a) eq))
+                                                                                        (cong proj₂ $ _≃_.right-inverse-of equiv _) ≡
+                                                                                      eq)
+                                                                              (
+            trans
+              (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
+                 (cong (get ⊚ set a) refl))
+              (cong proj₂ $ _≃_.right-inverse-of equiv _)                      ≡⟨⟩
+
+            trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
+              (cong proj₂ $ _≃_.right-inverse-of equiv _)                      ≡⟨ trans-symˡ (cong proj₂ (_≃_.right-inverse-of equiv _)) ⟩∎
+
+            refl                                                               ∎)
+                                                                              get-a≡b ⟩∎
+        get-a≡b                                                          ∎))
+  (λ r →
+     remainder (_≃_.from equiv (r , b))             ≡⟨⟩
+     proj₁ (_≃_.to equiv (_≃_.from equiv (r , b)))  ≡⟨ cong proj₁ $ _≃_.right-inverse-of equiv _ ⟩∎
+     r                                              ∎)
+  where
+  open Lens l
 
 -- If the domain type of a lens is contractible, then the remainder
 -- type is also contractible.
