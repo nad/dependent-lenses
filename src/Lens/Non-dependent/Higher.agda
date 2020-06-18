@@ -2145,6 +2145,34 @@ to-from-≃≃≊≡get
   ⊠ _ (⟨ _ , _ , _ ⟩ , (⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
   refl
 
+-- A variant of ≃≃≊ that works even if A and B live in different
+-- universes.
+--
+-- This variant came up in a discussion with Andrea Vezzosi.
+
+≃≃≊′ :
+  {A : Set a} {B : Set b}
+  (b-id : Block "id") →
+  Univalence (a ⊔ b) →
+  (A ≃ B) ≃ ([ b-id ] ↑ b A ≊ ↑ a B)
+≃≃≊′ {a = a} {b = b} {A = A} {B = B} b-id univ =
+  A ≃ B                   ↔⟨ inverse $ Eq.≃-preserves-bijections ext Bij.↑↔ Bij.↑↔ ⟩
+  ↑ b A ≃ ↑ a B           ↝⟨ ≃≃≊ b-id univ ⟩□
+  [ b-id ] ↑ b A ≊ ↑ a B  □
+
+-- The right-to-left direction of ≃≃≊′ maps bi-invertible lenses to a
+-- variant of their getter functions.
+
+to-from-≃≃≊′≡get :
+  {A : Set a} {B : Set b}
+  (b-id : Block "id")
+  (univ : Univalence (a ⊔ b)) →
+  (A≊B@(l , _) : [ b-id ] ↑ b A ≊ ↑ a B) →
+  _≃_.to (_≃_.from (≃≃≊′ b-id univ) A≊B) ≡ lower ⊚ Lens.get l ⊚ lift
+to-from-≃≃≊′≡get
+  ⊠ _ (⟨ _ , _ , _ ⟩ , (⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
+  refl
+
 -- The getter function of a bi-invertible lens is an equivalence
 -- (assuming univalence).
 
