@@ -7,7 +7,7 @@
 module Lens.Non-dependent.Higher where
 
 import Bi-invertibility
-open import Equality.Propositional.Cubical
+open import Equality.Propositional.Cubical as EP
 open import Logical-equivalence using (_⇔_)
 open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 
@@ -15,6 +15,7 @@ open import Bijection equality-with-J as Bij using (_↔_)
 open import Category equality-with-J as C using (Category; Precategory)
 open import Circle equality-with-paths as Circle using (𝕊¹)
 open import Equality.Decidable-UIP equality-with-J
+open import Equality.Decision-procedures equality-with-J
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
@@ -1212,6 +1213,150 @@ remainder≃get⁻¹ l b = Eq.↔→≃
      r                                              ∎)
   where
   open Lens l
+
+-- A corollary: Lens.get l ⁻¹_ is constant (up to equivalence).
+
+get⁻¹-constant :
+  (l : Lens A B) (b₁ b₂ : B) → Lens.get l ⁻¹ b₁ ≃ Lens.get l ⁻¹ b₂
+get⁻¹-constant l b₁ b₂ =
+  Lens.get l ⁻¹ b₁  ↝⟨ inverse $ remainder≃get⁻¹ l b₁ ⟩
+  Lens.R l          ↝⟨ remainder≃get⁻¹ l b₂ ⟩□
+  Lens.get l ⁻¹ b₂  □
+
+-- The previous lemma satisfies some coherence properties.
+
+get⁻¹-constant-id :
+  (l : Lens A B) (b : B) (p : Lens.get l ⁻¹ b) →
+  _≃_.to (get⁻¹-constant l b b) p ≡ p
+get⁻¹-constant-id l b p = Σ-≡,≡→≡
+  (from (r′ , b)        ≡⟨ cong (λ b → from (r′ , b)) $ sym $ proj₂ p ⟩
+   from (to (proj₁ p))  ≡⟨ left-inverse-of _ ⟩∎
+   proj₁ p              ∎)
+
+  (subst (λ a → proj₂ (to a) ≡ b)
+     (trans (cong (λ b → from (r′ , b)) (sym (proj₂ p)))
+        (left-inverse-of (proj₁ p)))
+     (cong proj₂ (right-inverse-of (r′ , b)))                     ≡⟨ subst-∘ _ _ (trans _ (left-inverse-of (proj₁ p))) ⟩
+
+   subst (_≡ b)
+     (cong (proj₂ ⊚ to)
+        (trans (cong (λ b → from (r′ , b)) (sym (proj₂ p)))
+           (left-inverse-of (proj₁ p))))
+     (cong proj₂ (right-inverse-of (r′ , b)))                     ≡⟨ subst-trans-sym {y≡x = cong (proj₂ ⊚ to)
+                                                                                              (trans _ (left-inverse-of (proj₁ p)))} ⟩
+   trans
+     (sym (cong (proj₂ ⊚ to)
+             (trans (cong (λ b → from (r′ , b)) (sym (proj₂ p)))
+                (left-inverse-of (proj₁ p)))))
+     (cong proj₂ (right-inverse-of (r′ , b)))                     ≡⟨ cong (flip trans (cong proj₂ (right-inverse-of (r′ , b))))
+                                                                     lemma ⟩
+   trans
+     (trans
+        (sym (cong proj₂ (right-inverse-of (to (proj₁ p)))))
+        (cong (λ b → proj₂ (to (from (r′ , b)))) (proj₂ p)))
+     (cong proj₂ (right-inverse-of (r′ , b)))                     ≡⟨ EP.elim
+                                                                       (λ {x y} eq →
+                                                                          (p : ∀ x → proj₂ (to (from (proj₁ (to (proj₁ p)) , x))) ≡ x) →
+                                                                          trans (trans (sym (p x))
+                                                                                   (cong (λ b → proj₂ (to (from (r′ , b)))) eq))
+                                                                            (p y) ≡
+                                                                          eq)
+                                                                       (λ x p →
+       trans (trans (sym (p x))
+                (cong (λ b → proj₂ (to (from (r′ , b)))) refl))
+         (p x)                                                          ≡⟨⟩
+
+       trans (sym (p x)) (p x)                                          ≡⟨ trans-symˡ (p x) ⟩∎
+
+       refl                                                             ∎)
+                                                                       (proj₂ p)
+                                                                       (λ x → cong proj₂ (right-inverse-of (r′ , x))) ⟩∎
+   proj₂ p                                                        ∎)
+  where
+  open Lens l
+  open _≃_ equiv
+
+  r′ : R
+  r′ = proj₁ (to (proj₁ p))
+
+  lemma =
+    sym (cong (proj₂ ⊚ to)
+           (trans (cong (λ b → from (r′ , b)) (sym (proj₂ p)))
+              (left-inverse-of (proj₁ p))))                      ≡⟨ cong sym $ cong-trans _ _ (left-inverse-of (proj₁ p)) ⟩
+
+    sym (trans (cong (proj₂ ⊚ to)
+                  (cong (λ b → from (r′ , b)) (sym (proj₂ p))))
+           (cong (proj₂ ⊚ to) (left-inverse-of (proj₁ p))))      ≡⟨ sym-trans _ (cong (proj₂ ⊚ to) (left-inverse-of (proj₁ p))) ⟩
+
+    trans
+      (sym (cong (proj₂ ⊚ to) (left-inverse-of (proj₁ p))))
+      (sym (cong (proj₂ ⊚ to)
+              (cong (λ b → from (r′ , b)) (sym (proj₂ p)))))     ≡⟨ cong₂ (λ p q → trans (sym p) (sym q))
+                                                                      (sym $ cong-∘ _ _ (left-inverse-of (proj₁ p)))
+                                                                      (cong-∘ _ _ (sym (proj₂ p))) ⟩
+    trans
+      (sym (cong proj₂ (cong to (left-inverse-of (proj₁ p)))))
+      (sym (cong (λ b → proj₂ (to (from (r′ , b))))
+              (sym (proj₂ p))))                                  ≡⟨ cong₂ (λ p q → trans (sym (cong proj₂ p)) q)
+                                                                      (left-right-lemma _)
+                                                                      (sym $ cong-sym _ (sym (proj₂ p))) ⟩
+    trans (sym (cong proj₂ (right-inverse-of (to (proj₁ p)))))
+      (cong (λ b → proj₂ (to (from (r′ , b))))
+         (sym (sym (proj₂ p))))                                  ≡⟨ cong (λ eq → trans _ (cong (λ b → proj₂ (to (from (r′ , b)))) eq)) $
+                                                                    sym-sym (proj₂ p) ⟩∎
+    trans (sym (cong proj₂ (right-inverse-of (to (proj₁ p)))))
+      (cong (λ b → proj₂ (to (from (r′ , b)))) (proj₂ p))        ∎
+
+get⁻¹-constant-∘ :
+  (l : Lens A B) (b₁ b₂ b₃ : B) (p : Lens.get l ⁻¹ b₁) →
+  _≃_.to (get⁻¹-constant l b₂ b₃) (_≃_.to (get⁻¹-constant l b₁ b₂) p) ≡
+  _≃_.to (get⁻¹-constant l b₁ b₃) p
+get⁻¹-constant-∘ l _ b₂ b₃ p =
+  from (r₂ , b₃) , cong proj₂ (right-inverse-of (r₂ , b₃))  ≡⟨ cong (λ r → from (r , b₃) , cong proj₂ (right-inverse-of (r , b₃))) $
+                                                               cong proj₁ $ right-inverse-of _ ⟩∎
+  from (r₁ , b₃) , cong proj₂ (right-inverse-of (r₁ , b₃))  ∎
+  where
+  open Lens l
+  open _≃_ equiv
+
+  r₁ r₂ : R
+  r₁ = proj₁ (to (proj₁ p))
+  r₂ = proj₁ (to (from (r₁ , b₂)))
+
+get⁻¹-constant-inverse :
+  (l : Lens A B) (b₁ b₂ : B) (p : Lens.get l ⁻¹ b₁) →
+  _≃_.to (get⁻¹-constant l b₁ b₂) p ≡
+  _≃_.from (get⁻¹-constant l b₂ b₁) p
+get⁻¹-constant-inverse _ _ _ _ = refl
+
+-- Another kind of coherence property does not hold for
+-- get⁻¹-constant.
+--
+-- This kind of property came up in a discussion with Andrea Vezzosi.
+
+get⁻¹-constant-not-coherent :
+  ¬ ({A B : Set} (l : Lens A B) (b₁ b₂ : B)
+     (f : ∀ b → Lens.get l ⁻¹ b) →
+     _≃_.to (get⁻¹-constant l b₁ b₂) (f b₁) ≡ f b₂)
+get⁻¹-constant-not-coherent =
+  (({A B : Set} (l : Lens A B) (b₁ b₂ : B) (f : ∀ b → Lens.get l ⁻¹ b) →
+   _≃_.to (get⁻¹-constant l b₁ b₂) (f b₁) ≡ f b₂))                        ↝⟨ (λ hyp → hyp l true false f) ⟩
+
+  _≃_.to (get⁻¹-constant l true false) (f true) ≡ f false                 ↝⟨ cong (proj₁ ⊚ proj₁) ⟩
+
+  true ≡ false                                                            ↝⟨ Bool.true≢false ⟩□
+
+  ⊥                                                                       □
+  where
+  l : Lens (Bool × Bool) Bool
+  l = record
+    { R         = Bool
+    ; equiv     = F.id
+    ; inhabited = ∣_∣
+    }
+
+  f : ∀ b → Lens.get l ⁻¹ b
+  f b = (b , b) , refl
 
 -- If the domain type of a lens is contractible, then the remainder
 -- type is also contractible.
