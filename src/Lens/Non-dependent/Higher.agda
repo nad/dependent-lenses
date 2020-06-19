@@ -1769,14 +1769,14 @@ module Lens-combinators where
 
   composition≡∘ :
     let open Lens in
-    {A : Set (a ⊔ b ⊔ c)} {B : Set (b ⊔ c)} {C : Set c} →
+    ∀ a b {A : Set (a ⊔ b ⊔ c)} {B : Set (b ⊔ c)} {C : Set c} →
     Univalence (a ⊔ b ⊔ c) →
     (∥ C ∥ → C) →
     (comp : Lens B C → Lens A B → Lens A C) →
     (∀ l₁ l₂ a c →
        set (comp l₁ l₂) a c ≡ set l₂ a (set l₁ (get l₂ a) c)) →
     comp ≡ ⟨ a , b ⟩_∘_
-  composition≡∘ univ ∥C∥→C comp set-comp =
+  composition≡∘ _ _ univ ∥C∥→C comp set-comp =
     ∘-unique univ ∥C∥→C (comp , set-comp)
       (_ , λ { ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ _ _ → refl })
 
