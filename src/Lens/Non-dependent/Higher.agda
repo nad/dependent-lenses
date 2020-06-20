@@ -1285,6 +1285,21 @@ get⁻¹-constant-not-coherent =
   f : ∀ b → Lens.get l ⁻¹ b
   f b = (b , b) , refl
 
+-- If B is inhabited whenever it is merely inhabited, then the
+-- remainder type of a lens of type Lens A B can be expressed in terms
+-- of preimages of the lens's getter.
+
+remainder≃∃get⁻¹ :
+  (l : Lens A B) (∥B∥→B : ∥ B ∥ → B) →
+  Lens.R l ≃ ∃ λ (b : ∥ B ∥) → Lens.get l ⁻¹ (∥B∥→B b)
+remainder≃∃get⁻¹ {B = B} l ∥B∥→B =
+  R                                     ↔⟨ (inverse $ drop-⊤-left-× λ r → _⇔_.to contractible⇔↔⊤ $
+                                            propositional⇒inhabited⇒contractible truncation-is-proposition (inhabited r)) ⟩
+  ∥ B ∥ × R                             ↝⟨ (∃-cong λ _ → remainder≃get⁻¹ l _) ⟩□
+  (∃ λ (b : ∥ B ∥) → get ⁻¹ (∥B∥→B b))  □
+  where
+  open Lens l
+
 -- If the domain type of a lens is contractible, then the remainder
 -- type is also contractible.
 
