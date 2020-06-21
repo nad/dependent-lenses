@@ -58,9 +58,8 @@ record Lens (A : Set a) (B : Set b) : Set (a ⊔ b) where
   get⁻¹-const⁻¹ : (b₁ b₂ : B) → get ⁻¹ b₂ → get ⁻¹ b₁
   get⁻¹-const⁻¹ b₁ b₂ = _≃_.from (get⁻¹-constant b₁ b₂)
 
-  -- The equivalence get⁻¹-constant must satisfy a coherence property.
-
   field
+    -- A coherence property.
     get⁻¹-const-∘ :
       (b₁ b₂ b₃ : B) (p : get ⁻¹ b₁) →
       get⁻¹-const b₂ b₃ (get⁻¹-const b₁ b₂ p) ≡ get⁻¹-const b₁ b₃ p
