@@ -644,8 +644,8 @@ lens-to-proposition↔get {b = b} {A = A} {B = B} univ₁ univ₂ B-prop =
    ∃ λ (⊤≃B′ : ∀ r → ⊤ ≃ B′ r) →
    ∃ λ (lens : A ≃ Σ R B′) →
    ∀ r → B (_≃_.from lens (r , _≃_.to (⊤≃B′ r) _)))          ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ ⊤≃B′ →
-                                                                 Σ-cong (Eq.≃-preserves-bijections ext F.id
-                                                                           (drop-⊤-right (λ r → inverse {k = equivalence} (⊤≃B′ r)))) λ _ →
+                                                                 Σ-cong (Eq.≃-preserves ext F.id
+                                                                           (drop-⊤-right (λ r → inverse (⊤≃B′ r)))) λ _ →
                                                                  F.id) ⟩
   (∃ λ (R : Set _) →
    ∃ λ (B′ : R → Set _) →
