@@ -1537,9 +1537,8 @@ Is-set-closed-domain {A = A} {B} univ A-set =
 -- If A has h-level n, then Lens A B has h-level 1 + n (assuming
 -- univalence).
 --
--- TODO: Can this be improved? The corresponding result for
--- Traditional.Lens (Traditional.lens-preserves-h-level-of-domain) is
--- stronger.
+-- See also
+-- Lens.Non-dependent.Equivalent-preimages.higher-lens-preserves-h-level-of-domain.
 
 domain-0+⇒lens-1+ :
   {A : Set a} {B : Set b} →
@@ -1698,6 +1697,8 @@ module Lens-combinators where
   --
   -- The composition operation matches on the lenses to ensure that it
   -- does not unfold when applied to neutral lenses.
+  --
+  -- See also Lens.Non-dependent.Equivalent-preimages.⟨_⟩_⊚_.
 
   infix 9 ⟨_,_⟩_∘_
 
