@@ -12,7 +12,8 @@ open import Logical-equivalence using (_⇔_)
 open import Prelude renaming (_∘_ to _⊚_)
 
 open import Bijection equality-with-J as B using (_↔_)
-open import Equivalence equality-with-J as Eq using (_≃_)
+open import Equivalence equality-with-J as Eq
+  using (_≃_; Is-equivalence)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
@@ -47,22 +48,27 @@ record Lens (A : Set a) (B : Set b) : Set (a ⊔ b) where
     -- A getter.
     get : A → B
 
-    -- All the getter's "preimages" are equivalent.
-    get⁻¹-constant : (b₁ b₂ : B) → get ⁻¹ b₁ ≃ get ⁻¹ b₂
+    -- A function from one "preimage" of get to another.
+    get⁻¹-const : (b₁ b₂ : B) → get ⁻¹ b₁ → get ⁻¹ b₂
 
-  -- The left-to-right and right-to-left directions of get⁻¹-constant.
+    -- This function is an equivalence.
+    get⁻¹-const-equivalence :
+      (b₁ b₂ : B) → Is-equivalence (get⁻¹-const b₁ b₂)
 
-  get⁻¹-const : (b₁ b₂ : B) → get ⁻¹ b₁ → get ⁻¹ b₂
-  get⁻¹-const b₁ b₂ = _≃_.to (get⁻¹-constant b₁ b₂)
-
-  get⁻¹-const⁻¹ : (b₁ b₂ : B) → get ⁻¹ b₂ → get ⁻¹ b₁
-  get⁻¹-const⁻¹ b₁ b₂ = _≃_.from (get⁻¹-constant b₁ b₂)
-
-  field
     -- A coherence property.
     get⁻¹-const-∘ :
       (b₁ b₂ b₃ : B) (p : get ⁻¹ b₁) →
       get⁻¹-const b₂ b₃ (get⁻¹-const b₁ b₂ p) ≡ get⁻¹-const b₁ b₃ p
+
+  -- All the getter's "preimages" are equivalent.
+
+  get⁻¹-constant : (b₁ b₂ : B) → get ⁻¹ b₁ ≃ get ⁻¹ b₂
+  get⁻¹-constant b₁ b₂ = Eq.⟨ _ , get⁻¹-const-equivalence b₁ b₂ ⟩
+
+  -- The inverse of get⁻¹-const.
+
+  get⁻¹-const⁻¹ : (b₁ b₂ : B) → get ⁻¹ b₂ → get ⁻¹ b₁
+  get⁻¹-const⁻¹ b₁ b₂ = _≃_.from (get⁻¹-constant b₁ b₂)
 
   -- Some derived coherence properties.
 
@@ -135,21 +141,69 @@ record Lens (A : Set a) (B : Set b) : Set (a ⊔ b) where
 Lens-as-Σ :
   Lens A B ≃
   ∃ λ (get : A → B) →
-  ∃ λ (get⁻¹-constant : (b₁ b₂ : B) → get ⁻¹ b₁ ≃ get ⁻¹ b₂) →
-    (b₁ b₂ b₃ : B) (p : get ⁻¹ b₁) →
-    _≃_.to (get⁻¹-constant b₂ b₃) (_≃_.to (get⁻¹-constant b₁ b₂) p) ≡
-    _≃_.to (get⁻¹-constant b₁ b₃) p
+  ∃ λ (get⁻¹-const : (b₁ b₂ : B) → get ⁻¹ b₁ → get ⁻¹ b₂) →
+    ((b₁ b₂ : B) → Is-equivalence (get⁻¹-const b₁ b₂)) ×
+    ((b₁ b₂ b₃ : B) (p : get ⁻¹ b₁) →
+     get⁻¹-const b₂ b₃ (get⁻¹-const b₁ b₂ p) ≡ get⁻¹-const b₁ b₃ p)
 Lens-as-Σ = Eq.↔→≃
-  (λ l → get l , get⁻¹-constant l , get⁻¹-const-∘ l)
-  (λ (g , c , c-∘) → record
-     { get            = g
-     ; get⁻¹-constant = c
-     ; get⁻¹-const-∘  = c-∘
+  (λ l → get l
+       , get⁻¹-const l
+       , get⁻¹-const-equivalence l
+       , get⁻¹-const-∘ l)
+  (λ (g , c , c-e , c-∘) → record
+     { get                     = g
+     ; get⁻¹-const             = c
+     ; get⁻¹-const-equivalence = c-e
+     ; get⁻¹-const-∘           = c-∘
      })
   (λ _ → refl)
-  (λ { (lens _ _ _) → refl })
+  (λ { (lens _ _ _ _) → refl })
   where
   open Lens
+
+-- A variant of Lens-as-Σ.
+
+Lens-as-Σ′ :
+  Lens A B ≃
+  ∃ λ (get : A → B) →
+  ∃ λ (get⁻¹-constant : (b₁ b₂ : B) → get ⁻¹ b₁ ≃ get ⁻¹ b₂) →
+    let get⁻¹-const : ∀ _ _ → _
+        get⁻¹-const = λ b₁ b₂ → _≃_.to (get⁻¹-constant b₁ b₂) in
+    (b₁ b₂ b₃ : B) (p : get ⁻¹ b₁) →
+    get⁻¹-const b₂ b₃ (get⁻¹-const b₁ b₂ p) ≡ get⁻¹-const b₁ b₃ p
+Lens-as-Σ′ {A = A} {B = B} =
+  Lens A B                                                             ↝⟨ Lens-as-Σ ⟩
+
+  (∃ λ (get : A → B) →
+   ∃ λ (get⁻¹-const : (b₁ b₂ : B) → get ⁻¹ b₁ → get ⁻¹ b₂) →
+     ((b₁ b₂ : B) → Is-equivalence (get⁻¹-const b₁ b₂)) ×
+     ((b₁ b₂ b₃ : B) (p : get ⁻¹ b₁) →
+      get⁻¹-const b₂ b₃ (get⁻¹-const b₁ b₂ p) ≡ get⁻¹-const b₁ b₃ p))  ↔⟨ (∃-cong λ _ → Σ-assoc) ⟩
+
+  (∃ λ (get : A → B) →
+   ∃ λ ((get⁻¹-const , _) :
+        ∃ λ (get⁻¹-const : (b₁ b₂ : B) → get ⁻¹ b₁ → get ⁻¹ b₂) →
+          (b₁ b₂ : B) → Is-equivalence (get⁻¹-const b₁ b₂)) →
+     (b₁ b₂ b₃ : B) (p : get ⁻¹ b₁) →
+     get⁻¹-const b₂ b₃ (get⁻¹-const b₁ b₂ p) ≡ get⁻¹-const b₁ b₃ p)    ↝⟨ (∃-cong λ _ →
+                                                                           Σ-cong-contra (ΠΣ-comm F.∘ ∀-cong ext (λ _ → ΠΣ-comm)) λ _ → F.id) ⟩
+  (∃ λ (get : A → B) →
+   ∃ λ (f :
+        (b₁ b₂ : B) →
+        ∃ λ (get⁻¹-const : get ⁻¹ b₁ → get ⁻¹ b₂) →
+          Is-equivalence get⁻¹-const) →
+     let get⁻¹-const : ∀ _ _ → _
+         get⁻¹-const = λ b₁ b₂ → proj₁ (f b₁ b₂) in
+     (b₁ b₂ b₃ : B) (p : get ⁻¹ b₁) →
+     get⁻¹-const b₂ b₃ (get⁻¹-const b₁ b₂ p) ≡ get⁻¹-const b₁ b₃ p)    ↝⟨ (∃-cong λ _ →
+                                                                           Σ-cong-contra (∀-cong ext λ _ → ∀-cong ext λ _ → Eq.≃-as-Σ) λ _ →
+                                                                                         F.id) ⟩□
+  (∃ λ (get : A → B) →
+   ∃ λ (get⁻¹-constant : (b₁ b₂ : B) → get ⁻¹ b₁ ≃ get ⁻¹ b₂) →
+     let get⁻¹-const : ∀ _ _ → _
+         get⁻¹-const = λ b₁ b₂ → _≃_.to (get⁻¹-constant b₁ b₂) in
+     (b₁ b₂ b₃ : B) (p : get ⁻¹ b₁) →
+     get⁻¹-const b₂ b₃ (get⁻¹-const b₁ b₂ p) ≡ get⁻¹-const b₁ b₃ p)    □
 
 ------------------------------------------------------------------------
 -- Some results related to h-levels
@@ -182,8 +236,8 @@ h-level-respects-lens-from-inhabited {A = A} {B = B} n l a =
 lens-preserves-h-level :
   ∀ n → (B → H-level n A) → (A → H-level n B) →
   H-level n (Lens A B)
-lens-preserves-h-level n hA hB =
-  H-level-cong _ n (inverse Lens-as-Σ) $
+lens-preserves-h-level {B = B} {A = A} n hA hB =
+  H-level-cong _ n (inverse Lens-as-Σ′) $
   Σ-closure n (Π-closure ext n λ a →
                hB a) λ _ →
   Σ-closure n (Π-closure ext n λ b →
@@ -227,95 +281,119 @@ equality-characterisation :
     ≃
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
    ∃ λ (gc : ∀ b₁ b₂ p →
-             _≃_.to (subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)
-                       (⟨ext⟩ g) (get⁻¹-constant l₁) b₁ b₂) p ≡
+             subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
+               (⟨ext⟩ g) (get⁻¹-const l₁) b₁ b₂ p ≡
              get⁻¹-const l₂ b₁ b₂ p) →
      subst
        (λ (get , gc) →
           ∀ b₁ b₂ b₃ (p : get ⁻¹ b₁) →
-          _≃_.to (gc b₂ b₃) (_≃_.to (gc b₁ b₂) p) ≡ _≃_.to (gc b₁ b₃) p)
+          gc b₂ b₃ (gc b₁ b₂ p) ≡ gc b₁ b₃ p)
        (Σ-≡,≡→≡ (⟨ext⟩ g)
-          (⟨ext⟩ λ b₁ → ⟨ext⟩ λ b₂ → _↔_.to (≃-to-≡↔≡ ext) (gc b₁ b₂)))
+          (⟨ext⟩ λ b₁ → ⟨ext⟩ λ b₂ → ⟨ext⟩ λ p → gc b₁ b₂ p))
        (get⁻¹-const-∘ l₁) ≡
      get⁻¹-const-∘ l₂)
 equality-characterisation {l₁ = l₁} {l₂ = l₂} =
-  l₁ ≡ l₂                                                                 ↝⟨ inverse $ Eq.≃-≡ (from-isomorphism Σ-assoc F.∘ Lens-as-Σ) F.∘
-                                                                                       from-isomorphism B.Σ-≡,≡↔≡ ⟩
-  (∃ λ (p : (get l₁ , get⁻¹-constant l₁) ≡
-            (get l₂ , get⁻¹-constant l₂)) →
+  l₁ ≡ l₂                                                      ↝⟨ inverse $ Eq.≃-≡ (lemma₁ F.∘ Lens-as-Σ) ⟩
+
+  ( ((get l₁ , get⁻¹-const l₁) , get⁻¹-const-∘ l₁)
+  , get⁻¹-const-equivalence l₁
+  ) ≡
+  ( ((get l₂ , get⁻¹-const l₂) , get⁻¹-const-∘ l₂)
+  , get⁻¹-const-equivalence l₂
+  )                                                            ↔⟨ inverse $
+                                                                  ignore-propositional-component
+                                                                    (Π-closure ext 1 λ _ →
+                                                                     Π-closure ext 1 λ _ →
+                                                                     Eq.propositional ext _) ⟩
+  ((get l₁ , get⁻¹-const l₁) , get⁻¹-const-∘ l₁) ≡
+  ((get l₂ , get⁻¹-const l₂) , get⁻¹-const-∘ l₂)               ↔⟨ inverse B.Σ-≡,≡↔≡ ⟩
+
+  (∃ λ (p : (get l₁ , get⁻¹-const l₁) ≡
+            (get l₂ , get⁻¹-const l₂)) →
      subst
        (λ (get , gc) →
           ∀ b₁ b₂ b₃ (p : get ⁻¹ b₁) →
-          _≃_.to (gc b₂ b₃) (_≃_.to (gc b₁ b₂) p) ≡ _≃_.to (gc b₁ b₃) p)
+          gc b₂ b₃ (gc b₁ b₂ p) ≡ gc b₁ b₃ p)
        p (get⁻¹-const-∘ l₁) ≡
-     get⁻¹-const-∘ l₂)                                                    ↝⟨ (Σ-cong-contra B.Σ-≡,≡↔≡ λ _ → F.id) ⟩
+     get⁻¹-const-∘ l₂)                                         ↝⟨ (Σ-cong-contra B.Σ-≡,≡↔≡ λ _ → F.id) ⟩
 
   (∃ λ (p : ∃ λ (g : get l₁ ≡ get l₂) →
-              subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)
-                g (get⁻¹-constant l₁) ≡
-              get⁻¹-constant l₂) →
+              subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
+                g (get⁻¹-const l₁) ≡
+              get⁻¹-const l₂) →
      subst
        (λ (get , gc) →
           ∀ b₁ b₂ b₃ (p : get ⁻¹ b₁) →
-          _≃_.to (gc b₂ b₃) (_≃_.to (gc b₁ b₂) p) ≡ _≃_.to (gc b₁ b₃) p)
+          gc b₂ b₃ (gc b₁ b₂ p) ≡ gc b₁ b₃ p)
        (uncurry Σ-≡,≡→≡ p) (get⁻¹-const-∘ l₁) ≡
-     get⁻¹-const-∘ l₂)                                                    ↔⟨ inverse Σ-assoc ⟩
+     get⁻¹-const-∘ l₂)                                         ↔⟨ inverse Σ-assoc ⟩
 
   (∃ λ (g : get l₁ ≡ get l₂) →
-   ∃ λ (gc : subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)
-               g (get⁻¹-constant l₁) ≡
-             get⁻¹-constant l₂) →
+   ∃ λ (gc : subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
+               g (get⁻¹-const l₁) ≡
+             get⁻¹-const l₂) →
      subst
        (λ (get , gc) →
           ∀ b₁ b₂ b₃ (p : get ⁻¹ b₁) →
-          _≃_.to (gc b₂ b₃) (_≃_.to (gc b₁ b₂) p) ≡ _≃_.to (gc b₁ b₃) p)
+          gc b₂ b₃ (gc b₁ b₂ p) ≡ gc b₁ b₃ p)
        (Σ-≡,≡→≡ g gc) (get⁻¹-const-∘ l₁) ≡
-     get⁻¹-const-∘ l₂)                                                    ↝⟨ (Σ-cong-contra (Eq.extensionality-isomorphism bad-ext) λ _ → F.id) ⟩
+     get⁻¹-const-∘ l₂)                                         ↝⟨ (Σ-cong-contra (Eq.extensionality-isomorphism bad-ext) λ _ → F.id) ⟩
 
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
-   ∃ λ (gc : subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)
-               (⟨ext⟩ g) (get⁻¹-constant l₁) ≡
-             get⁻¹-constant l₂) →
+   ∃ λ (gc : subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
+               (⟨ext⟩ g) (get⁻¹-const l₁) ≡
+             get⁻¹-const l₂) →
      subst
        (λ (get , gc) →
           ∀ b₁ b₂ b₃ (p : get ⁻¹ b₁) →
-          _≃_.to (gc b₂ b₃) (_≃_.to (gc b₁ b₂) p) ≡ _≃_.to (gc b₁ b₃) p)
+          gc b₂ b₃ (gc b₁ b₂ p) ≡ gc b₁ b₃ p)
        (Σ-≡,≡→≡ (⟨ext⟩ g) gc) (get⁻¹-const-∘ l₁) ≡
-     get⁻¹-const-∘ l₂)                                                    ↝⟨ (∃-cong λ _ → Σ-cong-contra (inverse $ lemma _) λ _ → F.id) ⟩□
+     get⁻¹-const-∘ l₂)                                         ↝⟨ (∃-cong λ _ → Σ-cong-contra (inverse $ lemma₂ _) λ _ → F.id) ⟩□
 
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
    ∃ λ (gc : ∀ b₁ b₂ p →
-             _≃_.to (subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)
-                       (⟨ext⟩ g) (get⁻¹-constant l₁) b₁ b₂) p ≡
+             subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
+               (⟨ext⟩ g) (get⁻¹-const l₁) b₁ b₂ p ≡
              get⁻¹-const l₂ b₁ b₂ p) →
      subst
        (λ (get , gc) →
           ∀ b₁ b₂ b₃ (p : get ⁻¹ b₁) →
-          _≃_.to (gc b₂ b₃) (_≃_.to (gc b₁ b₂) p) ≡ _≃_.to (gc b₁ b₃) p)
+          gc b₂ b₃ (gc b₁ b₂ p) ≡ gc b₁ b₃ p)
        (Σ-≡,≡→≡ (⟨ext⟩ g)
-          (⟨ext⟩ λ b₁ → ⟨ext⟩ λ b₂ → _↔_.to (≃-to-≡↔≡ ext) (gc b₁ b₂)))
+          (⟨ext⟩ λ b₁ → ⟨ext⟩ λ b₂ → ⟨ext⟩ λ p → gc b₁ b₂ p))
        (get⁻¹-const-∘ l₁) ≡
-     get⁻¹-const-∘ l₂)                                                    □
+     get⁻¹-const-∘ l₂)                                         □
   where
   open Lens
 
-  lemma : (g : ∀ a → get l₁ a ≡ get l₂ a) → _
-  lemma g =
-    subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)
-      (⟨ext⟩ g) (get⁻¹-constant l₁) ≡
-    get⁻¹-constant l₂                                           ↝⟨ inverse $ Eq.extensionality-isomorphism bad-ext ⟩
+  lemma₁ :
+    {P : A → Set ℓ} {Q R : (x : A) → P x → Set ℓ} →
+    (∃ λ (x : A) → ∃ λ (y : P x) → Q x y × R x y) ≃
+    (∃ λ (((x , y) , _) : Σ (Σ A P) (uncurry R)) → Q x y)
+  lemma₁ {A = A} {P = P} {Q = Q} {R = R} =
+    (∃ λ (x : A) → ∃ λ (y : P x) → Q x y × R x y)                      ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ×-comm) ⟩
+    (∃ λ (x : A) → ∃ λ (y : P x) → R x y × Q x y)                      ↔⟨ (∃-cong λ _ → Σ-assoc) ⟩
+    (∃ λ (x : A) → ∃ λ ((y , _) : ∃ λ (y : P x) → R x y) → Q x y)      ↔⟨ Σ-assoc ⟩
+    (∃ λ ((x , y , _) : ∃ λ (x : A) → ∃ λ (y : P x) → R x y) → Q x y)  ↝⟨ (Σ-cong Σ-assoc λ _ → F.id) ⟩□
+    (∃ λ (((x , y) , _) : Σ (Σ A P) (uncurry R)) → Q x y)              □
 
-    (∀ b₁ → subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)
-               (⟨ext⟩ g) (get⁻¹-constant l₁) b₁ ≡
-            get⁻¹-constant l₂ b₁)                               ↝⟨ (∀-cong ext λ _ → inverse $ Eq.extensionality-isomorphism bad-ext) ⟩
+  lemma₂ : (g : ∀ a → get l₁ a ≡ get l₂ a) → _
+  lemma₂ g =
+    subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
+      (⟨ext⟩ g) (get⁻¹-const l₁) ≡
+    get⁻¹-const l₂                                              ↝⟨ inverse $ Eq.extensionality-isomorphism bad-ext ⟩
 
-    (∀ b₁ b₂ → subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)
-                 (⟨ext⟩ g) (get⁻¹-constant l₁) b₁ b₂ ≡
-               get⁻¹-constant l₂ b₁ b₂)                         ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ → inverse $ ≃-to-≡↔≡ ext) ⟩□
+    (∀ b₁ → subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
+               (⟨ext⟩ g) (get⁻¹-const l₁) b₁ ≡
+            get⁻¹-const l₂ b₁)                                  ↝⟨ (∀-cong ext λ _ → inverse $ Eq.extensionality-isomorphism bad-ext) ⟩
+
+    (∀ b₁ b₂ → subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
+                 (⟨ext⟩ g) (get⁻¹-const l₁) b₁ b₂ ≡
+               get⁻¹-const l₂ b₁ b₂)                            ↝⟨ (∀-cong ext λ _ → ∀-cong ext λ _ → inverse $ Eq.extensionality-isomorphism bad-ext) ⟩□
 
     (∀ b₁ b₂ p →
-     _≃_.to (subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)
-               (⟨ext⟩ g) (get⁻¹-constant l₁) b₁ b₂) p ≡
+     subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
+       (⟨ext⟩ g) (get⁻¹-const l₁) b₁ b₂ p ≡
      get⁻¹-const l₂ b₁ b₂ p)                                    □
 
 -- An equality characterisation lemma for lenses between sets.
@@ -338,15 +416,16 @@ equality-characterisation-for-sets
 
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
    ∃ λ (gc : ∀ b₁ b₂ p →
-             _≃_.to (subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)
-                       (⟨ext⟩ g) (get⁻¹-constant l₁) b₁ b₂) p ≡
+             subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
+               (⟨ext⟩ g) (get⁻¹-const l₁) b₁ b₂ p ≡
              get⁻¹-const l₂ b₁ b₂ p) →
      subst
        (λ (get , gc) →
           ∀ b₁ b₂ b₃ (p : get ⁻¹ b₁) →
-          _≃_.to (gc b₂ b₃) (_≃_.to (gc b₁ b₂) p) ≡ _≃_.to (gc b₁ b₃) p)
-       (Σ-≡,≡→≡ (⟨ext⟩ g)
-          (⟨ext⟩ λ b₁ → ⟨ext⟩ λ b₂ → _↔_.to (≃-to-≡↔≡ ext) (gc b₁ b₂)))
+          gc b₂ b₃ (gc b₁ b₂ p) ≡ gc b₁ b₃ p)
+       (Σ-≡,≡→≡
+          (⟨ext⟩ g)
+          (⟨ext⟩ λ b₁ → ⟨ext⟩ λ b₂ → ⟨ext⟩ λ p → gc b₁ b₂ p))
        (get⁻¹-const-∘ l₁) ≡
      get⁻¹-const-∘ l₂)                                                    ↔⟨ (∃-cong λ _ → drop-⊤-right λ _ → _⇔_.to contractible⇔↔⊤ $ +⇒≡ $
                                                                               Π-closure ext 1 λ _ →
@@ -356,8 +435,8 @@ equality-characterisation-for-sets
                                                                               ⁻¹-set) ⟩
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
      ∀ b₁ b₂ p →
-     _≃_.to (subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)
-               (⟨ext⟩ g) (get⁻¹-constant l₁) b₁ b₂) p ≡
+     subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
+       (⟨ext⟩ g) (get⁻¹-const l₁) b₁ b₂ p ≡
      get⁻¹-const l₂ b₁ b₂ p)                                              ↝⟨ (∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
                                                                               ≡⇒↝ _ $ cong (_≡ _) $ lemma₁ _ _ _ _) ⟩
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
@@ -392,15 +471,12 @@ equality-characterisation-for-sets
 
   lemma₁ : ∀ g b₁ b₂ p → _
   lemma₁ g b₁ b₂ p =
-    _≃_.to (subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)
-              (⟨ext⟩ g) (get⁻¹-constant l₁) b₁ b₂) p             ≡⟨ cong (λ f → _≃_.to (f b₂) p) $ sym $
-                                                                    push-subst-application (⟨ext⟩ g) (λ get b₁ → ∀ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂) ⟩
-    _≃_.to (subst (λ get → ∀ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)
-              (⟨ext⟩ g) (get⁻¹-constant l₁ b₁) b₂) p             ≡⟨ cong (λ f → _≃_.to f p) $ sym $
-                                                                    push-subst-application (⟨ext⟩ g) _ ⟩
-    _≃_.to (subst (λ get → get ⁻¹ b₁ ≃ get ⁻¹ b₂)
-              (⟨ext⟩ g) (get⁻¹-constant l₁ b₁ b₂)) p             ≡⟨ cong (_$ p) $
-                                                                    Eq.to-subst {eq = ⟨ext⟩ g} ⟩
+    subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
+      (⟨ext⟩ g) (get⁻¹-const l₁) b₁ b₂ p                         ≡⟨ cong (λ f → f b₂ p) $ sym $
+                                                                    push-subst-application (⟨ext⟩ g) (λ get b₁ → ∀ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂) ⟩
+    subst (λ get → ∀ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
+      (⟨ext⟩ g) (get⁻¹-const l₁ b₁) b₂ p                         ≡⟨ cong (λ f → f p) $ sym $
+                                                                    push-subst-application (⟨ext⟩ g) (λ get b₂ → get ⁻¹ b₁ → get ⁻¹ b₂) ⟩
     subst (λ get → get ⁻¹ b₁ → get ⁻¹ b₂)
       (⟨ext⟩ g) (get⁻¹-const l₁ b₁ b₂) p                         ≡⟨ subst-→ {x₁≡x₂ = ⟨ext⟩ g} ⟩∎
 
@@ -425,11 +501,11 @@ equality-characterisation-for-sets
 -- Higher lenses can be converted to the ones defined above.
 
 higher→ : Higher.Lens A B → Lens A B
-higher→ l@(Higher.⟨ _ , _ , _ ⟩) = record
-  { get            = Higher.Lens.get l
-  ; get⁻¹-constant = Higher.get⁻¹-constant l
-  ; get⁻¹-const-∘  = Higher.get⁻¹-constant-∘ l
-  }
+higher→ l@(Higher.⟨ _ , _ , _ ⟩) = _≃_.from Lens-as-Σ′
+  ( Higher.Lens.get l
+  , Higher.get⁻¹-constant l
+  , Higher.get⁻¹-constant-∘ l
+  )
 
 -- The conversion preserves getters and setters.
 
@@ -447,7 +523,7 @@ set-higher→≡set Higher.⟨ _ , _ , _ ⟩ = refl
 -- if the codomain is inhabited when it is merely inhabited.
 
 →higher : (∥ B ∥ → B) → Lens A B → Higher.Lens A B
-→higher {B = B} {A = A} ∥B∥→B l@(lens _ _ _) = record
+→higher {B = B} {A = A} ∥B∥→B l@(lens _ _ _ _) = record
   { R     = ∃ λ (b : ∥ B ∥) → Lens.get l ⁻¹ (∥B∥→B b)
   ; equiv =
       A                                                      ↔⟨ (inverse $ drop-⊤-right λ _ → _⇔_.to contractible⇔↔⊤ $
@@ -466,12 +542,12 @@ set-higher→≡set Higher.⟨ _ , _ , _ ⟩ = refl
 get-→higher≡get :
   ∀ ∥B∥→B (l : Lens A B) →
   Higher.Lens.get (→higher ∥B∥→B l) a ≡ Lens.get l a
-get-→higher≡get _ (lens _ _ _) = refl
+get-→higher≡get _ (lens _ _ _ _) = refl
 
 set-→higher≡set :
   ∀ ∥B∥→B (l : Lens A B) →
   Higher.Lens.set (→higher ∥B∥→B l) a b ≡ Lens.set l a b
-set-→higher≡set {A = A} {a = a} {b = b} ∥B∥→B l@(lens _ _ _) =
+set-→higher≡set {A = A} {a = a} {b = b} ∥B∥→B l@(lens _ _ _ _) =
   _≃_.to-from (Higher.Lens.equiv (→higher ∥B∥→B l)) $ cong₂ _,_
     (∣ get a′ ∣ , get⁻¹-const (get a′) (∥B∥→B ∣ get a′ ∣) (a′ , refl)  ≡⟨ Σ-≡,≡→≡ (PT.truncation-is-proposition _ _)
                                                                             (
@@ -571,27 +647,25 @@ traditional→ :
    trans (sym (cong get (set-set a b₁ b₂))) (get-set (set a b₁) b₂) ≡
    get-set a b₂) →
   Lens A B
-traditional→ l get-set-get get-set-set = record
-  { get = get
+traditional→ l get-set-get get-set-set = _≃_.from Lens-as-Σ′
+  ( get
+  , (λ b₁ b₂ →
+       Eq.↔→≃ (gg b₁ b₂) (gg b₂ b₁) (gg∘gg b₁ b₂) (gg∘gg b₂ b₁))
+  , (λ b₁ b₂ b₃ (a , get-a≡b₁) →
+       Σ-≡,≡→≡
+         (set (set a b₂) b₃  ≡⟨ set-set a b₂ b₃ ⟩∎
+          set a b₃           ∎)
+         (subst (λ a → get a ≡ b₃) (set-set a b₂ b₃)
+            (get-set (set a b₂) b₃)                   ≡⟨ subst-∘ _ _ (set-set a b₂ b₃) ⟩
 
-  ; get⁻¹-constant = λ b₁ b₂ →
-      Eq.↔→≃ (gg b₁ b₂) (gg b₂ b₁) (gg∘gg b₁ b₂) (gg∘gg b₂ b₁)
+          subst (_≡ b₃) (cong get (set-set a b₂ b₃))
+            (get-set (set a b₂) b₃)                   ≡⟨ subst-trans-sym {y≡x = cong get (set-set a b₂ b₃)} ⟩
 
-  ; get⁻¹-const-∘ = λ b₁ b₂ b₃ (a , get-a≡b₁) →
-      Σ-≡,≡→≡
-        (set (set a b₂) b₃  ≡⟨ set-set a b₂ b₃ ⟩∎
-         set a b₃           ∎)
-        (subst (λ a → get a ≡ b₃) (set-set a b₂ b₃)
-           (get-set (set a b₂) b₃)                   ≡⟨ subst-∘ _ _ (set-set a b₂ b₃) ⟩
+          trans (sym (cong get (set-set a b₂ b₃)))
+            (get-set (set a b₂) b₃)                   ≡⟨ get-set-set _ _ _ ⟩∎
 
-         subst (_≡ b₃) (cong get (set-set a b₂ b₃))
-           (get-set (set a b₂) b₃)                   ≡⟨ subst-trans-sym {y≡x = cong get (set-set a b₂ b₃)} ⟩
-
-         trans (sym (cong get (set-set a b₂ b₃)))
-           (get-set (set a b₂) b₃)                   ≡⟨ get-set-set _ _ _ ⟩∎
-
-         get-set a b₃                                ∎)
-  }
+          get-set a b₃                                ∎))
+  )
   where
   open Traditional.Lens l
 
@@ -753,69 +827,69 @@ traditional≃ {A = A} {B = B} A-set = Eq.↔→≃
 infixr 9 _∘_
 
 _∘_ : Lens B C → Lens A B → Lens A C
-l₁@(lens _ _ _) ∘ l₂@(lens _ _ _) = block λ b → record
-  { get            = get l₁ ⊚ get l₂
-  ; get⁻¹-constant = λ c₁ c₂ →
-      get l₁ ⊚ get l₂ ⁻¹ c₁                         ↝⟨ ∘⁻¹≃ b _ _ ⟩
-      (∃ λ ((b , _) : get l₁ ⁻¹ c₁) → get l₂ ⁻¹ b)  ↝⟨ (Σ-cong (get⁻¹-constant l₁ c₁ c₂) λ p@(b , _) →
-                                                        get⁻¹-constant l₂ b (proj₁ (get⁻¹-const l₁ c₁ c₂ p))) ⟩
-      (∃ λ ((b , _) : get l₁ ⁻¹ c₂) → get l₂ ⁻¹ b)  ↝⟨ inverse $ ∘⁻¹≃ b _ _ ⟩□
-      get l₁ ⊚ get l₂ ⁻¹ c₂                         □
-  ; get⁻¹-const-∘ = λ c₁ c₂ c₃ p →
-      _≃_.from (∘⁻¹≃ b _ _)
-        (Σ-map (get⁻¹-const l₁ c₂ c₃)
-           (λ {p@(b , _)} →
-              get⁻¹-const l₂ b (proj₁ (get⁻¹-const l₁ c₂ c₃ p)))
-           (_≃_.to (∘⁻¹≃ b _ _)
-              (_≃_.from (∘⁻¹≃ b _ _)
-                 (Σ-map (get⁻¹-const l₁ c₁ c₂)
-                    (λ {p@(b , _)} →
-                       get⁻¹-const l₂ b
-                         (proj₁ (get⁻¹-const l₁ c₁ c₂ p)))
-                    (_≃_.to (∘⁻¹≃ b _ _) p)))))                      ≡⟨ cong (λ x → _≃_.from (∘⁻¹≃ b _ _)
-                                                                                      (Σ-map (get⁻¹-const l₁ c₂ c₃)
-                                                                                         (λ {p@(b , _)} →
-                                                                                            get⁻¹-const l₂ b
-                                                                                              (proj₁ (get⁻¹-const l₁ c₂ c₃ p))) x)) $
-                                                                        _≃_.right-inverse-of (∘⁻¹≃ b _ _) _ ⟩
-      _≃_.from (∘⁻¹≃ b _ _)
-        (Σ-map (get⁻¹-const l₁ c₂ c₃)
-           (λ {p@(b , _)} →
-              get⁻¹-const l₂ b (proj₁ (get⁻¹-const l₁ c₂ c₃ p)))
-           (Σ-map (get⁻¹-const l₁ c₁ c₂)
-              (λ {p@(b , _)} →
-                 get⁻¹-const l₂ b (proj₁ (get⁻¹-const l₁ c₁ c₂ p)))
-              (_≃_.to (∘⁻¹≃ b _ _) p)))                              ≡⟨⟩
+l₁@(lens _ _ _ _) ∘ l₂@(lens _ _ _ _) = block λ b → _≃_.from Lens-as-Σ′
+  ( get l₁ ⊚ get l₂
+  , (λ c₁ c₂ →
+       get l₁ ⊚ get l₂ ⁻¹ c₁                         ↝⟨ ∘⁻¹≃ b _ _ ⟩
+       (∃ λ ((b , _) : get l₁ ⁻¹ c₁) → get l₂ ⁻¹ b)  ↝⟨ (Σ-cong (get⁻¹-constant l₁ c₁ c₂) λ p@(b , _) →
+                                                         get⁻¹-constant l₂ b (proj₁ (get⁻¹-const l₁ c₁ c₂ p))) ⟩
+       (∃ λ ((b , _) : get l₁ ⁻¹ c₂) → get l₂ ⁻¹ b)  ↝⟨ inverse $ ∘⁻¹≃ b _ _ ⟩□
+       get l₁ ⊚ get l₂ ⁻¹ c₂                         □)
+  , (λ c₁ c₂ c₃ p →
+       _≃_.from (∘⁻¹≃ b _ _)
+         (Σ-map (get⁻¹-const l₁ c₂ c₃)
+            (λ {p@(b , _)} →
+               get⁻¹-const l₂ b (proj₁ (get⁻¹-const l₁ c₂ c₃ p)))
+            (_≃_.to (∘⁻¹≃ b _ _)
+               (_≃_.from (∘⁻¹≃ b _ _)
+                  (Σ-map (get⁻¹-const l₁ c₁ c₂)
+                     (λ {p@(b , _)} →
+                        get⁻¹-const l₂ b
+                          (proj₁ (get⁻¹-const l₁ c₁ c₂ p)))
+                     (_≃_.to (∘⁻¹≃ b _ _) p)))))                      ≡⟨ cong (λ x → _≃_.from (∘⁻¹≃ b _ _)
+                                                                                       (Σ-map (get⁻¹-const l₁ c₂ c₃)
+                                                                                          (λ {p@(b , _)} →
+                                                                                             get⁻¹-const l₂ b
+                                                                                               (proj₁ (get⁻¹-const l₁ c₂ c₃ p))) x)) $
+                                                                         _≃_.right-inverse-of (∘⁻¹≃ b _ _) _ ⟩
+       _≃_.from (∘⁻¹≃ b _ _)
+         (Σ-map (get⁻¹-const l₁ c₂ c₃)
+            (λ {p@(b , _)} →
+               get⁻¹-const l₂ b (proj₁ (get⁻¹-const l₁ c₂ c₃ p)))
+            (Σ-map (get⁻¹-const l₁ c₁ c₂)
+               (λ {p@(b , _)} →
+                  get⁻¹-const l₂ b (proj₁ (get⁻¹-const l₁ c₁ c₂ p)))
+               (_≃_.to (∘⁻¹≃ b _ _) p)))                              ≡⟨⟩
 
-      _≃_.from (∘⁻¹≃ b _ _)
-        (Σ-map (get⁻¹-const l₁ c₂ c₃ ⊚ get⁻¹-const l₁ c₁ c₂)
-           (λ {p@(b , _)} →
-              get⁻¹-const l₂ (proj₁ (get⁻¹-const l₁ c₁ c₂ p))
-                (proj₁ (get⁻¹-const l₁ c₂ c₃
-                          (get⁻¹-const l₁ c₁ c₂ p))) ⊚
-              get⁻¹-const l₂ b (proj₁ (get⁻¹-const l₁ c₁ c₂ p)))
-           (_≃_.to (∘⁻¹≃ b _ _) p))                                  ≡⟨ cong (λ f → _≃_.from (∘⁻¹≃ b _ _)
-                                                                                      (Σ-map (get⁻¹-const l₁ c₂ c₃ ⊚ get⁻¹-const l₁ c₁ c₂)
-                                                                                         (λ {p} → f {p})
-                                                                                         (_≃_.to (∘⁻¹≃ b _ _) p))) $
-                                                                        (implicit-extensionality ext λ p →
-                                                                         ⟨ext⟩ (get⁻¹-const-∘ l₂ _ (proj₁ (get⁻¹-const l₁ c₁ c₂ p)) _)) ⟩
-      _≃_.from (∘⁻¹≃ b _ _)
-        (Σ-map (get⁻¹-const l₁ c₂ c₃ ⊚ get⁻¹-const l₁ c₁ c₂)
-           (λ {p@(b , _)} →
-              get⁻¹-const l₂ b
-                (proj₁ (get⁻¹-const l₁ c₂ c₃
-                          (get⁻¹-const l₁ c₁ c₂ p))))
-           (_≃_.to (∘⁻¹≃ b _ _) p))                                  ≡⟨ cong (λ f → _≃_.from (∘⁻¹≃ b _ _)
-                                                                                      (Σ-map f (λ {p@(b , _)} → get⁻¹-const l₂ b (proj₁ (f p)))
-                                                                                         (_≃_.to (∘⁻¹≃ b _ _) p))) $
-                                                                        ⟨ext⟩ (get⁻¹-const-∘ l₁ _ _ _) ⟩∎
-      _≃_.from (∘⁻¹≃ b _ _)
-        (Σ-map (get⁻¹-const l₁ c₁ c₃)
-           (λ {p@(b , _)} →
-              get⁻¹-const l₂ b (proj₁ (get⁻¹-const l₁ c₁ c₃ p)))
-           (_≃_.to (∘⁻¹≃ b _ _) p))                                  ∎
-  }
+       _≃_.from (∘⁻¹≃ b _ _)
+         (Σ-map (get⁻¹-const l₁ c₂ c₃ ⊚ get⁻¹-const l₁ c₁ c₂)
+            (λ {p@(b , _)} →
+               get⁻¹-const l₂ (proj₁ (get⁻¹-const l₁ c₁ c₂ p))
+                 (proj₁ (get⁻¹-const l₁ c₂ c₃
+                           (get⁻¹-const l₁ c₁ c₂ p))) ⊚
+               get⁻¹-const l₂ b (proj₁ (get⁻¹-const l₁ c₁ c₂ p)))
+            (_≃_.to (∘⁻¹≃ b _ _) p))                                  ≡⟨ cong (λ f → _≃_.from (∘⁻¹≃ b _ _)
+                                                                                       (Σ-map (get⁻¹-const l₁ c₂ c₃ ⊚ get⁻¹-const l₁ c₁ c₂)
+                                                                                          (λ {p} → f {p})
+                                                                                          (_≃_.to (∘⁻¹≃ b _ _) p))) $
+                                                                         (implicit-extensionality ext λ p →
+                                                                          ⟨ext⟩ (get⁻¹-const-∘ l₂ _ (proj₁ (get⁻¹-const l₁ c₁ c₂ p)) _)) ⟩
+       _≃_.from (∘⁻¹≃ b _ _)
+         (Σ-map (get⁻¹-const l₁ c₂ c₃ ⊚ get⁻¹-const l₁ c₁ c₂)
+            (λ {p@(b , _)} →
+               get⁻¹-const l₂ b
+                 (proj₁ (get⁻¹-const l₁ c₂ c₃
+                           (get⁻¹-const l₁ c₁ c₂ p))))
+            (_≃_.to (∘⁻¹≃ b _ _) p))                                  ≡⟨ cong (λ f → _≃_.from (∘⁻¹≃ b _ _)
+                                                                                       (Σ-map f (λ {p@(b , _)} → get⁻¹-const l₂ b (proj₁ (f p)))
+                                                                                          (_≃_.to (∘⁻¹≃ b _ _) p))) $
+                                                                         ⟨ext⟩ (get⁻¹-const-∘ l₁ _ _ _) ⟩∎
+       _≃_.from (∘⁻¹≃ b _ _)
+         (Σ-map (get⁻¹-const l₁ c₁ c₃)
+            (λ {p@(b , _)} →
+               get⁻¹-const l₂ b (proj₁ (get⁻¹-const l₁ c₁ c₃ p)))
+            (_≃_.to (∘⁻¹≃ b _ _) p))                                  ∎)
+  )
   where
   open Lens
 
@@ -825,7 +899,7 @@ set-∘≡ :
   (l₁ : Lens B C) (l₂ : Lens A B) →
   Lens.set (l₁ ∘ l₂) a c ≡
   Lens.set l₂ a (Lens.set l₁ (Lens.get l₂ a) c)
-set-∘≡ (lens _ _ _) (lens _ _ _) = refl
+set-∘≡ (lens _ _ _ _) (lens _ _ _ _) = refl
 
 -- Composition for higher lenses, defined under the assumption that
 -- the resulting codomain is inhabited if it is merely inhabited.
