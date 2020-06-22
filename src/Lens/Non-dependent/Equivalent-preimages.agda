@@ -651,7 +651,7 @@ traditional→ l get-set-get get-set-set = _≃_.from Lens-as-Σ′
   ( get
   , (λ b₁ b₂ →
        Eq.↔→≃ (gg b₁ b₂) (gg b₂ b₁) (gg∘gg b₁ b₂) (gg∘gg b₂ b₁))
-  , (λ b₁ b₂ b₃ (a , get-a≡b₁) →
+  , (λ b₁ b₂ b₃ (a , _) →
        Σ-≡,≡→≡
          (set (set a b₂) b₃  ≡⟨ set-set a b₂ b₃ ⟩∎
           set a b₃           ∎)
