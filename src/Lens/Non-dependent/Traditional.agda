@@ -2382,14 +2382,14 @@ bi-invertible-but-not-coherent :
   ∃ λ (l : Lens A A) →
     let open Lens l in
     Is-bi-invertible l ×
-    ¬ (∀ a → get-set a (get a) ≡ cong get (set-get a))
+    ¬ (∀ a → cong get (set-get a) ≡ get-set a (get a))
 bi-invertible-but-not-coherent _ =
     𝕊¹
   , l
   , B.Has-quasi-inverse→Is-bi-invertible l
       (l⁻¹ , l∘l⁻¹≡id , l⁻¹∘l≡id)
-  , (((x : 𝕊¹) → proj₁ Circle.∃≢refl x ≡ refl)  ↔⟨ Eq.extensionality-isomorphism ext ⟩
-     proj₁ Circle.∃≢refl ≡ (λ _ → refl)         ↝⟨ proj₂ Circle.∃≢refl ⟩□
+  , (((x : 𝕊¹) → refl ≡ proj₁ Circle.∃≢refl x)  ↔⟨ Eq.extensionality-isomorphism ext ⟩
+     (λ _ → refl) ≡ proj₁ Circle.∃≢refl         ↝⟨ proj₂ Circle.∃≢refl ⊚ sym ⟩□
      ⊥                                          □)
   where
   open Lens
@@ -2480,11 +2480,11 @@ bi-invertible-with-same-getter-but-not-equal univ =
   , bi-inv
   , ((id , right-identity id) , (id , left-identity id))
   , refl
-  , (l ≡ id                                                      ↝⟨ (λ eq → subst (λ l → ∀ a → get-set l a (get l a) ≡
-                                                                                               cong (get l) (set-get l a))
+  , (l ≡ id                                                      ↝⟨ (λ eq → subst (λ l → ∀ a → cong (get l) (set-get l a) ≡
+                                                                                               get-set l a (get l a))
                                                                                   (sym eq)
                                                                                   (λ _ → refl)) ⟩
-     (∀ a → get-set l a (get l a) ≡ cong (get l) (set-get l a))  ↝⟨ not-coherent ⟩□
+     (∀ a → cong (get l) (set-get l a) ≡ get-set l a (get l a))  ↝⟨ not-coherent ⟩□
      ⊥                                                           □)
   where
   open Lens

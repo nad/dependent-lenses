@@ -140,32 +140,32 @@ record Lens (A : Set a) (B : Set b) : Set (lsuc (a ⊔ b)) where
   -- Traditional.bi-invertible-but-not-coherent), holds
   -- unconditionally for higher lenses.
 
-  get-set-get : ∀ a → get-set a (get a) ≡ cong get (set-get a)
+  get-set-get : ∀ a → cong get (set-get a) ≡ get-set a (get a)
   get-set-get a =
-    cong proj₂ (_≃_.right-inverse-of equiv _)                       ≡⟨ cong (cong proj₂) $ sym $ _≃_.left-right-lemma equiv _ ⟩
-    cong proj₂ (cong (_≃_.to equiv) (_≃_.left-inverse-of equiv _))  ≡⟨ cong-∘ _ _ (_≃_.left-inverse-of equiv _) ⟩∎
-    cong (proj₂ ⊚ _≃_.to equiv) (_≃_.left-inverse-of equiv _)       ∎
+    cong (proj₂ ⊚ _≃_.to equiv) (_≃_.left-inverse-of equiv _)       ≡⟨ sym $ cong-∘ _ _ (_≃_.left-inverse-of equiv _) ⟩
+    cong proj₂ (cong (_≃_.to equiv) (_≃_.left-inverse-of equiv _))  ≡⟨ cong (cong proj₂) $ _≃_.left-right-lemma equiv _ ⟩∎
+    cong proj₂ (_≃_.right-inverse-of equiv _)                       ∎
 
   -- Another coherence law.
 
   get-set-set :
     ∀ a b₁ b₂ →
-    trans (sym (cong get (set-set a b₁ b₂))) (get-set (set a b₁) b₂) ≡
-    get-set a b₂
+    cong get (set-set a b₁ b₂) ≡
+    trans (get-set (set a b₁) b₂) (sym (get-set a b₂))
   get-set-set a b₁ b₂ = elim₁
     (λ eq →
-       trans (sym (cong (proj₂ ⊚ _≃_.to equiv)
-                     (cong (λ p → _≃_.from equiv (proj₁ p , _)) eq)))
-         (cong proj₂ (_≃_.right-inverse-of equiv _)) ≡
-       cong proj₂ (_≃_.right-inverse-of equiv _))
-    (trans (sym (cong (proj₂ ⊚ _≃_.to equiv)
-                   (cong (λ p → _≃_.from equiv (proj₁ p , b₂))
-                      (refl {x = proj₁ (_≃_.to equiv a) , b₁}))))
-       (cong proj₂ (_≃_.right-inverse-of equiv _))                 ≡⟨⟩
+       cong (proj₂ ⊚ _≃_.to equiv)
+         (cong (λ p → _≃_.from equiv (proj₁ p , _)) eq) ≡
+       trans (cong proj₂ (_≃_.right-inverse-of equiv _))
+         (sym (cong proj₂ (_≃_.right-inverse-of equiv _))))
+    (cong (proj₂ ⊚ _≃_.to equiv)
+       (cong (λ p → _≃_.from equiv (proj₁ p , b₂))
+          (refl {x = proj₁ (_≃_.to equiv a) , b₁}))       ≡⟨⟩
 
-     trans refl (cong proj₂ (_≃_.right-inverse-of equiv _))        ≡⟨ trans-reflˡ (cong proj₂ (_≃_.right-inverse-of equiv _)) ⟩∎
+     refl                                                 ≡⟨ sym $ trans-symʳ (cong proj₂ (_≃_.right-inverse-of equiv _)) ⟩∎
 
-     cong proj₂ (_≃_.right-inverse-of equiv _)                     ∎)
+     trans (cong proj₂ (_≃_.right-inverse-of equiv _))
+       (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))  ∎)
     (_≃_.right-inverse-of equiv _)
 
 ------------------------------------------------------------------------

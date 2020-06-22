@@ -644,8 +644,8 @@ traditional→ :
   let open Traditional.Lens l in
   (∀ a → cong get (set-get a) ≡ get-set a (get a)) →
   (∀ a b₁ b₂ →
-   trans (sym (cong get (set-set a b₁ b₂))) (get-set (set a b₁) b₂) ≡
-   get-set a b₂) →
+   cong get (set-set a b₁ b₂) ≡
+   trans (get-set (set a b₁) b₂) (sym (get-set a b₂))) →
   Lens A B
 traditional→ l get-set-get get-set-set = _≃_.from Lens-as-Σ′
   ( get
@@ -662,12 +662,30 @@ traditional→ l get-set-get get-set-set = _≃_.from Lens-as-Σ′
             (get-set (set a b₂) b₃)                   ≡⟨ subst-trans-sym {y≡x = cong get (set-set a b₂ b₃)} ⟩
 
           trans (sym (cong get (set-set a b₂ b₃)))
-            (get-set (set a b₂) b₃)                   ≡⟨ get-set-set _ _ _ ⟩∎
+            (get-set (set a b₂) b₃)                   ≡⟨ get-set-set′ _ _ _ ⟩∎
 
           get-set a b₃                                ∎))
   )
   where
   open Traditional.Lens l
+
+  get-set-set′ :
+    ∀ a b₁ b₂ →
+    trans (sym (cong get (set-set a b₁ b₂))) (get-set (set a b₁) b₂) ≡
+    get-set a b₂
+  get-set-set′ a b₁ b₂ =
+    trans (sym (cong get (set-set a b₁ b₂))) (get-set (set a b₁) b₂)  ≡⟨ cong (λ eq → trans (sym eq) (get-set _ _)) $
+                                                                         get-set-set _ _ _ ⟩
+    trans (sym (trans (get-set (set a b₁) b₂) (sym (get-set a b₂))))
+      (get-set (set a b₁) b₂)                                         ≡⟨ cong (flip trans (get-set _ _)) $
+                                                                         sym-trans _ (sym (get-set _ _)) ⟩
+    trans (trans (sym (sym (get-set a b₂)))
+             (sym (get-set (set a b₁) b₂)))
+      (get-set (set a b₁) b₂)                                         ≡⟨ trans-[trans-sym]- _ (get-set _ _) ⟩
+
+    sym (sym (get-set a b₂))                                          ≡⟨ sym-sym (get-set _ _) ⟩∎
+
+    get-set a b₂                                                      ∎
 
   gg : ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂
   gg b₁ b₂ (a , _) = set a b₂ , get-set a b₂
@@ -696,7 +714,7 @@ traditional→ l get-set-get get-set-set = _≃_.from Lens-as-Σ′
             (trans (sym (cong get (set-set a b₁ b₂)))
                (get-set (set a b₁) b₂)))                      ≡⟨ cong₂ (λ p q → trans (sym p) (trans (cong (get ⊚ set a) get-a≡b₂) q))
                                                                    (get-set-get _)
-                                                                   (get-set-set _ _ _) ⟩
+                                                                   (get-set-set′ _ _ _) ⟩
        trans (sym (get-set a (get a)))
          (trans (cong (get ⊚ set a) get-a≡b₂)
             (get-set a b₂))                                   ≡⟨ cong (λ eq → trans (sym (eq (get a)))
