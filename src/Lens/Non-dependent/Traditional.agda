@@ -318,19 +318,6 @@ lens-preserves-h-level-of-domain n hA =
   A′ = _
 
 ------------------------------------------------------------------------
--- An existence result
-
--- There is, in general, no lens for the first projection from a
--- Σ-type.
-
-no-first-projection-lens :
-  ∃ λ (A : Set a) → ∃ λ (B : A → Set b) →
-    ¬ Lens (Σ A B) A
-no-first-projection-lens =
-  Lens.Non-dependent.no-first-projection-lens
-    Lens contractible-to-contractible
-
-------------------------------------------------------------------------
 -- Some equality characterisation lemmas
 
 abstract
@@ -990,6 +977,19 @@ equality-characterisation-for-sets
 
   B-set : A → Is-set B
   B-set a = h-level-respects-lens-from-inhabited 2 l₁ a A-set
+
+------------------------------------------------------------------------
+-- An existence result
+
+-- There is, in general, no lens for the first projection from a
+-- Σ-type.
+
+no-first-projection-lens :
+  ∃ λ (A : Set a) → ∃ λ (B : A → Set b) →
+    ¬ Lens (Σ A B) A
+no-first-projection-lens =
+  Lens.Non-dependent.no-first-projection-lens
+    Lens contractible-to-contractible
 
 ------------------------------------------------------------------------
 -- More lens isomorphisms
