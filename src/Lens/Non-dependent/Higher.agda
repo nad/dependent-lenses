@@ -1308,6 +1308,9 @@ remainder≃get⁻¹ l b = Eq.↔→≃
   open Lens l
 
 -- A corollary: Lens.get l ⁻¹_ is constant (up to equivalence).
+--
+-- Paolo Capriotti discusses this kind of property
+-- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
 
 get⁻¹-constant :
   (l : Lens A B) (b₁ b₂ : B) → Lens.get l ⁻¹ b₁ ≃ Lens.get l ⁻¹ b₂
@@ -1317,6 +1320,9 @@ get⁻¹-constant l b₁ b₂ =
   Lens.get l ⁻¹ b₂  □
 
 -- The previous lemma satisfies some coherence properties.
+--
+-- The first and third properties are discussed by Paolo Capriotti
+-- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
 
 get⁻¹-constant-∘ :
   (l : Lens A B) (b₁ b₂ b₃ : B) (p : Lens.get l ⁻¹ b₁) →

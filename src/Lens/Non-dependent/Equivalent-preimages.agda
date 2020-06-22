@@ -43,7 +43,10 @@ private
 -- Lenses defined in terms of a getter, equivalences between the
 -- getter's "preimages", and a coherence property.
 --
--- This definition is based on a suggestion from Andrea Vezzosi.
+-- This definition is based on a suggestion from Andrea Vezzosi. Note
+-- that the fields and some derived properties correspond to things
+-- discussed by Paolo Capriotti in the context of his higher lenses
+-- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
 
 record Lens (A : Set a) (B : Set b) : Set (a ⊔ b) where
   no-eta-equality
