@@ -400,7 +400,7 @@ equality-characterisation {l₁ = l₁} {l₂ = l₂} =
        (⟨ext⟩ g) (get⁻¹-const l₁) b₁ b₂ p ≡
      get⁻¹-const l₂ b₁ b₂ p)                                    □
 
--- An equality characterisation lemma for lenses between sets.
+-- An equality characterisation lemma for lenses from sets.
 
 equality-characterisation-for-sets :
   let open Lens in
