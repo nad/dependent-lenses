@@ -32,7 +32,8 @@ open import Preimage equality-with-J using (_⁻¹_)
 open import Surjection equality-with-J using (_↠_)
 open import Univalence-axiom equality-with-J
 
-import Lens.Non-dependent eq as Non-dependent
+open import Lens.Non-dependent eq as Non-dependent
+  hiding (no-first-projection-lens)
 import Lens.Non-dependent.Traditional eq as Traditional
 
 private
@@ -173,6 +174,17 @@ record Lens (A : Set a) (B : Set b) : Set (lsuc (a ⊔ b)) where
      trans (cong proj₂ (_≃_.right-inverse-of equiv _))
        (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))  ∎)
     (_≃_.right-inverse-of equiv _)
+
+instance
+
+  -- Higher lenses have getters and setters.
+
+  has-getter-and-setter :
+    Has-getter-and-setter (Lens {a = a} {b = b})
+  has-getter-and-setter = record
+    { get = Lens.get
+    ; set = Lens.set
+    }
 
 ------------------------------------------------------------------------
 -- Simple definitions related to lenses
@@ -1037,6 +1049,17 @@ Lens↠Traditional-lens {A = A} {B = B} bc A-set = record
   ; right-inverse-of = Lens↔Traditional-lens.to∘from A-set bc
   }
 
+-- The split surjection above preserves getters and setters.
+
+Lens↠Traditional-lens-preserves-getters-and-setters :
+  {A : Set a}
+  (b : Block "conversion")
+  (s : Is-set A) →
+  Preserves-getters-and-setters-⇔ A B
+    (_↠_.logical-equivalence (Lens↠Traditional-lens b s))
+Lens↠Traditional-lens-preserves-getters-and-setters ⊠ _ =
+  (λ _ → refl _ , refl _) , (λ _ → refl _ , refl _)
+
 -- If the domain A is a set, then Traditional.Lens A B and Lens A B
 -- are isomorphic (assuming univalence).
 
@@ -1048,6 +1071,18 @@ Lens↔Traditional-lens :
   Lens A B ↔ Traditional.Lens A B
 Lens↔Traditional-lens bc univ A-set =
   Lens↔Traditional-lens.iso A-set bc univ
+
+-- The isomorphism preserves getters and setters.
+
+Lens↔Traditional-lens-preserves-getters-and-setters :
+  {A : Set a} {B : Set b}
+  (bc : Block "conversion")
+  (univ : Univalence (a ⊔ b))
+  (s : Is-set A) →
+  Preserves-getters-and-setters-⇔ A B
+    (_↔_.logical-equivalence (Lens↔Traditional-lens bc univ s))
+Lens↔Traditional-lens-preserves-getters-and-setters bc _ =
+  Lens↠Traditional-lens-preserves-getters-and-setters bc
 
 -- If the codomain B is an inhabited set, then Lens A B and
 -- Traditional.Lens A B are logically equivalent.
@@ -1092,6 +1127,22 @@ Lens⇔Traditional-lens {B = B} {A = A} B-set b₀ = record
        })
     where
     open Traditional.Lens l
+
+-- The logical equivalence preserves getters and setters.
+
+Lens⇔Traditional-lens-preserves-getters-and-setters :
+  {B : Set b}
+  (s : Is-set B)
+  (b₀ : B) →
+  Preserves-getters-and-setters-⇔ A B (Lens⇔Traditional-lens s b₀)
+Lens⇔Traditional-lens-preserves-getters-and-setters _ b₀ =
+    (λ _ → refl _ , refl _)
+  , (λ l → refl _
+         , ⟨ext⟩ λ a → ⟨ext⟩ λ b →
+           set l (set l a b₀) b  ≡⟨ set-set l _ _ _ ⟩∎
+           set l a b             ∎)
+  where
+  open Traditional.Lens
 
 ------------------------------------------------------------------------
 -- Some results related to h-levels

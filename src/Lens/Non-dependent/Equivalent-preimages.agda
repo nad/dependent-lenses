@@ -27,6 +27,7 @@ open import Preimage equality-with-J using (_⁻¹_)
 open import Surjection equality-with-J using (_↠_)
 open import Univalence-axiom equality-with-J
 
+open import Lens.Non-dependent eq
 import Lens.Non-dependent.Higher      eq as Higher
 import Lens.Non-dependent.Traditional eq as Traditional
 
@@ -138,6 +139,17 @@ record Lens (A : Set a) (B : Set b) : Set (a ⊔ b) where
     ; get-set = get-set
     ; set-get = set-get
     ; set-set = set-set
+    }
+
+instance
+
+  -- The lenses defined above have getters and setters.
+
+  has-getter-and-setter :
+    Has-getter-and-setter (Lens {a = a} {b = b})
+  has-getter-and-setter = record
+    { get = Lens.get
+    ; set = Lens.set
     }
 
 -- The record type above is equivalent to a nested Σ-type.
@@ -513,15 +525,10 @@ higher→ l@(Higher.⟨ _ , _ , _ ⟩) = _≃_.from Lens-as-Σ′
 
 -- The conversion preserves getters and setters.
 
-get-higher→≡get :
-  (l : Higher.Lens A B) →
-  Lens.get (higher→ l) a ≡ Higher.Lens.get l a
-get-higher→≡get Higher.⟨ _ , _ , _ ⟩ = refl _
-
-set-higher→≡set :
-  (l : Higher.Lens A B) →
-  Lens.set (higher→ l) a b ≡ Higher.Lens.set l a b
-set-higher→≡set Higher.⟨ _ , _ , _ ⟩ = refl _
+higher→-preserves-getters-and-setters :
+  Preserves-getters-and-setters-→ A B higher→
+higher→-preserves-getters-and-setters Higher.⟨ _ , _ , _ ⟩ =
+  refl _ , refl _
 
 -- A lens of the kind defined above can be converted to a higher one
 -- if the codomain is inhabited when it is merely inhabited.
@@ -543,64 +550,68 @@ set-higher→≡set Higher.⟨ _ , _ , _ ⟩ = refl _
 
 -- The conversion preserves getters and setters.
 
-get-→higher≡get :
-  ∀ ∥B∥→B (l : Lens A B) →
-  Higher.Lens.get (→higher ∥B∥→B l) a ≡ Lens.get l a
-get-→higher≡get _ (lens _ _ _ _) = refl _
+→higher-preserves-getters-and-setters :
+  {B : Set b}
+  (∥B∥→B : ∥ B ∥ → B) →
+  Preserves-getters-and-setters-→ A B (→higher ∥B∥→B)
+→higher-preserves-getters-and-setters {A = A} ∥B∥→B l@(lens _ _ _ _) =
+    refl _
 
-set-→higher≡set :
-  ∀ ∥B∥→B (l : Lens A B) →
-  Higher.Lens.set (→higher ∥B∥→B l) a b ≡ Lens.set l a b
-set-→higher≡set {A = A} {a = a} {b = b} ∥B∥→B l@(lens _ _ _ _) =
-  _≃_.to-from (Higher.Lens.equiv (→higher ∥B∥→B l)) $ cong₂ _,_
-    (∣ get a′ ∣ , get⁻¹-const (get a′) (∥B∥→B ∣ get a′ ∣) (a′ , refl _)  ≡⟨ Σ-≡,≡→≡ (PT.truncation-is-proposition _ _)
-                                                                              (
-         subst (λ b → get ⁻¹ ∥B∥→B b)
-           (PT.truncation-is-proposition _ _)
-           (get⁻¹-const (get a′) (∥B∥→B ∣ get a′ ∣) (a′ , refl _))             ≡⟨ elim¹
-                                                                                    (λ {f} _ →
-                                                                                       subst (λ b → get ⁻¹ f b)
-                                                                                         (PT.truncation-is-proposition _ _)
-                                                                                         (get⁻¹-const (get a′) (f ∣ get a′ ∣) (a′ , refl _)) ≡
-                                                                                       get⁻¹-const (get a) (f ∣ get a ∣) (a , refl _))
-                                                                                    (
-             subst (λ _ → get ⁻¹ ∥B∥→B ∣ b ∣)
-               (PT.truncation-is-proposition _ _)
-               (get⁻¹-const (get a′) (∥B∥→B ∣ b ∣) (a′ , refl _))                    ≡⟨ subst-const (PT.truncation-is-proposition _ _) ⟩
+  , ⟨ext⟩ λ a → ⟨ext⟩ λ b →
 
-             get⁻¹-const (get a′) (∥B∥→B ∣ b ∣) (a′ , refl _)                        ≡⟨ sym $ get⁻¹-const-∘ _ _ _ _ ⟩
+    let a′ = set a b in
 
-             get⁻¹-const (get a) (∥B∥→B ∣ b ∣)
-               (get⁻¹-const (get a′) (get a) (a′ , refl _))                          ≡⟨ cong (get⁻¹-const (get a) (∥B∥→B ∣ b ∣)) $
-                                                                                        elim¹
-                                                                                          (λ {b} eq → get⁻¹-const (get a′) (get a) (a′ , refl _) ≡
-                                                                                                      get⁻¹-const b        (get a) (a′ , eq))
-                                                                                          (refl _)
-                                                                                          (get-set a b) ⟩
-             get⁻¹-const (get a) (∥B∥→B ∣ b ∣)
-               (get⁻¹-const b (get a) (set a b , get-set a b))                       ≡⟨⟩
+    _≃_.to-from (Higher.Lens.equiv (→higher ∥B∥→B l)) $ cong₂ _,_
 
-             get⁻¹-const (get a) (∥B∥→B ∣ b ∣)
-               (get⁻¹-const b (get a)
-                  (get⁻¹-const (get a) b (a , refl _)))                              ≡⟨ cong (λ p → get⁻¹-const (get a) (∥B∥→B ∣ b ∣)
-                                                                                                      (get⁻¹-const b (get a) p)) $
-                                                                                        get⁻¹-const-inverse _ _ _ ⟩
-             get⁻¹-const (get a) (∥B∥→B ∣ b ∣)
-               (get⁻¹-const b (get a)
-                  (get⁻¹-const⁻¹ b (get a) (a , refl _)))                            ≡⟨ cong (get⁻¹-const (get a) (∥B∥→B ∣ b ∣)) $
-                                                                                        _≃_.right-inverse-of (get⁻¹-constant _ _) _ ⟩∎
-             get⁻¹-const (get a) (∥B∥→B ∣ b ∣) (a , refl _)                          ∎)
-                                                                                    (⟨ext⟩ λ _ → cong ∥B∥→B $ PT.truncation-is-proposition _ _) ⟩∎
-         get⁻¹-const (get a) (∥B∥→B ∣ get a ∣) (a , refl _)                    ∎) ⟩∎
+      (∣ get a′ ∣ ,
+       get⁻¹-const (get a′) (∥B∥→B ∣ get a′ ∣) (a′ , refl _)          ≡⟨ Σ-≡,≡→≡ (PT.truncation-is-proposition _ _)
+                                                                           (
+           subst (λ b → get ⁻¹ ∥B∥→B b)
+             (PT.truncation-is-proposition _ _)
+             (get⁻¹-const (get a′) (∥B∥→B ∣ get a′ ∣) (a′ , refl _))        ≡⟨ elim¹
+                                                                                 (λ {f} _ →
+                                                                                    subst (λ b → get ⁻¹ f b)
+                                                                                      (PT.truncation-is-proposition _ _)
+                                                                                      (get⁻¹-const (get a′) (f ∣ get a′ ∣) (a′ , refl _)) ≡
+                                                                                    get⁻¹-const (get a) (f ∣ get a ∣) (a , refl _))
+                                                                                 (
+               subst (λ _ → get ⁻¹ ∥B∥→B ∣ b ∣)
+                 (PT.truncation-is-proposition _ _)
+                 (get⁻¹-const (get a′) (∥B∥→B ∣ b ∣) (a′ , refl _))               ≡⟨ subst-const (PT.truncation-is-proposition _ _) ⟩
 
-     ∣ get a ∣ , get⁻¹-const (get a) (∥B∥→B ∣ get a ∣) (a , refl _)      ∎)
-    (get (set a b)  ≡⟨ get-set a b ⟩∎
-     b              ∎)
+               get⁻¹-const (get a′) (∥B∥→B ∣ b ∣) (a′ , refl _)                   ≡⟨ sym $ get⁻¹-const-∘ _ _ _ _ ⟩
+
+               get⁻¹-const (get a) (∥B∥→B ∣ b ∣)
+                 (get⁻¹-const (get a′) (get a) (a′ , refl _))                     ≡⟨ cong (get⁻¹-const (get a) (∥B∥→B ∣ b ∣)) $
+                                                                                     elim¹
+                                                                                       (λ {b} eq → get⁻¹-const (get a′) (get a) (a′ , refl _) ≡
+                                                                                                   get⁻¹-const b        (get a) (a′ , eq))
+                                                                                       (refl _)
+                                                                                       (get-set a b) ⟩
+               get⁻¹-const (get a) (∥B∥→B ∣ b ∣)
+                 (get⁻¹-const b (get a) (set a b , get-set a b))                  ≡⟨⟩
+
+               get⁻¹-const (get a) (∥B∥→B ∣ b ∣)
+                 (get⁻¹-const b (get a)
+                    (get⁻¹-const (get a) b (a , refl _)))                         ≡⟨ cong (λ p → get⁻¹-const (get a) (∥B∥→B ∣ b ∣)
+                                                                                                   (get⁻¹-const b (get a) p)) $
+                                                                                     get⁻¹-const-inverse _ _ _ ⟩
+               get⁻¹-const (get a) (∥B∥→B ∣ b ∣)
+                 (get⁻¹-const b (get a)
+                    (get⁻¹-const⁻¹ b (get a) (a , refl _)))                       ≡⟨ cong (get⁻¹-const (get a) (∥B∥→B ∣ b ∣)) $
+                                                                                     _≃_.right-inverse-of (get⁻¹-constant _ _) _ ⟩∎
+               get⁻¹-const (get a) (∥B∥→B ∣ b ∣) (a , refl _)                     ∎)
+                                                                                 (⟨ext⟩ λ _ → cong ∥B∥→B $ PT.truncation-is-proposition _ _) ⟩∎
+           get⁻¹-const (get a) (∥B∥→B ∣ get a ∣) (a , refl _)               ∎) ⟩∎
+
+       ∣ get a ∣ ,
+       get⁻¹-const (get a) (∥B∥→B ∣ get a ∣) (a , refl _)             ∎)
+
+      (get (set a b)  ≡⟨ get-set a b ⟩∎
+       b              ∎)
+
   where
   open Lens l
-
-  a′ : A
-  a′ = set a b
 
 -- There is a split surjection from Lens A B to Higher.Lens A B if B
 -- is inhabited when it is merely inhabited (assuming univalence).
@@ -619,12 +630,24 @@ set-→higher≡set {A = A} {a = a} {b = b} ∥B∥→B l@(lens _ _ _ _) =
       Higher.lenses-equal-if-setters-equal
         univ _ _
         (λ _ → ∥B∥→B)
-        (set (→higher ∥B∥→B (higher→ l))  ≡⟨ (⟨ext⟩ λ _ → ⟨ext⟩ λ _ → set-→higher≡set ∥B∥→B (higher→ l)) ⟩
-         Lens.set (higher→ l)             ≡⟨ (⟨ext⟩ λ _ → ⟨ext⟩ λ _ → set-higher→≡set l) ⟩∎
+        (set (→higher ∥B∥→B (higher→ l))  ≡⟨ proj₂ $ →higher-preserves-getters-and-setters ∥B∥→B (higher→ l) ⟩
+         Lens.set (higher→ l)             ≡⟨ proj₂ $ higher→-preserves-getters-and-setters l ⟩∎
          set l                            ∎)
   }
   where
   open Higher.Lens
+
+-- The split surjection preserves getters and setters.
+
+↠higher-preserves-getters-and-setters :
+  {A : Set a} {B : Set b}
+  (univ : Univalence (a ⊔ b))
+  (∥B∥→B : ∥ B ∥ → B) →
+  Preserves-getters-and-setters-⇔ A B
+    (_↠_.logical-equivalence (↠higher univ ∥B∥→B))
+↠higher-preserves-getters-and-setters _ ∥B∥→B =
+    →higher-preserves-getters-and-setters ∥B∥→B
+  , higher→-preserves-getters-and-setters
 
 -- If B is inhabited when it is merely inhabited and A has positive
 -- h-level n, then Higher.Lens A B also has h-level n (assuming
@@ -788,6 +811,21 @@ traditional→ l get-set-get get-set-set = _≃_.from Lens-as-Σ′
                (cong (get ⊚ set a) get-a≡b₂))
         (sym (cong get (set-set a b₁ b₂)))                        ∎
 
+-- The conversion preserves getters and setters.
+
+traditional→-preserves-getters-and-setters :
+  {A : Set a} {B : Set b}
+  (l : Traditional.Lens A B) →
+  let open Traditional.Lens l in
+  (get-set-get : ∀ a → cong get (set-get a) ≡ get-set a (get a))
+  (get-set-set :
+     ∀ a b₁ b₂ →
+     cong get (set-set a b₁ b₂) ≡
+     trans (get-set (set a b₁) b₂) (sym (get-set a b₂))) →
+  Same-getter-and-setter (traditional→ l get-set-get get-set-set) l
+traditional→-preserves-getters-and-setters _ _ _ =
+  refl _ , refl _
+
 -- If A is a set, then Traditional.Lens A B is equivalent to Lens A B.
 
 traditional≃ :
@@ -835,6 +873,17 @@ traditional≃ {A = A} {B = B} A-set = Eq.↔→≃
   B-set : Traditional.Lens A B → A → Is-set B
   B-set l a =
     Traditional.h-level-respects-lens-from-inhabited 2 l a A-set
+
+-- The equivalence preserves getters and setters.
+
+traditional≃-preserves-getters-and-setters :
+  {A : Set a}
+  (s : Is-set A) →
+  Preserves-getters-and-setters-⇔ A B
+    (_≃_.logical-equivalence (traditional≃ s))
+traditional≃-preserves-getters-and-setters s =
+    (λ _ → refl _ , refl _)
+  , (λ _ → refl _ , refl _)
 
 ------------------------------------------------------------------------
 -- Composition
@@ -974,17 +1023,20 @@ set-⊚≡ :
   Higher.Lens.set (⟨ ∥C∥→C ⟩ l₁ ⊚ l₂) a c ≡
   Higher.Lens.set l₂ a (Higher.Lens.set l₁ (Higher.Lens.get l₂ a) c)
 set-⊚≡ {a = a} {c = c} ∥C∥→C l₁ l₂ =
-  set (⟨ ∥C∥→C ⟩ l₁ ⊚ l₂) a c                                   ≡⟨ set-→higher≡set ∥C∥→C (higher→ l₁ ∘ higher→ l₂) ⟩
+  set (⟨ ∥C∥→C ⟩ l₁ ⊚ l₂) a c                                   ≡⟨ cong (λ f → f a c) $ proj₂ $
+                                                                   →higher-preserves-getters-and-setters ∥C∥→C (higher→ l₁ ∘ higher→ l₂) ⟩
 
   Lens.set (higher→ l₁ ∘ higher→ l₂) a c                        ≡⟨ set-∘≡ (higher→ l₁) (higher→ l₂) ⟩
 
   Lens.set (higher→ l₂) a
-    (Lens.set (higher→ l₁) (Lens.get (higher→ l₂) a) c)         ≡⟨ set-higher→≡set l₂ ⟩
+    (Lens.set (higher→ l₁) (Lens.get (higher→ l₂) a) c)         ≡⟨ cong (λ f → Lens.set (higher→ l₂) a (Lens.set (higher→ l₁) (f a) c)) $ proj₁ $
+                                                                   higher→-preserves-getters-and-setters l₂ ⟩
 
-  set l₂ a (Lens.set (higher→ l₁) (Lens.get (higher→ l₂) a) c)  ≡⟨ cong (set l₂ a) $ set-higher→≡set l₁ ⟩
+  Lens.set (higher→ l₂) a (Lens.set (higher→ l₁) (get l₂ a) c)  ≡⟨ cong (λ f → Lens.set (higher→ l₂) a (f (get l₂ a) c)) $ proj₂ $
+                                                                   higher→-preserves-getters-and-setters l₁ ⟩
 
-  set l₂ a (set l₁ (Lens.get (higher→ l₂) a) c)                 ≡⟨ cong (λ a′ → set l₂ a (set l₁ a′ c)) $ get-higher→≡get l₂ ⟩∎
-
+  Lens.set (higher→ l₂) a (set l₁ (get l₂ a) c)                 ≡⟨ cong (λ f → f a (set l₁ (get l₂ a) c)) $ proj₂ $
+                                                                   higher→-preserves-getters-and-setters l₂ ⟩∎
   set l₂ a (set l₁ (get l₂ a) c)                                ∎
   where
   open Higher.Lens

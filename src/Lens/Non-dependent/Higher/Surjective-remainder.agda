@@ -23,6 +23,7 @@ open import H-level equality-with-J
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq
 
+open import Lens.Non-dependent eq
 import Lens.Non-dependent.Higher eq as Higher
 
 private
@@ -41,6 +42,18 @@ Lens {a = a} {b = b} A B =
   ∃ λ (remainder : A → R) →
     Is-equivalence (λ a → remainder a , get a) ×
     Surjective remainder
+
+instance
+
+  -- The lenses defined above have getters and setters.
+
+  has-getter-and-setter :
+    Has-getter-and-setter (Lens {a = a} {b = b})
+  has-getter-and-setter = record
+    { get = λ (get , _) → get
+    ; set = λ (_ , _ , rem , equiv , _) a b →
+              _≃_.from Eq.⟨ _ , equiv ⟩ (rem a , b)
+    }
 
 -- Higher.Lens A B is isomorphic to Lens A B.
 
@@ -102,3 +115,20 @@ Higher-lens↔Lens {A = A} {B = B} =
     (∃ λ { (_ , r′) → r′ ≡ r })  ↝⟨ (Σ-cong ×-comm λ _ → F.id) ⟩
     (∃ λ { (r′ , _) → r′ ≡ r })  ↝⟨ (inverse $ Σ-cong Eq.⟨ _ , eq ⟩ λ _ → F.id) ⟩□
     (∃ λ a → remainder a ≡ r)    □
+
+-- The isomorphism preserves getters and setters.
+
+Higher-lens↔Lens-preserves-getters-and-setters :
+  Preserves-getters-and-setters-⇔ A B
+    (_↔_.logical-equivalence Higher-lens↔Lens)
+Higher-lens↔Lens-preserves-getters-and-setters =
+    (λ _ → refl _ , refl _)
+  , (λ l@(get , _ , rem , is-equiv , _) →
+       let equiv = Eq.⟨ _ , is-equiv ⟩ in
+         refl _
+       , ⟨ext⟩ λ a → ⟨ext⟩ λ b →
+         _≃_.to-from (Higher.Lens.equiv (_↔_.from Higher-lens↔Lens l))
+           (_≃_.to equiv (_≃_.from equiv (rem a , b))  ≡⟨ _≃_.right-inverse-of equiv _ ⟩∎
+            rem a , b                                  ∎))
+  where
+  open Higher.Lens

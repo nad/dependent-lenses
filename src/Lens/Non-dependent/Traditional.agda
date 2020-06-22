@@ -27,7 +27,8 @@ open import H-level.Closure equality-with-J
 open import Surjection equality-with-J as Surjection using (_↠_)
 open import Univalence-axiom equality-with-J
 
-import Lens.Non-dependent eq as Non-dependent
+open import Lens.Non-dependent eq as Non-dependent
+  hiding (no-first-projection-lens)
 
 private
   variable
@@ -55,6 +56,17 @@ record Lens (A : Set a) (B : Set b) : Set (a ⊔ b) where
 
   modify : (B → B) → A → A
   modify f x = set x (f (get x))
+
+instance
+
+  -- Traditional lenses have getters and setters.
+
+  has-getter-and-setter :
+    Has-getter-and-setter (Lens {a = a} {b = b})
+  has-getter-and-setter = record
+    { get = Lens.get
+    ; set = Lens.set
+    }
 
 private
   variable

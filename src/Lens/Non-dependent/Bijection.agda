@@ -23,6 +23,7 @@ open import H-level.Truncation.Propositional eq
 open import Surjection equality-with-J using (_↠_)
 open import Univalence-axiom equality-with-J
 
+open import Lens.Non-dependent eq
 import Lens.Non-dependent.Higher      eq as Higher
 import Lens.Non-dependent.Traditional eq as Traditional
 
@@ -39,6 +40,17 @@ private
 Lens : Set a → Set b → Set (lsuc (a ⊔ b))
 Lens {a = a} {b = b} A B =
   ∃ λ (R : Set (a ⊔ b)) → A ↔ (R × B)
+
+instance
+
+  -- The lenses defined above have getters and setters.
+
+  has-getter-and-setter :
+    Has-getter-and-setter (Lens {a = a} {b = b})
+  has-getter-and-setter = record
+    { get = λ (_ , bij) a → proj₂ (_↔_.to bij a)
+    ; set = λ (_ , bij) a b → _↔_.from bij (proj₁ (_↔_.to bij a) , b)
+    }
 
 -- Lens ⊥ ⊥ is isomorphic to Set something.
 
@@ -101,3 +113,15 @@ Lens↠Higher-lens {A = A} {B} univ = record
     ⊥                  ∎
     where
     open _↠_ ⊤↠Set
+
+-- The split surjection Lens↠Higher-lens preserves getters and
+-- setters.
+
+Lens↠Higher-lens-preserves-getters-and-setters :
+  {A : Set a} {B : Set b}
+  (univ : Univalence (a ⊔ b)) →
+  Preserves-getters-and-setters-⇔ A B
+    (_↠_.logical-equivalence (Lens↠Higher-lens univ))
+Lens↠Higher-lens-preserves-getters-and-setters univ =
+    (λ _ → refl _ , refl _)
+  , (λ _ → refl _ , refl _)

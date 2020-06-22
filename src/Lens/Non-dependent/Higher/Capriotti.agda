@@ -24,6 +24,7 @@ open import H-level.Truncation.Propositional eq
 open import Preimage equality-with-J
 open import Univalence-axiom equality-with-J
 
+open import Lens.Non-dependent eq
 import Lens.Non-dependent.Higher      eq as Higher
 import Lens.Non-dependent.Traditional eq as Traditional
 
@@ -31,8 +32,11 @@ private
   variable
     a b : Level
 
--- Paolo Capriotti seems to have been first to describe a notion of
--- higher lens
+------------------------------------------------------------------------
+-- The lens type family
+
+-- Higher lenses, as presented by Paolo Capriotti, who seems to have
+-- been first to describe a notion of higher lens
 -- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
 
 Lens : Set a → Set b → Set (lsuc (a ⊔ b))
@@ -41,10 +45,59 @@ Lens {a = a} A B =
   ∃ λ (H : Pow a ∥ B ∥) →
     (g ⁻¹_) ≡ H ∘ ∣_∣
 
+-- Some derived definitions.
+
+module Lens {A : Set a} {B : Set b} (l : Lens A B) where
+
+  -- A getter.
+
+  get : A → B
+  get = proj₁ l
+
+  -- A predicate.
+
+  H : Pow a ∥ B ∥
+  H = proj₁ (proj₂ l)
+
+  -- An equality.
+
+  get⁻¹-≡ : (get ⁻¹_) ≡ H ∘ ∣_∣
+  get⁻¹-≡ = proj₂ (proj₂ l)
+
+  -- A setter.
+  --
+  -- This definition is based on Paolo Capriotti's.
+
+  set : A → B → A
+  set a b =                  $⟨ truncation-is-proposition ∣ get a ∣ ∣ b ∣ ⟩
+    ∣ get a ∣ ≡ ∣ b ∣        ↝⟨ cong H ⟩
+    H ∣ get a ∣ ≡ H ∣ b ∣    ↝⟨ subst (λ f → f (get a) ≡ f b) (sym get⁻¹-≡) ⟩
+    get ⁻¹ get a ≡ get ⁻¹ b  ↝⟨ ≡⇒≃ ⟩
+    get ⁻¹ get a ≃ get ⁻¹ b  ↝⟨ flip _≃_.to (a , refl _) ⟩
+    get ⁻¹ b                 ↝⟨ proj₁ ⟩□
+    A                        □
+
+instance
+
+  -- The lenses defined above have getters and setters.
+
+  has-getter-and-setter :
+    Has-getter-and-setter (Lens {a = a} {b = b})
+  has-getter-and-setter = record
+    { get = Lens.get
+    ; set = Lens.set
+    }
+
+------------------------------------------------------------------------
+-- Conversions between different kinds of lenses
+
 -- Lens A B is isomorphic to Higher.Lens A B (assuming univalence).
 --
--- (This proof was simplified following a suggestion by Paolo
--- Capriotti.)
+-- This proof was simplified following a suggestion by Paolo
+-- Capriotti.
+--
+-- I have not proved that this isomorphism preserves getters and
+-- setters.
 
 Lens↔Higher-lens :
   {A : Set a} {B : Set b} →
