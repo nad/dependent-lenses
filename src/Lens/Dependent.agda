@@ -39,7 +39,7 @@ open import H-level.Truncation.Propositional equality-with-paths
 open import Surjection equality-with-J using (module _↠_)
 open import Univalence-axiom equality-with-J
 
-import Lens.Non-dependent.Higher as ND
+import Lens.Non-dependent.Higher equality-with-paths as ND
 
 private
   variable

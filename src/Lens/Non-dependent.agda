@@ -4,13 +4,17 @@
 
 {-# OPTIONS --cubical --safe #-}
 
-module Lens.Non-dependent where
+import Equality.Path as P
 
-open import Equality.Propositional.Cubical
+module Lens.Non-dependent
+  {e⁺} (eq : ∀ {a p} → P.Equality-with-paths a p e⁺) where
+
+open P.Derived-definitions-and-properties eq
+
 open import Prelude
 
 open import Bijection equality-with-J as Bij using (module _↔_)
-open import Erased.Cubical equality-with-paths
+open import Erased.Cubical eq
 open import Function-universe equality-with-J
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
@@ -49,5 +53,5 @@ no-first-projection-lens {b = b} _ contractible-to-contractible =
       { to   = λ { (b , b≡true) → lift b , lift b≡true }
       ; from = λ { (lift b , lift b≡true) → b , b≡true }
       }
-    ; right-inverse-of = λ _ → refl
+    ; right-inverse-of = refl
     }

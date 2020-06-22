@@ -4,32 +4,36 @@
 
 {-# OPTIONS --cubical --safe #-}
 
-module Lens.Non-dependent.Higher where
+import Equality.Path as P
+
+module Lens.Non-dependent.Higher
+  {e⁺} (eq : ∀ {a p} → P.Equality-with-paths a p e⁺) where
+
+open P.Derived-definitions-and-properties eq
 
 import Bi-invertibility
-open import Equality.Propositional.Cubical as EP
 open import Logical-equivalence using (_⇔_)
 open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 
 open import Bijection equality-with-J as Bij using (_↔_)
 open import Category equality-with-J as C using (Category; Precategory)
-open import Circle equality-with-paths as Circle using (𝕊¹)
+open import Circle eq as Circle using (𝕊¹)
 open import Equality.Decidable-UIP equality-with-J
 open import Equality.Decision-procedures equality-with-J
+open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
-open import H-level.Truncation.Propositional equality-with-paths
-  as Trunc
+open import H-level.Truncation.Propositional eq as Trunc
 import Nat equality-with-J as Nat
 open import Preimage equality-with-J using (_⁻¹_)
 open import Surjection equality-with-J using (_↠_)
 open import Univalence-axiom equality-with-J
 
-import Lens.Non-dependent
-import Lens.Non-dependent.Traditional as Traditional
+import Lens.Non-dependent eq as Non-dependent
+import Lens.Non-dependent.Traditional eq as Traditional
 
 private
   variable
@@ -160,9 +164,11 @@ record Lens (A : Set a) (B : Set b) : Set (lsuc (a ⊔ b)) where
          (sym (cong proj₂ (_≃_.right-inverse-of equiv _))))
     (cong (proj₂ ⊚ _≃_.to equiv)
        (cong (λ p → _≃_.from equiv (proj₁ p , b₂))
-          (refl {x = proj₁ (_≃_.to equiv a) , b₁}))       ≡⟨⟩
+          (refl (proj₁ (_≃_.to equiv a) , b₁)))           ≡⟨ cong (cong (proj₂ ⊚ _≃_.to equiv)) $ cong-refl _ ⟩
 
-     refl                                                 ≡⟨ sym $ trans-symʳ (cong proj₂ (_≃_.right-inverse-of equiv _)) ⟩∎
+     cong (proj₂ ⊚ _≃_.to equiv) (refl _)                 ≡⟨ cong-refl _ ⟩
+
+     refl _                                               ≡⟨ sym $ trans-symʳ _ ⟩∎
 
      trans (cong proj₂ (_≃_.right-inverse-of equiv _))
        (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))  ∎)
@@ -189,9 +195,9 @@ Lens-as-Σ = record
                  ; inhabited = inhabited
                  }
       }
-    ; right-inverse-of = λ _ → refl
+    ; right-inverse-of = refl
     }
-  ; left-inverse-of = λ { ⟨ _ , _ , _ ⟩ → refl }
+  ; left-inverse-of = λ { ⟨ _ , _ , _ ⟩ → refl _ }
   }
   where
   open Lens
@@ -296,7 +302,7 @@ equality-characterisation₁ {A = A} {B} {l₁} {l₂} univ =
      subst (λ R → A ≃ (R × B)) (≃⇒≡ univ eq) (equiv l₁) ≡ equiv l₂)  ↝⟨ (∃-cong λ _ → inverse $ ≡⇒↝ _ $ cong (λ p → p ≡ _) $
                                                                            transport-theorem
                                                                              (λ R → A ≃ (R × B)) resp
-                                                                             (λ _ → Eq.lift-equality ext refl)
+                                                                             (λ _ → Eq.lift-equality ext (refl _))
                                                                              univ _ _) ⟩□
 
   (∃ λ (eq : R l₁ ≃ R l₂) → resp eq (equiv l₁) ≡ equiv l₂)           □
@@ -582,8 +588,8 @@ lenses-equal-if-setters-equal-and-remainder-propositional
   _↔_.from (equality-characterisation₃ univ)
     ( (∥ ↑ _ B ∥  ↔⟨ ∥∥-cong Bij.↑↔ ⟩□
        ∥ B ∥      □)
-    , (λ _ → refl)
-    , (λ _ → refl)
+    , (λ _ → refl _)
+    , (λ _ → refl _)
     )
 
 -- If the getter of a lens is an equivalence, then the lens formed
@@ -684,7 +690,7 @@ _ :
   (l : Lens A B) →
   _↔_.to (lens-to-proposition↔get univ prop) l ≡
   rec prop P.id ⊚ Lens.inhabited l ⊚ Lens.remainder l
-_ = λ _ _ _ → refl
+_ = λ _ _ _ → refl _
 
 -- A variant of the previous result.
 
@@ -696,7 +702,7 @@ lens-to-proposition≃get :
 lens-to-proposition≃get {b = b} {A = A} {B = B} univ prop = Eq.↔→≃
   get
   from
-  (λ _ → refl)
+  refl
   (λ l →
      let lemma =
            ↑ b A    ↔⟨ Bij.↑↔ ⟩
@@ -709,7 +715,7 @@ lens-to-proposition≃get {b = b} {A = A} {B = B} univ prop = Eq.↔→≃
            R l      □
      in
      _↔_.from (equality-characterisation₂ univ)
-        (lemma , λ _ → refl))
+        (lemma , λ _ → refl _))
   where
   open Lens
 
@@ -729,7 +735,7 @@ _ :
   (prop : Is-proposition B)
   (l : Lens A B) →
   _≃_.to (lens-to-proposition≃get univ prop) l ≡ Lens.get l
-_ = λ _ _ _ → refl
+_ = λ _ _ _ → refl _
 
 -- If B is contractible, then Lens A B is isomorphic to ⊤ (assuming
 -- univalence).
@@ -889,8 +895,8 @@ private
 
     to∘from : ∀ bc l → Lens.traditional-lens (from bc l) ≡ l
     to∘from ⊠ l = _↔_.from Traditional.equality-characterisation₁
-      ( refl
-      , refl
+      ( refl _
+      , refl _
       , (λ a _ → B-set a _ _)
       , (λ _ → A-set _ _)
       , (λ _ _ _ → A-set _ _)
@@ -907,7 +913,11 @@ private
       ∀ bc l → from bc (Lens.traditional-lens l) ≡ l
     from∘to univ ⊠ l′ =
       _↔_.from (equality-characterisation₄ univ)
-               (lemma , λ _ → refl)
+        ( lemma
+        , λ p →
+            _≃_.from l (subst (λ _ → R) (refl _) (proj₁ p) , proj₂ p)  ≡⟨ cong (λ r → _≃_.from l (r , proj₂ p)) $ subst-refl _ _ ⟩∎
+            _≃_.from l p                                               ∎
+        )
       where
       open Lens l′ renaming (equiv to l)
 
@@ -932,7 +942,7 @@ private
             { to   = λ { (∥b∥ , f) → f ∥b∥ }
             ; from = λ r → inhabited r , λ _ → r
             }
-          ; right-inverse-of = λ _ → refl
+          ; right-inverse-of = refl
           }
         ; left-inverse-of = λ { (∥b∥ , f) →
             curry (_↔_.to ≡×≡↔≡)
@@ -1177,7 +1187,9 @@ remainder≃get⁻¹ l b = Eq.↔→≃
                        (cong proj₂ (_≃_.right-inverse-of equiv _))))     ≡⟨ cong sym $
                                                                             sym-trans _ (cong proj₂ (_≃_.right-inverse-of equiv _)) ⟩
            sym (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
-                  (sym (sym (cong (get ⊚ set a) get-a≡b))))              ≡⟨ cong (λ eq → sym (trans _ eq)) $
+                  (sym (sym (cong (get ⊚ set a) get-a≡b))))              ≡⟨ cong (λ eq → sym (trans (sym (cong proj₂
+                                                                                                            (_≃_.right-inverse-of equiv _)))
+                                                                                                eq)) $
                                                                             sym-sym (cong (get ⊚ set a) get-a≡b) ⟩∎
            sym (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
                   (cong (get ⊚ set a) get-a≡b))                          ∎
@@ -1220,13 +1232,21 @@ remainder≃get⁻¹ l b = Eq.↔→≃
                                                                               (
             trans
               (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
-                 (cong (get ⊚ set a) refl))
-              (cong proj₂ $ _≃_.right-inverse-of equiv _)                      ≡⟨⟩
+                 (cong (get ⊚ set a) (refl _)))
+              (cong proj₂ $ _≃_.right-inverse-of equiv _)                      ≡⟨ cong (λ eq → trans (trans (sym (cong proj₂
+                                                                                                                    (_≃_.right-inverse-of equiv _)))
+                                                                                                        eq)
+                                                                                                 (cong proj₂ $ _≃_.right-inverse-of equiv _)) $
+                                                                                  cong-refl _ ⟩
+            trans
+              (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
+                 (refl _))
+              (cong proj₂ $ _≃_.right-inverse-of equiv _)                      ≡⟨ cong (flip trans _) $ trans-reflʳ _ ⟩
 
             trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
               (cong proj₂ $ _≃_.right-inverse-of equiv _)                      ≡⟨ trans-symˡ (cong proj₂ (_≃_.right-inverse-of equiv _)) ⟩∎
 
-            refl                                                               ∎)
+            refl _                                                             ∎)
                                                                               get-a≡b ⟩∎
         get-a≡b                                                          ∎))
   (λ r →
@@ -1267,7 +1287,7 @@ get⁻¹-constant-inverse :
   (l : Lens A B) (b₁ b₂ : B) (p : Lens.get l ⁻¹ b₁) →
   _≃_.to (get⁻¹-constant l b₁ b₂) p ≡
   _≃_.from (get⁻¹-constant l b₂ b₁) p
-get⁻¹-constant-inverse _ _ _ _ = refl
+get⁻¹-constant-inverse _ _ _ _ = refl _
 
 get⁻¹-constant-id :
   (l : Lens A B) (b : B) (p : Lens.get l ⁻¹ b) →
@@ -1305,7 +1325,7 @@ get⁻¹-constant-not-coherent =
     }
 
   f : ∀ b → Lens.get l ⁻¹ b
-  f b = (b , b) , refl
+  f b = (b , b) , refl _
 
 -- If B is inhabited whenever it is merely inhabited, then the
 -- remainder type of a lens of type Lens A B can be expressed in terms
@@ -1601,7 +1621,7 @@ no-first-projection-lens :
   ∃ λ (A : Set a) → ∃ λ (B : A → Set b) →
     ¬ Lens (Σ A B) A
 no-first-projection-lens =
-  Lens.Non-dependent.no-first-projection-lens
+  Non-dependent.no-first-projection-lens
     Lens contractible-to-contractible
 
 ------------------------------------------------------------------------
@@ -1743,7 +1763,7 @@ module Lens-combinators where
     comp ≡ ⟨ a , b ⟩_∘_
   composition≡∘ _ _ univ ∥C∥→C comp set-comp =
     ∘-unique univ ∥C∥→C (comp , set-comp)
-      (_ , λ { ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ _ _ → refl })
+      (_ , λ { ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ _ _ → refl _ })
 
   -- Identity and composition form a kind of precategory (assuming
   -- univalence).
@@ -1758,7 +1778,7 @@ module Lens-combinators where
     ⟨ a , b ⊔ c ⟩ (⟨ b , c ⟩ l₁ ∘ l₂) ∘ l₃
   associativity _ _ _ univ ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ =
     _↔_.from (equality-characterisation₂ univ)
-             (Eq.↔⇒≃ (inverse ×-assoc) , λ _ → refl)
+             (Eq.↔⇒≃ (inverse ×-assoc) , λ _ → refl _)
 
   left-identity :
     ∀ bi a {A : Set (a ⊔ b)} {B : Set b} →
@@ -1769,7 +1789,7 @@ module Lens-combinators where
     _↔_.from (equality-characterisation₂ univ)
       ( (R × ∥ B ∥  ↔⟨ lemma ⟩□
          R          □)
-      , λ _ → refl
+      , λ _ → refl _
       )
     where
     open Lens l
@@ -1781,7 +1801,7 @@ module Lens-combinators where
           { to   = proj₁
           ; from = λ r → r , inhabited r
           }
-        ; right-inverse-of = λ _ → refl
+        ; right-inverse-of = refl
         }
       ; left-inverse-of = λ { (r , _) →
           cong (λ x → r , x) $ truncation-is-proposition _ _ }
@@ -1796,7 +1816,7 @@ module Lens-combinators where
     _↔_.from (equality-characterisation₂ univ)
       ( (∥ A ∥ × R  ↔⟨ lemma ⟩□
          R          □)
-      , λ _ → refl
+      , λ _ → refl _
       )
     where
     open Lens l
@@ -1810,7 +1830,7 @@ module Lens-combinators where
                                   (inhabited r)
                          , r
           }
-        ; right-inverse-of = λ _ → refl
+        ; right-inverse-of = refl
         }
       ; left-inverse-of = λ { (_ , r) →
           cong (λ x → x , r) $ truncation-is-proposition _ _ }
@@ -1904,7 +1924,7 @@ open B public using () renaming (_≅_ to [_]_≅_)
       )
 
   ≅→≃∘from : ∀ b A≃B → ≅→≃ b (from b A≃B) ≡ A≃B
-  ≅→≃∘from ⊠ _ = Eq.lift-equality ext refl
+  ≅→≃∘from ⊠ _ = Eq.lift-equality ext (refl _)
 
 -- There is not necessarily a split surjection from
 -- Is-equivalence (Lens.get l) to B.Has-quasi-inverse l, if l is a
@@ -1960,7 +1980,7 @@ open B public using () renaming (_≅_ to [_]_≅_)
                                                                          (_≃_.is-equivalence Eq.id) ⟩
 
     Is-equivalence P.id                                             ↔⟨ ≡⇒↝ equivalence $ cong Is-equivalence $
-                                                                       unblock b (λ b → _ ≡ get (id b)) refl ⟩
+                                                                       unblock b (λ b → _ ≡ get (id b)) (refl _) ⟩
 
     Is-equivalence (get (id b))                                     ↝⟨ surj (id b) (λ _ → lift Circle.base) ⟩
 
@@ -2089,14 +2109,14 @@ has-right-inverse→remainder-propositional
       get (l′ b A≊B) a ≡ get l a
     lemma₂ ⊠
       (⟨ _ , _ , _ ⟩ , (⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) _ =
-      refl
+      refl _
 
   from∘to :
     ∀ b A≃B →
     _↠_.to (≅↠≃ b univ) (_↠_.from (BM.≅↠≊ b univ)
       (B.≅→≊ b (_↠_.from (≅↠≃ b univ) A≃B))) ≡
     A≃B
-  from∘to ⊠ _ = Eq.lift-equality ext refl
+  from∘to ⊠ _ = Eq.lift-equality ext (refl _)
 
 -- The right-to-left direction of ≃≃≊ maps bi-invertible lenses to
 -- their getter functions.
@@ -2108,7 +2128,7 @@ to-from-≃≃≊≡get :
   _≃_.to (_≃_.from (≃≃≊ b univ) A≊B) ≡ Lens.get l
 to-from-≃≃≊≡get
   ⊠ _ (⟨ _ , _ , _ ⟩ , (⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
-  refl
+  refl _
 
 -- A variant of ≃≃≊ that works even if A and B live in different
 -- universes.
@@ -2136,7 +2156,7 @@ to-from-≃≃≊′≡get :
   _≃_.to (_≃_.from (≃≃≊′ b-id univ) A≊B) ≡ lower ⊚ Lens.get l ⊚ lift
 to-from-≃≃≊′≡get
   ⊠ _ (⟨ _ , _ , _ ⟩ , (⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
-  refl
+  refl _
 
 -- The getter function of a bi-invertible lens is an equivalence
 -- (assuming univalence).
@@ -2217,7 +2237,7 @@ Is-bi-invertible≃Is-equivalence-get b univ l = Eq.⇔→≃
   proj₁ (_≃_.to (≃≃≅ b univ A-set) F.id) ≡ id b
 ≃≃≅-id≡id ⊠ univ A-set =
   _↔_.from (equality-characterisation₂ univ)
-    (F.id , λ _ → refl)
+    (F.id , λ _ → refl _)
 
 -- Lenses between sets in the same universe form a precategory
 -- (assuming univalence).
@@ -2282,7 +2302,7 @@ precategory≡precategory ⊠ univ⁺ univ =
          ↑ _ (Traditional.Lens X Y)  □)
     , (λ (_ , X-set) → cong lift $ _↔_.from
          (Traditional.equality-characterisation-for-sets X-set)
-         refl)
+         (refl _))
     , (λ (_ , X-set) (_ , Y-set) _ (lift l₁) (lift l₂) →
          cong lift (∘-lemma b X-set Y-set l₁ l₂))
     )
@@ -2296,7 +2316,7 @@ precategory≡precategory ⊠ univ⁺ univ =
     l₁ Traditional.Lens-combinators.∘ l₂
   ∘-lemma ⊠ A-set _ _ _ =
     _↔_.from (Traditional.equality-characterisation-for-sets A-set)
-      refl
+      (refl _)
 
 -- The category defined here is equal to the one defined in
 -- Traditional, if the latter one is lifted (assuming univalence).
@@ -2320,4 +2340,4 @@ category≡category b univ⁺ univ =
     ∀ b →
     Category.precategory (category b univ) ≡
     precategory b univ
-  lemma ⊠ = refl
+  lemma ⊠ = refl _

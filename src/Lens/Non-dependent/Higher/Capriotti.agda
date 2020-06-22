@@ -4,23 +4,28 @@
 
 {-# OPTIONS --cubical --safe #-}
 
-module Lens.Non-dependent.Higher.Capriotti where
+import Equality.Path as P
 
-open import Equality.Propositional.Cubical
+module Lens.Non-dependent.Higher.Capriotti
+  {e⁺} (eq : ∀ {a p} → P.Equality-with-paths a p e⁺) where
+
+open P.Derived-definitions-and-properties eq
+
 open import Logical-equivalence using (_⇔_)
 open import Prelude
 
 open import Bijection equality-with-J using (_↔_)
+open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
 open import Function-universe equality-with-J as F hiding (_∘_)
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
-open import H-level.Truncation.Propositional equality-with-paths
+open import H-level.Truncation.Propositional eq
 open import Preimage equality-with-J
 open import Univalence-axiom equality-with-J
 
-import Lens.Non-dependent.Higher      as Higher
-import Lens.Non-dependent.Traditional as Traditional
+import Lens.Non-dependent.Higher      eq as Higher
+import Lens.Non-dependent.Traditional eq as Traditional
 
 private
   variable
@@ -108,9 +113,9 @@ Lens↔Higher-lens {a = a} {b = b} {A = A} {B = B} univ =
         { to   = λ { (a , ga≡b) → lift a , ga≡b }
         ; from = λ { (lift a , ga≡b) → a , ga≡b }
         }
-      ; right-inverse-of = λ _ → refl
+      ; right-inverse-of = refl
       }
-    ; left-inverse-of = λ _ → refl
+    ; left-inverse-of = refl
     }
 
   abstract
@@ -124,12 +129,19 @@ Lens↔Higher-lens {a = a} {b = b} {A = A} {B = B} univ =
         ≃
       (proj₁ (_↔_.to lemma₂ g) ≡ H ∘ ∣_∣)
     lemma₃ g H =
-      (g ⁻¹_) ≡ H ∘ ∣_∣                   ↝⟨ inverse $ Eq.extensionality-isomorphism ext ⟩
-      (∀ b → g ⁻¹ b ≡ H ∣ b ∣)            ↝⟨ ∀-cong ext (λ _ →
-                                               ≡-preserves-≃ ext univ univ
-                                                 (Eq.↔⇒≃ $ lemma₁ _ _) F.id) ⟩
-      (∀ b → (g ∘ lower) ⁻¹ b ≡ H ∣ b ∣)  ↝⟨ Eq.extensionality-isomorphism ext ⟩□
-      ((g ∘ lower) ⁻¹_) ≡ H ∘ ∣_∣         □
+      (g ⁻¹_) ≡ H ∘ ∣_∣                                            ↝⟨ inverse $ Eq.extensionality-isomorphism ext ⟩
+      (∀ b → g ⁻¹ b ≡ H ∣ b ∣)                                     ↝⟨ ∀-cong ext (λ _ →
+                                                                        ≡-preserves-≃ ext univ univ
+                                                                          (Eq.↔⇒≃ $ lemma₁ _ _) F.id) ⟩
+      (∀ b → (g ∘ lower) ⁻¹ b ≡ H ∣ b ∣)                           ↝⟨ Eq.extensionality-isomorphism ext ⟩
+      ((g ∘ lower) ⁻¹_) ≡ H ∘ ∣_∣                                  ↝⟨ ≡⇒↝ _ $ cong (λ eq → (g ∘ lower ∘ _≃_.from eq ⁻¹_) ≡ H ∘ ∣_∣) lemma ⟩
+      (g ∘ lower ∘ _≃_.from (≡⇒↝ _ (sym (refl _))) ⁻¹_) ≡ H ∘ ∣_∣  ↔⟨⟩
+      proj₁ (_↔_.to lemma₂ g) ≡ H ∘ ∣_∣                            □
+      where
+      lemma =
+        F.id                 ≡⟨ sym ≡⇒↝-refl ⟩
+        ≡⇒↝ _ (refl _)       ≡⟨ cong (≡⇒↝ _) $ sym sym-refl ⟩∎
+        ≡⇒↝ _ (sym (refl _)) ∎
 
 -- If the domain A is a set, then Traditional.Lens A B and Lens A B
 -- are isomorphic (assuming univalence).

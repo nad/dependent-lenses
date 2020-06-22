@@ -5,20 +5,25 @@
 
 {-# OPTIONS --cubical --safe #-}
 
-module Lens.Non-dependent.Higher.Surjective-remainder where
+import Equality.Path as P
 
-open import Equality.Propositional.Cubical
+module Lens.Non-dependent.Higher.Surjective-remainder
+  {e⁺} (eq : ∀ {a p} → P.Equality-with-paths a p e⁺) where
+
+open P.Derived-definitions-and-properties eq
+
 open import Logical-equivalence using (_⇔_)
 open import Prelude
 
 open import Bijection equality-with-J using (_↔_)
+open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_; Is-equivalence)
 open import Function-universe equality-with-J as F
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
-open import H-level.Truncation.Propositional equality-with-paths
+open import H-level.Truncation.Propositional eq
 
-import Lens.Non-dependent.Higher as Higher
+import Lens.Non-dependent.Higher eq as Higher
 
 private
   variable

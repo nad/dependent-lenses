@@ -12,7 +12,7 @@
 
 module README.Record-getters-and-setters where
 
-open import Equality.Propositional
+open import Equality.Propositional.Cubical
 open import Prelude hiding (_∘_)
 
 open import Bijection equality-with-J as Bij using (_↔_; module _↔_)
@@ -21,7 +21,7 @@ import Equivalence equality-with-J as Eq
 open import Function-universe equality-with-J as F hiding (_∘_)
 
 import Lens.Dependent
-import Lens.Non-dependent.Higher
+import Lens.Non-dependent.Higher equality-with-paths as Higher
 
 ------------------------------------------------------------------------
 -- Dependent lenses with "remainder types" visible in the type
@@ -182,7 +182,7 @@ module Dependent where
 
 module Non-dependent where
 
-  open Lens.Non-dependent.Higher
+  open Higher
   open Lens-combinators
 
   -- Labels.

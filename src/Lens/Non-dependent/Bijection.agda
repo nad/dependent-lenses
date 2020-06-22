@@ -4,22 +4,27 @@
 
 {-# OPTIONS --cubical --safe #-}
 
-module Lens.Non-dependent.Bijection where
+import Equality.Path as P
 
-open import Equality.Propositional.Cubical
+module Lens.Non-dependent.Bijection
+  {e⁺} (eq : ∀ {a p} → P.Equality-with-paths a p e⁺) where
+
+open P.Derived-definitions-and-properties eq
+
 open import Prelude
 
 open import Bijection equality-with-J using (_↔_)
+open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
 open import Function-universe equality-with-J as F
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
-open import H-level.Truncation.Propositional equality-with-paths
+open import H-level.Truncation.Propositional eq
 open import Surjection equality-with-J using (_↠_)
 open import Univalence-axiom equality-with-J
 
-import Lens.Non-dependent.Higher      as Higher
-import Lens.Non-dependent.Traditional as Traditional
+import Lens.Non-dependent.Higher      eq as Higher
+import Lens.Non-dependent.Traditional eq as Traditional
 
 private
   variable
@@ -62,7 +67,7 @@ Lens↠Higher-lens {A = A} {B} univ = record
       _↔_.from (Higher.equality-characterisation₂ univ)
         ( (R l × ∥ B ∥  ↔⟨ drop-⊤-right (λ r → inhabited⇒∥∥↔⊤ (inhabited l r)) ⟩□
            R l          □)
-        , λ _ → refl
+        , λ _ → refl _
         ) }
   }
   where
