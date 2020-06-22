@@ -979,7 +979,7 @@ equality-characterisation-for-sets
   B-set a = h-level-respects-lens-from-inhabited 2 l₁ a A-set
 
 ------------------------------------------------------------------------
--- An existence result
+-- Some existence results
 
 -- There is, in general, no lens for the first projection from a
 -- Σ-type.
@@ -990,6 +990,46 @@ no-first-projection-lens :
 no-first-projection-lens =
   Lens.Non-dependent.no-first-projection-lens
     Lens contractible-to-contractible
+
+-- There are two lenses with equal setters that are not equal
+-- (assuming univalence).
+--
+-- (The lemma does not actually use the univalence argument, but
+-- univalence is used by Circle.∃≢refl.)
+
+equal-setters-but-not-equal :
+  Univalence lzero →
+  ∃ λ (A : Set) →
+  ∃ λ (B : Set) →
+  ∃ λ (l₁ : Lens A B) →
+  ∃ λ (l₂ : Lens A B) →
+    Lens.set l₁ ≡ Lens.set l₂ ×
+    l₁ ≢ l₂
+equal-setters-but-not-equal _ =
+  𝕊¹ , ⊤ , l₁′ , l₂′ , refl , l₁′≢l₂′
+  where
+  open Lens
+
+  lemma : Lens 𝕊¹ ⊤ ≃ ((x : 𝕊¹) → x ≡ x)
+  lemma =
+    Lens 𝕊¹ ⊤                      ↔⟨ lens-to-proposition↔ (mono₁ 0 ⊤-contractible) ⟩
+    (𝕊¹ → ⊤) × ((x : 𝕊¹) → x ≡ x)  ↔⟨ (drop-⊤-left-× λ _ → →-right-zero) ⟩□
+    ((x : 𝕊¹) → x ≡ x)             □
+
+  l₁′ : Lens 𝕊¹ ⊤
+  l₁′ = _≃_.from lemma (proj₁ Circle.∃≢refl)
+
+  l₂′ : Lens 𝕊¹ ⊤
+  l₂′ = _≃_.from lemma (λ _ → refl)
+
+  set-l₁′≡set-l₂′ : set l₁′ ≡ set l₂′
+  set-l₁′≡set-l₂′ = refl
+
+  l₁′≢l₂′ : l₁′ ≢ l₂′
+  l₁′≢l₂′ =
+    l₁′ ≡ l₂′                           ↔⟨ Eq.≃-≡ (inverse lemma) {x = proj₁ Circle.∃≢refl} {y = λ _ → refl} ⟩
+    proj₁ Circle.∃≢refl ≡ (λ _ → refl)  ↝⟨ proj₂ Circle.∃≢refl ⟩□
+    ⊥                                   □
 
 ------------------------------------------------------------------------
 -- More lens isomorphisms
