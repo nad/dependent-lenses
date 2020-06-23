@@ -446,64 +446,9 @@ Lens≃Higher-lens-preserves-getters-and-setters :
   Preserves-getters-and-setters-⇔ A B
     (_≃_.logical-equivalence (Lens≃Higher-lens bc univ))
 Lens≃Higher-lens-preserves-getters-and-setters ⊠ univ =
+  Preserves-getters-and-setters-→-↠-⇔
+    (_≃_.surjection (Lens≃Higher-lens ⊠ univ))
     Lens→Higher-lens-preserves-getters-and-setters
-  , (λ l → refl _
-         , ⟨ext⟩ λ a → ⟨ext⟩ λ b →
-           let open Higher.Lens l
-
-               l′@(_ , _ , eq) = _≃_.from (Lens≃Higher-lens ⊠ univ) l
-
-               R≃⁻¹ = Higher.remainder≃get⁻¹ l
-           in
-           (Lens.set l′ a b                                               ≡⟨⟩
-
-            proj₁ (≡⇒→ (subst (λ f → f (get a) ≡ f b) (sym eq)
-                          (cong (λ _ → R)
-                             (truncation-is-proposition _ _)))
-                     (a , refl _))                                        ≡⟨ cong (λ p → proj₁ (≡⇒→ (subst (λ f → f (get a) ≡ f b) (sym eq) p)
-                                                                                                  (a , refl _))) $
-                                                                             cong-const _ ⟩
-            proj₁ (≡⇒→ (subst (λ f → f (get a) ≡ f b) (sym eq) (refl _))
-                     (a , refl _))                                        ≡⟨ cong (λ eq → proj₁ (≡⇒→ eq (a , refl _)))
-                                                                             subst-in-terms-of-trans-and-cong ⟩
-            proj₁ (≡⇒→ (trans (sym (cong (_$ get a) (sym eq)))
-                          (trans (refl _) (cong (_$ b) (sym eq))))
-                     (a , refl _))                                        ≡⟨ cong₂ (λ p q → proj₁ (≡⇒→ (trans p q) (a , refl _)))
-                                                                               (trans (sym $ cong-sym _ _) $
-                                                                                cong (cong (_$ get a)) $ sym-sym _)
-                                                                               (trans (trans-reflˡ _) $
-                                                                                cong-sym _ _) ⟩
-            proj₁ (≡⇒→ (trans (cong (_$ get a) eq)
-                          (sym (cong (_$ b) eq)))
-                     (a , refl _))                                        ≡⟨⟩
-
-            proj₁ (≡⇒→ (trans (cong (_$ get a)
-                                 (⟨ext⟩ (≃⇒≡ univ ∘ inverse ∘ R≃⁻¹)))
-                          (sym (cong (_$ b)
-                                  (⟨ext⟩ (≃⇒≡ univ ∘ inverse ∘ R≃⁻¹)))))
-                     (a , refl _))                                        ≡⟨ cong₂ (λ p q → proj₁ (≡⇒→ (trans p (sym q)) (a , refl _)))
-                                                                               (cong-ext _)
-                                                                               (cong-ext _) ⟩
-            proj₁ (≡⇒→ (trans (≃⇒≡ univ (inverse (R≃⁻¹ (get a))))
-                          (sym (≃⇒≡ univ (inverse (R≃⁻¹ b)))))
-                     (a , refl _))                                        ≡⟨ cong (λ eq → proj₁ (≡⇒→ (trans (≃⇒≡ univ (inverse (R≃⁻¹ (get a)))) eq)
-                                                                                                   (a , refl _))) $
-                                                                             trans (cong sym $ ≃⇒≡-inverse univ ext _) $
-                                                                             sym-sym _ ⟩
-            proj₁ (≡⇒→ (trans (≃⇒≡ univ (inverse (R≃⁻¹ (get a))))
-                          (≃⇒≡ univ (R≃⁻¹ b)))
-                     (a , refl _))                                        ≡⟨ cong (λ eq → proj₁ (≡⇒→ eq (a , refl _))) $ sym $
-                                                                             ≃⇒≡-∘ univ ext _ _ ⟩
-            proj₁ (≡⇒→ (≃⇒≡ univ (R≃⁻¹ b F.∘ inverse (R≃⁻¹ (get a))))
-                     (a , refl _))                                        ≡⟨ cong (λ f → proj₁ (f (a , refl _))) $
-                                                                             ≡⇒→-≃⇒≡ equivalence univ ⟩
-            proj₁ (_≃_.to (R≃⁻¹ b F.∘ inverse (R≃⁻¹ (get a)))
-                     (a , refl _))                                        ≡⟨⟩
-
-            proj₁ (_≃_.to (Higher.get⁻¹-constant l (get a) b)
-                     (a , refl _))                                        ≡⟨⟩
-
-            set a b                                                       ∎))
 
 -- An alternative proof showing that Lens A B is equivalent to
 -- Higher.Lens A B (assuming univalence).

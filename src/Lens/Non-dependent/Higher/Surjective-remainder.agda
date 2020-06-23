@@ -122,13 +122,6 @@ Higher-lens↔Lens-preserves-getters-and-setters :
   Preserves-getters-and-setters-⇔ A B
     (_↔_.logical-equivalence Higher-lens↔Lens)
 Higher-lens↔Lens-preserves-getters-and-setters =
+  Preserves-getters-and-setters-→-↠-⇔
+    (_↔_.surjection Higher-lens↔Lens)
     (λ _ → refl _ , refl _)
-  , (λ l@(get , _ , rem , is-equiv , _) →
-       let equiv = Eq.⟨ _ , is-equiv ⟩ in
-         refl _
-       , ⟨ext⟩ λ a → ⟨ext⟩ λ b →
-         _≃_.to-from (Higher.Lens.equiv (_↔_.from Higher-lens↔Lens l))
-           (_≃_.to equiv (_≃_.from equiv (rem a , b))  ≡⟨ _≃_.right-inverse-of equiv _ ⟩∎
-            rem a , b                                  ∎))
-  where
-  open Higher.Lens
