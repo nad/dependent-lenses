@@ -14,7 +14,7 @@ open P.Derived-definitions-and-properties eq
 open import Logical-equivalence using (_⇔_)
 open import Prelude
 
-open import Bijection equality-with-J using (_↔_)
+open import Bijection equality-with-J as B using (_↔_)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
 open import Function-universe equality-with-J as F hiding (_∘_)
@@ -31,6 +31,7 @@ import Lens.Non-dependent.Traditional eq as Traditional
 private
   variable
     a b : Level
+    A B : Set a
 
 ------------------------------------------------------------------------
 -- The lens type family
@@ -87,6 +88,105 @@ instance
     { get = Lens.get
     ; set = Lens.set
     }
+
+------------------------------------------------------------------------
+-- Equality characterisation lemmas
+
+-- An equality characterisation lemma.
+
+equality-characterisation₁ :
+  {l₁ l₂ : Lens A B} →
+
+  let open Lens in
+
+  (l₁ ≡ l₂)
+    ≃
+  (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
+   ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
+     trans (sym (cong _⁻¹_ (⟨ext⟩ g)))
+       (trans (get⁻¹-≡ l₁) (⟨ext⟩ (h ∘ ∣_∣))) ≡
+     get⁻¹-≡ l₂)
+equality-characterisation₁ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
+  l₁ ≡ l₂                                                                ↝⟨ inverse $ Eq.≃-≡ $ Eq.↔⇒≃ Σ-assoc ⟩
+
+  ((get l₁ , H l₁) , get⁻¹-≡ l₁) ≡ ((get l₂ , H l₂) , get⁻¹-≡ l₂)        ↔⟨ inverse B.Σ-≡,≡↔≡ ⟩
+
+  (∃ λ (eq : (get l₁ , H l₁) ≡ (get l₂ , H l₂)) →
+     subst (λ (g , H) → g ⁻¹_ ≡ H ∘ ∣_∣) eq (get⁻¹-≡ l₁) ≡ get⁻¹-≡ l₂)   ↝⟨ (Σ-cong-contra ≡×≡↔≡ λ _ → F.id) ⟩
+
+  (∃ λ ((g , h) : get l₁ ≡ get l₂ × H l₁ ≡ H l₂) →
+     subst (λ (g , H) → g ⁻¹_ ≡ H ∘ ∣_∣) (cong₂ _,_ g h) (get⁻¹-≡ l₁) ≡
+     get⁻¹-≡ l₂)                                                         ↔⟨ inverse Σ-assoc ⟩
+
+  (∃ λ (g : get l₁ ≡ get l₂) →
+   ∃ λ (h : H l₁ ≡ H l₂) →
+     subst (λ (g , H) → g ⁻¹_ ≡ H ∘ ∣_∣) (cong₂ _,_ g h) (get⁻¹-≡ l₁) ≡
+     get⁻¹-≡ l₂)                                                         ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ≡⇒↝ _ $ cong (_≡ _) $
+                                                                             lemma _ _) ⟩
+  (∃ λ (g : get l₁ ≡ get l₂) →
+   ∃ λ (h : H l₁ ≡ H l₂) →
+     trans (sym (cong _⁻¹_ g)) (trans (get⁻¹-≡ l₁) (cong (_∘ ∣_∣) h)) ≡
+     get⁻¹-≡ l₂)                                                         ↝⟨ (Σ-cong-contra (Eq.extensionality-isomorphism bad-ext) λ _ →
+                                                                             Σ-cong-contra (Eq.extensionality-isomorphism bad-ext) λ _ →
+                                                                             F.id) ⟩
+  (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
+   ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
+     trans (sym (cong _⁻¹_ (⟨ext⟩ g)))
+       (trans (get⁻¹-≡ l₁) (cong (_∘ ∣_∣) (⟨ext⟩ h))) ≡
+     get⁻¹-≡ l₂)                                                         ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ≡⇒↝ _ $
+                                                                             cong (λ eq → trans _ (trans _ eq) ≡ _) $
+                                                                             cong-pre-∘-ext _) ⟩□
+  (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
+   ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
+     trans (sym (cong _⁻¹_ (⟨ext⟩ g)))
+       (trans (get⁻¹-≡ l₁) (⟨ext⟩ (h ∘ ∣_∣))) ≡
+     get⁻¹-≡ l₂)                                                         □
+  where
+  open Lens
+
+  lemma : ∀ _ _ → _
+  lemma g h =
+    subst (λ (g , H) → g ⁻¹_ ≡ H ∘ ∣_∣) (cong₂ _,_ g h) (get⁻¹-≡ l₁)     ≡⟨ subst-in-terms-of-trans-and-cong ⟩
+
+    trans (sym (cong (λ (g , _) → g ⁻¹_) (cong₂ _,_ g h)))
+      (trans (get⁻¹-≡ l₁) (cong (λ (_ , H) → H ∘ ∣_∣) (cong₂ _,_ g h)))  ≡⟨ cong₂ (λ p q → trans (sym p) (trans (get⁻¹-≡ l₁) q))
+                                                                              (trans (sym $ cong-∘ _ _ _) $
+                                                                               cong (cong _⁻¹_) $ cong-proj₁-cong₂-, _ _)
+                                                                              (trans (sym $ cong-∘ _ _ _) $
+                                                                               cong (cong (_∘ ∣_∣)) $ cong-proj₂-cong₂-, _ _) ⟩∎
+    trans (sym (cong _⁻¹_ g)) (trans (get⁻¹-≡ l₁) (cong (_∘ ∣_∣) h))     ∎
+
+-- Another equality characterisation lemma.
+
+equality-characterisation₂ :
+  {A : Set a} {B : Set b} {l₁ l₂ : Lens A B}
+  (univ : Univalence (a ⊔ b)) →
+
+  let open Lens in
+
+  (l₁ ≡ l₂)
+    ≃
+  (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
+   ∃ λ (h : ∀ b → H l₁ b ≃ H l₂ b) →
+     trans (sym (cong _⁻¹_ (⟨ext⟩ g)))
+       (trans (get⁻¹-≡ l₁) (⟨ext⟩ (≃⇒≡ univ ∘ h ∘ ∣_∣))) ≡
+     get⁻¹-≡ l₂)
+equality-characterisation₂ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} univ =
+  l₁ ≡ l₂                                                   ↝⟨ equality-characterisation₁ ⟩
+
+  (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
+   ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
+     trans (sym (cong _⁻¹_ (⟨ext⟩ g)))
+       (trans (get⁻¹-≡ l₁) (⟨ext⟩ (h ∘ ∣_∣))) ≡
+     get⁻¹-≡ l₂)                                            ↝⟨ (∃-cong λ _ →
+                                                                Σ-cong-contra (∀-cong ext λ _ → inverse $ ≡≃≃ univ) λ _ → F.id) ⟩□
+  (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
+   ∃ λ (h : ∀ b → H l₁ b ≃ H l₂ b) →
+     trans (sym (cong _⁻¹_ (⟨ext⟩ g)))
+       (trans (get⁻¹-≡ l₁) (⟨ext⟩ (≃⇒≡ univ ∘ h ∘ ∣_∣))) ≡
+     get⁻¹-≡ l₂)                                            □
+  where
+  open Lens
 
 ------------------------------------------------------------------------
 -- Conversions between different kinds of lenses
