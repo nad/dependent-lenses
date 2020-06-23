@@ -1319,7 +1319,28 @@ get⁻¹-constant l b₁ b₂ =
   Lens.R l          ↝⟨ remainder≃get⁻¹ l b₂ ⟩□
   Lens.get l ⁻¹ b₂  □
 
--- The previous lemma satisfies some coherence properties.
+-- The set function can be expressed using get⁻¹-constant and get.
+--
+-- Paolo Capriotti defines set in a similar way
+-- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
+
+set-in-terms-of-get⁻¹-constant :
+  (l : Lens A B) →
+  Lens.set l ≡
+  λ a b →
+    proj₁ (_≃_.to (get⁻¹-constant l (Lens.get l a) b) (a , refl _))
+set-in-terms-of-get⁻¹-constant l = refl _
+
+-- The remainder function can be expressed using remainder≃get⁻¹ and
+-- get.
+
+remainder-in-terms-of-remainder≃get⁻¹ :
+  (l : Lens A B) →
+  Lens.remainder l ≡
+  λ a → _≃_.from (remainder≃get⁻¹ l (Lens.get l a)) (a , refl _)
+remainder-in-terms-of-remainder≃get⁻¹ l = refl _
+
+-- The lemma get⁻¹-constant satisfies some coherence properties.
 --
 -- The first and third properties are discussed by Paolo Capriotti
 -- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
