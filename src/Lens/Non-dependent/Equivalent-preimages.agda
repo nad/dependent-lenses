@@ -669,8 +669,10 @@ higher-lens-preserves-h-level-of-domain {A = A} {B = B} univ ∥B∥→B n =
 -- Traditional lenses that satisfy some coherence properties can be
 -- translated to lenses of the kind defined above.
 
-coherent→ : Traditional.Coherent-lens A B → Lens A B
-coherent→ l = _≃_.from Lens-as-Σ′
+coherent→ :
+  Block "conversion" →
+  Traditional.Coherent-lens A B → Lens A B
+coherent→ ⊠ l = _≃_.from Lens-as-Σ′
   ( get
   , (λ b₁ b₂ →
        Eq.↔→≃ (gg b₁ b₂) (gg b₂ b₁) (gg∘gg b₁ b₂) (gg∘gg b₂ b₁))
@@ -810,24 +812,26 @@ coherent→ l = _≃_.from Lens-as-Σ′
 -- The conversion preserves getters and setters.
 
 coherent→-preserves-getters-and-setters :
-  Preserves-getters-and-setters-→ A B coherent→
-coherent→-preserves-getters-and-setters _ =
+  (b : Block "conversion") →
+  Preserves-getters-and-setters-→ A B (coherent→ b)
+coherent→-preserves-getters-and-setters ⊠ _ =
   refl _ , refl _
 
 -- If A is a set, then Traditional.Lens A B is equivalent to Lens A B.
 
 traditional≃ :
+  Block "conversion" →
   Is-set A → Traditional.Lens A B ≃ Lens A B
-traditional≃ {A = A} {B = B} A-set = Eq.↔→≃
+traditional≃ {A = A} {B = B} b@⊠ A-set = Eq.↔→≃
   (Traditional.Lens A B           ↔⟨ Traditional.≃coherent A-set ⟩
-   Traditional.Coherent-lens A B  ↝⟨ coherent→ ⟩□
+   Traditional.Coherent-lens A B  ↝⟨ coherent→ b ⟩□
    Lens A B                       □)
   Lens.traditional-lens
   (λ l → _≃_.from (equality-characterisation-for-sets A-set)
      ( (λ _ → refl _)
      , (λ b₁ b₂ p@(a , _) →
           let l′ = traditional-lens l
-              l″ = coherent→ (_≃_.to (Traditional.≃coherent A-set) l′)
+              l″ = coherent→ b (_≃_.to (Traditional.≃coherent A-set) l′)
           in
           proj₁ (get⁻¹-const l″ b₁ b₂
                    (subst (_⁻¹ b₁) (sym $ ⟨ext⟩ λ _ → refl _) p))         ≡⟨ cong (λ eq → proj₁ (get⁻¹-const l″ b₁ b₂ (subst (_⁻¹ b₁) (sym eq) p)))
@@ -865,12 +869,74 @@ traditional≃ {A = A} {B = B} A-set = Eq.↔→≃
 
 traditional≃-preserves-getters-and-setters :
   {A : Set a}
+  (b : Block "conversion")
   (s : Is-set A) →
   Preserves-getters-and-setters-⇔ A B
-    (_≃_.logical-equivalence (traditional≃ s))
-traditional≃-preserves-getters-and-setters _ =
+    (_≃_.logical-equivalence (traditional≃ b s))
+traditional≃-preserves-getters-and-setters ⊠ _ =
     (λ _ → refl _ , refl _)
   , (λ _ → refl _ , refl _)
+
+-- If B is inhabited when it is merely inhabited, then
+-- Traditional.Coherent-lens A B is logically equivalent to
+-- Higher.Lens A B.
+
+coherent⇔higher :
+  Block "conversion" →
+  (∥ B ∥ → B) →
+  Traditional.Coherent-lens A B ⇔ Higher.Lens A B
+coherent⇔higher {B = B} {A = A} b ∥B∥→B = record
+  { to   = Traditional.Coherent-lens A B  ↝⟨ coherent→ b ⟩
+           Lens A B                       ↝⟨ →higher ∥B∥→B ⟩□
+           Higher.Lens A B                □
+  ; from = Higher.Lens.coherent-lens
+  }
+
+-- The logical equivalence preserves getters and setters.
+
+coherent⇔higher-preserves-getters-and-setters :
+  {B : Set b}
+  (bc : Block "conversion")
+  (∥B∥→B : ∥ B ∥ → B) →
+  Preserves-getters-and-setters-⇔ A B (coherent⇔higher bc ∥B∥→B)
+coherent⇔higher-preserves-getters-and-setters b ∥B∥→B =
+    Preserves-getters-and-setters-→-∘
+      {f = →higher ∥B∥→B}
+      {g = coherent→ b}
+      (→higher-preserves-getters-and-setters ∥B∥→B)
+      (coherent→-preserves-getters-and-setters b)
+  , (λ _ → refl _ , refl _)
+
+-- If B is inhabited when it is merely inhabited, then there is a
+-- split surjection from Traditional.Coherent-lens A B to
+-- Higher.Lens A B (assuming univalence).
+
+coherent↠higher :
+  {A : Set a} {B : Set b} →
+  Block "conversion" →
+  Univalence (a ⊔ b) →
+  (∥ B ∥ → B) →
+  Traditional.Coherent-lens A B ↠ Higher.Lens A B
+coherent↠higher {A = A} {B = B} b univ ∥B∥→B = record
+  { logical-equivalence = coherent⇔higher b ∥B∥→B
+  ; right-inverse-of    = λ l →
+      Higher.lenses-equal-if-setters-equal univ _ _ (λ _ → ∥B∥→B) $
+      proj₂ (proj₁ (coherent⇔higher-preserves-getters-and-setters
+                      b ∥B∥→B)
+               _)
+  }
+
+-- The split surjection preserves getters and setters.
+
+coherent↠higher-preserves-getters-and-setters :
+  {A : Set a} {B : Set b}
+  (bc : Block "conversion")
+  (univ : Univalence (a ⊔ b))
+  (∥B∥→B : ∥ B ∥ → B) →
+  Preserves-getters-and-setters-⇔ A B
+    (_↠_.logical-equivalence (coherent↠higher bc univ ∥B∥→B))
+coherent↠higher-preserves-getters-and-setters b _ ∥B∥→B =
+  coherent⇔higher-preserves-getters-and-setters b ∥B∥→B
 
 ------------------------------------------------------------------------
 -- Composition

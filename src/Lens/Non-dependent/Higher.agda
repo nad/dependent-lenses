@@ -1098,6 +1098,8 @@ Lens↔Traditional-lens-preserves-getters-and-setters bc _ =
 --
 -- This definition is inspired by the statement of Corollary 13 from
 -- "Algebras and Update Strategies" by Johnson, Rosebrugh and Wood.
+--
+-- See also Lens.Non-dependent.Equivalent-preimages.coherent↠higher.
 
 Lens⇔Traditional-lens :
   Is-set B →
