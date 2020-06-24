@@ -1548,7 +1548,7 @@ remainder≃get⁻¹ l b = Eq.↔→≃
         a                                 ∎)
        (subst (λ a → get a ≡ b)
           (trans (cong (set a) (sym get-a≡b)) (set-get a))
-          (cong proj₂ $ _≃_.right-inverse-of equiv (remainder a , b))  ≡⟨⟩
+          (cong proj₂ $ _≃_.right-inverse-of equiv (remainder a , b))    ≡⟨⟩
 
         subst (λ a → get a ≡ b)
           (trans (cong (set a) (sym get-a≡b))
