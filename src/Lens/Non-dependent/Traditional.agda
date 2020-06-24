@@ -68,14 +68,7 @@ instance
     ; set = Lens.set
     }
 
-private
-  variable
-    l₁ l₂ : Lens A B
-
-------------------------------------------------------------------------
--- Some lemmas
-
--- The record type above is isomorphic to a nested Σ-type.
+-- Lens A B is isomorphic to a nested Σ-type.
 
 Lens-as-Σ :
   Lens A B ↔
@@ -104,6 +97,64 @@ Lens-as-Σ = record
   }
   where
   open Lens
+
+private
+  variable
+    l₁ l₂ : Lens A B
+
+------------------------------------------------------------------------
+-- Coherent lenses
+
+-- Traditional lenses that satisfy some extra coherence properties.
+
+record Coherent-lens (A : Set a) (B : Set b) : Set (a ⊔ b) where
+  field
+    lens : Lens A B
+
+  open Lens lens public
+
+  field
+    get-set-get : ∀ a → cong get (set-get a) ≡ get-set a (get a)
+    get-set-set :
+      ∀ a b₁ b₂ →
+      cong get (set-set a b₁ b₂) ≡
+      trans (get-set (set a b₁) b₂) (sym (get-set a b₂))
+
+instance
+
+  -- Coherent lenses have getters and setters.
+
+  coherent-has-getter-and-setter :
+    Has-getter-and-setter (Coherent-lens {a = a} {b = b})
+  coherent-has-getter-and-setter = record
+    { get = Coherent-lens.get
+    ; set = Coherent-lens.set
+    }
+
+-- Coherent-lens A B is equivalent to a nested Σ-type.
+
+Coherent-lens-as-Σ :
+  Coherent-lens A B ≃
+  ∃ λ (l : Lens A B) →
+    let open Lens l in
+    (∀ a → cong get (set-get a) ≡ get-set a (get a)) ×
+    (∀ a b₁ b₂ →
+     cong get (set-set a b₁ b₂) ≡
+     trans (get-set (set a b₁) b₂) (sym (get-set a b₂)))
+Coherent-lens-as-Σ = Eq.↔→≃
+  (λ l → lens l , get-set-get l , get-set-set l)
+  (λ (l , get-set-get , get-set-set) → record
+     { lens        = l
+     ; get-set-get = get-set-get
+     ; get-set-set = get-set-set
+     })
+  refl
+  refl
+  where
+  open Coherent-lens
+
+------------------------------------------------------------------------
+-- Some lemmas
 
 -- If two lenses have equal setters, then they also have equal
 -- getters.
@@ -332,6 +383,50 @@ lens-preserves-h-level-of-domain n hA =
   ⊥₀                                 □)
   where
   A′ = _
+
+------------------------------------------------------------------------
+-- A conversion function
+
+-- If A is a set, then Lens A B is equivalent to Coherent-lens A B.
+
+≃coherent : Is-set A → Lens A B ≃ Coherent-lens A B
+≃coherent {A = A} {B = B} A-set = Eq.↔→≃
+  to
+  Coherent-lens.lens
+  (λ l → let l′ = Coherent-lens.lens l in
+                          $⟨ ×-closure 1
+                               (Π-closure ext 1 λ a →
+                                mono₁ 2 (B-set l′ a))
+                               (Π-closure ext 1 λ a →
+                                Π-closure ext 1 λ _ →
+                                Π-closure ext 1 λ _ →
+                                mono₁ 2 (B-set l′ a)) ⟩
+     Is-proposition _     ↝⟨ (λ p → cong (l′ ,_) (p _ _)) ⦂ (_ → _) ⟩
+     (l′ , _) ≡ (l′ , _)  ↔⟨ Eq.≃-≡ Coherent-lens-as-Σ ⟩□
+     to l′ ≡ l            □)
+  refl
+  where
+  B-set : Lens A B → A → Is-set B
+  B-set l a =
+    h-level-respects-lens-from-inhabited 2 l a A-set
+
+  to : Lens A B → Coherent-lens A B
+  to l = record
+    { lens        = l
+    ; get-set-get = λ a → B-set l a _ _
+    ; get-set-set = λ a _ _ → B-set l a _ _
+    }
+
+-- The conversion preserves getters and setters.
+
+≃coherent-preserves-getters-and-setters :
+  {A : Set a}
+  (s : Is-set A) →
+  Preserves-getters-and-setters-⇔ A B
+    (_≃_.logical-equivalence (≃coherent s))
+≃coherent-preserves-getters-and-setters _ =
+    (λ _ → refl _ , refl _)
+  , (λ _ → refl _ , refl _)
 
 ------------------------------------------------------------------------
 -- Some equality characterisation lemmas

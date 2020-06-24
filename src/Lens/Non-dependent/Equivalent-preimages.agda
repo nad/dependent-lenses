@@ -669,15 +669,8 @@ higher-lens-preserves-h-level-of-domain {A = A} {B = B} univ ∥B∥→B n =
 -- Traditional lenses that satisfy some coherence properties can be
 -- translated to lenses of the kind defined above.
 
-traditional→ :
-  (l : Traditional.Lens A B) →
-  let open Traditional.Lens l in
-  (∀ a → cong get (set-get a) ≡ get-set a (get a)) →
-  (∀ a b₁ b₂ →
-   cong get (set-set a b₁ b₂) ≡
-   trans (get-set (set a b₁) b₂) (sym (get-set a b₂))) →
-  Lens A B
-traditional→ l get-set-get get-set-set = _≃_.from Lens-as-Σ′
+coherent→ : Traditional.Coherent-lens A B → Lens A B
+coherent→ l = _≃_.from Lens-as-Σ′
   ( get
   , (λ b₁ b₂ →
        Eq.↔→≃ (gg b₁ b₂) (gg b₂ b₁) (gg∘gg b₁ b₂) (gg∘gg b₂ b₁))
@@ -697,7 +690,7 @@ traditional→ l get-set-get get-set-set = _≃_.from Lens-as-Σ′
           get-set a b₃                                ∎))
   )
   where
-  open Traditional.Lens l
+  open Traditional.Coherent-lens l
 
   get-set-set′ :
     ∀ a b₁ b₂ →
@@ -816,17 +809,9 @@ traditional→ l get-set-get get-set-set = _≃_.from Lens-as-Σ′
 
 -- The conversion preserves getters and setters.
 
-traditional→-preserves-getters-and-setters :
-  {A : Set a} {B : Set b}
-  (l : Traditional.Lens A B) →
-  let open Traditional.Lens l in
-  (get-set-get : ∀ a → cong get (set-get a) ≡ get-set a (get a))
-  (get-set-set :
-     ∀ a b₁ b₂ →
-     cong get (set-set a b₁ b₂) ≡
-     trans (get-set (set a b₁) b₂) (sym (get-set a b₂))) →
-  Same-getter-and-setter (traditional→ l get-set-get get-set-set) l
-traditional→-preserves-getters-and-setters _ _ _ =
+coherent→-preserves-getters-and-setters :
+  Preserves-getters-and-setters-→ A B coherent→
+coherent→-preserves-getters-and-setters _ =
   refl _ , refl _
 
 -- If A is a set, then Traditional.Lens A B is equivalent to Lens A B.
@@ -834,16 +819,15 @@ traditional→-preserves-getters-and-setters _ _ _ =
 traditional≃ :
   Is-set A → Traditional.Lens A B ≃ Lens A B
 traditional≃ {A = A} {B = B} A-set = Eq.↔→≃
-  (λ l →
-     traditional→ l (λ a → B-set l a _ _) (λ a _ _ → B-set l a _ _))
+  (Traditional.Lens A B           ↔⟨ Traditional.≃coherent A-set ⟩
+   Traditional.Coherent-lens A B  ↝⟨ coherent→ ⟩□
+   Lens A B                       □)
   Lens.traditional-lens
   (λ l → _≃_.from (equality-characterisation-for-sets A-set)
      ( (λ _ → refl _)
      , (λ b₁ b₂ p@(a , _) →
           let l′ = traditional-lens l
-              l″ = traditional→ l′
-                     (λ a → B-set l′ a _ _)
-                     (λ a _ _ → B-set l′ a _ _)
+              l″ = coherent→ (_≃_.to (Traditional.≃coherent A-set) l′)
           in
           proj₁ (get⁻¹-const l″ b₁ b₂
                    (subst (_⁻¹ b₁) (sym $ ⟨ext⟩ λ _ → refl _) p))         ≡⟨ cong (λ eq → proj₁ (get⁻¹-const l″ b₁ b₂ (subst (_⁻¹ b₁) (sym eq) p)))
