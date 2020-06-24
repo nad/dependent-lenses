@@ -850,6 +850,35 @@ lens-from-⊥↔⊤ {B = B} univ =
           (λ b → ⊥-elim (_≃_.from (equiv l) (r , b)))
           (inhabited l r)
 
+-- There is an equivalence between A ≃ B and
+-- ∃ λ (l : Lens A B) → Is-equivalence (Lens.get l) (assuming
+-- univalence).
+--
+-- See also ≃≃≊ below.
+
+≃-≃-Σ-Lens-Is-equivalence-get :
+  {A : Set a} {B : Set b} →
+  Univalence (a ⊔ b) →
+  (A ≃ B) ≃ (∃ λ (l : Lens A B) → Is-equivalence (Lens.get l))
+≃-≃-Σ-Lens-Is-equivalence-get univ = Eq.↔→≃
+  (λ A≃B → ≃→lens A≃B , _≃_.is-equivalence A≃B)
+  (λ (l , eq) → Eq.⟨ Lens.get l , eq ⟩)
+  (λ (l , eq) → Σ-≡,≡→≡
+     (sym $ get-equivalence→≡≃→lens univ l eq)
+     (Eq.propositional ext _ _ _))
+  (λ _ → Eq.lift-equality ext (refl _))
+
+-- The right-to-left direction of ≃-≃-Σ-Lens-Is-equivalence-get
+-- returns the lens's getter (and some proof).
+
+to-from-≃-≃-Σ-Lens-Is-equivalence-get≡get :
+  {A : Set a} {B : Set b} →
+  (univ : Univalence (a ⊔ b))
+  (p@(l , _) : ∃ λ (l : Lens A B) → Is-equivalence (Lens.get l)) →
+  _≃_.to (_≃_.from (≃-≃-Σ-Lens-Is-equivalence-get univ) p) ≡
+  Lens.get l
+to-from-≃-≃-Σ-Lens-Is-equivalence-get≡get _ _ = refl _
+
 ------------------------------------------------------------------------
 -- Results relating different kinds of lenses
 
