@@ -868,7 +868,7 @@ traditional≃-preserves-getters-and-setters :
   (s : Is-set A) →
   Preserves-getters-and-setters-⇔ A B
     (_≃_.logical-equivalence (traditional≃ s))
-traditional≃-preserves-getters-and-setters s =
+traditional≃-preserves-getters-and-setters _ =
     (λ _ → refl _ , refl _)
   , (λ _ → refl _ , refl _)
 
