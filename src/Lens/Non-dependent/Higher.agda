@@ -140,9 +140,9 @@ record Lens (A : Set a) (B : Set b) : Set (lsuc (a ⊔ b)) where
     ; set-set = set-set
     }
 
-  -- The following coherence law, which does not necessarily hold for
-  -- traditional lenses (see
-  -- Traditional.bi-invertible-but-not-coherent), holds
+  -- The following two coherence laws, which do not necessarily hold
+  -- for traditional lenses (see
+  -- Traditional.getter-equivalence-but-not-coherent), hold
   -- unconditionally for higher lenses.
 
   get-set-get : ∀ a → cong get (set-get a) ≡ get-set a (get a)
@@ -150,8 +150,6 @@ record Lens (A : Set a) (B : Set b) : Set (lsuc (a ⊔ b)) where
     cong (proj₂ ⊚ _≃_.to equiv) (_≃_.left-inverse-of equiv _)       ≡⟨ sym $ cong-∘ _ _ (_≃_.left-inverse-of equiv _) ⟩
     cong proj₂ (cong (_≃_.to equiv) (_≃_.left-inverse-of equiv _))  ≡⟨ cong (cong proj₂) $ _≃_.left-right-lemma equiv _ ⟩∎
     cong proj₂ (_≃_.right-inverse-of equiv _)                       ∎
-
-  -- Another coherence law.
 
   get-set-set :
     ∀ a b₁ b₂ →

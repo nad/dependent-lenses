@@ -1983,6 +1983,144 @@ equal-setters-but-not-equal _ =
     proj₁ Circle.∃≢refl ≡ refl  ↝⟨ proj₂ Circle.∃≢refl ⟩□
     ⊥                           □
 
+-- There is a lens, for which the getter is an equivalence, that does
+-- not satisfy either of the coherence laws that Coherent-lens lenses
+-- must satisfy (assuming univalence).
+--
+-- (The lemma does not actually use the univalence argument, but
+-- univalence is used by Circle.∃≢refl.)
+
+getter-equivalence-but-not-coherent :
+  Univalence lzero →
+  ∃ λ (A : Set) →
+  ∃ λ (l : Lens A A) →
+    let open Lens l in
+    Is-equivalence get ×
+    ¬ (∀ a → cong get (set-get a) ≡ get-set a (get a)) ×
+    ¬ (∀ a₁ a₂ a₃ →
+       cong get (set-set a₁ a₂ a₃) ≡
+       trans (get-set (set a₁ a₂) a₃) (sym (get-set a₁ a₃)))
+getter-equivalence-but-not-coherent _ =
+    𝕊¹
+  , l
+  , _≃_.is-equivalence F.id
+  , (((x : 𝕊¹) → cong (get l) (set-get l x) ≡ get-set l x (get l x))  ↔⟨⟩
+     ((x : 𝕊¹) → cong P.id (refl _) ≡ proj₁ Circle.∃≢refl x)          ↝⟨ trans (cong-id _) ⊚_ ⟩
+     ((x : 𝕊¹) → refl _ ≡ proj₁ Circle.∃≢refl x)                      ↔⟨ Eq.extensionality-isomorphism ext ⟩
+     refl ≡ proj₁ Circle.∃≢refl                                       ↝⟨ proj₂ Circle.∃≢refl ⊚ sym ⟩□
+     ⊥                                                                □)
+  , (((x y z : 𝕊¹) →
+      cong (get l) (set-set l x y z) ≡
+      trans (get-set l (set l x y) z) (sym (get-set l x z)))        ↔⟨⟩
+
+     ((x y z : 𝕊¹) →
+      cong P.id (proj₁ Circle.∃≢refl z) ≡
+      trans (proj₁ Circle.∃≢refl z) (sym (proj₁ Circle.∃≢refl z)))  ↝⟨ (λ hyp → hyp Circle.base Circle.base) ⟩
+
+     ((x : 𝕊¹) →
+      cong P.id (proj₁ Circle.∃≢refl x) ≡
+      trans (proj₁ Circle.∃≢refl x) (sym (proj₁ Circle.∃≢refl x)))  ↝⟨ (∀-cong _ λ _ → ≡⇒↝ _ $ cong₂ _≡_
+                                                                          (sym $ cong-id _)
+                                                                          (trans-symʳ _)) ⟩
+
+     ((x : 𝕊¹) → proj₁ Circle.∃≢refl x ≡ refl x)                    ↔⟨ Eq.extensionality-isomorphism ext ⟩
+
+     proj₁ Circle.∃≢refl ≡ refl                                     ↝⟨ proj₂ Circle.∃≢refl ⟩□
+
+     ⊥                                                              □)
+  where
+  open Lens
+
+  l : Lens 𝕊¹ 𝕊¹
+  l = record
+    { get     = P.id
+    ; set     = const P.id
+    ; get-set = λ _ → proj₁ Circle.∃≢refl
+    ; set-get = λ _ → refl _
+    ; set-set = λ _ _ → proj₁ Circle.∃≢refl
+    }
+
+-- There are two distinct lenses with equal setters that have
+-- equivalences as getters (assuming univalence).
+
+equal-setters-and-equivalences-as-getters-but-not-equal :
+  Univalence lzero →
+  ∃ λ (A : Set) →
+  ∃ λ (l₁ : Lens A A) →
+  ∃ λ (l₂ : Lens A A) →
+    Is-equivalence (Lens.get l₁) ×
+    Is-equivalence (Lens.get l₂) ×
+    Lens.set l₁ ≡ Lens.set l₂ ×
+    l₁ ≢ l₂
+equal-setters-and-equivalences-as-getters-but-not-equal univ =
+  let A , l , is-equiv , not-coherent , _ =
+        getter-equivalence-but-not-coherent univ
+  in
+    A
+  , l
+  , id
+  , is-equiv
+  , _≃_.is-equivalence F.id
+  , refl _
+  , (l ≡ id                                                      ↝⟨ (λ eq → subst (λ l → ∀ a → cong (get l) (set-get l a) ≡
+                                                                                               get-set l a (get l a))
+                                                                                  (sym eq)
+                                                                                  (λ _ → cong-refl _)) ⟩
+     (∀ a → cong (get l) (set-get l a) ≡ get-set l a (get l a))  ↝⟨ not-coherent ⟩□
+     ⊥                                                           □)
+  where
+  open Lens
+  open Lens-combinators
+
+-- There is in general no split surjection from equivalences to lenses
+-- with getters that are equivalences, if the right-to-left direction
+-- of the split surjection is required to return the lens's getter
+-- plus some proof (assuming univalence).
+
+¬-≃-↠-Σ-Lens-Is-equivalence-get :
+  Univalence lzero →
+  ∃ λ (A : Set) →
+  ¬ ∃ λ (f : (A ≃ A) ↠
+             (∃ λ (l : Lens A A) → Is-equivalence (Lens.get l))) →
+      ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p)
+¬-≃-↠-Σ-Lens-Is-equivalence-get univ =
+  let A , l₁ , l₂ , is-equiv₁ , is-equiv₂ , setters-equal , l₁≢l₂ =
+        equal-setters-and-equivalences-as-getters-but-not-equal univ
+  in
+    A
+  , (λ (f , hyp) →                             $⟨ setters-equal ⟩
+
+       Lens.set l₁ ≡ Lens.set l₂               ↝⟨ getters-equal-if-setters-equal l₁ l₂ ⟩
+
+       Lens.get l₁ ≡ Lens.get l₂               ↝⟨ (λ eq → trans (hyp _) (trans eq (sym (hyp _)))) ⟩
+
+       _≃_.to (_↠_.from f (l₁ , is-equiv₁)) ≡
+       _≃_.to (_↠_.from f (l₂ , is-equiv₂))    ↝⟨ Eq.lift-equality ext ⟩
+
+       _↠_.from f (l₁ , is-equiv₁) ≡
+       _↠_.from f (l₂ , is-equiv₂)             ↝⟨ _↠_.to (Surjection.↠-≡ f) ⟩
+
+       (l₁ , is-equiv₁) ≡ (l₂ , is-equiv₂)     ↝⟨ cong proj₁ ⟩
+
+       l₁ ≡ l₂                                 ↝⟨ l₁≢l₂ ⟩□
+
+       ⊥                                       □)
+
+-- There is in general no equivalence from equivalences to lenses with
+-- getters that are equivalences, if the right-to-left direction of
+-- the equivalence is required to return the lens's getter plus some
+-- proof (assuming univalence).
+
+¬-≃-≃-Σ-Lens-Is-equivalence-get :
+  Univalence lzero →
+  ∃ λ (A : Set) →
+  ¬ ∃ λ (f : (A ≃ A) ≃
+             (∃ λ (l : Lens A A) → Is-equivalence (Lens.get l))) →
+      ∀ p → _≃_.to (_≃_.from f p) ≡ Lens.get (proj₁ p)
+¬-≃-≃-Σ-Lens-Is-equivalence-get univ =
+  Σ-map P.id (_⊚ Σ-map _≃_.surjection P.id)
+    (¬-≃-↠-Σ-Lens-Is-equivalence-get univ)
+
 ------------------------------------------------------------------------
 -- Isomorphisms expressed using lens quasi-inverses
 
@@ -2421,181 +2559,6 @@ Is-bi-invertible→Is-equivalence-get :
 Is-bi-invertible→Is-equivalence-get l is-bi-inv =
   _≃_.is-equivalence (_↠_.to ≊↠≃ (l , is-bi-inv))
 
--- There is a bi-invertible lens which does not satisfy a certain
--- coherence law (assuming univalence).
---
--- (The lemma does not actually use the univalence argument, but
--- univalence is used by Circle.∃≢refl.)
-
-bi-invertible-but-not-coherent :
-  Univalence lzero →
-  ∃ λ (A : Set) →
-  ∃ λ (l : Lens A A) →
-    let open Lens l in
-    Is-bi-invertible l ×
-    ¬ (∀ a → cong get (set-get a) ≡ get-set a (get a))
-bi-invertible-but-not-coherent _ =
-    𝕊¹
-  , l
-  , B.Has-quasi-inverse→Is-bi-invertible l
-      (l⁻¹ , l∘l⁻¹≡id , l⁻¹∘l≡id)
-  , (((x : 𝕊¹) → cong (get l) (set-get l x) ≡ get-set l x (get l x))  ↔⟨⟩
-     ((x : 𝕊¹) → cong P.id (refl _) ≡ proj₁ Circle.∃≢refl x)          ↝⟨ trans (cong-id _) ⊚_ ⟩
-     ((x : 𝕊¹) → refl _ ≡ proj₁ Circle.∃≢refl x)                      ↔⟨ Eq.extensionality-isomorphism ext ⟩
-     refl ≡ proj₁ Circle.∃≢refl                                       ↝⟨ proj₂ Circle.∃≢refl ⊚ sym ⟩□
-     ⊥                                                                □)
-  where
-  open Lens
-  open Lens-combinators
-
-  l : Lens 𝕊¹ 𝕊¹
-  l = record
-    { get     = P.id
-    ; set     = const P.id
-    ; get-set = λ _ → proj₁ Circle.∃≢refl
-    ; set-get = λ _ → refl _
-    ; set-set = λ _ _ _ → refl _
-    }
-
-  l⁻¹ = record
-    { get     = P.id
-    ; set     = const P.id
-    ; get-set = λ _ → sym ⊚ proj₁ Circle.∃≢refl
-    ; set-get = λ _ → refl _
-    ; set-set = λ _ _ _ → refl _
-    }
-
-  l∘l⁻¹≡id : l ∘ l⁻¹ ≡ id
-  l∘l⁻¹≡id = equal-laws→≡
-    (λ x y →
-       get-set (l ∘ l⁻¹) x y                            ≡⟨⟩
-
-       trans (cong P.id $ sym $ proj₁ Circle.∃≢refl y)
-         (proj₁ Circle.∃≢refl y)                        ≡⟨ cong (λ eq → trans eq (proj₁ Circle.∃≢refl y)) $ sym $
-                                                           cong-id (sym $ proj₁ Circle.∃≢refl y) ⟩
-       trans (sym $ proj₁ Circle.∃≢refl y)
-         (proj₁ Circle.∃≢refl y)                        ≡⟨ trans-symˡ (proj₁ Circle.∃≢refl y) ⟩∎
-
-       refl _                                           ∎)
-    (λ x →
-       set-get (l ∘ l⁻¹) x                  ≡⟨⟩
-       trans (cong P.id (refl _)) (refl _)  ≡⟨ trans-reflʳ _ ⟩
-       cong P.id (refl _)                   ≡⟨ cong-refl _ ⟩∎
-       refl _                               ∎)
-    (λ x y z →
-       set-set (l ∘ l⁻¹) x y z                                            ≡⟨⟩
-       trans (refl _)
-         (cong P.id (trans (cong (λ _ → z) (get-set l⁻¹ x y)) (refl _)))  ≡⟨ trans-reflˡ _ ⟩
-       cong P.id (trans (cong (λ _ → z) (get-set l⁻¹ x y)) (refl _))      ≡⟨ sym $ cong-id _ ⟩
-       trans (cong (λ _ → z) (get-set l⁻¹ x y)) (refl _)                  ≡⟨ trans-reflʳ _ ⟩
-       cong (λ _ → z) (get-set l⁻¹ x y)                                   ≡⟨ cong-const _ ⟩∎
-       refl _                                                             ∎)
-
-  l⁻¹∘l≡id : l⁻¹ ∘ l ≡ id
-  l⁻¹∘l≡id = equal-laws→≡
-    (λ x y →
-       get-set (l⁻¹ ∘ l) x y                                        ≡⟨⟩
-
-       trans (cong P.id (proj₁ Circle.∃≢refl y))
-         (sym $ proj₁ Circle.∃≢refl y)                              ≡⟨ cong (λ eq → trans eq (sym $ proj₁ Circle.∃≢refl y)) $ sym $
-                                                                       cong-id (proj₁ Circle.∃≢refl y) ⟩
-
-       trans (proj₁ Circle.∃≢refl y) (sym $ proj₁ Circle.∃≢refl y)  ≡⟨ trans-symʳ (proj₁ Circle.∃≢refl y) ⟩∎
-
-       refl _                                                       ∎)
-    (λ x →
-       set-get (l⁻¹ ∘ l) x                  ≡⟨⟩
-       trans (cong P.id (refl _)) (refl _)  ≡⟨ trans-reflʳ _ ⟩
-       cong P.id (refl _)                   ≡⟨ cong-refl _ ⟩∎
-       refl _                               ∎)
-    (λ x y z →
-       set-set (l⁻¹ ∘ l) x y z                                          ≡⟨⟩
-       trans (refl _)
-         (cong P.id (trans (cong (λ _ → z) (get-set l x y)) (refl _)))  ≡⟨ trans-reflˡ _ ⟩
-       cong P.id (trans (cong (λ _ → z) (get-set l x y)) (refl _))      ≡⟨ sym $ cong-id _ ⟩
-       trans (cong (λ _ → z) (get-set l x y)) (refl _)                  ≡⟨ trans-reflʳ _ ⟩
-       cong (λ _ → z) (get-set l x y)                                   ≡⟨ cong-const _ ⟩∎
-       refl _                                                           ∎)
-
--- There are two bi-invertible lenses with the same getter that are
--- not equal (assuming univalence).
-
-bi-invertible-with-same-getter-but-not-equal :
-  Univalence lzero →
-  ∃ λ (A : Set) →
-  ∃ λ (l₁ : Lens A A) →
-  ∃ λ (l₂ : Lens A A) →
-    Is-bi-invertible l₁ ×
-    Is-bi-invertible l₂ ×
-    Lens.get l₁ ≡ Lens.get l₂ ×
-    l₁ ≢ l₂
-bi-invertible-with-same-getter-but-not-equal univ =
-  let A , l , bi-inv , not-coherent =
-        bi-invertible-but-not-coherent univ
-  in
-    A
-  , l
-  , id
-  , bi-inv
-  , ((id , right-identity id) , (id , left-identity id))
-  , refl _
-  , (l ≡ id                                                      ↝⟨ (λ eq → subst (λ l → ∀ a → cong (get l) (set-get l a) ≡
-                                                                                               get-set l a (get l a))
-                                                                                  (sym eq)
-                                                                                  (λ _ → cong-refl _)) ⟩
-     (∀ a → cong (get l) (set-get l a) ≡ get-set l a (get l a))  ↝⟨ not-coherent ⟩□
-     ⊥                                                           □)
-  where
-  open Lens
-  open Lens-combinators
-
--- There is in general no split surjection from equivalences to
--- bi-invertible lenses, if the right-to-left direction of the split
--- surjection is required to map bi-invertible lenses to their getter
--- functions (assuming univalence).
-
-¬≃↠≊ :
-  Univalence lzero →
-  ∃ λ (A : Set) →
-  ¬ ∃ λ (≃↠≊ : (A ≃ A) ↠ (A ≊ A)) →
-      (A≊A@(l , _) : A ≊ A) →
-      _≃_.to (_↠_.from ≃↠≊ A≊A) ≡ Lens.get l
-¬≃↠≊ univ =
-  let A , l₁ , l₂ , bi-inv₁ , bi-inv₂ , getters-equal , l₁≢l₂ =
-        bi-invertible-with-same-getter-but-not-equal univ
-  in
-    A
-  , (λ (≃↠≊ , hyp) →                           $⟨ getters-equal ⟩
-
-       Lens.get l₁ ≡ Lens.get l₂               ↝⟨ (λ eq → trans (hyp _) (trans eq (sym (hyp _)))) ⟩
-
-       _≃_.to (_↠_.from ≃↠≊ (l₁ , bi-inv₁)) ≡
-       _≃_.to (_↠_.from ≃↠≊ (l₂ , bi-inv₂))    ↝⟨ Eq.lift-equality ext ⟩
-
-       _↠_.from ≃↠≊ (l₁ , bi-inv₁) ≡
-       _↠_.from ≃↠≊ (l₂ , bi-inv₂)             ↝⟨ _↠_.to (Surjection.↠-≡ ≃↠≊) ⟩
-
-       (l₁ , bi-inv₁) ≡ (l₂ , bi-inv₂)         ↝⟨ cong proj₁ ⟩
-
-       l₁ ≡ l₂                                 ↝⟨ l₁≢l₂ ⟩□
-
-       ⊥                                       □)
-
--- There is in general no equivalence between equivalences and
--- bi-invertible lenses, if the right-to-left direction of the
--- equivalence is required to map bi-invertible lenses to their getter
--- functions (assuming univalence).
-
-¬≃≃≊ :
-  Univalence lzero →
-  ∃ λ (A : Set) →
-  ¬ ∃ λ (≃≃≊ : (A ≃ A) ≃ (A ≊ A)) →
-      (A≊A@(l , _) : A ≊ A) →
-      _≃_.to (_≃_.from ≃≃≊ A≊A) ≡ Lens.get l
-¬≃≃≊ univ =
-  Σ-map P.id (_⊚ Σ-map _≃_.surjection P.id)
-    (¬≃↠≊ univ)
-
 -- If the getter function is an equivalence, then the lens is
 -- bi-invertible.
 
@@ -3019,44 +2982,44 @@ Is-bi-invertible≃Is-equivalence-get l = Eq.⇔→≃
   (Is-bi-invertible→Is-equivalence-get l)
   (Is-equivalence-get→Is-bi-invertible l)
 
--- There is in general no split surjection from equivalences to lenses
--- with getters that are equivalences, if the right-to-left direction
--- of the split surjection is required to return the lens's getter
--- plus some proof (assuming univalence).
+-- There is in general no split surjection from equivalences to
+-- bi-invertible lenses, if the right-to-left direction of the split
+-- surjection is required to map bi-invertible lenses to their getter
+-- functions (assuming univalence).
 
-¬-≃-↠-Σ-Lens-Is-equivalence-get :
+¬≃↠≊ :
   Univalence lzero →
   ∃ λ (A : Set) →
-  ¬ ∃ λ (f : (A ≃ A) ↠
-             (∃ λ (l : Lens A A) → Is-equivalence (Lens.get l))) →
-      ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p)
-¬-≃-↠-Σ-Lens-Is-equivalence-get univ =
-  let A , ¬≃↠≊ = ¬≃↠≊ univ in
+  ¬ ∃ λ (≃↠≊ : (A ≃ A) ↠ (A ≊ A)) →
+      (A≊A@(l , _) : A ≊ A) →
+      _≃_.to (_↠_.from ≃↠≊ A≊A) ≡ Lens.get l
+¬≃↠≊ univ =
+  let A , ¬≃↠ = ¬-≃-↠-Σ-Lens-Is-equivalence-get univ in
     A
-  , ((∃ λ (f : (A ≃ A) ↠
-               (∃ λ (l : Lens A A) → Is-equivalence (Lens.get l))) →
+  , ((∃ λ (f : (A ≃ A) ↠ (A ≊ A)) →
         ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))             ↝⟨ Σ-map
-                                                                           ((∃-cong λ l → _≃_.surjection $ inverse $ Is-bi-invertible≃Is-equivalence-get l) F.∘_)
+                                                                           ((∃-cong λ l → _≃_.surjection $ Is-bi-invertible≃Is-equivalence-get l) F.∘_)
                                                                            (λ hyp _ → hyp _) ⟩
-     (∃ λ (f : (A ≃ A) ↠ (A ≊ A)) →
-        ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))             ↝⟨ ¬≃↠≊ ⟩□
+     (∃ λ (f : (A ≃ A) ↠
+               (∃ λ (l : Lens A A) → Is-equivalence (Lens.get l))) →
+        ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))             ↝⟨ ¬≃↠ ⟩□
 
      ⊥                                                                □)
 
--- There is in general no equivalence from equivalences to lenses with
--- getters that are equivalences, if the right-to-left direction of
--- the equivalence is required to return the lens's getter plus some
--- proof (assuming univalence).
+-- There is in general no equivalence between equivalences and
+-- bi-invertible lenses, if the right-to-left direction of the
+-- equivalence is required to map bi-invertible lenses to their getter
+-- functions (assuming univalence).
 
-¬-≃-≃-Σ-Lens-Is-equivalence-get :
+¬≃≃≊ :
   Univalence lzero →
   ∃ λ (A : Set) →
-  ¬ ∃ λ (f : (A ≃ A) ≃
-             (∃ λ (l : Lens A A) → Is-equivalence (Lens.get l))) →
-      ∀ p → _≃_.to (_≃_.from f p) ≡ Lens.get (proj₁ p)
-¬-≃-≃-Σ-Lens-Is-equivalence-get univ =
+  ¬ ∃ λ (≃≃≊ : (A ≃ A) ≃ (A ≊ A)) →
+      (A≊A@(l , _) : A ≊ A) →
+      _≃_.to (_≃_.from ≃≃≊ A≊A) ≡ Lens.get l
+¬≃≃≊ univ =
   Σ-map P.id (_⊚ Σ-map _≃_.surjection P.id)
-    (¬-≃-↠-Σ-Lens-Is-equivalence-get univ)
+    (¬≃↠≊ univ)
 
 ------------------------------------------------------------------------
 -- A category
