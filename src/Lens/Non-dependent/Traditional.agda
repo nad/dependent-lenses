@@ -1272,7 +1272,8 @@ module Lens-combinators where
   -- This implementation is pointwise equal to the other one. However,
   -- I don't know if there is some other definition that is distinct
   -- from these two (if we require that the definitions are
-  -- polymorphic and that the three composition laws below hold).
+  -- polymorphic, that get and set are implemented in the same way as
+  -- for _∘_, and that the three composition laws below hold).
 
   ∘≡∘′ : l₁ ∘ l₂ ≡ l₁ ∘′ l₂
   ∘≡∘′ {l₁ = l₁} {l₂ = l₂} = equal-laws→≡
