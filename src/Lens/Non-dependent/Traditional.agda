@@ -3019,6 +3019,45 @@ Is-bi-invertible≃Is-equivalence-get l = Eq.⇔→≃
   (Is-bi-invertible→Is-equivalence-get l)
   (Is-equivalence-get→Is-bi-invertible l)
 
+-- There is in general no split surjection from equivalences to lenses
+-- with getters that are equivalences, if the right-to-left direction
+-- of the split surjection is required to return the lens's getter
+-- plus some proof (assuming univalence).
+
+¬-≃-↠-Σ-Lens-Is-equivalence-get :
+  Univalence lzero →
+  ∃ λ (A : Set) →
+  ¬ ∃ λ (f : (A ≃ A) ↠
+             (∃ λ (l : Lens A A) → Is-equivalence (Lens.get l))) →
+      ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p)
+¬-≃-↠-Σ-Lens-Is-equivalence-get univ =
+  let A , ¬≃↠≊ = ¬≃↠≊ univ in
+    A
+  , ((∃ λ (f : (A ≃ A) ↠
+               (∃ λ (l : Lens A A) → Is-equivalence (Lens.get l))) →
+        ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))             ↝⟨ Σ-map
+                                                                           ((∃-cong λ l → _≃_.surjection $ inverse $ Is-bi-invertible≃Is-equivalence-get l) F.∘_)
+                                                                           (λ hyp _ → hyp _) ⟩
+     (∃ λ (f : (A ≃ A) ↠ (A ≊ A)) →
+        ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))             ↝⟨ ¬≃↠≊ ⟩□
+
+     ⊥                                                                □)
+
+-- There is in general no equivalence from equivalences to lenses with
+-- getters that are equivalences, if the right-to-left direction of
+-- the equivalence is required to return the lens's getter plus some
+-- proof (assuming univalence).
+
+¬-≃-≃-Σ-Lens-Is-equivalence-get :
+  Univalence lzero →
+  ∃ λ (A : Set) →
+  ¬ ∃ λ (f : (A ≃ A) ≃
+             (∃ λ (l : Lens A A) → Is-equivalence (Lens.get l))) →
+      ∀ p → _≃_.to (_≃_.from f p) ≡ Lens.get (proj₁ p)
+¬-≃-≃-Σ-Lens-Is-equivalence-get univ =
+  Σ-map P.id (_⊚ Σ-map _≃_.surjection P.id)
+    (¬-≃-↠-Σ-Lens-Is-equivalence-get univ)
+
 ------------------------------------------------------------------------
 -- A category
 
