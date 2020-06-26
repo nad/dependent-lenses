@@ -173,7 +173,7 @@ record Lens (A : Set a) (B : Set b) : Set (lsuc (a ⊔ b)) where
        (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))  ∎)
     (_≃_.right-inverse-of equiv _)
 
-  -- A coherent lens.
+  -- A somewhat coherent lens.
 
   coherent-lens : Traditional.Coherent-lens A B
   coherent-lens = record

@@ -103,7 +103,7 @@ private
     l₁ l₂ : Lens A B
 
 ------------------------------------------------------------------------
--- Coherent lenses
+-- Somewhat coherent lenses
 
 -- Traditional lenses that satisfy some extra coherence properties.
 
@@ -122,7 +122,7 @@ record Coherent-lens (A : Set a) (B : Set b) : Set (a ⊔ b) where
 
 instance
 
-  -- Coherent lenses have getters and setters.
+  -- Somewhat coherent lenses have getters and setters.
 
   coherent-has-getter-and-setter :
     Has-getter-and-setter (Coherent-lens {a = a} {b = b})
