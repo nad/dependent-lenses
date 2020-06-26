@@ -2479,7 +2479,8 @@ equality-characterisation-for-sets-≅
 
 -- A form of isomorphism between types, expressed using lenses.
 
-open B public using (_≊_; Is-bi-invertible)
+open B public
+  using (_≊_; Has-left-inverse; Has-right-inverse; Is-bi-invertible)
 
 -- An equality characterisation lemma for A ≊ B that applies when A is
 -- a set.
