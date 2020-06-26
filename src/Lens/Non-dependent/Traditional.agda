@@ -2621,22 +2621,22 @@ Is-equivalence-get→Is-bi-invertible {A = A} {B = B} l′ is-equiv =
     ( right-inverse-of
     , right-inverse-of
     , (λ b₁ b₂ →
-        get-set (l ∘ l⁻¹) b₁ b₂                                 ≡⟨⟩
+         get-set (l ∘ l⁻¹) b₁ b₂                                 ≡⟨⟩
 
-        trans (cong (get l) (get-set l⁻¹ b₁ (from b₂)))
-          (get-set l (from b₁) b₂)                              ≡⟨⟩
+         trans (cong (get l) (get-set l⁻¹ b₁ (from b₂)))
+           (get-set l (from b₁) b₂)                              ≡⟨⟩
 
-        trans (cong (get l) (left-inverse-of (from b₂)))
-          (right-inverse-of b₂)                                 ≡⟨ cong (λ eq → trans (cong (get l) eq) (right-inverse-of b₂)) $ sym $
-                                                                   right-left-lemma _ ⟩
-        trans (cong (get l) (cong from (right-inverse-of b₂)))
-          (right-inverse-of b₂)                                 ≡⟨ cong (λ eq → trans eq (right-inverse-of b₂)) $
-                                                                   cong-∘ _ _ (right-inverse-of b₂) ⟩
-        trans (cong (get l ⊚ from) (right-inverse-of b₂))
-          (right-inverse-of b₂)                                 ≡⟨⟩
+         trans (cong (get l) (left-inverse-of (from b₂)))
+           (right-inverse-of b₂)                                 ≡⟨ cong (λ eq → trans (cong (get l) eq) (right-inverse-of b₂)) $ sym $
+                                                                    right-left-lemma _ ⟩
+         trans (cong (get l) (cong from (right-inverse-of b₂)))
+           (right-inverse-of b₂)                                 ≡⟨ cong (λ eq → trans eq (right-inverse-of b₂)) $
+                                                                    cong-∘ _ _ (right-inverse-of b₂) ⟩
+         trans (cong (get l ⊚ from) (right-inverse-of b₂))
+           (right-inverse-of b₂)                                 ≡⟨⟩
 
-        trans (cong (get (l ∘ l⁻¹)) (right-inverse-of b₂))
-          (right-inverse-of b₂)                                 ∎)
+         trans (cong (get (l ∘ l⁻¹)) (right-inverse-of b₂))
+           (right-inverse-of b₂)                                 ∎)
     , (λ b →
          set-get (l ∘ l⁻¹) b                                 ≡⟨⟩
 
