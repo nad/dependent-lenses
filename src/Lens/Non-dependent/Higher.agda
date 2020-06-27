@@ -2047,16 +2047,13 @@ open B public using () renaming (_≅_ to [_]_≅_)
 
 -- There is not necessarily a split surjection from
 -- Is-equivalence (Lens.get l) to B.Has-quasi-inverse l, if l is a
--- lens between types in the same universe, even if the codomain of l
--- is required to be inhabited when its remainder type is inhabited
--- (assuming univalence).
+-- lens between types in the same universe (assuming univalence).
 
 ¬Is-equivalence-get↠Has-quasi-inverse :
   (b : Block "id") →
   Univalence a →
   ¬ ({A B : Set a}
      (l : Lens A B) →
-     (Lens.R l → B) →
      Is-equivalence (Lens.get l) ↠ B.Has-quasi-inverse b l)
 ¬Is-equivalence-get↠Has-quasi-inverse b univ surj =
                                     $⟨ ⊤-contractible ⟩
@@ -2101,7 +2098,7 @@ open B public using () renaming (_≅_ to [_]_≅_)
     Is-equivalence P.id                                             ↔⟨ ≡⇒↝ equivalence $ cong Is-equivalence $
                                                                        unblock b (λ b → _ ≡ get (id b)) (refl _) ⟩
 
-    Is-equivalence (get (id b))                                     ↝⟨ surj (id b) (λ _ → lift Circle.base) ⟩
+    Is-equivalence (get (id b))                                     ↝⟨ surj (id b) ⟩
 
     B.Has-quasi-inverse b (id b)                                    ↔⟨ BM.Has-quasi-inverse≃id≡id-domain b univ
                                                                          (id b , left-identity b _ univ _ , right-identity b _ univ _) ⟩
