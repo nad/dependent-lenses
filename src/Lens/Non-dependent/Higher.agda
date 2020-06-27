@@ -465,8 +465,8 @@ lenses-equal-if-setters-equal′ :
   Lens.set l₁ ≡ Lens.set l₂ →
   l₁ ≡ l₂
 lenses-equal-if-setters-equal′
-   {A = A} {B = B} univ l₁ l₂
-   f ∃≡f f-remainder≡remainder setters-equal =
+  {A = A} {B = B} univ l₁ l₂
+  f ∃≡f f-remainder≡remainder setters-equal =
 
   _↔_.from (equality-characterisation₃ univ)
     ( R≃R
@@ -603,7 +603,7 @@ lenses-equal-if-setters-equal-and-remainder-propositional
   {A B : Set a} →
   Univalence a →
   (A≃B : A ≃ B) → ≃→lens A≃B ≡ ≃→lens′ A≃B
-≃→lens≡≃→lens′ {A = A} {B = B} univ A≃B =
+≃→lens≡≃→lens′ {B = B} univ A≃B =
   _↔_.from (equality-characterisation₃ univ)
     ( (∥ ↑ _ B ∥  ↔⟨ ∥∥-cong Bij.↑↔ ⟩□
        ∥ B ∥      □)
@@ -1709,14 +1709,14 @@ get⁻¹-constant-not-coherent :
      (f : ∀ b → Lens.get l ⁻¹ b) →
      _≃_.to (get⁻¹-constant l b₁ b₂) (f b₁) ≡ f b₂)
 get⁻¹-constant-not-coherent =
-  (({A B : Set} (l : Lens A B) (b₁ b₂ : B) (f : ∀ b → Lens.get l ⁻¹ b) →
-   _≃_.to (get⁻¹-constant l b₁ b₂) (f b₁) ≡ f b₂))                        ↝⟨ (λ hyp → hyp l true false f) ⟩
+  ({A B : Set} (l : Lens A B) (b₁ b₂ : B) (f : ∀ b → Lens.get l ⁻¹ b) →
+   _≃_.to (get⁻¹-constant l b₁ b₂) (f b₁) ≡ f b₂)                        ↝⟨ (λ hyp → hyp l true false f) ⟩
 
-  _≃_.to (get⁻¹-constant l true false) (f true) ≡ f false                 ↝⟨ cong (proj₁ ⊚ proj₁) ⟩
+  _≃_.to (get⁻¹-constant l true false) (f true) ≡ f false                ↝⟨ cong (proj₁ ⊚ proj₁) ⟩
 
-  true ≡ false                                                            ↝⟨ Bool.true≢false ⟩□
+  true ≡ false                                                           ↝⟨ Bool.true≢false ⟩□
 
-  ⊥                                                                       □
+  ⊥                                                                      □
   where
   l : Lens (Bool × Bool) Bool
   l = record
@@ -2354,7 +2354,7 @@ Is-bi-invertible≃Is-equivalence-get b univ l = Eq.⇔→≃
   {A : Set a}
   (b : Block "≃≃≅") (univ : Univalence a) (A-set : Is-set A) →
   proj₁ (_≃_.to (≃≃≅ b univ A-set) F.id) ≡ id b
-≃≃≅-id≡id ⊠ univ A-set =
+≃≃≅-id≡id ⊠ univ _ =
   _↔_.from (equality-characterisation₂ univ)
     (F.id , λ _ → refl _)
 
