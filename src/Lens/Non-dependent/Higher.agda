@@ -1971,7 +1971,7 @@ private
 
 -- A form of isomorphism between types, expressed using lenses.
 
-open B public using () renaming (_≅_ to [_]_≅_)
+open B public renaming (_≅_ to [_]_≅_) using (Has-quasi-inverse)
 
 -- Lenses with quasi-inverses can be converted to equivalences.
 
@@ -2046,7 +2046,7 @@ open B public using () renaming (_≅_ to [_]_≅_)
   ≅→≃∘from ⊠ _ = Eq.lift-equality ext (refl _)
 
 -- There is not necessarily a split surjection from
--- Is-equivalence (Lens.get l) to B.Has-quasi-inverse l, if l is a
+-- Is-equivalence (Lens.get l) to Has-quasi-inverse l, if l is a
 -- lens between types in the same universe (assuming univalence).
 
 ¬Is-equivalence-get↠Has-quasi-inverse :
@@ -2054,7 +2054,7 @@ open B public using () renaming (_≅_ to [_]_≅_)
   Univalence a →
   ¬ ({A B : Set a}
      (l : Lens A B) →
-     Is-equivalence (Lens.get l) ↠ B.Has-quasi-inverse b l)
+     Is-equivalence (Lens.get l) ↠ Has-quasi-inverse b l)
 ¬Is-equivalence-get↠Has-quasi-inverse b univ surj =
                                     $⟨ ⊤-contractible ⟩
   Contractible ⊤                    ↝⟨ H-level.respects-surjection lemma₃ 0 ⟩
@@ -2100,7 +2100,7 @@ open B public using () renaming (_≅_ to [_]_≅_)
 
     Is-equivalence (get (id b))                                     ↝⟨ surj (id b) ⟩
 
-    B.Has-quasi-inverse b (id b)                                    ↔⟨ BM.Has-quasi-inverse≃id≡id-domain b univ
+    Has-quasi-inverse b (id b)                                      ↔⟨ BM.Has-quasi-inverse≃id≡id-domain b univ
                                                                          (id b , left-identity b _ univ _ , right-identity b _ univ _) ⟩
 
     id b ≡ id b                                                     ↔⟨ equality-characterisation₃ univ ⟩
@@ -2119,7 +2119,9 @@ open B public using () renaming (_≅_ to [_]_≅_)
 
 -- A form of equivalence between types, expressed using lenses.
 
-open B public using () renaming (_≊_ to [_]_≊_; _≅_ to [_]_≅_)
+open B public
+  renaming (_≊_ to [_]_≊_)
+  using (Has-left-inverse; Has-right-inverse; Is-bi-invertible)
 open BM public using (equality-characterisation-≊)
 
 -- Lenses with left inverses have propositional remainder types.
@@ -2127,7 +2129,7 @@ open BM public using (equality-characterisation-≊)
 has-left-inverse→remainder-propositional :
   (b : Block "id")
   (l : Lens A B) →
-  B.Has-left-inverse b l →
+  Has-left-inverse b l →
   Is-proposition (Lens.R l)
 has-left-inverse→remainder-propositional
   ⊠ l@(⟨ _ , _ , _ ⟩) (l⁻¹@(⟨ _ , _ , _ ⟩) , l⁻¹∘l≡id) =
@@ -2145,7 +2147,7 @@ has-left-inverse→remainder-propositional
 has-right-inverse→remainder-propositional :
   (b : Block "id")
   (l : Lens A B) →
-  B.Has-right-inverse b l →
+  Has-right-inverse b l →
   Is-proposition (Lens.R l)
 has-right-inverse→remainder-propositional
   ⊠ l@(⟨ _ , _ , _ ⟩) (l⁻¹@(⟨ _ , _ , _ ⟩) , l∘l⁻¹≡id) =
@@ -2282,7 +2284,7 @@ Is-bi-invertible→Is-equivalence-get :
   (b : Block "id") →
   Univalence a →
   (l : Lens A B) →
-  B.Is-bi-invertible b l → Is-equivalence (Lens.get l)
+  Is-bi-invertible b l → Is-equivalence (Lens.get l)
 Is-bi-invertible→Is-equivalence-get
   b@⊠ univ l@(⟨ _ , _ , _ ⟩)
   is-bi-inv@((⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
@@ -2297,7 +2299,7 @@ Is-bi-invertible≃Is-equivalence-get :
   (b : Block "id") →
   Univalence a →
   (l : Lens A B) →
-  B.Is-bi-invertible b l ≃ Is-equivalence (Lens.get l)
+  Is-bi-invertible b l ≃ Is-equivalence (Lens.get l)
 Is-bi-invertible≃Is-equivalence-get b univ l = Eq.⇔→≃
   (BM.Is-bi-invertible-propositional b univ l)
   (Eq.propositional ext _)
@@ -2306,9 +2308,9 @@ Is-bi-invertible≃Is-equivalence-get b univ l = Eq.⇔→≃
 
      let l′ = ≃→lens′ Eq.⟨ get l , is-equiv ⟩ in
 
-                              $⟨ proj₂ (_≃_.to (≃≃≊ b univ) Eq.⟨ _ , is-equiv ⟩) ⟩
-     B.Is-bi-invertible b l′  ↝⟨ subst (B.Is-bi-invertible b) (sym $ get-equivalence→≡≃→lens′ univ l is-equiv) ⟩□
-     B.Is-bi-invertible b l   □)
+                            $⟨ proj₂ (_≃_.to (≃≃≊ b univ) Eq.⟨ _ , is-equiv ⟩) ⟩
+     Is-bi-invertible b l′  ↝⟨ subst (Is-bi-invertible b) (sym $ get-equivalence→≡≃→lens′ univ l is-equiv) ⟩□
+     Is-bi-invertible b l   □)
   where
   open Lens
 
