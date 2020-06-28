@@ -2288,10 +2288,9 @@ Is-bi-invertible→Is-equivalence-get
   is-bi-inv@((⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
   _≃_.is-equivalence (_≃_.from (≃≃≊ b univ) (l , is-bi-inv))
 
--- If l is a lens between types in the same universe, and the codomain
--- of l is inhabited when its remainder type is inhabited, then there
--- is an equivalence between "l is bi-invertible" and "the getter of l
--- is an equivalence" (assuming univalence).
+-- If l is a lens between types in the same universe, then there is an
+-- equivalence between "l is bi-invertible" and "the getter of l is an
+-- equivalence" (assuming univalence).
 
 Is-bi-invertible≃Is-equivalence-get :
   {A B : Set a}
