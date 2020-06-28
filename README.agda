@@ -17,6 +17,10 @@ import Lens.Non-dependent.Higher.Surjective-remainder
 import Lens.Non-dependent.Equivalent-preimages
 import Lens.Non-dependent.Bijection
 
+-- Non-dependent lenses with erased proofs.
+
+import Lens.Non-dependent.Traditional.Erased
+
 -- Dependent lenses.
 
 import Lens.Dependent
