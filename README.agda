@@ -20,6 +20,7 @@ import Lens.Non-dependent.Bijection
 -- Non-dependent lenses with erased proofs.
 
 import Lens.Non-dependent.Traditional.Erased
+import Lens.Non-dependent.Higher.Erased
 
 -- Dependent lenses.
 
