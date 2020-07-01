@@ -29,6 +29,7 @@ open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq as Trunc
 import Nat equality-with-J as Nat
 open import Preimage equality-with-J using (_⁻¹_)
+open import Quotient eq
 open import Surjection equality-with-J using (_↠_)
 open import Univalence-axiom equality-with-J
 
@@ -595,6 +596,62 @@ lenses-equal-if-setters-equal-and-remainder-propositional
     Trunc.rec R₂-prop
       (λ b → remainder l₂ (_≃_.from (equiv l₁) (r , b)))
       (inhabited l₁ r)
+
+-- A generalisation of the previous result: If a lens has a remainder
+-- type that is a set, then this lens is equal to another lens if
+-- their setters are equal (assuming univalence).
+--
+-- This result is due to Andrea Vezzosi.
+
+lenses-equal-if-setters-equal-and-remainder-set :
+  {A : Set a} {B : Set b} →
+  Univalence (a ⊔ b) →
+  (l₁ l₂ : Lens A B) →
+  Is-set (Lens.R l₂) →
+  Lens.set l₁ ≡ Lens.set l₂ →
+  l₁ ≡ l₂
+lenses-equal-if-setters-equal-and-remainder-set
+  {B = B} univ l₁ l₂ R₂-set setters-equal =
+
+  lenses-equal-if-setters-equal′
+    univ l₁ l₂ f
+    (λ b r →
+         b
+       , (remainder l₂ (_≃_.from (equiv l₁) (r , b))  ≡⟨ cong (f₂ r) $ truncation-is-proposition ∣ _ ∣ (inhabited l₁ r) ⟩∎
+          f r                                         ∎))
+    (λ a →
+       f (remainder l₁ a)                                   ≡⟨⟩
+       f₂ (remainder l₁ a) (inhabited l₁ (remainder l₁ a))  ≡⟨ cong (f₂ (remainder l₁ a)) $
+                                                               truncation-is-proposition (inhabited l₁ (remainder l₁ a)) ∣ _ ∣ ⟩
+       f₁ (remainder l₁ a) (get l₁ a)                       ≡⟨ sym $ f₁-remainder _ _ ⟩∎
+       remainder l₂ a                                       ∎)
+    setters-equal
+  where
+  open Lens
+
+  f₁ : R l₁ → B → R l₂
+  f₁ r b = remainder l₂ (_≃_.from (equiv l₁) (r , b))
+
+  f₁-remainder : ∀ a b → remainder l₂ a ≡ f₁ (remainder l₁ a) b
+  f₁-remainder a b =
+    remainder l₂ a             ≡⟨ sym $ remainder-set l₂ a b ⟩
+    remainder l₂ (set l₂ a b)  ≡⟨ cong (λ f → remainder l₂ (f a b)) $ sym setters-equal ⟩∎
+    remainder l₂ (set l₁ a b)  ∎
+
+  f₂ : R l₁ → ∥ B ∥ → R l₂
+  f₂ r =
+    _↔_.to (constant-function↔∥inhabited∥⇒inhabited R₂-set)
+      ( f₁ r
+      , λ b₁ b₂ →
+          let a = _≃_.from (equiv l₁) (r , b₁) in
+          remainder l₂ a                                            ≡⟨ f₁-remainder _ _ ⟩
+          f₁ (remainder l₁ a) b₂                                    ≡⟨⟩
+          remainder l₂ (_≃_.from (equiv l₁) (remainder l₁ a , b₂))  ≡⟨ cong (λ p → f₁ (proj₁ p) b₂) $ _≃_.right-inverse-of (equiv l₁) _ ⟩∎
+          remainder l₂ (_≃_.from (equiv l₁) (r , b₂))               ∎
+      )
+
+  f : R l₁ → R l₂
+  f r = f₂ r (inhabited l₁ r)
 
 -- The functions ≃→lens and ≃→lens′ are pointwise equal (when
 -- applicable, assuming univalence).
