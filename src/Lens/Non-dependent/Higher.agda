@@ -585,7 +585,7 @@ lenses-equal-if-setters-equal-and-remainder-propositional
        , (remainder l₂ (_≃_.from (equiv l₁) (r , b))  ≡⟨ R₂-prop _ _ ⟩∎
           f r                                         ∎))
     (λ a →
-       f (remainder l₁ a)  ≡⟨ R₂-prop _ _ ⟩
+       f (remainder l₁ a)  ≡⟨ R₂-prop _ _ ⟩∎
        remainder l₂ a      ∎)
   where
   open Lens
@@ -708,7 +708,7 @@ _ :
   (prop : Is-proposition B)
   (l : Lens A B) →
   _↔_.to (lens-to-proposition↔get univ prop) l ≡
-  rec prop P.id ⊚ Lens.inhabited l ⊚ Lens.remainder l
+  Trunc.rec prop P.id ⊚ Lens.inhabited l ⊚ Lens.remainder l
 _ = λ _ _ _ → refl _
 
 -- A variant of the previous result.
@@ -843,10 +843,10 @@ lens-from-⊥↔⊤ {B = B} univ =
     }
     where
     whatever : ∀ {ℓ} {Whatever : R l → Set ℓ} → (r : R l) → Whatever r
-    whatever r = ⊥-elim {ℓ = lzero} $
-      rec ⊥-propositional
-          (λ b → ⊥-elim (_≃_.from (equiv l) (r , b)))
-          (inhabited l r)
+    whatever r = ⊥-elim {ℓ = lzero} $ Trunc.rec
+      ⊥-propositional
+      (λ b → ⊥-elim (_≃_.from (equiv l) (r , b)))
+      (inhabited l r)
 
 -- There is an equivalence between A ≃ B and
 -- ∃ λ (l : Lens A B) → Is-equivalence (Lens.get l) (assuming
@@ -970,18 +970,18 @@ private
       open Lens l′ renaming (equiv to l)
 
       B-set : (B → R) → ∥ B ∥ → Is-set B
-      B-set f =
-        rec (H-level-propositional ext 2)
-            (λ b → proj₂-closure (f b) 2 $
-                   H-level.respects-surjection
-                     (_≃_.surjection l) 2 A-set)
+      B-set f = Trunc.rec
+        (H-level-propositional ext 2)
+        (λ b → proj₂-closure (f b) 2 $
+               H-level.respects-surjection
+                 (_≃_.surjection l) 2 A-set)
 
       R-set : ∥ B ∥ → Is-set R
-      R-set =
-        rec (H-level-propositional ext 2)
-            (λ b → proj₁-closure (const b) 2 $
-                   H-level.respects-surjection
-                     (_≃_.surjection l) 2 A-set)
+      R-set = Trunc.rec
+        (H-level-propositional ext 2)
+        (λ b → proj₁-closure (const b) 2 $
+               H-level.respects-surjection
+                 (_≃_.surjection l) 2 A-set)
 
       lemma′ : (∥ B ∥ × (∥ B ∥ → R)) ↔ R
       lemma′ = record
@@ -1265,9 +1265,10 @@ remainder-has-same-h-level-as-domain {A = A} {B = B} l (suc n) h =
   [inhabited⇒+]⇒+ n λ r →
                              $⟨ h ⟩
     H-level (1 + n) A        ↝⟨ H-level.respects-surjection (_≃_.surjection equiv) (1 + n) ⟩
-    H-level (1 + n) (R × B)  ↝⟨ rec (Π-closure ext 1 λ _ → H-level-propositional ext (1 + n))
-                                    (λ b → proj₁-closure (λ _ → b) (1 + n))
-                                    (inhabited r) ⟩□
+    H-level (1 + n) (R × B)  ↝⟨ Trunc.rec
+                                  (Π-closure ext 1 λ _ → H-level-propositional ext (1 + n))
+                                  (λ b → proj₁-closure (λ _ → b) (1 + n))
+                                  (inhabited r) ⟩□
     H-level (1 + n) R        □
   where
   open Lens l
@@ -1407,10 +1408,10 @@ Is-proposition-closed-domain {b = b} {A = A} {B = B} univ A-prop =
     remainder-has-same-h-level-as-domain l 1 A-prop
 
   remainder⁻¹ : (l : Lens A B) → R l → A
-  remainder⁻¹ l r =
-    rec A-prop
-        (λ b → _≃_.from (equiv l) (r , b))
-        (inhabited l r)
+  remainder⁻¹ l r = Trunc.rec
+    A-prop
+    (λ b → _≃_.from (equiv l) (r , b))
+    (inhabited l r)
 
   R-to-R : (l₁ l₂ : Lens A B) → R l₁ → R l₂
   R-to-R l₁ l₂ = remainder l₂ ⊚ remainder⁻¹ l₁
