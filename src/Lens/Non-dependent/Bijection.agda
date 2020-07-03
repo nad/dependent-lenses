@@ -76,7 +76,7 @@ Lens↠Higher-lens {A = A} {B} univ = record
     ; from = λ { l → R l , _≃_.bijection (equiv l) }
     }
   ; right-inverse-of = λ { l →
-      _↔_.from (Higher.equality-characterisation₂ univ)
+      _↔_.from (Higher.equality-characterisation₂ ⊠ univ)
         ( (R l × ∥ B ∥  ↔⟨ drop-⊤-right (λ r → inhabited⇒∥∥↔⊤ (inhabited l r)) ⟩□
            R l          □)
         , λ _ → refl _

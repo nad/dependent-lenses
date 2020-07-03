@@ -349,7 +349,7 @@ equality-characterisation₀ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
 equality-characterisation₁ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} univ =
   l₁ ≡ l₂                                                        ↔⟨ inverse $ Eq.≃-≡ Lens≃Higher-lens ⟩
 
-  high l₁ ≡ high l₂                                              ↝⟨ H.equality-characterisation₁ univ ⟩
+  high l₁ ≡ high l₂                                              ↝⟨ H.equality-characterisation₁ ⊠ univ ⟩
 
   (∃ λ (eq : R l₁ ≃ R l₂) →
     (eq ×-cong F.id) F.∘ H.Lens.equiv (high l₁) ≡
@@ -379,7 +379,7 @@ equality-characterisation₁ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} univ =
 equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} univ =
   l₁ ≡ l₂                                             ↔⟨ inverse $ Eq.≃-≡ Lens≃Higher-lens ⟩
 
-  high l₁ ≡ high l₂                                   ↝⟨ H.equality-characterisation₂ univ ⟩□
+  high l₁ ≡ high l₂                                   ↝⟨ H.equality-characterisation₂ ⊠ univ ⟩□
 
   (∃ λ (eq : R l₁ ≃ R l₂) →
      ∀ x → (_≃_.to eq (remainder l₁ x) , get l₁ x) ≡
