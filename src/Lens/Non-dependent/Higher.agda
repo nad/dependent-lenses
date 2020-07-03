@@ -208,26 +208,44 @@ instance
 
 Lens-as-Σ :
   {A : Set a} {B : Set b} →
-  Lens A B ↔
+  Lens A B ≃
   ∃ λ (R : Set (a ⊔ b)) →
     (A ≃ (R × B)) ×
     (R → ∥ B ∥)
-Lens-as-Σ = record
-  { surjection = record
-    { logical-equivalence = record
-      { to   = λ l → R l , equiv l , inhabited l
-      ; from = λ (R , equiv , inhabited) → record
-                 { R         = R
-                 ; equiv     = equiv
-                 ; inhabited = inhabited
-                 }
-      }
-    ; right-inverse-of = refl
-    }
-  ; left-inverse-of = λ { ⟨ _ , _ , _ ⟩ → refl _ }
-  }
+Lens-as-Σ = Eq.↔→≃
+  (λ l → R l , equiv l , inhabited l)
+  (λ (R , equiv , inhabited) → record
+     { R         = R
+     ; equiv     = equiv
+     ; inhabited = inhabited
+     })
+  refl
+  η
   where
   open Lens
+
+-- An equality rearrangement lemma.
+
+left-inverse-of-Lens-as-Σ :
+  (l : Lens A B) →
+  _≃_.left-inverse-of Lens-as-Σ l ≡ η l
+left-inverse-of-Lens-as-Σ l@(⟨ _ , _ , _ ⟩) =
+  _≃_.left-inverse-of Lens-as-Σ l                          ≡⟨⟩
+
+  _≃_.left-inverse-of Lens-as-Σ
+    (_≃_.from Lens-as-Σ (_≃_.to Lens-as-Σ l))              ≡⟨ sym $ _≃_.right-left-lemma Lens-as-Σ _ ⟩
+
+  cong (_≃_.from Lens-as-Σ)
+    (_≃_.right-inverse-of Lens-as-Σ (_≃_.to Lens-as-Σ l))  ≡⟨⟩
+
+  cong (_≃_.from Lens-as-Σ)
+    (trans (sym (sym (refl _))) (refl _))                  ≡⟨ cong (cong (_≃_.from Lens-as-Σ)) $
+                                                              trans (trans-reflʳ _) $
+                                                              sym-sym _ ⟩
+
+  cong (_≃_.from Lens-as-Σ) (refl _)                       ≡⟨ cong-refl _ ⟩∎
+
+  refl _                                                   ∎
 
 -- Isomorphisms can be converted into lenses.
 
@@ -284,7 +302,7 @@ equality-characterisation₀ :
   ∃ λ (p : R l₁ ≡ R l₂) →
     subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂
 equality-characterisation₀ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
-  l₁ ≡ l₂                                                     ↔⟨ inverse $ Eq.≃-≡ $ Eq.↔⇒≃ Lens-as-Σ ⟩
+  l₁ ≡ l₂                                                     ↔⟨ inverse $ Eq.≃-≡ Lens-as-Σ ⟩
 
   l₁′ ≡ l₂′                                                   ↝⟨ inverse Bij.Σ-≡,≡↔≡ ⟩
 
@@ -305,8 +323,8 @@ equality-characterisation₀ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
   where
   open Lens
 
-  l₁′ = _↔_.to Lens-as-Σ l₁
-  l₂′ = _↔_.to Lens-as-Σ l₂
+  l₁′ = _≃_.to Lens-as-Σ l₁
+  l₂′ = _≃_.to Lens-as-Σ l₂
 
 -- Equality of lenses is isomorphic to certain pairs (assuming
 -- univalence).
@@ -736,9 +754,9 @@ Lens-cong :
   A₁ ↔ A₂ → B₁ ↔ B₂ →
   Lens A₁ B₁ ↔ Lens A₂ B₂
 Lens-cong {A₁ = A₁} {A₂ = A₂} {B₁ = B₁} {B₂ = B₂} A₁↔A₂ B₁↔B₂ =
-  Lens A₁ B₁                              ↝⟨ Lens-as-Σ ⟩
+  Lens A₁ B₁                              ↔⟨ Lens-as-Σ ⟩
   (∃ λ R → A₁ ≃ (R × B₁) × (R → ∥ B₁ ∥))  ↝⟨ Lens-cong′ A₁↔A₂ B₁↔B₂ ⟩
-  (∃ λ R → A₂ ≃ (R × B₂) × (R → ∥ B₂ ∥))  ↝⟨ inverse Lens-as-Σ ⟩□
+  (∃ λ R → A₂ ≃ (R × B₂) × (R → ∥ B₂ ∥))  ↔⟨ inverse Lens-as-Σ ⟩□
   Lens A₂ B₂                              □
 
 -- If B is a proposition, then Lens A B is isomorphic to A → B
@@ -750,7 +768,7 @@ lens-to-proposition↔get :
   Is-proposition B →
   Lens A B ↔ (A → B)
 lens-to-proposition↔get {b = b} {A = A} {B = B} univ B-prop =
-  Lens A B                             ↝⟨ Lens-as-Σ ⟩
+  Lens A B                             ↔⟨ Lens-as-Σ ⟩
   (∃ λ R → A ≃ (R × B) × (R → ∥ B ∥))  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ →
                                              ∥∥↔ B-prop) ⟩
   (∃ λ R → A ≃ (R × B) × (R → B))      ↝⟨ (∃-cong λ _ →
@@ -854,7 +872,7 @@ lens-from-contractible↔codomain-contractible :
   Contractible A →
   Lens A B ↔ Contractible B
 lens-from-contractible↔codomain-contractible {A = A} {B} univ cA =
-  Lens A B                                                   ↝⟨ Lens-as-Σ ⟩
+  Lens A B                                                   ↔⟨ Lens-as-Σ ⟩
   (∃ λ R → A ≃ (R × B) × (R → ∥ B ∥))                        ↝⟨ ∃-cong (λ _ →
                                                                   Eq.≃-preserves-bijections ext (_⇔_.to contractible⇔↔⊤ cA) F.id
                                                                     ×-cong

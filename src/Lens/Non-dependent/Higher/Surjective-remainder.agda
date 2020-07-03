@@ -60,7 +60,7 @@ instance
 Higher-lens↔Lens : Higher.Lens A B ↔ Lens A B
 Higher-lens↔Lens {A = A} {B = B} =
 
-  Higher.Lens A B                                         ↝⟨ Higher.Lens-as-Σ ⟩
+  Higher.Lens A B                                         ↔⟨ Higher.Lens-as-Σ ⟩
 
   (∃ λ (R : Set _) →
      (A ≃ (R × B)) ×
