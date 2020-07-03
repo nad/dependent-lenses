@@ -197,6 +197,13 @@ instance
 ------------------------------------------------------------------------
 -- Simple definitions related to lenses
 
+-- An η-law for lenses.
+
+η :
+  (l : Lens A B) →
+  ⟨ Lens.R l , Lens.equiv l , Lens.inhabited l ⟩ ≡ l
+η ⟨ _ , _ , _ ⟩ = refl _
+
 -- Lens can be expressed as a nested Σ-type.
 
 Lens-as-Σ :
