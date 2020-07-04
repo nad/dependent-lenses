@@ -315,7 +315,7 @@ Lens≃Higher-lens {A = A} {B = B} ⊠ univ =
     open Higher.Lens l
 
   to∘from : ∀ l → to (from l) ≡ l
-  to∘from l = _↔_.from (Higher.equality-characterisation₃ univ)
+  to∘from l = _↔_.from (Higher.equality-characterisation₂ univ)
     ( (∥ B ∥ × R  ↔⟨ (drop-⊤-left-× λ r → _⇔_.to contractible⇔↔⊤ $
                       propositional⇒inhabited⇒contractible
                         truncation-is-proposition

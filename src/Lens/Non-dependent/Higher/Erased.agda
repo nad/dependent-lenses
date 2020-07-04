@@ -345,41 +345,12 @@ equality-characterisation₀ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
   l₁ ≡ l₂
     ↔
   ∃ λ (eq : R l₁ ≃ R l₂) →
-    from-equivalence (eq ×-cong F.id) F.∘ equiv l₁ ≡ equiv l₂
-equality-characterisation₁ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} univ =
-  l₁ ≡ l₂                                                        ↔⟨ inverse $ Eq.≃-≡ Lens≃Higher-lens ⟩
-
-  high l₁ ≡ high l₂                                              ↝⟨ H.equality-characterisation₁ ⊠ univ ⟩
-
-  (∃ λ (eq : R l₁ ≃ R l₂) →
-    (eq ×-cong F.id) F.∘ H.Lens.equiv (high l₁) ≡
-    H.Lens.equiv (high l₂))                                      ↔⟨ (∃-cong λ eq → inverse $ Eq.≃-≡ $ EEq.≃≃≃ᴱ ext) ⟩
-
-  (∃ λ (eq : R l₁ ≃ R l₂) →
-     EEq.≃→≃ᴱ ((eq ×-cong F.id) F.∘ H.Lens.equiv (high l₁)) ≡
-     EEq.≃→≃ᴱ (H.Lens.equiv (high l₂)))                          ↝⟨ (∃-cong λ _ → ≡⇒↝ _ $ cong₂ _≡_
-                                                                       (EEq.to≡to→≡ ext (refl _))
-                                                                       (EEq.to≡to→≡ ext (refl _))) ⟩□
-  (∃ λ (eq : R l₁ ≃ R l₂) →
-     from-equivalence (eq ×-cong F.id) F.∘ equiv l₁ ≡ equiv l₂)  □
-  where
-  open Lens
-
--- Yet another equality characterisation lemma.
-
-@0 equality-characterisation₂ :
-  {A : Set a} {B : Set b} {l₁ l₂ : Lens A B} →
-  let open Lens in
-  Univalence (a ⊔ b) →
-  l₁ ≡ l₂
-    ↔
-  ∃ λ (eq : R l₁ ≃ R l₂) →
     ∀ x → (_≃_.to eq (remainder l₁ x) , get l₁ x) ≡
           _≃ᴱ_.to (equiv l₂) x
-equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} univ =
+equality-characterisation₁ {l₁ = l₁} {l₂ = l₂} univ =
   l₁ ≡ l₂                                             ↔⟨ inverse $ Eq.≃-≡ Lens≃Higher-lens ⟩
 
-  high l₁ ≡ high l₂                                   ↝⟨ H.equality-characterisation₂ ⊠ univ ⟩□
+  high l₁ ≡ high l₂                                   ↝⟨ H.equality-characterisation₁ ⊠ univ ⟩□
 
   (∃ λ (eq : R l₁ ≃ R l₂) →
      ∀ x → (_≃_.to eq (remainder l₁ x) , get l₁ x) ≡
@@ -389,7 +360,7 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} univ =
 
 -- And another one.
 
-@0 equality-characterisation₃ :
+@0 equality-characterisation₂ :
   {A : Set a} {B : Set b} {l₁ l₂ : Lens A B} →
   let open Lens in
   Univalence (a ⊔ b) →
@@ -399,10 +370,10 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} univ =
     (∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x)
       ×
     (∀ x → get l₁ x ≡ get l₂ x)
-equality-characterisation₃ {l₁ = l₁} {l₂ = l₂} univ =
+equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} univ =
   l₁ ≡ l₂                                                 ↔⟨ inverse $ Eq.≃-≡ Lens≃Higher-lens ⟩
 
-  high l₁ ≡ high l₂                                       ↝⟨ H.equality-characterisation₃ univ ⟩□
+  high l₁ ≡ high l₂                                       ↝⟨ H.equality-characterisation₂ univ ⟩□
 
   (∃ λ (eq : R l₁ ≃ R l₂) →
      (∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x)
@@ -413,7 +384,7 @@ equality-characterisation₃ {l₁ = l₁} {l₂ = l₂} univ =
 
 -- And a final one.
 
-@0 equality-characterisation₄ :
+@0 equality-characterisation₃ :
   {A : Set a} {B : Set b} {l₁ l₂ : Lens A B} →
   let open Lens in
   Univalence (a ⊔ b) →
@@ -422,10 +393,10 @@ equality-characterisation₃ {l₁ = l₁} {l₂ = l₂} univ =
   ∃ λ (eq : R l₁ ≃ R l₂) →
     ∀ p → _≃ᴱ_.from (equiv l₁) (_≃_.from eq (proj₁ p) , proj₂ p) ≡
           _≃ᴱ_.from (equiv l₂) p
-equality-characterisation₄ {l₁ = l₁} {l₂} univ =
+equality-characterisation₃ {l₁ = l₁} {l₂} univ =
   l₁ ≡ l₂                                                            ↔⟨ inverse $ Eq.≃-≡ Lens≃Higher-lens ⟩
 
-  high l₁ ≡ high l₂                                                  ↝⟨ H.equality-characterisation₄ univ ⟩□
+  high l₁ ≡ high l₂                                                  ↝⟨ H.equality-characterisation₃ univ ⟩□
 
   (∃ λ (eq : R l₁ ≃ R l₂) →
      ∀ p → _≃ᴱ_.from (equiv l₁) (_≃_.from eq (proj₁ p) , proj₂ p) ≡
@@ -529,7 +500,7 @@ lenses-equal-if-setters-equal-and-remainder-propositional
   Univalence a →
   (A≃B : A ≃ᴱ B) → ≃ᴱ→Lens A≃B ≡ ≃ᴱ→Lens′ A≃B
 ≃ᴱ→Lens≡≃ᴱ→Lens′ {B = B} univ A≃B =
-  _↔_.from (equality-characterisation₃ univ)
+  _↔_.from (equality-characterisation₂ univ)
     ( (Erased ∥ ↑ _ B ∥  ↔⟨ Erased-cong (∥∥-cong Bijection.↑↔) ⟩□
        Erased ∥ B ∥      □)
     , (λ _ → refl _)
@@ -626,7 +597,7 @@ lens-to-proposition≃ᴱget {b = b} {A = A} {B = B} univ prop = EEq.↔→≃�
                           (inhabited l r)) ⟩□
            R l      □
      in
-     _↔_.from (equality-characterisation₂ univ)
+     _↔_.from (equality-characterisation₁ univ)
         (lemma , λ _ → refl _))
   where
   open Lens
@@ -713,7 +684,7 @@ lens-from-⊥↔⊤ {B = B} univ =
       ≃ᴱ×→Lens
         (⊥      ↔⟨ inverse ×-left-zero ⟩□
          ⊥ × B  □)
-    , [ (λ l → _↔_.from (equality-characterisation₂ univ)
+    , [ (λ l → _↔_.from (equality-characterisation₁ univ)
                  ( (⊥ × Erased ∥ B ∥  ↔⟨ ×-left-zero ⟩
                     ⊥₀                ↝⟨ lemma l ⟩□
                     R l               □)
@@ -861,7 +832,7 @@ private
       Univalence (a ⊔ b) →
       ∀ bc l → from bc (Lens.traditional-lens l) ≡ l
     from∘to univ ⊠ l′ =
-      _↔_.from (equality-characterisation₄ univ)
+      _↔_.from (equality-characterisation₃ univ)
         ( lemma
         , λ p →
             _≃ᴱ_.from l (subst (λ _ → R) (refl _) (proj₁ p) , proj₂ p)  ≡⟨ cong (λ r → _≃ᴱ_.from l (r , proj₂ p)) $ subst-refl _ _ ⟩∎
@@ -1600,7 +1571,7 @@ module Lens-combinators where
     (univ : Univalence a) →
     Higher-lens→Lens (HLC.id b) ≡ id {A = A} b
   Higher-lens-id≡id {A = A} ⊠ univ =
-    _↔_.from (equality-characterisation₂ univ)
+    _↔_.from (equality-characterisation₁ univ)
       ( (∥ A ∥         ↔⟨ inverse $ erased Erased↔ ⟩□
          Erased ∥ A ∥  □)
       , λ _ → refl _
@@ -1641,7 +1612,7 @@ module Lens-combinators where
     Higher-lens→Lens (HLC.⟨ a , b ⟩ l₁ ∘ l₂) ≡
     ⟨ a , b ⟩ Higher-lens→Lens l₁ ∘ Higher-lens→Lens l₂
   Higher-lens-∘≡∘ _ _ univ (H.⟨ _ , _ , _ ⟩) (H.⟨ _ , _ , _ ⟩) =
-    _↔_.from (equality-characterisation₂ univ)
+    _↔_.from (equality-characterisation₁ univ)
       ( F.id
       , λ _ → refl _
       )
@@ -1686,7 +1657,7 @@ module Lens-combinators where
     ⟨ a ⊔ b , c ⟩ l₁ ∘ (⟨ a , b ⟩ l₂ ∘ l₃) ≡
     ⟨ a , b ⊔ c ⟩ (⟨ b , c ⟩ l₁ ∘ l₂) ∘ l₃
   associativity _ _ _ univ ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ =
-    _↔_.from (equality-characterisation₂ univ)
+    _↔_.from (equality-characterisation₁ univ)
              (Eq.↔⇒≃ (inverse ×-assoc) , λ _ → refl _)
 
   @0 left-identity :
@@ -1695,7 +1666,7 @@ module Lens-combinators where
     (l : Lens A B) →
     ⟨ a , lzero ⟩ id bi ∘ l ≡ l
   left-identity ⊠ _ {B = B} univ l@(⟨ _ , _ , _ ⟩) =
-    _↔_.from (equality-characterisation₂ univ)
+    _↔_.from (equality-characterisation₁ univ)
       ( (R × Erased ∥ B ∥  ↔⟨ lemma ⟩□
          R                 □)
       , λ _ → refl _
@@ -1722,7 +1693,7 @@ module Lens-combinators where
     (l : Lens A B) →
     ⟨ lzero , a ⟩ l ∘ id bi ≡ l
   right-identity ⊠ _ {A = A} univ l@(⟨ _ , _ , _ ⟩) =
-    _↔_.from (equality-characterisation₂ univ)
+    _↔_.from (equality-characterisation₁ univ)
       ( (Erased ∥ A ∥ × R  ↔⟨ lemma ⟩□
          R                 □)
       , λ _ → refl _
@@ -1905,7 +1876,7 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
     l⁻¹ = ≃ᴱ→Lens′ (inverse A≃B)
 
     @0 l∘l⁻¹≡id : ∀ b → l ∘ l⁻¹ ≡ id b
-    l∘l⁻¹≡id ⊠ = _↔_.from (equality-characterisation₂ univ)
+    l∘l⁻¹≡id ⊠ = _↔_.from (equality-characterisation₁ univ)
       ( (Erased ∥ A ∥ × Erased ∥ B ∥  ↔⟨ inverse Erased-Σ↔Σ ⟩
          Erased (∥ A ∥ × ∥ B ∥)       ↔⟨ Erased-cong (
                                          drop-⊤-left-× λ b →
@@ -1917,7 +1888,7 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
       )
 
     @0 l⁻¹∘l≡id : ∀ b → l⁻¹ ∘ l ≡ id b
-    l⁻¹∘l≡id ⊠ = _↔_.from (equality-characterisation₂ univ)
+    l⁻¹∘l≡id ⊠ = _↔_.from (equality-characterisation₁ univ)
       ( (Erased ∥ B ∥ × Erased ∥ A ∥  ↔⟨ inverse Erased-Σ↔Σ ⟩
          Erased (∥ B ∥ × ∥ A ∥)       ↔⟨ Erased-cong (
                                          drop-⊤-left-× λ a →
@@ -2198,7 +2169,7 @@ Has-right-inverseᴱ→remainder-propositional
   @0 to∘from : ∀ b A≊ᴱB → to b (from b A≊ᴱB) ≡ A≊ᴱB
   to∘from b A≊ᴱB =
     _≃_.from (equality-characterisation-≊ᴱ b univ _ _) $
-    _↔_.from (equality-characterisation₃ univ)
+    _↔_.from (equality-characterisation₂ univ)
       ( ∥B∥≃R  b A≊ᴱB
       , lemma₁ b A≊ᴱB
       , lemma₂ b A≊ᴱB
@@ -2365,5 +2336,5 @@ Is-bi-invertible≃Is-equivalence-get b univ l = EEq.⇔→≃ᴱ
   (A-set : Is-set A) →
   proj₁ (_≃ᴱ_.to (≃ᴱ≃ᴱ≅ᴱ b univ A-set) F.id) ≡ id b
 ≃ᴱ≃ᴱ≅ᴱ-id≡id ⊠ univ _ =
-  _↔_.from (equality-characterisation₂ univ)
+  _↔_.from (equality-characterisation₁ univ)
     (F.id , λ _ → refl _)
