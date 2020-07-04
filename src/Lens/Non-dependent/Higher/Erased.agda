@@ -433,8 +433,8 @@ equality-characterisation₄ {l₁ = l₁} {l₂} univ =
   where
   open Lens
 
--- ------------------------------------------------------------------------
--- -- More lens equalities
+------------------------------------------------------------------------
+-- More lens equalities
 
 -- If the forward direction of an equivalence with erased proofs is
 -- Lens.get l, then the setter of l can be expressed using the other
