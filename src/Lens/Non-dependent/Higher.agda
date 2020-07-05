@@ -580,12 +580,17 @@ private
         ( ≃⇒≡ univ p
         , Eq.lift-equality ext
             (trans
-               (trans Eq.to-subst
-                  (sym (transport-theorem
-                          (λ R → A → R × B)
-                          (λ eq f → Σ-map (_≃_.to eq) P.id ⊚ f)
-                          refl
-                          univ _ _)))
+               (≃-elim¹ univ
+                  (λ {R} p →
+                     _≃_.to (subst (λ R → A ≃ (R × B))
+                               (≃⇒≡ univ p) (equiv l₁)) ≡
+                     (λ a → _≃_.to p (remainder l₁ a) , get l₁ a))
+                  (trans
+                     (cong (λ eq → _≃_.to (subst (λ R → A ≃ (R × B))
+                                             eq (equiv l₁)))
+                        (≃⇒≡-id univ))
+                     (cong _≃_.to $ subst-refl _ _))
+                  p)
                (⟨ext⟩ q))
         )
   equality-characterisation₁′ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂}
@@ -601,15 +606,21 @@ private
        (∃ λ (p : R l₁ ≃ R l₂) →
           ∀ a →
           _≃_.to (subst (λ R → A ≃ (R × B)) (≃⇒≡ univ p) (equiv l₁)) a ≡
-          _≃_.to (equiv l₂) a)                                            ↔⟨ (∃-cong λ _ → ∀-cong ext λ a → inverse $ ≡⇒≃ $
-                                                                              cong (_≡ _) $ cong (_$ a) $
-                                                                              trans
-                                                                                (transport-theorem
-                                                                                   (λ R → A → R × B)
-                                                                                   (λ eq f → Σ-map (_≃_.to eq) P.id ⊚ f)
-                                                                                   refl
-                                                                                   univ _ _) $
-                                                                                sym Eq.to-subst) ⟩□
+          _≃_.to (equiv l₂) a)                                            ↔⟨ (∃-cong λ p → ∀-cong ext λ a → inverse $ ≡⇒≃ $
+                                                                              cong (_≡ _) $ sym $ cong (_$ a) $
+                                                                              ≃-elim¹ univ
+                                                                                (λ {R} p →
+                                                                                   _≃_.to (subst (λ R → A ≃ (R × B)) (≃⇒≡ univ p) (equiv l₁)) ≡
+                                                                                   (λ a → _≃_.to p (remainder l₁ a) , get l₁ a))
+                                                                                (
+           _≃_.to (subst (λ R → A ≃ (R × B))
+                     (≃⇒≡ univ Eq.id) (equiv l₁))                                ≡⟨ cong (λ eq → _≃_.to (subst (λ R → A ≃ (R × B)) eq (equiv l₁))) $
+                                                                                    ≃⇒≡-id univ ⟩
+
+           _≃_.to (subst (λ R → A ≃ (R × B)) (refl _) (equiv l₁))                ≡⟨ cong _≃_.to $ subst-refl _ _ ⟩∎
+
+           _≃_.to (equiv l₁)                                                     ∎)
+                                                                                p) ⟩□
        (∃ λ (p : R l₁ ≃ R l₂) →
           ∀ a → (_≃_.to p (remainder l₁ a) , get l₁ a) ≡
                 _≃_.to (equiv l₂) a)                                      □)
@@ -618,54 +629,64 @@ private
           ( ≃⇒≡ univ p
           , Eq.lift-equality ext
               (⟨ext⟩ λ a →
-               ≡⇒→ (cong (_≡ _) $ cong (_$ a) $
-                    trans (transport-theorem
-                             (λ R → A → R × B)
-                             (λ eq f → Σ-map (_≃_.to eq) P.id ⊚ f)
-                             refl
-                             univ _ _) $
-                    sym Eq.to-subst)
+               ≡⇒→ (cong (_≡ _) $ sym $ cong (_$ a) $
+                    ≃-elim¹ univ
+                      (λ {R} p →
+                         _≃_.to (subst (λ R → A ≃ (R × B))
+                                   (≃⇒≡ univ p) (equiv l₁)) ≡
+                         (λ a → _≃_.to p (remainder l₁ a) , get l₁ a))
+                      (trans
+                         (cong (λ eq → _≃_.to (subst (λ R → A ≃ (R × B))
+                                                 eq (equiv l₁)))
+                            (≃⇒≡-id univ))
+                         (cong _≃_.to $ subst-refl _ _))
+                      p)
                  (q a))
-          )                                                       ≡⟨ (cong (λ eq → _↔_.from (equality-characterisation₀ b)
-                                                                                     (≃⇒≡ univ p , Eq.lift-equality ext (⟨ext⟩ eq))) $
-                                                                      ⟨ext⟩ λ a →
-                                                                      trans (sym $ subst-in-terms-of-≡⇒↝ equivalence _ _ _) $
-                                                                      trans subst-trans-sym $
-                                                                      cong (flip trans (q a)) $
-                                                                      trans (sym $ cong-sym _ _) $
-                                                                      cong (cong (_$ a)) $
-                                                                      trans (sym-trans _ _) $
-                                                                      cong (flip trans _) $ sym-sym _) ⟩
+          )                                                               ≡⟨ (cong (λ eq → _↔_.from (equality-characterisation₀ b)
+                                                                                             (≃⇒≡ univ p , Eq.lift-equality ext (⟨ext⟩ eq))) $
+                                                                              ⟨ext⟩ λ a →
+                                                                              trans (sym $ subst-in-terms-of-≡⇒↝ equivalence _ _ _) $
+                                                                              subst-trans _) ⟩
         _↔_.from (equality-characterisation₀ b)
           ( ≃⇒≡ univ p
           , Eq.lift-equality ext
               (⟨ext⟩ λ a →
                trans
                  (cong (_$ a) $
-                  trans Eq.to-subst $
-                  sym $ transport-theorem
-                          (λ R → A → R × B)
-                          (λ eq f → Σ-map (_≃_.to eq) P.id ⊚ f)
-                          refl
-                          univ _ _)
+                  ≃-elim¹ univ
+                    (λ {R} p →
+                       _≃_.to (subst (λ R → A ≃ (R × B))
+                                 (≃⇒≡ univ p) (equiv l₁)) ≡
+                       (λ a → _≃_.to p (remainder l₁ a) , get l₁ a))
+                    (trans
+                       (cong (λ eq → _≃_.to (subst (λ R → A ≃ (R × B))
+                                               eq (equiv l₁)))
+                          (≃⇒≡-id univ))
+                       (cong _≃_.to $ subst-refl _ _))
+                    p)
                  (q a))
-          )                                                       ≡⟨ cong (λ eq → _↔_.from (equality-characterisation₀ b)
-                                                                                    (≃⇒≡ univ p , Eq.lift-equality ext eq)) $
-                                                                     trans (ext-trans _ _) $
-                                                                     cong (flip trans _) $
-                                                                     _≃_.right-inverse-of (Eq.extensionality-isomorphism bad-ext) _ ⟩
+          )                                                               ≡⟨ cong (λ eq → _↔_.from (equality-characterisation₀ b)
+                                                                                            (≃⇒≡ univ p , Eq.lift-equality ext eq)) $
+                                                                             trans (ext-trans _ _) $
+                                                                             cong (flip trans _) $
+                                                                             _≃_.right-inverse-of (Eq.extensionality-isomorphism bad-ext) _ ⟩
         _↔_.from (equality-characterisation₀ b)
           ( ≃⇒≡ univ p
           , Eq.lift-equality ext
               (trans
-                 (trans Eq.to-subst $
-                  sym $ transport-theorem
-                          (λ R → A → R × B)
-                          (λ eq f → Σ-map (_≃_.to eq) P.id ⊚ f)
-                          refl
-                          univ _ _)
+                 (≃-elim¹ univ
+                    (λ {R} p →
+                       _≃_.to (subst (λ R → A ≃ (R × B))
+                                 (≃⇒≡ univ p) (equiv l₁)) ≡
+                       (λ a → _≃_.to p (remainder l₁ a) , get l₁ a))
+                    (trans
+                       (cong (λ eq → _≃_.to (subst (λ R → A ≃ (R × B))
+                                               eq (equiv l₁)))
+                          (≃⇒≡-id univ))
+                       (cong _≃_.to $ subst-refl _ _))
+                    p)
                  (⟨ext⟩ q))
-          )                                                       ∎
+          )                                                               ∎
     where
     open Lens
 
@@ -700,12 +721,17 @@ from-equality-characterisation₁ :
     ( ≃⇒≡ univ p
     , Eq.lift-equality ext
         (trans
-           (trans Eq.to-subst
-              (sym (transport-theorem
-                      (λ R → A → R × B)
-                      (λ eq f → Σ-map (_≃_.to eq) P.id ⊚ f)
-                      refl
-                      univ _ _)))
+           (≃-elim¹ univ
+              (λ {R} p →
+                 _≃_.to (subst (λ R → A ≃ (R × B))
+                           (≃⇒≡ univ p) (equiv l₁)) ≡
+                 (λ a → _≃_.to p (remainder l₁ a) , get l₁ a))
+              (trans
+                 (cong (λ eq → _≃_.to (subst (λ R → A ≃ (R × B))
+                                         eq (equiv l₁)))
+                    (≃⇒≡-id univ))
+                 (cong _≃_.to $ subst-refl _ _))
+              p)
            (⟨ext⟩ q))
     )
 from-equality-characterisation₁ b univ _ _ =
