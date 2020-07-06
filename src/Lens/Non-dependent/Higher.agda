@@ -1353,34 +1353,8 @@ private
 
     from : Block "conversion" → Traditional.Lens A B → Lens A B
     from ⊠ l = isomorphism-to-lens
-      {R = ∃ λ (f : B → A) → ∀ b b′ → set (f b) b′ ≡ f b′}
-      (record
-         { surjection = record
-           { logical-equivalence = record
-             { to   = λ a → (set a , set-set a) , get a
-             ; from = λ { ((f , _) , b) → f b }
-             }
-           ; right-inverse-of = λ { ((f , h) , b) →
-
-              let
-                irr = {p q : ∀ b b′ → set (f b) b′ ≡ f b′} → p ≡ q
-                irr =
-                  (Π-closure ext 1 λ _ →
-                   Π-closure ext 1 λ _ →
-                   A-set) _ _
-
-                lemma =
-                  get (f b)          ≡⟨ cong get (sym (h b b)) ⟩
-                  get (set (f b) b)  ≡⟨ get-set (f b) b ⟩∎
-                  b                  ∎
-              in
-              (set (f b) , set-set (f b)) , get (f b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ (⟨ext⟩ (h b)) irr) lemma ⟩∎
-              (f         , h            ) , b          ∎ }
-           }
-         ; left-inverse-of = λ a →
-             set a (get a)  ≡⟨ set-get a ⟩∎
-             a              ∎
-         })
+      (A                                     ↔⟨ Traditional.≃Σ∥set⁻¹∥× A-set l ⟩□
+       (∃ λ (f : B → A) → ∥ set ⁻¹ f ∥) × B  □)
       where
       open Traditional.Lens l
 
@@ -1404,20 +1378,9 @@ private
       ∀ bc l → from bc (Lens.traditional-lens l) ≡ l
     from∘to univ ⊠ l′ =
       _↔_.from (equality-characterisation₃ univ)
-        ( lemma
-        , λ p →
-            _≃_.from l (subst (λ _ → R) (refl _) (proj₁ p) , proj₂ p)  ≡⟨ cong (λ r → _≃_.from l (r , proj₂ p)) $ subst-refl _ _ ⟩∎
-            _≃_.from l p                                               ∎
-        )
+        (lemma , λ _ → refl _)
       where
       open Lens l′ renaming (equiv to l)
-
-      B-set : (B → R) → ∥ B ∥ → Is-set B
-      B-set f = Trunc.rec
-        (H-level-propositional ext 2)
-        (λ b → proj₂-closure (f b) 2 $
-               H-level.respects-surjection
-                 (_≃_.surjection l) 2 A-set)
 
       R-set : ∥ B ∥ → Is-set R
       R-set = Trunc.rec
@@ -1426,80 +1389,61 @@ private
                H-level.respects-surjection
                  (_≃_.surjection l) 2 A-set)
 
-      lemma′ : (∥ B ∥ × (∥ B ∥ → R)) ↔ R
-      lemma′ = record
-        { surjection = record
-          { logical-equivalence = record
-            { to   = λ { (∥b∥ , f) → f ∥b∥ }
-            ; from = λ r → inhabited r , λ _ → r
-            }
-          ; right-inverse-of = refl
-          }
-        ; left-inverse-of = λ { (∥b∥ , f) →
-            curry (_↔_.to ≡×≡↔≡)
-              (truncation-is-proposition _ _)
-              (⟨ext⟩ λ ∥b∥′ →
-                 f ∥b∥   ≡⟨ cong f (truncation-is-proposition _ _) ⟩∎
-                 f ∥b∥′  ∎) }
-        }
+      lemma : ((∃ λ (f : B → A) → ∥ set ⁻¹ f ∥) × ∥ B ∥) ≃ R
+      lemma = Eq.↔→≃
+        (λ ((f , p) , b) → to f p b b)
+        from′
+        (λ r →
+           let (f , p) , b = from′ r in
+           flip (Trunc.rec (R-set b)) b λ b′ →
+           to f p b b                              ≡⟨ cong (to f p b) $ truncation-is-proposition b ∣ _ ∣ ⟩
+           to f p b ∣ b′ ∣                         ≡⟨⟩
+           proj₁ (_≃_.to l (_≃_.from l (r , b′)))  ≡⟨ cong proj₁ $ _≃_.right-inverse-of l _ ⟩∎
+           r                                       ∎)
+        (uncurry λ (f , p) →
+         Trunc.elim _ (λ _ → prop) λ b →
+         flip (Trunc.rec prop) p λ (a , set-a≡f) →
+         Σ-≡,≡→≡
+           (Σ-≡,≡→≡
+              (set (f b)      ≡⟨ cong (λ f → set (f b)) $ sym set-a≡f ⟩
+               set (set a b)  ≡⟨ ⟨ext⟩ (set-set _ _) ⟩
+               set a          ≡⟨ set-a≡f ⟩∎
+               f              ∎)
+              (truncation-is-proposition _ _))
+           (truncation-is-proposition _ _))
+        where
+        prop =
+          ×-closure 2
+            (Σ-closure 2
+               (Π-closure ext 2 λ _ → A-set)
+               (λ _ → mono₁ 1 truncation-is-proposition))
+            (mono₁ 1 truncation-is-proposition)
 
-      lemma =
-        (∃ λ (f : B → A) → ∀ b b′ →
-             _≃_.from l (proj₁ (_≃_.to l (f b)) , b′) ≡ f b′) ×
-        ∥ B ∥                                                       ↔⟨ ×-comm ⟩
+        to : (f : B → A) → ∥ set ⁻¹ f ∥ → ∥ B ∥ → ∥ B ∥ → R
+        to f p b =
+          _≃_.to (constant-function≃∥inhabited∥⇒inhabited (R-set b))
+            ( remainder ⊚ f
+            , λ b₁ b₂ →
+                flip (Trunc.rec (R-set b)) p λ (a , set-a≡f) →
+                remainder (f b₁)      ≡⟨ cong (λ f → remainder (f b₁)) $ sym set-a≡f ⟩
+                remainder (set a b₁)  ≡⟨ remainder-set _ _ ⟩
+                remainder a           ≡⟨ sym $ remainder-set _ _ ⟩
+                remainder (set a b₂)  ≡⟨ cong (λ f → remainder (f b₂)) set-a≡f ⟩∎
+                remainder (f b₂)      ∎
+            )
 
-        (∥ B ∥ ×
-         ∃ λ (f : B → A) → ∀ b b′ →
-             _≃_.from l (proj₁ (_≃_.to l (f b)) , b′) ≡ f b′)       ↝⟨ (∃-cong λ _ →
-                                                                        Σ-cong (→-cong ext F.id l) λ f →
-                                                                               ∀-cong ext λ b → ∀-cong ext λ b′ →
-                                                                               ≡⇒↝ _ (cong (_≃_.from l (proj₁ (_≃_.to l (f b)) , b′) ≡_)
-                                                                                           (sym $ _≃_.left-inverse-of l _))) ⟩
-        (∥ B ∥ ×
-         ∃ λ (f : B → R × B) → ∀ b b′ →
-             _≃_.from l (proj₁ (f b) , b′) ≡ _≃_.from l (f b′))     ↝⟨ ∃-cong (λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
-                                                                         Eq.≃-≡ (inverse l)) ⟩
-        (∥ B ∥ ×
-         ∃ λ (f : B → R × B) → ∀ b b′ → (proj₁ (f b) , b′) ≡ f b′)  ↔⟨ (∃-cong λ _ → Σ-cong ΠΣ-comm λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
-                                                                          inverse $ ≡×≡↔≡) ⟩
-        (∥ B ∥ ×
-         ∃ λ (p : (B → R) × (B → B)) →
-           ∀ b b′ → proj₁ p b ≡ proj₁ p b′ × b′ ≡ proj₂ p b′)       ↔⟨ (∃-cong λ _ → inverse Σ-assoc) ⟩
-
-        (∥ B ∥ ×
-         ∃ λ (f : B → R) → ∃ λ (g : B → B) →
-           ∀ b b′ → f b ≡ f b′ × b′ ≡ g b′)                         ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ →
-                                                                          ΠΣ-comm) ⟩
-        (∥ B ∥ ×
-         ∃ λ (f : B → R) → ∃ λ (g : B → B) →
-           ∀ b → (∀ b′ → f b ≡ f b′) × (∀ b′ → b′ ≡ g b′))          ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ΠΣ-comm) ⟩
-
-        (∥ B ∥ ×
-         ∃ λ (f : B → R) → ∃ λ (g : B → B) →
-           Constant f × (B → ∀ b → b ≡ g b))                        ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-comm) ⟩
-
-        (∥ B ∥ ×
-         ∃ λ (f : B → R) → Constant f ×
-         ∃ λ (g : B → B) → B → ∀ b → b ≡ g b)                       ↔⟨ (∃-cong λ _ → Σ-assoc) ⟩
-
-        (∥ B ∥ ×
-         (∃ λ (f : B → R) → Constant f) ×
-         (∃ λ (g : B → B) → B → ∀ b → b ≡ g b))                     ↔⟨ (∃-cong λ ∥b∥ → ∃-cong $ uncurry λ f _ → ∃-cong λ _ → inverse $
-                                                                          →-intro ext (λ _ → B-set f ∥b∥)) ⟩
-        (∥ B ∥ ×
-         (∃ λ (f : B → R) → Constant f) ×
-         (∃ λ (g : B → B) → ∀ b → b ≡ g b))                         ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
-                                                                          Eq.extensionality-isomorphism ext) ⟩
-        (∥ B ∥ ×
-         (∃ λ (f : B → R) → Constant f) ×
-         (∃ λ (g : B → B) → F.id ≡ g))                              ↔⟨ (∃-cong λ _ → drop-⊤-right λ _ →
-                                                                          _⇔_.to contractible⇔↔⊤ $
-                                                                          other-singleton-contractible _) ⟩
-        (∥ B ∥ × ∃ λ (f : B → R) → Constant f)                      ↝⟨ (∃-cong λ ∥b∥ → constant-function≃∥inhabited∥⇒inhabited (R-set ∥b∥)) ⟩
-
-        (∥ B ∥ × (∥ B ∥ → R))                                       ↔⟨ lemma′ ⟩□
-
-        R                                                           □
+        from′ = λ r →
+          ( (λ b → _≃_.from l (r , b))
+          , ∥∥-map (λ b → _≃_.from l (r , b)
+                        , ⟨ext⟩ λ b′ →
+                          set (_≃_.from l (r , b)) b′                       ≡⟨⟩
+                          _≃_.from l (remainder (_≃_.from l (r , b)) , b′)  ≡⟨ cong (λ p → _≃_.from l (proj₁ p , b′)) $
+                                                                               _≃_.right-inverse-of l _ ⟩∎
+                          _≃_.from l (r , b′)                               ∎
+                        )
+                   (inhabited r)
+          )
+          , inhabited r
 
     iso :
       Block "conversion" →
