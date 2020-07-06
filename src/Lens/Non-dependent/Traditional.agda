@@ -2425,29 +2425,26 @@ equality-characterisation-for-sets-≅
   proj₁ (_≃_.to (≃≃≅ A-set) F.id) ≡ id
 ≃≃≅-id≡id _ = ≅↠≃-id≡id
 
--- There is not necessarily a split surjection from
--- Is-equivalence (Lens.get l) to Has-quasi-inverse l, if l is a lens
--- between types in the same universe (assuming univalence).
+-- The type Has-quasi-inverse id is not necessarily a proposition
+-- (assuming univalence).
 --
 -- (The lemma does not actually use the univalence argument, but
 -- univalence is used by Circle.¬-type-of-refl-propositional.)
 
-¬Is-equivalence↠Has-quasi-inverse :
-  Univalence a →
-  ¬ ({A B : Set a}
-     (l : Lens A B) →
-     Is-equivalence (Lens.get l) ↠ Has-quasi-inverse l)
-¬Is-equivalence↠Has-quasi-inverse _ surj =      $⟨ ⊤-contractible ⟩
-  Contractible ⊤                                ↝⟨ H-level.respects-surjection lemma₁ 0 ⟩
-
-  Contractible (∃ λ (g : (x : X) → x ≡ x) → _)  ↝⟨ flip proj₁-closure 0
-                                                     (λ g → (λ _ x → sym (g x)) , lemma₂ g , lemma₃ g , lemma₄ g) ⟩
-
-  Contractible ((x : X) → x ≡ x)                ↝⟨ mono₁ 0 ⟩
-
-  Is-proposition ((x : X) → x ≡ x)              ↝⟨ ¬-prop ⟩□
-
-  ⊥                                             □
+Has-quasi-inverse-id-not-proposition :
+  Univalence lzero →
+  let open Lens-combinators in
+  ∃ λ (A : Set a) →
+    ¬ Is-proposition (Has-quasi-inverse (id {A = A}))
+Has-quasi-inverse-id-not-proposition _ =
+    X
+  , (Is-proposition (Has-quasi-inverse id)         ↝⟨ flip propositional⇒inhabited⇒contractible q ⟩
+     Contractible (Has-quasi-inverse id)           ↝⟨ H-level-cong _ 0 lemma₁ ⟩
+     Contractible (∃ λ (g : (x : X) → x ≡ x) → _)  ↝⟨ flip proj₁-closure 0
+                                                        (λ g → (λ _ x → sym (g x)) , lemma₂ g , lemma₃ g , lemma₄ g) ⟩
+     Contractible ((x : X) → x ≡ x)                ↝⟨ mono₁ 0 ⟩
+     Is-proposition ((x : X) → x ≡ x)              ↝⟨ ¬-prop ⟩□
+     ⊥                                             □)
   where
   open Lens-combinators
 
@@ -2455,16 +2452,10 @@ equality-characterisation-for-sets-≅
   X        = proj₁ X,¬-prop
   ¬-prop   = proj₂ X,¬-prop
 
+  q = id , left-identity _ , right-identity _
+
   lemma₁ =
-    ⊤                                                                ↔⟨ inverse $ _⇔_.to contractible⇔↔⊤ $
-                                                                        propositional⇒inhabited⇒contractible
-                                                                          (Eq.propositional ext _)
-                                                                          (_≃_.is-equivalence Eq.id) ⟩
-
-    Is-equivalence (P.id {A = X})                                    ↝⟨ surj id ⟩
-
-    Has-quasi-inverse id                                             ↔⟨ BM.Has-quasi-inverse≃id≡id-domain
-                                                                          (id , left-identity _ , right-identity _) ⟩
+    Has-quasi-inverse id                                             ↝⟨ BM.Has-quasi-inverse≃id≡id-domain q ⟩
 
     id ≡ id                                                          ↔⟨ equality-characterisation₄ ⟩□
 
@@ -2506,6 +2497,31 @@ equality-characterisation-for-sets-≅
     cong (λ set → set (set x y) z) (⟨ext⟩ λ _ → ⟨ext⟩ (sym ⊚ g))          ≡⟨ sym $ trans-reflʳ _ ⟩∎
     trans (cong (λ set → set (set x y) z) (⟨ext⟩ λ _ → ⟨ext⟩ (sym ⊚ g)))
       (refl _)                                                            ∎
+
+-- There is not necessarily a split surjection from
+-- Is-equivalence (Lens.get l) to Has-quasi-inverse l, if l is a lens
+-- between types in the same universe (assuming univalence).
+
+¬Is-equivalence↠Has-quasi-inverse :
+  Univalence lzero →
+  ¬ ({A B : Set a}
+     (l : Lens A B) →
+     Is-equivalence (Lens.get l) ↠ Has-quasi-inverse l)
+¬Is-equivalence↠Has-quasi-inverse univ surj =
+                                         $⟨ mono₁ 0 ⊤-contractible ⟩
+  Is-proposition ⊤                       ↝⟨ H-level.respects-surjection lemma 1 ⟩
+  Is-proposition (Has-quasi-inverse id)  ↝⟨ proj₂ $ Has-quasi-inverse-id-not-proposition univ ⟩□
+  ⊥                                      □
+  where
+  open Lens-combinators
+
+  lemma =
+    ⊤                     ↔⟨ inverse $ _⇔_.to contractible⇔↔⊤ $
+                             propositional⇒inhabited⇒contractible
+                               (Eq.propositional ext _)
+                               (_≃_.is-equivalence Eq.id) ⟩
+    Is-equivalence P.id   ↝⟨ surj id ⟩□
+    Has-quasi-inverse id  □
 
 ------------------------------------------------------------------------
 -- Isomorphisms expressed using bi-invertibility for lenses

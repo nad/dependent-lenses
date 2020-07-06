@@ -2505,12 +2505,28 @@ equality-characterisation-for-sets-≅ᴱ
   proj₁ (_≃ᴱ_.to (≃ᴱ≃ᴱ≅ᴱ A-set) F.id) ≡ id
 ≃ᴱ≃ᴱ≅ᴱ-id≡id _ = ≃ᴱ⇔≅ᴱ-id≡id
 
+-- The type Has-quasi-inverseᴱ id is not necessarily a proposition
+-- (assuming univalence).
+
+Has-quasi-inverseᴱ-id-not-proposition :
+  @0 Univalence lzero →
+  let open Lens-combinators in
+  ∃ λ (A : Set a) →
+    ¬ Is-proposition (Has-quasi-inverseᴱ (id {A = A}))
+Has-quasi-inverseᴱ-id-not-proposition univ =
+    _
+  , Stable-¬ _
+      [ Is-proposition (Has-quasi-inverseᴱ Lens-combinators.id)     ↝⟨ H-level-cong _ 1 $ Has-quasi-inverseᴱ≃Has-quasi-inverse T.Lens-combinators.id ⟩
+        Is-proposition (T.Has-quasi-inverse T.Lens-combinators.id)  ↝⟨ proj₂ $ T.Has-quasi-inverse-id-not-proposition univ ⟩□
+        ⊥                                                           □
+      ]
+
 -- There is not necessarily a split surjection from
 -- Is-equivalenceᴱ (Lens.get l) to Has-quasi-inverseᴱ l, if l is a
 -- lens between types in the same universe (assuming univalence).
 
 ¬Is-equivalenceᴱ↠Has-quasi-inverseᴱ :
-  Univalence a →
+  Univalence lzero →
   ¬ ({A B : Set a}
      (l : Lens A B) →
      Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ l)
@@ -2534,7 +2550,7 @@ equality-characterisation-for-sets-≅ᴱ
 -- lens between types in the same universe (assuming univalence).
 
 ¬Is-equivalenceᴱ≃Has-quasi-inverseᴱ :
-  Univalence a →
+  Univalence lzero →
   ¬ ({A B : Set a}
      (l : Lens A B) →
      Is-equivalenceᴱ (Lens.get l) ≃ᴱ Has-quasi-inverseᴱ l)
