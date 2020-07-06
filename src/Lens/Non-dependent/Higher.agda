@@ -1582,30 +1582,8 @@ Lens⇔Traditional-lens {B = B} {A = A} B-set b₀ = record
   where
   from : Traditional.Lens A B → Lens A B
   from l = isomorphism-to-lens
-    {R = ∃ λ (a : A) → get a ≡ b₀}
-    (record
-       { surjection = record
-         { logical-equivalence = record
-           { to   = λ a → (set a b₀ , get-set a b₀) , get a
-           ; from = λ { ((a , _) , b) → set a b }
-           }
-         ; right-inverse-of = λ { ((a , h) , b) →
-             let
-               lemma =
-                 set (set a b) b₀  ≡⟨ set-set a b b₀ ⟩
-                 set a b₀          ≡⟨ cong (set a) (sym h) ⟩
-                 set a (get a)     ≡⟨ set-get a ⟩∎
-                 a                 ∎
-             in
-             ((set (set a b) b₀ , get-set (set a b) b₀) , get (set a b))  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma (B-set _ _)) (get-set a b) ⟩∎
-             ((a                , h                   ) , b            )  ∎
-           }
-         }
-       ; left-inverse-of = λ a →
-           set (set a b₀) (get a)  ≡⟨ set-set a b₀ (get a) ⟩
-           set a (get a)           ≡⟨ set-get a ⟩∎
-           a                       ∎
-       })
+    (A                               ↔⟨ Traditional.≃get⁻¹× B-set b₀ l ⟩□
+     (∃ λ (a : A) → get a ≡ b₀) × B  □)
     where
     open Traditional.Lens l
 
