@@ -202,64 +202,57 @@ lens-to-proposition↔ :
   Is-proposition B →
   Lens A B ↔ (A → B) × ((a : A) → a ≡ a)
 lens-to-proposition↔ {B = B} {A = A} B-prop =
-  Lens A B                                                          ↝⟨ Lens-as-Σ ⟩
+  Lens A B                                                               ↝⟨ Lens-as-Σ ⟩
 
   (∃ λ (get : A → B) →
    ∃ λ (set : A → B → A) →
      (∀ a b → get (set a b) ≡ b) ×
      (∀ a → set a (get a) ≡ a) ×
-     (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂))                    ↝⟨ (∃-cong λ get → ∃-cong λ set → ∃-cong λ _ → ∃-cong λ _ →
-                                                                        ∀-cong ext λ a → ∀-cong ext λ b₁ → ∀-cong ext λ b₂ →
-                                                                          ≡⇒↝ _ (
-       (set (set a b₁)                         b₂ ≡ set a b₂)               ≡⟨ cong (λ b → set (set a b) b₂ ≡ _) (B-prop _ _) ⟩
-       (set (set a (get a))                    b₂ ≡ set a b₂)               ≡⟨ cong (λ b → set (set a (get a)) b ≡ _) (B-prop _ _) ⟩
-       (set (set a (get a)) (get (set a (get a))) ≡ set a b₂)               ≡⟨ cong (λ b → _ ≡ set a b) (B-prop _ _) ⟩∎
-       (set (set a (get a)) (get (set a (get a))) ≡ set a (get a))          ∎)) ⟩
+     (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂))                         ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
+                                                                             drop-⊤-left-× λ _ →
+                                                                             _⇔_.to contractible⇔↔⊤ $
+                                                                             Π-closure ext 0 λ _ →
+                                                                             Π-closure ext 0 λ _ →
+                                                                             +⇒≡ B-prop) ⟩
+  (∃ λ (get : A → B) →
+   ∃ λ (set : A → B → A) →
+     (∀ a → set a (get a) ≡ a) ×
+     (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂))                         ↝⟨ (∃-cong λ get → ∃-cong λ set → ∃-cong λ _ →
+                                                                             ∀-cong ext λ a → ∀-cong ext λ b₁ → ∀-cong ext λ b₂ →
+                                                                               ≡⇒↝ _ (
+       (set (set a b₁)                         b₂ ≡ set a b₂)                    ≡⟨ cong (λ b → set (set a b) b₂ ≡ _) (B-prop _ _) ⟩
+       (set (set a (get a))                    b₂ ≡ set a b₂)                    ≡⟨ cong (λ b → set (set a (get a)) b ≡ _) (B-prop _ _) ⟩
+       (set (set a (get a)) (get (set a (get a))) ≡ set a b₂)                    ≡⟨ cong (λ b → _ ≡ set a b) (B-prop _ _) ⟩∎
+       (set (set a (get a)) (get (set a (get a))) ≡ set a (get a))               ∎)) ⟩
 
   (∃ λ (get : A → B) →
    ∃ λ (set : A → B → A) →
-     (∀ a b → get (set a b) ≡ b) ×
      (∀ a → set a (get a) ≡ a) ×
      (∀ a → B → B →
         set (set a (get a)) (get (set a (get a))) ≡
-        set a (get a)))                                             ↝⟨ (∃-cong λ get →
-                                                                        Σ-cong (A→B→A↔A→A get) λ set →
-                                                                          drop-⊤-left-× λ _ →
-                                                                            _⇔_.to contractible⇔↔⊤ $
-                                                                              Π-closure ext 0 λ _ →
-                                                                              Π-closure ext 0 λ _ →
-                                                                              +⇒≡ B-prop) ⟩
-  ((A → B) ×
-   ∃ λ (f : A → A) →
-     (∀ a → f a ≡ a) ×
-     (∀ a → B → B → f (f a) ≡ f a))                                 ↝⟨ (∃-cong λ get → ∃-cong λ _ → ∃-cong λ _ →
-                                                                        ∀-cong ext λ a →
-                                                                          drop-⊤-left-Π ext (B↔⊤ (get a))) ⟩
-  ((A → B) ×
-   ∃ λ (f : A → A) →
-     (∀ a → f a ≡ a) ×
-     (∀ a → B → f (f a) ≡ f a))                                     ↝⟨ (∃-cong λ get → ∃-cong λ _ → ∃-cong λ _ →
-                                                                        ∀-cong ext λ a →
-                                                                          drop-⊤-left-Π ext (B↔⊤ (get a))) ⟩
-  ((A → B) ×
-   ∃ λ (f : A → A) →
-     (∀ a → f a ≡ a) ×
-     (∀ a → f (f a) ≡ f a))                                         ↝⟨ (∃-cong λ _ → ∃-cong λ f →
-                                                                        Σ-cong (Eq.extensionality-isomorphism ext) λ f≡id →
-                                                                        ∀-cong ext λ a →
-                                                                        ≡⇒↝ _ (cong₂ _≡_ (trans (f≡id (f a)) (f≡id a)) (f≡id a ))) ⟩
-  ((A → B) ×
-   ∃ λ (f : A → A) →
-     f ≡ P.id ×
-     (∀ a → a ≡ a))                                                 ↝⟨ (∃-cong λ _ → Σ-assoc) ⟩
+        set a (get a)))                                                  ↝⟨ (∃-cong λ get → Σ-cong (A→B→A↔A→A get) λ _ → F.id) ⟩
 
-  (A → B) ×
-  (∃ λ (f : A → A) → f ≡ P.id) ×
-  (∀ a → a ≡ a)                                                     ↝⟨ (∃-cong λ _ → drop-⊤-left-× λ _ →
-                                                                          _⇔_.to contractible⇔↔⊤ $
-                                                                            singleton-contractible _) ⟩□
-  (A → B) × (∀ a → a ≡ a)                                           □
+  ((A → B) ×
+   ∃ λ (f : A → A) →
+     (∀ a → f a ≡ a) ×
+     (∀ a → B → B → f (f a) ≡ f a))                                      ↝⟨ (∃-cong λ get → ∃-cong λ _ → ∃-cong λ _ →
+                                                                             ∀-cong ext λ a →
+                                                                             drop-⊤-left-Π ext (B↔⊤ (get a)) F.∘
+                                                                             drop-⊤-left-Π ext (B↔⊤ (get a))) ⟩
 
+  ((A → B) × ∃ λ (f : A → A) → (∀ a → f a ≡ a) × (∀ a → f (f a) ≡ f a))  ↝⟨ (∃-cong λ _ → ∃-cong λ f → ∃-cong λ f≡id →
+                                                                             ∀-cong ext λ a →
+                                                                             ≡⇒↝ _ (cong₂ _≡_ (trans (f≡id (f a)) (f≡id a)) (f≡id a))) ⟩
+
+  ((A → B) × ∃ λ (f : A → A) → (∀ a → f a ≡ a) × (∀ a → a ≡ a))          ↝⟨ (∃-cong λ _ →
+                                                                             Σ-assoc F.∘
+                                                                             (∃-cong λ _ →
+                                                                              Σ-cong (Eq.extensionality-isomorphism ext) λ _ → F.id)) ⟩
+
+  (A → B) × (∃ λ (f : A → A) → f ≡ P.id) × (∀ a → a ≡ a)                 ↝⟨ (∃-cong λ _ → drop-⊤-left-× λ _ →
+                                                                             _⇔_.to contractible⇔↔⊤ $
+                                                                             singleton-contractible _) ⟩□
+  (A → B) × (∀ a → a ≡ a)                                                □
   where
   B↔⊤ : B → B ↔ ⊤
   B↔⊤ b =
