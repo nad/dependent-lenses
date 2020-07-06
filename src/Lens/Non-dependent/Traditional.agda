@@ -300,8 +300,7 @@ lens-to-⊥↔ {A = A} =
         ⊥-elim (¬a a)
     }
 
--- See also lens-from-⊥↔⊤ and
--- lens-from-contractible↔codomain-contractible below.
+-- See also lens-from-⊥≃⊤ and lens-from-⊤≃codomain-contractible below.
 
 ------------------------------------------------------------------------
 -- Some lens results related to h-levels
@@ -383,6 +382,39 @@ lens-preserves-h-level-of-domain n hA =
   ⊥₀                                 □)
   where
   A′ = _
+
+------------------------------------------------------------------------
+-- More lens isomorphisms
+
+-- Lens ⊤ B is equivalent to Contractible B.
+
+lens-from-⊤≃codomain-contractible :
+  Lens ⊤ B ≃ Contractible B
+lens-from-⊤≃codomain-contractible = Eq.⇔→≃
+  (lens-preserves-h-level-of-domain 0 (mono₁ 0 ⊤-contractible))
+  (H-level-propositional ext 0)
+  (λ l → contractible-to-contractible l ⊤-contractible)
+  (λ (b , irrB) → record
+     { get     = λ _ → b
+     ; get-set = λ _ → irrB
+     ; set-get = refl
+     ; set-set = λ _ _ _ → refl _
+     })
+
+-- Lens ⊥ B is equivalent to the unit type.
+
+lens-from-⊥≃⊤ : Lens (⊥ {ℓ = a}) B ≃ ⊤
+lens-from-⊥≃⊤ = Eq.⇔→≃
+  (lens-preserves-h-level-of-domain 0 ⊥-propositional)
+  (mono₁ 0 ⊤-contractible)
+  _
+  (λ _ → record
+     { get = ⊥-elim
+     ; set = ⊥-elim
+     ; get-set = λ a → ⊥-elim a
+     ; set-get = λ a → ⊥-elim a
+     ; set-set = λ a → ⊥-elim a
+     })
 
 ------------------------------------------------------------------------
 -- A conversion function
@@ -1172,49 +1204,6 @@ equality-characterisation-for-sets
 
   B-set : A → Is-set B
   B-set a = h-level-respects-lens-from-inhabited 2 l₁ a A-set
-
-------------------------------------------------------------------------
--- More lens isomorphisms
-
--- Lens ⊥ B is isomorphic to the unit type.
-
-lens-from-⊥↔⊤ : Lens (⊥ {ℓ = a}) B ↔ ⊤
-lens-from-⊥↔⊤ =
-  _⇔_.to contractible⇔↔⊤ $
-    record
-      { get = ⊥-elim
-      ; set = ⊥-elim
-      ; get-set = λ a → ⊥-elim a
-      ; set-get = λ a → ⊥-elim a
-      ; set-set = λ a → ⊥-elim a
-      } ,
-    λ l → _↔_.from equality-characterisation₁
-            ( ⟨ext⟩ (λ a → ⊥-elim a)
-            , ⟨ext⟩ (λ a → ⊥-elim a)
-            , (λ a → ⊥-elim a)
-            , (λ a → ⊥-elim a)
-            , (λ a → ⊥-elim a)
-            )
-
--- If A is contractible, then Lens A B is isomorphic to
--- Contractible B.
-
-lens-from-contractible↔codomain-contractible :
-  Contractible A →
-  Lens A B ↔ Contractible B
-lens-from-contractible↔codomain-contractible cA@(a , irrA) =
-  _≃_.bijection $
-  _↠_.from (Eq.≃↠⇔ (lens-preserves-h-level-of-domain 0 (mono₁ 0 cA))
-                   (H-level-propositional ext 0)) (record
-    { to   = flip contractible-to-contractible cA
-    ; from = λ (b , irrB) → record
-        { get     = λ _ → b
-        ; set     = λ _ _ → a
-        ; get-set = λ _ → irrB
-        ; set-get = irrA
-        ; set-set = λ _ _ _ → irrA a
-        }
-    })
 
 ------------------------------------------------------------------------
 -- Lens combinators
