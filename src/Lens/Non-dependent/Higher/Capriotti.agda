@@ -202,12 +202,11 @@ Lens→Higher-lens {A = A} {B = B} (g , H , eq) = record
       A                                      ↔⟨ (inverse $ drop-⊤-right λ _ → _⇔_.to contractible⇔↔⊤ $
                                                  other-singleton-contractible _) ⟩
       (∃ λ (a : A) → ∃ λ (b : B) → g a ≡ b)  ↔⟨ ∃-comm ⟩
-      (∃ λ (b : B) → ∃ λ (a : A) → g a ≡ b)  ↔⟨⟩
       (∃ λ (b : B) → g ⁻¹ b)                 ↝⟨ (∃-cong λ b → ≡⇒↝ _ $ cong (_$ b) eq) ⟩
       (∃ λ (b : B) → H ∣ b ∣)                ↝⟨ (Σ-cong (inverse ∥∥×≃) λ _ → ≡⇒↝ _ $ cong H $ truncation-is-proposition _ _) ⟩
-      (∃ λ ((b , _) : ∥ B ∥ × B) → H b)      ↔⟨ inverse Σ-assoc ⟩
-      (∃ λ (b : ∥ B ∥) → B × H b)            ↔⟨ (∃-cong λ _ → ×-comm) ⟩
-      (∃ λ (b : ∥ B ∥) → H b × B)            ↔⟨ Σ-assoc ⟩□
+      (∃ λ ((b , _) : ∥ B ∥ × B) → H b)      ↔⟨ Σ-assoc F.∘
+                                                (∃-cong λ _ → ×-comm) F.∘
+                                                inverse Σ-assoc ⟩□
       Σ ∥ B ∥ H × B                          □
 
   ; inhabited = proj₁

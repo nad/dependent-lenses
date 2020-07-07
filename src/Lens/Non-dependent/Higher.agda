@@ -91,43 +91,38 @@ record Lens (A : Set a) (B : Set b) : Set (lsuc (a ⊔ b)) where
   modify : (B → B) → A → A
   modify f x = set x (f (get x))
 
+  -- The setter leaves the remainder unchanged.
+
+  remainder-set : ∀ a b → remainder (set a b) ≡ remainder a
+  remainder-set a b =
+    proj₁ (_≃_.to equiv (_≃_.from equiv (remainder a , b)))  ≡⟨ cong proj₁ (_≃_.right-inverse-of equiv (remainder a , b)) ⟩∎
+    remainder a                                              ∎
+
   -- Lens laws.
 
   get-set : ∀ a b → get (set a b) ≡ b
   get-set a b =
-    proj₂ (_≃_.to equiv (_≃_.from equiv (remainder a , b)))  ≡⟨ cong proj₂ (_≃_.right-inverse-of equiv _) ⟩∎
+    proj₂ (_≃_.to equiv (_≃_.from equiv (remainder a , b)))  ≡⟨ cong proj₂ (_≃_.right-inverse-of equiv (remainder a , b)) ⟩∎
     proj₂ (remainder a , b)                                  ∎
 
   set-get : ∀ a → set a (get a) ≡ a
   set-get a =
-    _≃_.from equiv (_≃_.to equiv a)  ≡⟨ _≃_.left-inverse-of equiv _ ⟩∎
+    _≃_.from equiv (_≃_.to equiv a)  ≡⟨ _≃_.left-inverse-of equiv a ⟩∎
     a                                ∎
 
   set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂
   set-set a b₁ b₂ =
-    let r = remainder a in
-
-    _≃_.from equiv (remainder (_≃_.from equiv (r , b₁)) , b₂)  ≡⟨⟩
-
-    _≃_.from equiv
-      (proj₁ (_≃_.to equiv (_≃_.from equiv (r , b₁))) , b₂)    ≡⟨ cong (λ x → _≃_.from equiv (proj₁ x , b₂))
-                                                                       (_≃_.right-inverse-of equiv _) ⟩∎
-    _≃_.from equiv (r , b₂)                                    ∎
-
-  -- Another law.
-
-  remainder-set : ∀ a b → remainder (set a b) ≡ remainder a
-  remainder-set a b =
-    proj₁ (_≃_.to equiv (_≃_.from equiv (remainder a , b)))  ≡⟨ cong proj₁ $ _≃_.right-inverse-of equiv _ ⟩∎
-    remainder a                                              ∎
+    _≃_.from equiv (remainder (set a b₁) , b₂)  ≡⟨ cong (λ r → _≃_.from equiv (r , b₂)) (remainder-set a b₁) ⟩∎
+    _≃_.from equiv (remainder a          , b₂)  ∎
 
   -- The remainder function is surjective.
 
   remainder-surjective : Surjective remainder
   remainder-surjective r =
     ∥∥-map (λ b → _≃_.from equiv (r , b)
-                , (remainder (_≃_.from equiv (r , b))  ≡⟨ cong proj₁ $ _≃_.right-inverse-of equiv _ ⟩∎
-                   r                                   ∎))
+                , (remainder (_≃_.from equiv (r , b))             ≡⟨⟩
+                   proj₁ (_≃_.to equiv (_≃_.from equiv (r , b)))  ≡⟨ cong proj₁ (_≃_.right-inverse-of equiv (r , b)) ⟩∎
+                   r                                              ∎))
            (inhabited r)
 
   -- Traditional lens.
@@ -148,31 +143,42 @@ record Lens (A : Set a) (B : Set b) : Set (lsuc (a ⊔ b)) where
 
   get-set-get : ∀ a → cong get (set-get a) ≡ get-set a (get a)
   get-set-get a =
-    cong (proj₂ ⊚ _≃_.to equiv) (_≃_.left-inverse-of equiv _)       ≡⟨ sym $ cong-∘ _ _ (_≃_.left-inverse-of equiv _) ⟩
-    cong proj₂ (cong (_≃_.to equiv) (_≃_.left-inverse-of equiv _))  ≡⟨ cong (cong proj₂) $ _≃_.left-right-lemma equiv _ ⟩∎
-    cong proj₂ (_≃_.right-inverse-of equiv _)                       ∎
+    cong get (set-get a)                                            ≡⟨⟩
+    cong (proj₂ ⊚ _≃_.to equiv) (_≃_.left-inverse-of equiv a)       ≡⟨ sym $ cong-∘ _ _ (_≃_.left-inverse-of equiv _) ⟩
+    cong proj₂ (cong (_≃_.to equiv) (_≃_.left-inverse-of equiv a))  ≡⟨ cong (cong proj₂) $ _≃_.left-right-lemma equiv _ ⟩
+    cong proj₂ (_≃_.right-inverse-of equiv (_≃_.to equiv a))        ≡⟨⟩
+    get-set a (get a)                                               ∎
 
   get-set-set :
     ∀ a b₁ b₂ →
     cong get (set-set a b₁ b₂) ≡
     trans (get-set (set a b₁) b₂) (sym (get-set a b₂))
-  get-set-set a b₁ b₂ = elim₁
-    (λ eq →
-       cong (proj₂ ⊚ _≃_.to equiv)
-         (cong (λ p → _≃_.from equiv (proj₁ p , _)) eq) ≡
-       trans (cong proj₂ (_≃_.right-inverse-of equiv _))
-         (sym (cong proj₂ (_≃_.right-inverse-of equiv _))))
-    (cong (proj₂ ⊚ _≃_.to equiv)
-       (cong (λ p → _≃_.from equiv (proj₁ p , b₂))
-          (refl (proj₁ (_≃_.to equiv a) , b₁)))           ≡⟨ cong (cong (proj₂ ⊚ _≃_.to equiv)) $ cong-refl _ ⟩
+  get-set-set a b₁ b₂ =
+    cong get (set-set a b₁ b₂)                                            ≡⟨⟩
 
-     cong (proj₂ ⊚ _≃_.to equiv) (refl _)                 ≡⟨ cong-refl _ ⟩
+    cong get (cong (λ r → _≃_.from equiv (r , b₂)) (remainder-set a b₁))  ≡⟨ elim₁
+                                                                               (λ {r} eq →
+                                                                                  cong get (cong (λ r → _≃_.from equiv (r , b₂)) eq) ≡
+                                                                                  trans (cong proj₂ (_≃_.right-inverse-of equiv (r , b₂)))
+                                                                                    (sym (get-set a b₂)))
+                                                                               (
+        cong get (cong (λ r → _≃_.from equiv (r , b₂))
+                    (refl (remainder a)))                                       ≡⟨ trans (cong (cong get) $ cong-refl _) $
+                                                                                   cong-refl _ ⟩
 
-     refl _                                               ≡⟨ sym $ trans-symʳ _ ⟩∎
+        refl (get (set a b₂))                                                   ≡⟨ sym $ trans-symʳ _ ⟩
 
-     trans (cong proj₂ (_≃_.right-inverse-of equiv _))
-       (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))  ∎)
-    (_≃_.right-inverse-of equiv _)
+        trans (get-set a b₂) (sym (get-set a b₂))                               ≡⟨⟩
+
+        trans (cong proj₂
+                 (_≃_.right-inverse-of equiv (remainder a , b₂)))
+          (sym (get-set a b₂))                                                  ∎)
+                                                                               (remainder-set a b₁) ⟩
+    trans (cong proj₂
+             (_≃_.right-inverse-of equiv (remainder (set a b₁) , b₂)))
+      (sym (get-set a b₂))                                                ≡⟨⟩
+
+    trans (get-set (set a b₁) b₂) (sym (get-set a b₂))                    ∎
 
   -- A somewhat coherent lens.
 
@@ -1353,18 +1359,13 @@ to-from-≃-≃-Σ-Lens-Is-equivalence-get≡get _ _ = refl _
 
 ¬Lens↠Traditional-lens :
   Univalence lzero →
-  Univalence a →
-  ∃ λ (A : Set a) →
-    ¬ (Lens A ⊤ ↠ Traditional.Lens A ⊤)
-¬Lens↠Traditional-lens univ₀ univ =
-  let A = _ in
-
-  A ,
-  (λ surj →                                 $⟨ _⇔_.from contractible⇔↔⊤ (lens-to-contractible↔⊤ univ ⊤-contractible) ⟩
-     Contractible (Lens A ⊤)                ↝⟨ H-level.respects-surjection surj 0 ⟩
-     Contractible (Traditional.Lens A ⊤)    ↝⟨ mono₁ 0 ⟩
-     Is-proposition (Traditional.Lens A ⊤)  ↝⟨ proj₂ $ Traditional.¬-lens-to-⊤-propositional univ₀ ⟩□
-     ⊥                                      □)
+  ¬ (Lens 𝕊¹ ⊤ ↠ Traditional.Lens 𝕊¹ ⊤)
+¬Lens↠Traditional-lens univ =
+  Lens 𝕊¹ ⊤ ↠ Traditional.Lens 𝕊¹ ⊤                                      ↝⟨ flip H-level.respects-surjection 1 ⟩
+  (Is-proposition (Lens 𝕊¹ ⊤) → Is-proposition (Traditional.Lens 𝕊¹ ⊤))  ↝⟨ _$ mono₁ 0 (_⇔_.from contractible⇔↔⊤ $
+                                                                                        lens-to-contractible↔⊤ univ ⊤-contractible) ⟩
+  Is-proposition (Traditional.Lens 𝕊¹ ⊤)                                 ↝⟨ Traditional.¬-lens-to-⊤-propositional univ ⟩□
+  ⊥                                                                      □
 
 -- Some lemmas used in Lens↠Traditional-lens and Lens↔Traditional-lens
 -- below.
@@ -1384,13 +1385,10 @@ private
       open Traditional.Lens l
 
     to∘from : ∀ bc l → Lens.traditional-lens (from bc l) ≡ l
-    to∘from ⊠ l = _↔_.from Traditional.equality-characterisation₁
-      ( refl _
-      , refl _
-      , (λ a _ → B-set a _ _)
-      , (λ _ → A-set _ _)
-      , (λ _ _ _ → A-set _ _)
-      )
+    to∘from ⊠ l = Traditional.equal-laws→≡
+      (λ a _ → B-set a _ _)
+      (λ _ → A-set _ _)
+      (λ _ _ _ → A-set _ _)
       where
       open Traditional.Lens l
 
@@ -1608,27 +1606,22 @@ Lens⇔Traditional-lens-preserves-getters-and-setters _ b₀ =
 -- codomain also has h-level n.
 
 h-level-respects-lens-from-inhabited :
-  Lens A B → A → H-level n A → H-level n B
-h-level-respects-lens-from-inhabited {A = A} {B = B} {n = n} l a =
-  H-level n A        ↝⟨ H-level.respects-surjection (_≃_.surjection equiv) n ⟩
-  H-level n (R × B)  ↝⟨ proj₂-closure (remainder a) n ⟩□
-  H-level n B        □
-  where
-  open Lens l
+  ∀ n → Lens A B → A → H-level n A → H-level n B
+h-level-respects-lens-from-inhabited n =
+  Traditional.h-level-respects-lens-from-inhabited n ⊚
+  Lens.traditional-lens
 
 -- This is not necessarily true for arbitrary domains (assuming
 -- univalence).
 
 ¬-h-level-respects-lens :
-  Univalence (a ⊔ b) →
-  ¬ (∀ n {A : Set a} {B : Set b} →
-     Lens A B → H-level n A → H-level n B)
+  Univalence lzero →
+  ¬ (∀ n → Lens ⊥₀ Bool → H-level n ⊥₀ → H-level n Bool)
 ¬-h-level-respects-lens univ resp =
-                             $⟨ ⊥-propositional ⟩
-  Is-proposition ⊥           ↝⟨ resp 1 (_↔_.from (lens-from-⊥↔⊤ univ) _) ⟩
-  Is-proposition (↑ _ Bool)  ↝⟨ ↑⁻¹-closure 1 ⟩
-  Is-proposition Bool        ↝⟨ ¬-Bool-propositional ⟩□
-  ⊥₀                         □
+                       $⟨ ⊥-propositional ⟩
+  Is-proposition ⊥     ↝⟨ resp 1 (_↔_.from (lens-from-⊥↔⊤ univ) _) ⟩
+  Is-proposition Bool  ↝⟨ ¬-Bool-propositional ⟩□
+  ⊥                    □
 
 -- In fact, there is a lens with a proposition as its domain and a
 -- non-set as its codomain (assuming univalence).
@@ -1658,37 +1651,17 @@ lens-from-proposition-to-non-set {b = b} _ =
 contractible-to-contractible :
   Lens A B → Contractible A → Contractible B
 contractible-to-contractible l c =
-  h-level-respects-lens-from-inhabited l (proj₁ c) c
-
--- If the domain type of a lens is contractible, then the remainder
--- type is also contractible.
-
-domain-contractible⇒remainder-contractible :
-  (l : Lens A B) → Contractible A → Contractible (Lens.R l)
-domain-contractible⇒remainder-contractible {A = A} {B = B} l =
-  Contractible A                   ↔⟨ H-level-cong {k₂ = equivalence} ext 0 equiv ⟩
-  Contractible (R × B)             ↔⟨ Contractible-commutes-with-× {k = bijection} ext ⟩
-  Contractible R × Contractible B  ↝⟨ proj₁ ⟩□
-  Contractible R                   □
-  where
-  open Lens l
+  h-level-respects-lens-from-inhabited _ l (proj₁ c) c
 
 -- If the domain type of a lens has h-level n, then the remainder type
 -- also has h-level n.
 
 remainder-has-same-h-level-as-domain :
   (l : Lens A B) → ∀ n → H-level n A → H-level n (Lens.R l)
-remainder-has-same-h-level-as-domain l zero =
-  domain-contractible⇒remainder-contractible l
-remainder-has-same-h-level-as-domain {A = A} {B = B} l (suc n) h =
-  [inhabited⇒+]⇒+ n λ r →
-                             $⟨ h ⟩
-    H-level (1 + n) A        ↝⟨ H-level.respects-surjection (_≃_.surjection equiv) (1 + n) ⟩
-    H-level (1 + n) (R × B)  ↝⟨ Trunc.rec
-                                  (Π-closure ext 1 λ _ → H-level-propositional ext (1 + n))
-                                  (λ b → proj₁-closure (λ _ → b) (1 + n))
-                                  (inhabited r) ⟩□
-    H-level (1 + n) R        □
+remainder-has-same-h-level-as-domain {A = A} {B = B} l n =
+  H-level n A        ↝⟨ H-level.respects-surjection (_≃_.surjection equiv) n ⟩
+  H-level n (R × B)  ↝⟨ H-level-×₁ inhabited n ⟩□
+  H-level n R        □
   where
   open Lens l
 
@@ -2220,39 +2193,32 @@ module Lens-combinators where
   id-unique :
     {A : Set a} →
     Univalence a →
-    ((l₁ , _) (l₂ , _) :
-       ∃ λ (l : Lens A A) → ∀ a → Lens.get l a ≡ a) →
+    (l₁ l₂ : Lens A A) →
+    Lens.get l₁ ≡ P.id →
+    Lens.get l₂ ≡ P.id →
     l₁ ≡ l₂
-  id-unique {A = A} univ l₁ l₂ =
-    _↔_.from (equality-characterisation₂ univ)
-      ( R₁≃R₂
-      , (λ _ → uncurry get≡id→remainder-propositional l₂ _ _)
-      , λ a →
-          get (proj₁ l₁) a  ≡⟨ proj₂ l₁ a ⟩
-          a                 ≡⟨ sym $ proj₂ l₂ a ⟩∎
-          get (proj₁ l₂) a  ∎
-      )
+  id-unique {A = A} univ l₁ l₂ get-l₁≡id get-l₂≡id =   $⟨ trans get-l₁≡id (sym get-l₂≡id) ⟩
+    _≃_.to (_≃_.from f l₁′) ≡ _≃_.to (_≃_.from f l₂′)  ↝⟨ Eq.lift-equality ext ⟩
+    _≃_.from f l₁′ ≡ _≃_.from f l₂′                    ↝⟨ _≃_.to $ Eq.≃-≡ (inverse f) {x = l₁′} {y = l₂′} ⟩
+    l₁′ ≡ l₂′                                          ↝⟨ cong proj₁ ⟩□
+    l₁ ≡ l₂                                            □
     where
     open Lens
 
-    R→R :
-      (l₁ l₂ : ∃ λ (l : Lens A A) → ∀ a → get l a ≡ a) →
-      R (proj₁ l₁) → R (proj₁ l₂)
-    R→R (l₁ , l₁-id) (l₂ , l₂-id) r =
-      Trunc.rec
-        (get≡id→remainder-propositional l₂ l₂-id)
-        (A         ↔⟨ equiv l₂ ⟩
-         R l₂ × A  ↝⟨ proj₁ ⟩□
-         R l₂      □)
-        (inhabited l₁ r)
+    f : (A ≃ A) ≃ (∃ λ (l : Lens A A) → Is-equivalence (Lens.get l))
+    f = ≃-≃-Σ-Lens-Is-equivalence-get univ
 
-    R₁≃R₂ : R (proj₁ l₁) ≃ R (proj₁ l₂)
-    R₁≃R₂ =
-      _↠_.from (Eq.≃↠⇔ (uncurry get≡id→remainder-propositional l₁)
-                       (uncurry get≡id→remainder-propositional l₂))
-               (record { to   = R→R l₁ l₂
-                       ; from = R→R l₂ l₁
-                       })
+    is-equiv :
+      (l : Lens A A) →
+      get l ≡ P.id → Is-equivalence (get l)
+    is-equiv _ get≡id =
+      Eq.respects-extensional-equality
+        (ext⁻¹ $ sym get≡id)
+        (_≃_.is-equivalence Eq.id)
+
+    l₁′ l₂′ : ∃ λ (l : Lens A A) → Is-equivalence (Lens.get l)
+    l₁′ = l₁ , is-equiv l₁ get-l₁≡id
+    l₂′ = l₂ , is-equiv l₂ get-l₂≡id
 
   -- The result of composing two lenses is unique if the codomain type
   -- is inhabited whenever it is merely inhabited, and we require that

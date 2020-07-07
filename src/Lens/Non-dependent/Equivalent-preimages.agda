@@ -538,18 +538,20 @@ higher→-preserves-getters-and-setters Higher.⟨ _ , _ , _ ⟩ =
 
 →higher : (∥ B ∥ → B) → Lens A B → Higher.Lens A B
 →higher {B = B} {A = A} ∥B∥→B l@(lens _ _ _ _) = record
-  { R     = ∃ λ (b : ∥ B ∥) → Lens.get l ⁻¹ (∥B∥→B b)
+  { R     = ∃ λ (b : ∥ B ∥) → get l ⁻¹ (∥B∥→B b)
   ; equiv =
-      A                                                      ↔⟨ (inverse $ drop-⊤-right λ _ → _⇔_.to contractible⇔↔⊤ $
-                                                                 other-singleton-contractible _) ⟩
-      (∃ λ a → ∃ λ b → Lens.get l a ≡ b)                     ↔⟨ ∃-comm ⟩
-      (∃ λ b → Lens.get l ⁻¹ b)                              ↝⟨ (Σ-cong (inverse PT.∥∥×≃) λ _ → Lens.get⁻¹-constant l _ _) ⟩
-      (∃ λ ((b , _) : ∥ B ∥ × B) → Lens.get l ⁻¹ (∥B∥→B b))  ↔⟨ inverse Σ-assoc ⟩
-      (∃ λ (b : ∥ B ∥) → B × Lens.get l ⁻¹ (∥B∥→B b))        ↔⟨ (∃-cong λ _ → ×-comm) ⟩
-      (∃ λ (b : ∥ B ∥) → Lens.get l ⁻¹ (∥B∥→B b) × B)        ↔⟨ Σ-assoc ⟩□
-      (∃ λ (b : ∥ B ∥) → Lens.get l ⁻¹ (∥B∥→B b)) × B        □
+      A                                                 ↔⟨ (inverse $ drop-⊤-right λ _ → _⇔_.to contractible⇔↔⊤ $
+                                                            other-singleton-contractible _) ⟩
+      (∃ λ a → ∃ λ b → get l a ≡ b)                     ↔⟨ ∃-comm ⟩
+      (∃ λ b → get l ⁻¹ b)                              ↝⟨ (Σ-cong (inverse PT.∥∥×≃) λ _ → get⁻¹-constant l _ _) ⟩
+      (∃ λ ((b , _) : ∥ B ∥ × B) → get l ⁻¹ (∥B∥→B b))  ↔⟨ Σ-assoc F.∘
+                                                           (∃-cong λ _ → ×-comm) F.∘
+                                                           inverse Σ-assoc ⟩□
+      (∃ λ (b : ∥ B ∥) → get l ⁻¹ (∥B∥→B b)) × B        □
   ; inhabited = proj₁
   }
+  where
+  open Lens
 
 -- The conversion preserves getters and setters.
 

@@ -20,6 +20,7 @@ open import Prelude as P hiding (id; [_,_]) renaming (_∘_ to _⊚_)
 
 import Bi-invertibility.Erased
 open import Bijection equality-with-J as Bij using (_↔_)
+open import Circle eq using (𝕊¹)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
@@ -533,21 +534,17 @@ lens-preserves-h-level-of-domain {A = A} {B = B} n =
   H-level (1 + n) (T.Lens A B)  ↝⟨ H-level-cong _ (1 + n) (inverse Lens≃Traditional-lens) ⟩□
   H-level (1 + n) (Lens A B)    □
 
--- There is a type A such that Lens A ⊤ is not propositional (assuming
--- univalence).
+-- Lens 𝕊¹ ⊤ is not propositional (assuming univalence).
 
 ¬-lens-to-⊤-propositional :
   Univalence (# 0) →
-  ∃ λ (A : Set a) → ¬ Is-proposition (Lens A ⊤)
+  ¬ Is-proposition (Lens 𝕊¹ ⊤)
 ¬-lens-to-⊤-propositional univ =
-    A′
-  , Stable-¬ _
-      [ Is-proposition (Lens A′ ⊤)    ↝⟨ H-level-cong _ 1 Lens≃Traditional-lens ⟩
-        Is-proposition (T.Lens A′ ⊤)  ↝⟨ proj₂ $ T.¬-lens-to-⊤-propositional univ ⟩□
-        ⊥₀                            □
-      ]
-  where
-  A′ = _
+  Stable-¬ _
+    [ Is-proposition (Lens 𝕊¹ ⊤)    ↝⟨ H-level-cong _ 1 Lens≃Traditional-lens ⟩
+      Is-proposition (T.Lens 𝕊¹ ⊤)  ↝⟨ T.¬-lens-to-⊤-propositional univ ⟩□
+      ⊥₀                            □
+    ]
 
 ------------------------------------------------------------------------
 -- A conversion function

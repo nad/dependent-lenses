@@ -307,7 +307,7 @@ lens-to-⊥↔ {A = A} =
 h-level-respects-lens-from-inhabited :
   ∀ n → Lens A B → A → H-level n A → H-level n B
 h-level-respects-lens-from-inhabited {A = A} {B = B} n l a =
-  H-level n A  ↝⟨ H-level.respects-surjection surj n ⟩
+  H-level n A  ↝⟨ H-level.respects-surjection surj n ⟩□
   H-level n B  □
   where
   open Lens l
@@ -362,22 +362,19 @@ lens-preserves-h-level-of-domain n hA =
     lens-preserves-h-level (1 + n) (λ _ → hA) λ a →
       h-level-respects-lens-from-inhabited _ l a hA
 
--- There is a type A such that Lens A ⊤ is not propositional (assuming
--- univalence).
+-- Lens 𝕊¹ ⊤ is not propositional (assuming univalence).
 --
 -- (The lemma does not actually use the univalence argument, but
 -- univalence is used by Circle.¬-type-of-refl-propositional.)
 
 ¬-lens-to-⊤-propositional :
   Univalence (# 0) →
-  ∃ λ (A : Set a) → ¬ Is-proposition (Lens A ⊤)
+  ¬ Is-proposition (Lens 𝕊¹ ⊤)
 ¬-lens-to-⊤-propositional _ =
-  A′ , (
-  Is-proposition (Lens A′ ⊤)         ↝⟨ H-level.respects-surjection (_↔_.surjection lens-to-⊤↔) 1 ⟩
-  Is-proposition ((a : A′) → a ≡ a)  ↝⟨ proj₂ $ Circle.¬-type-of-refl-propositional ⟩□
-  ⊥₀                                 □)
-  where
-  A′ = _
+  Is-proposition (Lens 𝕊¹ ⊤)                 ↝⟨ H-level.respects-surjection (_↔_.surjection lens-to-⊤↔) 1 ⟩
+  Is-proposition ((x : 𝕊¹) → x ≡ x)          ↝⟨ H-level-cong _ 1 (Π-cong ext (inverse Bij.↑↔) λ _ → Eq.≃-≡ $ Eq.↔⇒≃ Bij.↑↔) ⟩
+  Is-proposition ((x : ↑ lzero 𝕊¹) → x ≡ x)  ↝⟨ proj₂ $ Circle.¬-type-of-refl-propositional ⟩□
+  ⊥                                          □
 
 ------------------------------------------------------------------------
 -- More isomorphisms/equivalences related to lenses
@@ -2342,12 +2339,10 @@ equal-setters-and-equivalences-as-getters-but-not-equal univ =
              (∃ λ (l : Lens 𝕊¹ 𝕊¹) → Is-equivalence (Lens.get l))) →
       ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p)
 ¬-≃-↠-Σ-Lens-Is-equivalence-get univ =
-  let is-equiv₁ , is-equiv₂ , setters-equal , bad≢id =
+  let is-equiv₁ , is-equiv₂ , _ , bad≢id =
         equal-setters-and-equivalences-as-getters-but-not-equal univ
   in
-  λ (f , hyp) →                              $⟨ setters-equal ⟩
-
-    Lens.set bad ≡ Lens.set id               ↝⟨ getters-equal-if-setters-equal bad id ⟩
+  λ (f , hyp) →                              $⟨ refl _ ⟩
 
     Lens.get bad ≡ Lens.get id               ↝⟨ (λ eq → trans (hyp _) (trans eq (sym (hyp _)))) ⟩
 

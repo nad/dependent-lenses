@@ -677,7 +677,7 @@ lens-from-contractible≃ᴱcodomain-contractible {A = A} {B} univ cA =
 
 lens-from-⊥↔⊤ :
   {B : Set b} →
-  Univalence (a ⊔ b) →
+  @0 Univalence (a ⊔ b) →
   Lens (⊥ {ℓ = a}) B ≃ᴱ ⊤
 lens-from-⊥↔⊤ {B = B} univ =
   _⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ $
@@ -740,37 +740,28 @@ to-from-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get≡get _ _ = refl _
 
 ¬Lens↠Traditional-lens :
   @0 Univalence lzero →
-  @0 Univalence a →
-  ∃ λ (A : Set a) → ¬ (Lens A ⊤ ↠ Traditionalᴱ.Lens A ⊤)
-¬Lens↠Traditional-lens {a = a} univ₀ univ =
-    A′
-  , Stable-¬ _
-      [ (Lens A′ ⊤ ↠ Traditionalᴱ.Lens A′ ⊤)  ↝⟨ (λ f → from-equivalence Traditionalᴱ.Lens≃Traditional-lens F.∘
-                                                        f F.∘
-                                                        from-equivalence (inverse Lens≃Higher-lens)) ⟩
-        (H.Lens A′ ⊤ ↠ T.Lens A′ ⊤)           ↝⟨ proj₂ $ H.¬Lens↠Traditional-lens univ₀ univ ⟩□
-        ⊥                                     □
-      ]
-  where
-  A′ = _
+  ¬ (Lens 𝕊¹ ⊤ ↠ Traditionalᴱ.Lens 𝕊¹ ⊤)
+¬Lens↠Traditional-lens univ =
+  Stable-¬ _
+    [ (Lens 𝕊¹ ⊤ ↠ Traditionalᴱ.Lens 𝕊¹ ⊤)  ↝⟨ (λ f → from-equivalence Traditionalᴱ.Lens≃Traditional-lens F.∘
+                                                      f F.∘
+                                                      from-equivalence (inverse Lens≃Higher-lens)) ⟩
+      (H.Lens 𝕊¹ ⊤ ↠ T.Lens 𝕊¹ ⊤)           ↝⟨ H.¬Lens↠Traditional-lens univ ⟩□
+      ⊥                                     □
+    ]
 
 -- In general there is no equivalence with erased proofs between
 -- Lens A B and Traditionalᴱ.Lens A B (assuming univalence).
 
 ¬Lens≃ᴱTraditional-lens :
   @0 Univalence lzero →
-  @0 Univalence a →
-  ∃ λ (A : Set a) →
-    ¬ (Lens A ⊤ ≃ᴱ Traditionalᴱ.Lens A ⊤)
-¬Lens≃ᴱTraditional-lens univ₀ univ =
-    A′
-  , Stable-¬ _
-      [ (Lens A′ ⊤ ≃ᴱ Traditionalᴱ.Lens A′ ⊤)  ↝⟨ from-equivalence ⊚ EEq.≃ᴱ→≃ ⟩
-        (Lens A′ ⊤ ↠  Traditionalᴱ.Lens A′ ⊤)  ↝⟨ proj₂ $ ¬Lens↠Traditional-lens univ₀ univ ⟩□
-        ⊥                                      □
-      ]
-  where
-  A′ = _
+  ¬ (Lens 𝕊¹ ⊤ ≃ᴱ Traditionalᴱ.Lens 𝕊¹ ⊤)
+¬Lens≃ᴱTraditional-lens univ =
+  Stable-¬ _
+    [ (Lens 𝕊¹ ⊤ ≃ᴱ Traditionalᴱ.Lens 𝕊¹ ⊤)  ↝⟨ from-equivalence ⊚ EEq.≃ᴱ→≃ ⟩
+      (Lens 𝕊¹ ⊤ ↠  Traditionalᴱ.Lens 𝕊¹ ⊤)  ↝⟨ ¬Lens↠Traditional-lens univ ⟩□
+      ⊥                                      □
+    ]
 
 -- Some lemmas used in Lens↠Traditional-lens and
 -- Lens≃ᴱTraditional-lens below.
@@ -1057,21 +1048,20 @@ Lens⇔Traditional-lens-preserves-getters-and-setters _ b₀ =
 -- codomain also has h-level n (in erased contexts).
 
 @0 h-level-respects-lens-from-inhabited :
-  Lens A B → A → H-level n A → H-level n B
-h-level-respects-lens-from-inhabited l =
-  H.h-level-respects-lens-from-inhabited (high l)
+  ∀ n → Lens A B → A → H-level n A → H-level n B
+h-level-respects-lens-from-inhabited n l =
+  H.h-level-respects-lens-from-inhabited n (high l)
 
 -- This is not necessarily true for arbitrary domains (assuming
 -- univalence).
 
 ¬-h-level-respects-lens :
-  @0 Univalence (a ⊔ b) →
-  ¬ (∀ n {A : Set a} {B : Set b} →
-     Lens A B → H-level n A → H-level n B)
+  @0 Univalence lzero →
+  ¬ (∀ n → Lens ⊥₀ Bool → H-level n ⊥₀ → H-level n Bool)
 ¬-h-level-respects-lens univ =
   Stable-¬ _
-    [ (∀ n {A B} → Lens A B → H-level n A → H-level n B)    ↝⟨ (λ hyp n l → hyp n (Higher-lens→Lens l)) ⟩
-      (∀ n {A B} → H.Lens A B → H-level n A → H-level n B)  ↝⟨ H.¬-h-level-respects-lens univ ⟩□
+    [ (∀ n → Lens ⊥ Bool → H-level n ⊥ → H-level n Bool)    ↝⟨ (λ hyp n l → hyp n (Higher-lens→Lens l)) ⟩
+      (∀ n → H.Lens ⊥ Bool → H-level n ⊥ → H-level n Bool)  ↝⟨ H.¬-h-level-respects-lens univ ⟩□
       ⊥                                                     □
     ]
 
@@ -1113,15 +1103,8 @@ Contractibleᴱ→Contractibleᴱ =
   Traditionalᴱ.Contractibleᴱ→Contractibleᴱ ⊚
   Lens.traditional-lens
 
--- If the domain type of a lens is contractible, then the remainder
--- type is also contractible (in erased contexts).
-
-@0 domain-contractible⇒remainder-contractible :
-  (l : Lens A B) → Contractible A → Contractible (Lens.R l)
-domain-contractible⇒remainder-contractible =
-  H.domain-contractible⇒remainder-contractible ⊚ high
-
--- A variant for Contractibleᴱ.
+-- If the domain type of a lens is contractible with an erased proof,
+-- then the remainder type is also contractible with an erased proof.
 
 domain-Contractibleᴱ⇒remainder-Contractibleᴱ :
   (l : Lens A B) → Contractibleᴱ A → Contractibleᴱ (Lens.R l)
@@ -1516,11 +1499,12 @@ module Lens-combinators where
   @0 id-unique :
     {A : Set a} →
     Univalence a →
-    ((l₁ , _) (l₂ , _) :
-       ∃ λ (l : Lens A A) → ∀ a → Lens.get l a ≡ a) →
+    (l₁ l₂ : Lens A A) →
+    Lens.get l₁ ≡ P.id →
+    Lens.get l₂ ≡ P.id →
     l₁ ≡ l₂
-  id-unique {A = A} univ (l₁ , g₁) (l₂ , g₂) =
-                       $⟨ HLC.id-unique univ (high l₁ , g₁) (high l₂ , g₂) ⟩
+  id-unique {A = A} univ l₁ l₂ g₁ g₂ =
+                       $⟨ HLC.id-unique univ (high l₁) (high l₂) g₁ g₂ ⟩
     high l₁ ≡ high l₂  ↝⟨ Eq.≃-≡ Lens≃Higher-lens {x = l₁} {y = l₂} ⟩□
     l₁ ≡ l₂            □
 
@@ -1916,7 +1900,7 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
 
 ¬Is-equivalenceᴱ-get↠Has-quasi-inverseᴱ :
   (b : Block "id") →
-  Univalence a →
+  @0 Univalence a →
   ¬ ({A B : Set a}
      (l : Lens A B) →
      Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ b l)
@@ -1946,7 +1930,7 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
 
 ¬Is-equivalenceᴱ-get≃ᴱHas-quasi-inverseᴱ :
   (b : Block "id") →
-  Univalence a →
+  @0 Univalence a →
   ¬ ({A B : Set a}
      (l : Lens A B) →
      Is-equivalenceᴱ (Lens.get l) ≃ᴱ Has-quasi-inverseᴱ b l)
@@ -2249,7 +2233,7 @@ to-from-≃ᴱ≃ᴱ≊ᴱ≡get
 to-from-≃ᴱ≃ᴱ≊ᴱ′≡get :
   {A : Set a} {B : Set b}
   (b-id : Block "id")
-  (univ : Univalence (a ⊔ b)) →
+  (@0 univ : Univalence (a ⊔ b)) →
   (A≊ᴱB@(l , _) : [ b-id ] ↑ b A ≊ᴱ ↑ a B) →
   _≃ᴱ_.to (_≃ᴱ_.from (≃ᴱ≃ᴱ≊ᴱ′ b-id univ) A≊ᴱB) ≡
   lower ⊚ Lens.get l ⊚ lift
