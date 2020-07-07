@@ -2062,17 +2062,28 @@ get⁻¹-constant l b₁ b₂ =
   Lens.R l          ↝⟨ remainder≃get⁻¹ l b₂ ⟩□
   Lens.get l ⁻¹ b₂  □
 
--- The set function can be expressed using get⁻¹-constant and get.
+-- The two directions of get⁻¹-constant.
+
+get⁻¹-const :
+  (l : Lens A B) (b₁ b₂ : B) →
+  Lens.get l ⁻¹ b₁ → Lens.get l ⁻¹ b₂
+get⁻¹-const l b₁ b₂ = _≃_.to (get⁻¹-constant l b₁ b₂)
+
+get⁻¹-const⁻¹ :
+  (l : Lens A B) (b₁ b₂ : B) →
+  Lens.get l ⁻¹ b₂ → Lens.get l ⁻¹ b₁
+get⁻¹-const⁻¹ l b₁ b₂ = _≃_.from (get⁻¹-constant l b₁ b₂)
+
+-- The set function can be expressed using get⁻¹-const and get.
 --
 -- Paolo Capriotti defines set in a similar way
 -- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
 
-set-in-terms-of-get⁻¹-constant :
+set-in-terms-of-get⁻¹-const :
   (l : Lens A B) →
   Lens.set l ≡
-  λ a b →
-    proj₁ (_≃_.to (get⁻¹-constant l (Lens.get l a) b) (a , refl _))
-set-in-terms-of-get⁻¹-constant l = refl _
+  λ a b → proj₁ (get⁻¹-const l (Lens.get l a) b (a , refl _))
+set-in-terms-of-get⁻¹-const l = refl _
 
 -- The remainder function can be expressed using remainder≃get⁻¹ and
 -- get.
@@ -2083,16 +2094,17 @@ remainder-in-terms-of-remainder≃get⁻¹ :
   λ a → _≃_.from (remainder≃get⁻¹ l (Lens.get l a)) (a , refl _)
 remainder-in-terms-of-remainder≃get⁻¹ l = refl _
 
--- The lemma get⁻¹-constant satisfies some coherence properties.
+-- The functions get⁻¹-const and get⁻¹-const⁻¹ satisfy some coherence
+-- properties.
 --
 -- The first and third properties are discussed by Paolo Capriotti
 -- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
 
-get⁻¹-constant-∘ :
+get⁻¹-const-∘ :
   (l : Lens A B) (b₁ b₂ b₃ : B) (p : Lens.get l ⁻¹ b₁) →
-  _≃_.to (get⁻¹-constant l b₂ b₃) (_≃_.to (get⁻¹-constant l b₁ b₂) p) ≡
-  _≃_.to (get⁻¹-constant l b₁ b₃) p
-get⁻¹-constant-∘ l _ b₂ b₃ p =
+  get⁻¹-const l b₂ b₃ (get⁻¹-const l b₁ b₂ p) ≡
+  get⁻¹-const l b₁ b₃ p
+get⁻¹-const-∘ l _ b₂ b₃ p =
   from (r₂ , b₃) , cong proj₂ (right-inverse-of (r₂ , b₃))  ≡⟨ cong (λ r → from (r , b₃) , cong proj₂ (right-inverse-of (r , b₃))) $
                                                                cong proj₁ $ right-inverse-of _ ⟩∎
   from (r₁ , b₃) , cong proj₂ (right-inverse-of (r₁ , b₃))  ∎
@@ -2104,35 +2116,33 @@ get⁻¹-constant-∘ l _ b₂ b₃ p =
   r₁ = proj₁ (to (proj₁ p))
   r₂ = proj₁ (to (from (r₁ , b₂)))
 
-get⁻¹-constant-inverse :
+get⁻¹-const-inverse :
   (l : Lens A B) (b₁ b₂ : B) (p : Lens.get l ⁻¹ b₁) →
-  _≃_.to (get⁻¹-constant l b₁ b₂) p ≡
-  _≃_.from (get⁻¹-constant l b₂ b₁) p
-get⁻¹-constant-inverse _ _ _ _ = refl _
+  get⁻¹-const l b₁ b₂ p ≡ get⁻¹-const⁻¹ l b₂ b₁ p
+get⁻¹-const-inverse _ _ _ _ = refl _
 
-get⁻¹-constant-id :
+get⁻¹-const-id :
   (l : Lens A B) (b : B) (p : Lens.get l ⁻¹ b) →
-  _≃_.to (get⁻¹-constant l b b) p ≡ p
-get⁻¹-constant-id l b p =
-  _≃_.to (get⁻¹-constant l b b) p                                    ≡⟨ sym $ get⁻¹-constant-∘ l b _ _ p ⟩
-  _≃_.to (get⁻¹-constant l b b) (_≃_.to (get⁻¹-constant l b b) p)    ≡⟨⟩
-  _≃_.from (get⁻¹-constant l b b) (_≃_.to (get⁻¹-constant l b b) p)  ≡⟨ _≃_.left-inverse-of (get⁻¹-constant l b b) _ ⟩∎
-  p                                                                  ∎
+  get⁻¹-const l b b p ≡ p
+get⁻¹-const-id l b p =
+  get⁻¹-const l b b p                        ≡⟨ sym $ get⁻¹-const-∘ l b _ _ p ⟩
+  get⁻¹-const l b b (get⁻¹-const l b b p)    ≡⟨⟩
+  get⁻¹-const⁻¹ l b b (get⁻¹-const l b b p)  ≡⟨ _≃_.left-inverse-of (get⁻¹-constant l b b) _ ⟩∎
+  p                                          ∎
 
--- Another kind of coherence property does not hold for
--- get⁻¹-constant.
+-- Another kind of coherence property does not hold for get⁻¹-const.
 --
 -- This kind of property came up in a discussion with Andrea Vezzosi.
 
-get⁻¹-constant-not-coherent :
+get⁻¹-const-not-coherent :
   ¬ ({A B : Set} (l : Lens A B) (b₁ b₂ : B)
      (f : ∀ b → Lens.get l ⁻¹ b) →
-     _≃_.to (get⁻¹-constant l b₁ b₂) (f b₁) ≡ f b₂)
-get⁻¹-constant-not-coherent =
+     get⁻¹-const l b₁ b₂ (f b₁) ≡ f b₂)
+get⁻¹-const-not-coherent =
   ({A B : Set} (l : Lens A B) (b₁ b₂ : B) (f : ∀ b → Lens.get l ⁻¹ b) →
-   _≃_.to (get⁻¹-constant l b₁ b₂) (f b₁) ≡ f b₂)                        ↝⟨ (λ hyp → hyp l true false f) ⟩
+   get⁻¹-const l b₁ b₂ (f b₁) ≡ f b₂)                                    ↝⟨ (λ hyp → hyp l true false f) ⟩
 
-  _≃_.to (get⁻¹-constant l true false) (f true) ≡ f false                ↝⟨ cong (proj₁ ⊚ proj₁) ⟩
+  get⁻¹-const l true false (f true) ≡ f false                            ↝⟨ cong (proj₁ ⊚ proj₁) ⟩
 
   true ≡ false                                                           ↝⟨ Bool.true≢false ⟩□
 

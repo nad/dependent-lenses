@@ -523,7 +523,7 @@ higher→ : Higher.Lens A B → Lens A B
 higher→ l@(Higher.⟨ _ , _ , _ ⟩) = _≃_.from Lens-as-Σ′
   ( Higher.Lens.get l
   , Higher.get⁻¹-constant l
-  , Higher.get⁻¹-constant-∘ l
+  , Higher.get⁻¹-const-∘ l
   )
 
 -- The conversion preserves getters and setters.
