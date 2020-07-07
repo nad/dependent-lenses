@@ -1301,13 +1301,38 @@ lens-from-⊥↔⊤ {B = B} univ =
   {A : Set a} {B : Set b} →
   Univalence (a ⊔ b) →
   (A ≃ B) ≃ (∃ λ (l : Lens A B) → Is-equivalence (Lens.get l))
-≃-≃-Σ-Lens-Is-equivalence-get univ = Eq.↔→≃
-  (λ A≃B → ≃→lens A≃B , _≃_.is-equivalence A≃B)
-  (λ (l , eq) → Eq.⟨ Lens.get l , eq ⟩)
-  (λ (l , eq) → Σ-≡,≡→≡
-     (sym $ get-equivalence→≡≃→lens univ l eq)
-     (Eq.propositional ext _ _ _))
-  (λ _ → Eq.lift-equality ext (refl _))
+≃-≃-Σ-Lens-Is-equivalence-get {a = a} {A = A} {B = B} univ =
+  A ≃ B                                                       ↔⟨ (inverse $ drop-⊤-right λ _ → singleton-with-≃-↔-⊤ {a = a} ext univ) ⟩
+
+  A ≃ B × (∃ λ R → R ≃ ∥ B ∥)                                 ↔⟨ ∃-comm ⟩
+
+  (∃ λ R → A ≃ B × R ≃ ∥ B ∥)                                 ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ≃∥∥≃→∥∥×proj₂-equivalence) ⟩
+
+  (∃ λ R → A ≃ B × (R → ∥ B ∥) × Is-equivalence proj₂)        ↝⟨ (∃-cong λ _ → ×-cong₁ λ (_ , eq) →
+                                                                  Eq.≃-preserves ext F.id (inverse Eq.⟨ _ , eq ⟩)) ⟩
+
+  (∃ λ R → A ≃ (R × B) × (R → ∥ B ∥) × Is-equivalence proj₂)  ↔⟨ (∃-cong λ _ →
+                                                                  inverse Σ-assoc F.∘
+                                                                  (×-cong₁ λ _ → Eq.≃-as-Σ)) ⟩
+  (∃ λ R → ∃ λ (f : A → R × B) →
+     Is-equivalence f ×
+     (R → ∥ B ∥) ×
+     Is-equivalence proj₂)                                    ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ f-eq → ∃-cong λ _ →
+                                                                  Eq.⇔→≃
+                                                                    (Eq.propositional ext _)
+                                                                    (Eq.propositional ext _)
+                                                                    (Eq.Two-out-of-three.f-g (Eq.two-out-of-three _ _) f-eq)
+                                                                    (flip (Eq.Two-out-of-three.g∘f-f (Eq.two-out-of-three _ _)) f-eq)) ⟩
+  (∃ λ R → ∃ λ (f : A → R × B) →
+     Is-equivalence f ×
+     (R → ∥ B ∥) ×
+     Is-equivalence (proj₂ ⊚ f))                              ↔⟨ (Σ-cong (inverse Lens-as-Σ) λ _ → F.id) F.∘
+                                                                 Σ-assoc F.∘
+                                                                 (∃-cong λ _ →
+                                                                  Σ-assoc F.∘
+                                                                  (Σ-cong (inverse Eq.≃-as-Σ) λ _ → F.id) F.∘
+                                                                  Σ-assoc) ⟩□
+  (∃ λ (l : Lens A B) → Is-equivalence (Lens.get l))          □
 
 -- The right-to-left direction of ≃-≃-Σ-Lens-Is-equivalence-get
 -- returns the lens's getter (and some proof).
