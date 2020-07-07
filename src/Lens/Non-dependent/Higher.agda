@@ -28,7 +28,7 @@ open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq as Trunc
 import Nat equality-with-J as Nat
-open import Preimage equality-with-J using (_⁻¹_)
+open import Preimage equality-with-J as Preimage using (_⁻¹_)
 open import Quotient eq
 open import Surjection equality-with-J using (_↠_)
 open import Univalence-axiom equality-with-J
@@ -2172,6 +2172,42 @@ remainder≃∃get⁻¹ {B = B} l ∥B∥→B =
   (∃ λ (b : ∥ B ∥) → get ⁻¹ (∥B∥→B b))  □
   where
   open Lens l
+
+-- Two lenses of type Lens A B are equal if B is inhabited and the
+-- lenses' setters are equal (assuming univalence).
+--
+-- Some results above are more general than this one, but this proof,
+-- which uses remainder≃get⁻¹, is rather easy.
+
+lenses-with-inhabited-codomains-equal-if-setters-equal :
+  {A : Set a} {B : Set b} →
+  Univalence (a ⊔ b) →
+  (l₁ l₂ : Lens A B) →
+  B →
+  Lens.set l₁ ≡ Lens.set l₂ →
+  l₁ ≡ l₂
+lenses-with-inhabited-codomains-equal-if-setters-equal
+  {B = B} univ l₁ l₂ b setters-equal =
+  _↔_.from (equality-characterisation₂ univ)
+    ( R≃R
+    , (λ a →
+         remainder l₂ (set l₁ a b)  ≡⟨ cong (λ f → remainder l₂ (f a b)) setters-equal ⟩
+         remainder l₂ (set l₂ a b)  ≡⟨ remainder-set l₂ _ _ ⟩∎
+         remainder l₂ a             ∎)
+    , getters-equal
+    )
+  where
+  open Lens
+
+  getters-equal =
+    ext⁻¹ $ getters-equal-if-setters-equal l₁ l₂ setters-equal
+
+  R≃R : R l₁ ≃ R l₂
+  R≃R =
+    R l₁         ↝⟨ remainder≃get⁻¹ l₁ b ⟩
+    get l₁ ⁻¹ b  ↔⟨ Preimage.respects-extensional-equality getters-equal ⟩
+    get l₂ ⁻¹ b  ↝⟨ inverse $ remainder≃get⁻¹ l₂ b ⟩□
+    R l₂         □
 
 ------------------------------------------------------------------------
 -- Lens combinators
