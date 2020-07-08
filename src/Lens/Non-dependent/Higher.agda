@@ -2296,6 +2296,15 @@ module Lens-combinators where
     where
     open Lens
 
+  -- The composition operation implements set in a certain way.
+
+  ∘-set :
+    let open Lens in
+    ∀ ℓa ℓb {A : Set (ℓa ⊔ ℓb ⊔ c)} {B : Set (ℓb ⊔ c)} {C : Set c}
+    (l₁ : Lens B C) (l₂ : Lens A B) a c →
+    set (⟨ ℓa , ℓb ⟩ l₁ ∘ l₂) a c ≡ set l₂ a (set l₁ (get l₂ a) c)
+  ∘-set _ _ ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ _ _ = refl _
+
   -- A variant of composition for lenses between types with the same
   -- universe level.
 
