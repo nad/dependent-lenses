@@ -202,24 +202,6 @@ instance
                    truncation-is-proposition ∣ get l a ∣ ∣ b ∣
            eq₂ = ⟨ext⟩ (≃⇒≡ univ ∘ get⁻¹-≃ l)
        in
-       proj₁ (≡⇒→ (subst (λ f → f (get l a) ≡ f b) (sym eq₂) eq₁)
-                (a , refl _))                                           ≡⟨ cong (λ eq → proj₁ (≡⇒→ eq (a , refl _)))
-                                                                           subst-in-terms-of-trans-and-cong ⟩
-       proj₁ (≡⇒→ (trans (sym (cong (_$ get l a) (sym eq₂)))
-                     (trans eq₁ (cong (_$ b) (sym eq₂))))
-                (a , refl _))                                           ≡⟨ cong₂ (λ p q → proj₁ (≡⇒→ (trans p (trans eq₁ q))
-                                                                                                 (a , refl _)))
-                                                                             (trans (sym $ cong-sym _ _) $
-                                                                              cong (cong (_$ get l a)) $ sym-sym _)
-                                                                             (cong-sym _ _) ⟩
-       proj₁ (≡⇒→ (trans (cong (_$ get l a) eq₂)
-                     (trans eq₁ (sym (cong (_$ b) eq₂))))
-                (a , refl _))                                           ≡⟨ cong (λ eq → proj₁ (_≃_.to eq (a , refl _))) $
-                                                                           trans (≡⇒≃-trans ext _ _) $
-                                                                           trans (cong (F._∘ ≡⇒≃ (cong (_$ get l a) eq₂)) $
-                                                                                  ≡⇒≃-trans ext _ (sym (cong (_$ b) eq₂))) $
-                                                                           cong (λ eq → (eq F.∘ ≡⇒≃ eq₁) F.∘ ≡⇒≃ (cong (_$ get l a) eq₂)) $
-                                                                           ≡⇒≃-sym ext _ ⟩
        proj₁ (_≃_.from (≡⇒≃ (cong (_$ b) eq₂))
                 (≡⇒→ eq₁ (≡⇒→ (cong (_$ get l a) eq₂) (a , refl _))))   ≡⟨ cong₂ (λ p q → proj₁ (_≃_.from p (≡⇒→ eq₁ (_≃_.to q (a , refl _)))))
                                                                              (lemma l _)

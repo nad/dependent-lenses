@@ -46,7 +46,7 @@ Lens {a = a} A B =
   ∃ λ (H : Pow a ∥ B ∥) →
     (g ⁻¹_) ≡ H ∘ ∣_∣
 
--- Some derived definitions.
+-- Some derived definitions (based on Paolo's presentation).
 
 module Lens {A : Set a} {B : Set b} (l : Lens A B) where
 
@@ -65,18 +65,27 @@ module Lens {A : Set a} {B : Set b} (l : Lens A B) where
   get⁻¹-≡ : (get ⁻¹_) ≡ H ∘ ∣_∣
   get⁻¹-≡ = proj₂ (proj₂ l)
 
+  -- An equivalence.
+
+  get⁻¹-≃ : ∀ b → get ⁻¹ b ≃ H ∣ b ∣
+  get⁻¹-≃ = ≡⇒≃ ∘ ext⁻¹ get⁻¹-≡
+
+  -- All the getter's fibres are equivalent.
+
+  get⁻¹-constant : (b₁ b₂ : B) → get ⁻¹ b₁ ≃ get ⁻¹ b₂
+  get⁻¹-constant b₁ b₂ =
+    get ⁻¹ b₁  ↝⟨ get⁻¹-≃ b₁ ⟩
+    H ∣ b₁ ∣   ↝⟨ ≡⇒≃ $ cong H $ truncation-is-proposition _ _ ⟩
+    H ∣ b₂ ∣   ↝⟨ inverse $ get⁻¹-≃ b₂ ⟩□
+    get ⁻¹ b₂  □
+
   -- A setter.
-  --
-  -- This definition is based on Paolo Capriotti's.
 
   set : A → B → A
-  set a b =                  $⟨ truncation-is-proposition ∣ get a ∣ ∣ b ∣ ⟩
-    ∣ get a ∣ ≡ ∣ b ∣        ↝⟨ cong H ⟩
-    H ∣ get a ∣ ≡ H ∣ b ∣    ↝⟨ subst (λ f → f (get a) ≡ f b) (sym get⁻¹-≡) ⟩
-    get ⁻¹ get a ≡ get ⁻¹ b  ↝⟨ ≡⇒≃ ⟩
-    get ⁻¹ get a ≃ get ⁻¹ b  ↝⟨ flip _≃_.to (a , refl _) ⟩
-    get ⁻¹ b                 ↝⟨ proj₁ ⟩□
-    A                        □
+  set a b =                    $⟨ _≃_.to (get⁻¹-constant (get a) b) ⟩
+    (get ⁻¹ get a → get ⁻¹ b)  ↝⟨ _$ (a , refl _) ⟩
+    get ⁻¹ b                   ↝⟨ proj₁ ⟩□
+    A                          □
 
 instance
 
@@ -222,73 +231,43 @@ Lens→Higher-lens-preserves-getters-and-setters l@(g , H , eq) =
     let h₁ = ≡⇒→ (cong (_$ g a) eq) (a , refl _)
 
         h₂ =
-          _≃_.from (≡⇒↝ _ (cong H _))
+          _≃_.from (≡⇒≃ (cong H _))
             (subst (H ∘ proj₁) (sym (_≃_.left-inverse-of ∥∥×≃ _))
                (≡⇒→ (cong H _) h₁))
 
+        h₃ = ≡⇒→ (cong H _) h₁
+
         lemma =
-          h₂                                                         ≡⟨ sym $ subst-in-terms-of-inverse∘≡⇒↝ equivalence _ _ _ ⟩
+          h₂                                                       ≡⟨ sym $ subst-in-terms-of-inverse∘≡⇒↝ equivalence _ _ _ ⟩
 
           subst H _
             (subst (H ∘ proj₁) (sym (_≃_.left-inverse-of ∥∥×≃ _))
-               (≡⇒→ (cong H _) h₁))                                  ≡⟨ cong (λ x → subst H (sym $ truncation-is-proposition _ _)
-                                                                                      (subst (H ∘ proj₁)
-                                                                                         (sym (_≃_.left-inverse-of ∥∥×≃ (∣ g a ∣ , b)))
-                                                                                         x)) $ sym $
-                                                                        subst-in-terms-of-≡⇒↝ equivalence _ _ _ ⟩
+               (≡⇒→ (cong H _) h₁))                                ≡⟨ cong (λ x → subst H (sym $ truncation-is-proposition _ _)
+                                                                                    (subst (H ∘ proj₁)
+                                                                                       (sym (_≃_.left-inverse-of ∥∥×≃ (∣ g a ∣ , b)))
+                                                                                       x)) $ sym $
+                                                                      subst-in-terms-of-≡⇒↝ equivalence _ _ _ ⟩
           subst H _
             (subst (H ∘ proj₁) (sym (_≃_.left-inverse-of ∥∥×≃ _))
-               (subst H _ h₁))                                       ≡⟨ cong (λ x → subst H (sym $ truncation-is-proposition _ _) x) $
-                                                                        subst-∘ _ _ _ ⟩
+               (subst H _ h₁))                                     ≡⟨ cong (λ x → subst H (sym $ truncation-is-proposition _ _) x) $
+                                                                      subst-∘ _ _ _ ⟩
 
-          subst H _ (subst H _ (subst H _ h₁))                       ≡⟨ cong (λ x → subst H (sym $ truncation-is-proposition _ _) x) $
-                                                                        subst-subst _ _ _ _ ⟩
+          subst H _ (subst H _ (subst H _ h₁))                     ≡⟨ cong (λ x → subst H (sym $ truncation-is-proposition _ _) x) $
+                                                                      subst-subst _ _ _ _ ⟩
 
-          subst H _ (subst H _ h₁)                                   ≡⟨ subst-subst _ _ _ _ ⟩
+          subst H _ (subst H _ h₁)                                 ≡⟨ subst-subst _ _ _ _ ⟩
 
-          subst H _ h₁                                               ≡⟨ cong (λ eq → subst H eq h₁) $
-                                                                        mono₁ 1 truncation-is-proposition _ _ ⟩
+          subst H _ h₁                                             ≡⟨ cong (λ eq → subst H eq h₁) $
+                                                                      mono₁ 1 truncation-is-proposition _ _ ⟩
 
-          subst H _ h₁                                               ≡⟨ subst-in-terms-of-≡⇒↝ equivalence _ _ _ ⟩∎
+          subst H _ h₁                                             ≡⟨ subst-in-terms-of-≡⇒↝ equivalence _ _ _ ⟩∎
 
-          ≡⇒→ (cong H _) h₁                                          ∎
+          ≡⇒→ (cong H _) h₁                                        ∎
     in
-    (Higher.Lens.set (Lens→Higher-lens l) a b                      ≡⟨⟩
-
-     proj₁ (_≃_.from (≡⇒↝ _ (cong (_$ b) eq)) h₂)                  ≡⟨ cong (λ f → proj₁ (f h₂)) $ sym $
-                                                                      ≡⇒↝-sym equivalence ⟩
-
-     proj₁ (≡⇒→ (sym (cong (_$ b) eq)) h₂)                         ≡⟨ cong (λ eq → proj₁ (≡⇒→ eq h₂)) $ sym $
-                                                                      cong-sym _ _ ⟩
-
-     proj₁ (≡⇒→ (cong (_$ b) (sym eq)) h₂)                         ≡⟨ cong (proj₁ ∘ ≡⇒→ (cong (_$ b) (sym eq)))
-                                                                      lemma ⟩
-
-     proj₁ (≡⇒→ (cong (_$ b) (sym eq)) (≡⇒→ (cong H _) h₁))        ≡⟨ cong (λ f → proj₁ (f h₁)) $ sym $
-                                                                      ≡⇒↝-trans equivalence ⟩
-
-     proj₁ (≡⇒→ (trans (cong H _) (cong (_$ b) (sym eq))) h₁)      ≡⟨⟩
-
-     proj₁ (≡⇒→ (trans (cong H _) (cong (_$ b) (sym eq)))
-              (≡⇒→ (cong (_$ g a) eq) (a , refl _)))               ≡⟨ cong (λ f → proj₁ (f (a , refl _))) $ sym $
-                                                                      ≡⇒↝-trans equivalence ⟩
-     proj₁ (≡⇒→ (trans (cong (_$ g a) eq)
-                   (trans (cong H _) (cong (_$ b) (sym eq))))
-              (a , refl _))                                        ≡⟨ cong (λ p → proj₁
-                                                                                    (≡⇒→ (trans p
-                                                                                            (trans (cong H (truncation-is-proposition _ _))
-                                                                                               (cong (_$ b) (sym eq))))
-                                                                                       (a , refl _))) $
-                                                                      trans (cong (cong (_$ g a)) $ sym $ sym-sym _) $
-                                                                      cong-sym _ _ ⟩
-     proj₁ (≡⇒→ (trans (sym (cong (_$ g a) (sym eq)))
-                   (trans (cong H _) (cong (_$ b) (sym eq))))
-              (a , refl _))                                        ≡⟨ cong (λ eq → proj₁ (≡⇒→ eq (a , refl _))) $ sym $
-                                                                      subst-in-terms-of-trans-and-cong ⟩
-     proj₁ (≡⇒→ (subst (λ f → f (g a) ≡ f b) (sym eq) (cong H _))
-              (a , refl _))                                        ≡⟨⟩
-
-     Lens.set l a b                                                ∎)
+    (Higher.Lens.set (Lens→Higher-lens l) a b    ≡⟨⟩
+     proj₁ (_≃_.from (≡⇒≃ (cong (_$ b) eq)) h₂)  ≡⟨ cong (λ h → proj₁ (_≃_.from (≡⇒≃ (cong (_$ b) eq)) h)) lemma ⟩
+     proj₁ (_≃_.from (≡⇒≃ (cong (_$ b) eq)) h₃)  ≡⟨⟩
+     Lens.set l a b                              ∎)
 
 -- Lens A B is equivalent to Higher.Lens A B (assuming univalence).
 
