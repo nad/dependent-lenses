@@ -36,29 +36,17 @@ private
 -- contractible codomains.
 
 no-first-projection-lens :
-  (Lens : Set (a ⊔ b) → Set a → Set c) →
+  (Lens : Set → Set → Set a) →
   @0 (∀ {A B} → Lens A B → Contractible A → Contractible B) →
-  ∃ λ (A : Set a) → ∃ λ (B : A → Set b) →
-    ¬ Lens (Σ A B) A
-no-first-projection-lens {b = b} _ contractible-to-contractible =
-  ↑ _ Bool ,
-  (λ b → ↑ _ (lower b ≡ true)) ,
-  λ l →                                           $⟨ singleton-contractible _ ⟩
-     Contractible (Singleton true)                ↝⟨ H-level.respects-surjection surj 0 ⟩
-     Contractible (∃ λ b → ↑ _ (lower b ≡ true))  ↝⟨ (λ hyp → [ contractible-to-contractible l hyp ]) ⟩
-     Erased (Contractible (↑ _ Bool))             ↝⟨ Erased-cong (H-level.respects-surjection (_↔_.surjection Bij.↑↔) 0) ⟩
-     Erased (Contractible Bool)                   ↝⟨ Erased-cong (mono₁ 0) ⟩
-     Erased (Is-proposition Bool)                 ↝⟨ inverse-ext? ¬-Erased↔¬ _ ¬-Bool-propositional ⟩□
-     ⊥                                            □
-  where
-  surj : Singleton true ↠ ∃ λ b → ↑ _ (lower b ≡ true)
-  surj = record
-    { logical-equivalence = record
-      { to   = λ { (b , b≡true) → lift b , lift b≡true }
-      ; from = λ { (lift b , lift b≡true) → b , b≡true }
-      }
-    ; right-inverse-of = refl
-    }
+  ¬ Lens (∃ λ (b : Bool) → b ≡ true) Bool
+no-first-projection-lens _ contractible-to-contractible l =
+  _↔_.to Erased-⊥↔⊥
+    [                                $⟨ singleton-contractible _ ⟩
+      Contractible (Singleton true)  ↝⟨ contractible-to-contractible l ⟩
+      Contractible Bool              ↝⟨ mono₁ 0 ⟩
+      Is-proposition Bool            ↝⟨ ¬-Bool-propositional ⟩□
+      ⊥                              □
+    ]
 
 ------------------------------------------------------------------------
 -- Statements of preservation results, and some related lemmas

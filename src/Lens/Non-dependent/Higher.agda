@@ -1910,8 +1910,7 @@ domain-0+⇒lens-1+′ {A = A} {B} univ n hA =
 -- Σ-type.
 
 no-first-projection-lens :
-  ∃ λ (A : Set a) → ∃ λ (B : A → Set b) →
-    ¬ Lens (Σ A B) A
+  ¬ Lens (∃ λ (b : Bool) → b ≡ true) Bool
 no-first-projection-lens =
   Non-dependent.no-first-projection-lens
     Lens contractible-to-contractible
