@@ -1100,6 +1100,47 @@ get-equivalence→≡≃→lens′ {A = A} {B = B} univ l eq =
   A≃B = Eq.⟨ Lens.get l , eq ⟩
 
 ------------------------------------------------------------------------
+-- Some equivalences
+
+-- "The getter is an equivalence" is equivalent to "the remainder type
+-- is equivalent to the propositional truncation of the codomain".
+
+get-equivalence≃inhabited-equivalence :
+  (l : Lens A B) →
+  Is-equivalence (Lens.get l) ≃ Is-equivalence (Lens.inhabited l)
+get-equivalence≃inhabited-equivalence {A = A} {B = B} l =
+  Is-equivalence (get l)                  ↝⟨ Eq.⇔→≃
+                                               (Eq.propositional ext _)
+                                               (Eq.propositional ext _)
+                                               (flip (Eq.Two-out-of-three.g∘f-f (Eq.two-out-of-three _ _))
+                                                  (_≃_.is-equivalence (equiv l)))
+                                               (Eq.Two-out-of-three.f-g (Eq.two-out-of-three _ _)
+                                                  (_≃_.is-equivalence (equiv l))) ⟩
+  Is-equivalence (proj₂ ⦂ (R l × B → B))  ↝⟨ inverse $ equivalence-to-∥∥≃proj₂-equivalence _ ⟩□
+  Is-equivalence (inhabited l)            □
+  where
+  open Lens
+
+-- "The getter is an equivalence" is equivalent to "the remainder type
+-- is equivalent to the propositional truncation of the codomain".
+
+get-equivalence≃remainder≃∥codomain∥ :
+  (l : Lens A B) →
+  Is-equivalence (Lens.get l) ≃ (Lens.R l ≃ ∥ B ∥)
+get-equivalence≃remainder≃∥codomain∥ {A = A} {B = B} l =
+  Is-equivalence (get l)                          ↝⟨ get-equivalence≃inhabited-equivalence l ⟩
+  Is-equivalence (inhabited l)                    ↔⟨ inverse $
+                                                     drop-⊤-left-Σ $ _⇔_.to contractible⇔↔⊤ $
+                                                     propositional⇒inhabited⇒contractible
+                                                       (Π-closure ext 1 λ _ →
+                                                        truncation-is-proposition)
+                                                       (inhabited l) ⟩
+  (∃ λ (inh : R l → ∥ B ∥) → Is-equivalence inh)  ↔⟨ inverse Eq.≃-as-Σ ⟩□
+  R l ≃ ∥ B ∥                                     □
+  where
+  open Lens
+
+------------------------------------------------------------------------
 -- Some lens isomorphisms
 
 -- A generalised variant of Lens preserves bijections.
@@ -1672,28 +1713,12 @@ get-equivalence→remainder-propositional :
   (l : Lens A B) →
   Is-equivalence (Lens.get l) →
   Is-proposition (Lens.R l)
-get-equivalence→remainder-propositional l is-equiv =
-  [inhabited⇒+]⇒+ 0 λ r →
-    Trunc.rec
-      (H-level-propositional ext 1)
-      (λ b r₁ r₂ →
-         r₁                      ≡⟨ lemma _ _ ⟩
-         remainder (from A≃B b)  ≡⟨ sym $ lemma _ _ ⟩∎
-         r₂                      ∎)
-      (inhabited r)
+get-equivalence→remainder-propositional {B = B} l =
+  Is-equivalence (get l)  ↔⟨ get-equivalence≃remainder≃∥codomain∥ l ⟩
+  R l ≃ ∥ B ∥             ↝⟨ ≃∥∥→Is-proposition ⟩□
+  Is-proposition (R l)    □
   where
-  open _≃_
-  open Lens l
-
-  A≃B = Eq.⟨ _ , is-equiv ⟩
-
-  lemma : ∀ b r → r ≡ remainder (from A≃B b)
-  lemma b r =
-    r                                                             ≡⟨ cong proj₁ $ sym $ right-inverse-of equiv _ ⟩
-    proj₁ (to equiv (from equiv (r , b)))                         ≡⟨ cong (proj₁ ⊚ to equiv) $ sym $ left-inverse-of A≃B _ ⟩
-    proj₁ (to equiv (from A≃B (to A≃B (from equiv (r , b)))))     ≡⟨⟩
-    remainder (from A≃B (proj₂ (to equiv (from equiv (r , b)))))  ≡⟨ cong (remainder ⊚ from A≃B ⊚ proj₂) $ right-inverse-of equiv _ ⟩∎
-    remainder (from A≃B b)                                        ∎
+  open Lens
 
 -- If the getter function is pointwise equal to the identity
 -- function, then the remainder type is propositional.
