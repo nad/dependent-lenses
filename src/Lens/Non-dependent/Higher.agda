@@ -16,6 +16,7 @@ open import Logical-equivalence using (_⇔_)
 open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 
 open import Bijection equality-with-J as Bij using (_↔_)
+import Bool equality-with-J as Bool
 open import Category equality-with-J as C using (Category; Precategory)
 open import Circle eq as Circle using (𝕊¹)
 open import Equality.Decidable-UIP equality-with-J
@@ -2189,6 +2190,66 @@ lenses-with-inhabited-codomains-equal-if-setters-equal
     get l₁ ⁻¹ b  ↔⟨ Preimage.respects-extensional-equality getters-equal ⟩
     get l₂ ⁻¹ b  ↝⟨ inverse $ remainder≃get⁻¹ l₂ b ⟩□
     R l₂         □
+
+------------------------------------------------------------------------
+-- Equal lenses can be "observably different"
+
+-- An example based on one presented in "Shattered lens" by Oleg
+-- Grenrus.
+--
+-- Grenrus states that there are two lenses with equal getters and
+-- setters that are "observably different".
+
+-- A lemma used to construct the two lenses of the example.
+
+grenrus-example : (Bool → Bool ↔ Bool) → Lens (Bool × Bool) Bool
+grenrus-example eq = record
+  { R         = Bool
+  ; inhabited = ∣_∣
+  ; equiv     = Bool × Bool  ↔⟨ ×-cong₁ eq ⟩□
+                Bool × Bool  □
+  }
+
+-- The two lenses.
+
+grenrus-example₁ = grenrus-example (if_then F.id else Bool.swap)
+grenrus-example₂ = grenrus-example (if_then Bool.swap else F.id)
+
+-- The two lenses have equal setters.
+
+set-grenrus-example₁≡set-grenrus-example₂ :
+  Lens.set grenrus-example₁ ≡ Lens.set grenrus-example₂
+set-grenrus-example₁≡set-grenrus-example₂ = ⟨ext⟩ (⟨ext⟩ ⊚ lemma)
+  where
+  lemma : ∀ _ _ → _
+  lemma (true  , true)  true  = refl _
+  lemma (true  , true)  false = refl _
+  lemma (true  , false) true  = refl _
+  lemma (true  , false) false = refl _
+  lemma (false , true)  true  = refl _
+  lemma (false , true)  false = refl _
+  lemma (false , false) true  = refl _
+  lemma (false , false) false = refl _
+
+-- Thus the lenses are equal (assuming univalence)
+
+grenrus-example₁≡grenrus-example₂ :
+  Univalence lzero →
+  grenrus-example₁ ≡ grenrus-example₂
+grenrus-example₁≡grenrus-example₂ univ =
+  lenses-with-inhabited-codomains-equal-if-setters-equal
+    univ _ _ true
+    set-grenrus-example₁≡set-grenrus-example₂
+
+-- However, in a certain sense the lenses are "observably different".
+
+grenrus-example₁-true :
+  Lens.remainder grenrus-example₁ (true , true) ≡ true
+grenrus-example₁-true = refl _
+
+grenrus-example₂-false :
+  Lens.remainder grenrus-example₂ (true , true) ≡ false
+grenrus-example₂-false = refl _
 
 ------------------------------------------------------------------------
 -- Lens combinators
