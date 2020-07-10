@@ -2481,7 +2481,10 @@ private
 
 -- A form of isomorphism between types, expressed using lenses.
 
-open B public renaming (_≅_ to [_]_≅_) using (Has-quasi-inverse)
+open B public
+  using ()
+  renaming (_≅_ to [_]_≅_;
+            Has-quasi-inverse to Has-quasi-inverse)
 
 -- Lenses with quasi-inverses can be converted to equivalences.
 
@@ -2630,9 +2633,14 @@ open B public renaming (_≅_ to [_]_≅_) using (Has-quasi-inverse)
 -- A form of equivalence between types, expressed using lenses.
 
 open B public
-  renaming (_≊_ to [_]_≊_)
-  using (Has-left-inverse; Has-right-inverse; Is-bi-invertible)
-open BM public using (equality-characterisation-≊)
+  using ()
+  renaming (_≊_ to [_]_≊_;
+            Has-left-inverse to Has-left-inverse;
+            Has-right-inverse to Has-right-inverse;
+            Is-bi-invertible to Is-bi-invertible)
+open BM public
+  using ()
+  renaming (equality-characterisation-≊ to equality-characterisation-≊)
 
 -- Lenses with left inverses have propositional remainder types.
 

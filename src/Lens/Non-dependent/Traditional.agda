@@ -2397,7 +2397,9 @@ private
 
 -- A form of isomorphism between types, expressed using lenses.
 
-open B public using (_≅_; Has-quasi-inverse)
+open B public
+  using ()
+  renaming (_≅_ to _≅_; Has-quasi-inverse to Has-quasi-inverse)
 
 -- An equality characterisation lemma for A ≅ B that applies when A is
 -- a set.
@@ -2728,7 +2730,11 @@ Has-quasi-inverse-id-not-proposition _ =
 -- A form of isomorphism between types, expressed using lenses.
 
 open B public
-  using (_≊_; Has-left-inverse; Has-right-inverse; Is-bi-invertible)
+  using ()
+  renaming (_≊_ to _≊_;
+            Has-left-inverse to Has-left-inverse;
+            Has-right-inverse to Has-right-inverse;
+            Is-bi-invertible to Is-bi-invertible)
 
 -- An equality characterisation lemma for A ≊ B that applies when A is
 -- a set.
