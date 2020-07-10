@@ -31,3 +31,9 @@ import Lens.Dependent
 -- definition of composable record getters and setters.
 
 import README.Record-getters-and-setters
+
+-- Pointers to code corresponding to many definitions and results from
+-- the paper "Higher lenses" by Paolo Capriotti, Nils Anders
+-- Danielsson and Andrea Vezzosi.
+
+import README.Higher-lenses
