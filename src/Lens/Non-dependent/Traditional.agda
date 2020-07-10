@@ -2736,6 +2736,11 @@ open B public
             Has-right-inverse to Has-right-inverse;
             Is-bi-invertible to Is-bi-invertible)
 
+open BM public
+  using ()
+  renaming (Is-bi-invertible-propositional to
+              Is-bi-invertible-propositional)
+
 -- An equality characterisation lemma for A ≊ B that applies when A is
 -- a set.
 
