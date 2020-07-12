@@ -309,6 +309,9 @@ lemma-45 = B.Lens-⊥-⊥↔Set
 -- 3.2: A well-behaved variant of the lenses based on bijections
 
 -- Higher lenses.
+--
+-- For performance reasons η-equality has been turned off for this
+-- definition.
 
 Higher-lens = H.Lens
 
@@ -530,6 +533,9 @@ lemma-106-preserves-get-and-set =
 -- 3.11: Some results can be made a little stronger for stable types
 
 -- Partial-lens.
+--
+-- For performance reasons η-equality has been turned off for this
+-- definition.
 
 Partial-lens = P.Lens
 
