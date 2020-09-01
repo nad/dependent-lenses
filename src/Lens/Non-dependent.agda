@@ -126,6 +126,9 @@ Preserves-getters-and-setters-→-∘ p-f p-g _ =
 -- Composition preserves Preserves-getters-and-setters-⇔.
 
 Preserves-getters-and-setters-⇔-∘ :
+  {Lens₁ : Set a → Set b → Set c₁}
+  {Lens₂ : Set a → Set b → Set c₂}
+  {Lens₃ : Set a → Set b → Set c₃}
   ⦃ L₁ : Has-getter-and-setter Lens₁ ⦄
   ⦃ L₂ : Has-getter-and-setter Lens₂ ⦄
   ⦃ L₃ : Has-getter-and-setter Lens₃ ⦄
@@ -141,6 +144,8 @@ Preserves-getters-and-setters-⇔-∘ p-f p-g =
 -- The function inverse preserves Preserves-getters-and-setters-⇔.
 
 Preserves-getters-and-setters-⇔-inverse :
+  {Lens₁ : Set a → Set b → Set c₁}
+  {Lens₂ : Set a → Set b → Set c₂}
   ⦃ L₁ : Has-getter-and-setter Lens₁ ⦄
   ⦃ L₂ : Has-getter-and-setter Lens₂ ⦄
   {f : Lens₁ A B ⇔ Lens₂ A B} →
@@ -152,6 +157,8 @@ Preserves-getters-and-setters-⇔-inverse = swap
 -- and setters, then both directions do.
 
 Preserves-getters-and-setters-→-↠-⇔ :
+  {Lens₁ : Set a → Set b → Set c₁}
+  {Lens₂ : Set a → Set b → Set c₂}
   ⦃ L₁ : Has-getter-and-setter Lens₁ ⦄
   ⦃ L₂ : Has-getter-and-setter Lens₂ ⦄
   (f : Lens₁ A B ↠ Lens₂ A B) →
