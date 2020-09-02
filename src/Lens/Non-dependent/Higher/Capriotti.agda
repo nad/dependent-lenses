@@ -153,7 +153,7 @@ equality-characterisation₁ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
   where
   open Lens
 
-  lemma : ∀ _ _ → _
+  lemma : ∀ _ (h : H l₁ ≡ H l₂) → _
   lemma g h =
     subst (λ (g , H) → g ⁻¹_ ≡ H ∘ ∣_∣) (cong₂ _,_ g h) (get⁻¹-≡ l₁)     ≡⟨ subst-in-terms-of-trans-and-cong ⟩
 
@@ -162,7 +162,7 @@ equality-characterisation₁ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
                                                                               (trans (sym $ cong-∘ _ _ _) $
                                                                                cong (cong _⁻¹_) $ cong-proj₁-cong₂-, _ _)
                                                                               (trans (sym $ cong-∘ _ _ _) $
-                                                                               cong (cong (_∘ ∣_∣)) $ cong-proj₂-cong₂-, _ _) ⟩∎
+                                                                               cong (cong (_∘ ∣_∣)) $ cong-proj₂-cong₂-, _ h) ⟩∎
     trans (sym (cong _⁻¹_ g)) (trans (get⁻¹-≡ l₁) (cong (_∘ ∣_∣) h))     ∎
 
 -- Another equality characterisation lemma.
@@ -321,7 +321,7 @@ Lens≃Higher-lens {A = A} {B = B} ⊠ univ =
          ≡⇒→ (cong (_$ get a)
                 (⟨ext⟩ (≃⇒≡ univ ∘ inverse ∘ Higher.remainder≃get⁻¹ l)))
            (a , refl _)                                                   ≡⟨ cong (λ eq → ≡⇒→ eq (a , refl _)) $
-                                                                             cong-ext _ ⟩
+                                                                             cong-ext (≃⇒≡ univ ∘ inverse ∘ Higher.remainder≃get⁻¹ l) ⟩
          ≡⇒→ (≃⇒≡ univ (inverse (Higher.remainder≃get⁻¹ l (get a))))
            (a , refl _)                                                   ≡⟨ cong (_$ a , refl _) $
                                                                              ≡⇒→-≃⇒≡ equivalence univ ⟩
@@ -425,6 +425,7 @@ Lens≃Higher-lens-preserves-getters-and-setters :
     (_≃_.logical-equivalence (Lens≃Higher-lens bc univ))
 Lens≃Higher-lens-preserves-getters-and-setters ⊠ univ =
   Preserves-getters-and-setters-→-↠-⇔
+    ⦃ L₂ = Higher.has-getter-and-setter ⦄
     (_≃_.surjection (Lens≃Higher-lens ⊠ univ))
     Lens→Higher-lens-preserves-getters-and-setters
 
