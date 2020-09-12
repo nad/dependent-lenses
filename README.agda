@@ -3,7 +3,7 @@
 -- Nils Anders Danielsson
 ------------------------------------------------------------------------
 
-{-# OPTIONS --cubical --safe #-}
+{-# OPTIONS --cubical --safe --guardedness #-}
 
 module README where
 
@@ -14,6 +14,7 @@ import Lens.Non-dependent.Traditional
 import Lens.Non-dependent.Higher
 import Lens.Non-dependent.Higher.Capriotti
 import Lens.Non-dependent.Higher.Capriotti.Variant
+import Lens.Non-dependent.Higher.Coinductive
 import Lens.Non-dependent.Higher.Surjective-remainder
 import Lens.Non-dependent.Equivalent-preimages
 import Lens.Non-dependent.Bijection
