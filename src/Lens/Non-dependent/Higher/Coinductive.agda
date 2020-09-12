@@ -19,13 +19,15 @@ open P.Derived-definitions-and-properties eq
 open import Logical-equivalence using (_⇔_)
 open import Prelude
 
-open import Bijection equality-with-J using (_↔_)
+open import Bijection equality-with-J as B using (_↔_)
 import Bijection P.equality-with-J as PB
 open import Colimit.Sequential eq as C using (∣_∣)
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
+import Equivalence P.equality-with-J as PEq
 open import Function-universe equality-with-J as F hiding (_∘_)
+import Function-universe P.equality-with-J as PF
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq as T using (∥_∥; ∣_∣)
@@ -34,15 +36,17 @@ open import H-level.Truncation.Propositional.One-step eq as O
   using (∥_∥₁; ∥_∥₁-out-^; ∥_∥₁-in-^; ∣_∣; ∣_,_∣-in-^)
 open import Preimage equality-with-J using (_⁻¹_)
 open import Univalence-axiom equality-with-J
+import Univalence-axiom P.equality-with-J as PU
 
 open import Lens.Non-dependent eq
 import Lens.Non-dependent.Higher.Capriotti eq as Higher
 
 private
   variable
-    a b p : Level
-    A B C : Set a
-    x y   : A
+    a b ℓ p p₁ p₂ : Level
+    A B C         : Set a
+    x y           : A
+    f             : A → B
 
 ------------------------------------------------------------------------
 -- Weakly constant functions
@@ -122,7 +126,7 @@ Constant≃Constant′ f = Eq.↔→≃
      c x y                                                       ∎)
 
 ------------------------------------------------------------------------
--- Coherently constant functions
+-- The type family Coherently
 
 -- Coherently P step f means that f and all variants of f built using
 -- step (in a certain way) satisfy the property P.
@@ -158,6 +162,390 @@ subst-Coherently-property
      subst (λ x → P x (f x)) (refl _) (c .property)                      ∎)
     eq
 
+private
+
+  -- A preservation lemma for Coherently.
+  --
+  -- The lemma does not use the univalence argument, instead it uses
+  -- P.univ directly.
+
+  Coherently-cong-≡ :
+    Block "Coherently-cong-≡" →
+    {A : Set a}
+    {P₁ P₂ : {A : Set a} → (A → B) → Set p}
+    {step₁ : {A : Set a} (f : A → B) → P₁ f → ∥ A ∥₁ → B}
+    {step₂ : {A : Set a} (f : A → B) → P₂ f → ∥ A ∥₁ → B}
+    {f : A → B} →
+    PU.Univalence p →
+    (P₁≃P₂ : {A : Set a} (f : A → B) → P₁ f ≃ P₂ f) →
+    ({A : Set a} (f : A → B) (x : P₂ f) →
+     step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
+    Coherently P₁ step₁ f P.≡ Coherently P₂ step₂ f
+  Coherently-cong-≡
+    {a = a} {B = B} {p = p} ⊠ {P₁ = P₁} {P₂ = P₂}
+    {step₁ = step₁} {step₂ = step₂} {f = f} _ P₁≃P₂′ step₁≡step₂ =
+
+    P.cong (λ ((P , step) :
+              ∃ λ (P : (A : Set a) → (A → B) → Set p) →
+                  {A : Set a} (f : A → B) → P A f → ∥ A ∥₁ → B) →
+             Coherently (P _) step f) $
+
+    Σ-≡,≡→≡′
+
+      (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) →
+       P.≃⇒≡ (P₁≃P₂ f))
+
+      (P.implicit-extensionality P.ext λ A → P.⟨ext⟩ λ f →
+         P.subst (λ P → {A : Set a} (f : A → B) → P A f → ∥ A ∥₁ → B)
+           (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) →
+            P.≃⇒≡ (P₁≃P₂ f))
+           step₁ f                                                     P.≡⟨ P.trans (P.cong (_$ f) $ P.sym $
+                                                                                     P.push-subst-implicit-application
+                                                                                       (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) → P.≃⇒≡ (P₁≃P₂ f))
+                                                                                       (λ P A → (f : A → B) → P A f → ∥ A ∥₁ → B)
+                                                                                       {f = const _} {g = step₁}) $
+                                                                            P.sym $ P.push-subst-application
+                                                                                      (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) → P.≃⇒≡ (P₁≃P₂ f))
+                                                                                      (λ P f → P A f → ∥ A ∥₁ → B)
+                                                                                      {f = const f} {g = step₁} ⟩
+         P.subst (λ P → P A f → ∥ A ∥₁ → B)
+           (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) →
+            P.≃⇒≡ (P₁≃P₂ f))
+           (step₁ f)                                                   P.≡⟨⟩
+
+         P.subst (λ P → P → ∥ A ∥₁ → B)
+           (P.≃⇒≡ (P₁≃P₂ f))
+           (step₁ f)                                                   P.≡⟨ P.sym $
+                                                                            PU.transport-theorem
+                                                                              (λ P → P → ∥ A ∥₁ → B)
+                                                                              (PF.→-cong₁ _)
+                                                                              (λ _ → P.refl)
+                                                                              P.univ
+                                                                              (P₁≃P₂ f)
+                                                                              (step₁ f) ⟩
+         PF.→-cong₁ _ (P₁≃P₂ f) (step₁ f)                              P.≡⟨⟩
+
+         step₁ f ∘ PEq._≃_.from (P₁≃P₂ f)                              P.≡⟨ P.⟨ext⟩ (_↔_.to ≡↔≡ ∘ step₁≡step₂ f) ⟩∎
+
+         step₂ f                                                       ∎)
+    where
+    P₁≃P₂ : {A : Set a} (f : A → B) → P₁ f PEq.≃ P₂ f
+    P₁≃P₂ f = _↔_.to ≃↔≃ (P₁≃P₂′ f)
+
+    Σ-≡,≡→≡′ :
+      {P : A → Set b} {p₁ p₂ : Σ A P} →
+      (p : proj₁ p₁ P.≡ proj₁ p₂) →
+      P.subst P p (proj₂ p₁) P.≡ proj₂ p₂ →
+      p₁ P.≡ p₂
+    Σ-≡,≡→≡′ {P = P} {p₁ = _ , y₁} {p₂ = _ , y₂} p q i =
+      p i , lemma i
+      where
+      lemma : P.[ (λ i → P (p i)) ] y₁ ≡ y₂
+      lemma = PB._↔_.from (P.heterogeneous↔homogeneous _) q
+
+  -- A "computation rule".
+
+  to-Coherently-cong-≡-property :
+    (bl : Block "Coherently-cong-≡")
+    {A : Set a} {B : Set b}
+    {P₁ P₂ : {A : Set a} → (A → B) → Set p}
+    {step₁ : {A : Set a} (f : A → B) → P₁ f → ∥ A ∥₁ → B}
+    {step₂ : {A : Set a} (f : A → B) → P₂ f → ∥ A ∥₁ → B}
+    {f : A → B}
+    (univ : PU.Univalence p)
+    (P₁≃P₂ : {A : Set a} (f : A → B) → P₁ f ≃ P₂ f)
+    (step₁≡step₂ :
+       {A : Set a} (f : A → B) (x : P₂ f) →
+       step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x)
+    (c : Coherently P₁ step₁ f) →
+    PU.≡⇒→ (Coherently-cong-≡ bl univ P₁≃P₂ step₁≡step₂) c .property P.≡
+    _≃_.to (P₁≃P₂ f) (c .property)
+  to-Coherently-cong-≡-property
+    ⊠ {P₁ = P₁} {P₂ = P₂} {f = f} _ P₁≃P₂ step₁≡step₂ c =
+
+    P.transport (λ _ → P₂ f) P.0̲
+      (_≃_.to (P₁≃P₂ f) (P.transport (λ _ → P₁ f) P.0̲ (c .property)))  P.≡⟨ P.cong (_$ _≃_.to (P₁≃P₂ f)
+                                                                                             (P.transport (λ _ → P₁ f) P.0̲ (c .property))) $
+                                                                                P.transport-refl P.0̲ ⟩
+
+    _≃_.to (P₁≃P₂ f) (P.transport (λ _ → P₁ f) P.0̲ (c .property))      P.≡⟨ P.cong (λ g → _≃_.to (P₁≃P₂ f) (g (c .property))) $
+                                                                                P.transport-refl P.0̲ ⟩∎
+    _≃_.to (P₁≃P₂ f) (c .property)                                     ∎
+
+  -- Another "computation rule".
+
+  from-Coherently-cong-≡-property :
+    (bl : Block "Coherently-cong-≡")
+    {A : Set a} {B : Set b}
+    {P₁ P₂ : {A : Set a} → (A → B) → Set p}
+    {step₁ : {A : Set a} (f : A → B) → P₁ f → ∥ A ∥₁ → B}
+    {step₂ : {A : Set a} (f : A → B) → P₂ f → ∥ A ∥₁ → B}
+    {f : A → B}
+    (univ : PU.Univalence p)
+    (P₁≃P₂ : {A : Set a} (f : A → B) → P₁ f ≃ P₂ f)
+    (step₁≡step₂ :
+       {A : Set a} (f : A → B) (x : P₂ f) →
+       step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x)
+    (c : Coherently P₂ step₂ f) →
+    PEq._≃_.from
+      (PU.≡⇒≃ (Coherently-cong-≡ bl {step₁ = step₁} univ
+                 P₁≃P₂ step₁≡step₂))
+      c .property P.≡
+    _≃_.from (P₁≃P₂ f) (c .property)
+  from-Coherently-cong-≡-property
+    ⊠ {P₁ = P₁} {P₂ = P₂} {f = f} _ P₁≃P₂ step₁≡step₂ c =
+
+    P.transport (λ _ → P₁ f) P.0̲
+      (_≃_.from (P₁≃P₂ f) (P.transport (λ _ → P₂ f) P.0̲ (c .property)))  P.≡⟨ P.cong (_$ _≃_.from (P₁≃P₂ f)
+                                                                                           (P.transport (λ _ → P₂ f) P.0̲ (c .property))) $
+                                                                              P.transport-refl P.0̲ ⟩
+
+    _≃_.from (P₁≃P₂ f) (P.transport (λ _ → P₂ f) P.0̲ (c .property))      P.≡⟨ P.cong (λ g → _≃_.from (P₁≃P₂ f) (g (c .property))) $
+                                                                              P.transport-refl P.0̲ ⟩∎
+    _≃_.from (P₁≃P₂ f) (c .property)                                     ∎
+
+  -- A preservation lemma for Coherently.
+  --
+  -- The two directions of this equivalence compute the property
+  -- fields in certain ways, see the "unit tests" below.
+  --
+  -- Note that P₁ and P₂ have to target the same universe. A more
+  -- general result is given below (Coherently-cong).
+
+  Coherently-cong-≃ :
+    {A : Set a}
+    {P₁ P₂ : {A : Set a} → (A → B) → Set p}
+    {step₁ : {A : Set a} (f : A → B) → P₁ f → ∥ A ∥₁ → B}
+    {step₂ : {A : Set a} (f : A → B) → P₂ f → ∥ A ∥₁ → B}
+    {f : A → B} →
+    PU.Univalence p →
+    (P₁≃P₂ : {A : Set a} (f : A → B) → P₁ f ≃ P₂ f) →
+    ({A : Set a} (f : A → B) (x : P₂ f) →
+     step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
+    Coherently P₁ step₁ f ≃ Coherently P₂ step₂ f
+  Coherently-cong-≃
+    {P₁ = P₁} {P₂ = P₂} {step₁ = step₁} {step₂ = step₂} {f = f}
+    univ P₁≃P₂ step₁≡step₂ =
+
+    block λ bl →
+    Eq.with-other-inverse
+      (Eq.with-other-function
+         (equiv bl)
+         (to bl)
+         (_↔_.from ≡↔≡ ∘ ≡to bl))
+      (from bl)
+      (_↔_.from ≡↔≡ ∘ ≡from bl)
+
+    where
+
+    equiv :
+      Block "Coherently-cong-≡" →
+      Coherently P₁ step₁ f ≃ Coherently P₂ step₂ f
+    equiv bl =
+      _↔_.from ≃↔≃ $ PU.≡⇒≃ $
+      Coherently-cong-≡ bl univ P₁≃P₂ step₁≡step₂
+
+    to :
+      Block "Coherently-cong-≡" →
+      Coherently P₁ step₁ f → Coherently P₂ step₂ f
+    to _  c .property = _≃_.to (P₁≃P₂ f) (c .property)
+    to bl c .coherent =
+      P.subst
+        (Coherently P₂ step₂)
+        (P.cong (step₂ f) $
+         to-Coherently-cong-≡-property bl univ P₁≃P₂ step₁≡step₂ c) $
+      _≃_.to (equiv bl) c .coherent
+
+    ≡to : ∀ bl c → _≃_.to (equiv bl) c P.≡ to bl c
+    ≡to bl c i .property = to-Coherently-cong-≡-property
+                             bl univ P₁≃P₂ step₁≡step₂ c i
+    ≡to bl c i .coherent = lemma i
+      where
+      lemma :
+        P.[ (λ i → Coherently P₂ step₂
+                     (step₂ f
+                        (to-Coherently-cong-≡-property
+                           bl univ P₁≃P₂ step₁≡step₂ c i))) ]
+          _≃_.to (equiv bl) c .coherent ≡
+          P.subst
+            (Coherently P₂ step₂)
+            (P.cong (step₂ f) $
+             to-Coherently-cong-≡-property bl univ P₁≃P₂ step₁≡step₂ c)
+            (_≃_.to (equiv bl) c .coherent)
+      lemma =
+        PB._↔_.from (P.heterogeneous↔homogeneous _) P.refl
+
+    from :
+      Block "Coherently-cong-≡" →
+      Coherently P₂ step₂ f → Coherently P₁ step₁ f
+    from _  c .property = _≃_.from (P₁≃P₂ f) (c .property)
+    from bl c .coherent =
+      P.subst
+        (Coherently P₁ step₁)
+        (P.cong (step₁ f) $
+         from-Coherently-cong-≡-property bl univ P₁≃P₂ step₁≡step₂ c) $
+      _≃_.from (equiv bl) c .coherent
+
+    ≡from : ∀ bl c → _≃_.from (equiv bl) c P.≡ from bl c
+    ≡from bl c i .property = from-Coherently-cong-≡-property
+                               bl univ P₁≃P₂ step₁≡step₂ c i
+    ≡from bl c i .coherent = lemma i
+      where
+      lemma :
+        P.[ (λ i → Coherently P₁ step₁
+                     (step₁ f
+                        (from-Coherently-cong-≡-property
+                           bl univ P₁≃P₂ step₁≡step₂ c i))) ]
+          _≃_.from (equiv bl) c .coherent ≡
+          P.subst
+            (Coherently P₁ step₁)
+            (P.cong (step₁ f) $
+             from-Coherently-cong-≡-property
+               bl univ P₁≃P₂ step₁≡step₂ c)
+            (_≃_.from (equiv bl) c .coherent)
+      lemma =
+        PB._↔_.from (P.heterogeneous↔homogeneous _) P.refl
+
+  -- Unit tests that ensure that Coherently-cong-≃ computes the
+  -- property fields in certain ways.
+
+  module _
+    {A : Set a}
+    {P₁ P₂ : {A : Set a} → (A → B) → Set p}
+    {step₁ : {A : Set a} (f : A → B) → P₁ f → ∥ A ∥₁ → B}
+    {step₂ : {A : Set a} (f : A → B) → P₂ f → ∥ A ∥₁ → B}
+    {f : A → B}
+    {univ : PU.Univalence p}
+    {P₁≃P₂ : {A : Set a} (f : A → B) → P₁ f ≃ P₂ f}
+    {step₁≡step₂ :
+       {A : Set a} (f : A → B) (x : P₂ f) →
+       step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x}
+    where
+
+    _ :
+      {c : Coherently P₁ step₁ f} →
+      _≃_.to (Coherently-cong-≃ univ P₁≃P₂ step₁≡step₂) c .property ≡
+      _≃_.to (P₁≃P₂ f) (c .property)
+    _ = refl _
+
+    _ :
+      {c : Coherently P₂ step₂ f} →
+      _≃_.from (Coherently-cong-≃ {step₁ = step₁} univ
+                  P₁≃P₂ step₁≡step₂)
+        c .property ≡
+      _≃_.from (P₁≃P₂ f) (c .property)
+    _ = refl _
+
+  -- A lemma involving Coherently and ↑.
+
+  Coherently-↑ :
+    {A : Set a}
+    {P : {A : Set a} → (A → B) → Set p}
+    {step : {A : Set a} (f : A → B) → P f → ∥ A ∥₁ → B}
+    {f : A → B} →
+    Coherently (↑ ℓ ∘ P) ((_∘ lower) ∘ step) f ≃
+    Coherently P step f
+  Coherently-↑ {ℓ = ℓ} {P = P} {step = step} =
+    Eq.↔→≃
+      to
+      from
+      (_↔_.from ≡↔≡ ∘ to-from)
+      (_↔_.from ≡↔≡ ∘ from-to)
+    where
+    to :
+      Coherently (↑ ℓ ∘ P) ((_∘ lower) ∘ step) f →
+      Coherently P step f
+    to c .property = lower (c .property)
+    to c .coherent = to (c .coherent)
+
+    from :
+      Coherently P step f →
+      Coherently (↑ ℓ ∘ P) ((_∘ lower) ∘ step) f
+    from c .property = lift (c .property)
+    from c .coherent = from (c .coherent)
+
+    to-from :
+      (c : Coherently P step f) →
+      to (from c) P.≡ c
+    to-from c i .property = c .property
+    to-from c i .coherent = to-from (c .coherent) i
+
+    from-to :
+      (c : Coherently (↑ ℓ ∘ P) ((_∘ lower) ∘ step) f) →
+      from (to c) P.≡ c
+    from-to c i .property = c .property
+    from-to c i .coherent = from-to (c .coherent) i
+
+-- A preservation lemma for Coherently.
+--
+-- The two directions of this equivalence compute the property
+-- fields in certain ways, see the "unit tests" below.
+
+Coherently-cong :
+  {A : Set a}
+  {P₁ : {A : Set a} → (A → B) → Set p₁}
+  {P₂ : {A : Set a} → (A → B) → Set p₂}
+  {step₁ : {A : Set a} (f : A → B) → P₁ f → ∥ A ∥₁ → B}
+  {step₂ : {A : Set a} (f : A → B) → P₂ f → ∥ A ∥₁ → B}
+  {f : A → B} →
+  PU.Univalence (p₁ ⊔ p₂) →
+  (P₁≃P₂ : {A : Set a} (f : A → B) → P₁ f ≃ P₂ f) →
+  ({A : Set a} (f : A → B) (x : P₂ f) →
+   step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
+  Coherently P₁ step₁ f ≃ Coherently P₂ step₂ f
+Coherently-cong
+  {p₁ = p₁} {p₂ = p₂}
+  {P₁ = P₁} {P₂ = P₂} {step₁ = step₁} {step₂ = step₂} {f = f}
+  univ P₁≃P₂ step₁≡step₂ =
+
+  Coherently P₁ step₁ f                          ↝⟨ inverse Coherently-↑ ⟩
+
+  Coherently (↑ p₂ ∘ P₁) ((_∘ lower) ∘ step₁) f  ↝⟨ Coherently-cong-≃
+                                                      univ
+                                                      (λ f →
+    ↑ p₂ (P₁ f)                                          ↔⟨ B.↑↔ ⟩
+    P₁ f                                                 ↝⟨ P₁≃P₂ f ⟩
+    P₂ f                                                 ↔⟨ inverse B.↑↔ ⟩□
+    ↑ p₁ (P₂ f)                                          □)
+                                                      ((_∘ lower) ∘ step₁≡step₂) ⟩
+
+  Coherently (↑ p₁ ∘ P₂) ((_∘ lower) ∘ step₂) f  ↝⟨ Coherently-↑ ⟩□
+
+  Coherently P₂ step₂ f                          □
+
+-- Unit tests that ensure that Coherently-cong computes the
+-- property fields in certain ways.
+
+module _
+  {A : Set a}
+  {P₁ : {A : Set a} → (A → B) → Set p₁}
+  {P₂ : {A : Set a} → (A → B) → Set p₂}
+  {step₁ : {A : Set a} (f : A → B) → P₁ f → ∥ A ∥₁ → B}
+  {step₂ : {A : Set a} (f : A → B) → P₂ f → ∥ A ∥₁ → B}
+  {f : A → B}
+  {univ : PU.Univalence (p₁ ⊔ p₂)}
+  {P₁≃P₂ : {A : Set a} (f : A → B) → P₁ f ≃ P₂ f}
+  {step₁≡step₂ :
+     {A : Set a} (f : A → B) (x : P₂ f) →
+     step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x}
+  where
+
+  _ :
+    {c : Coherently P₁ step₁ f} →
+    _≃_.to (Coherently-cong univ P₁≃P₂ step₁≡step₂) c .property ≡
+    _≃_.to (P₁≃P₂ f) (c .property)
+  _ = refl _
+
+  _ :
+    {c : Coherently P₂ step₂ f} →
+    _≃_.from (Coherently-cong {step₁ = step₁} univ P₁≃P₂ step₁≡step₂)
+      c .property ≡
+    _≃_.from (P₁≃P₂ f) (c .property)
+  _ = refl _
+
+------------------------------------------------------------------------
+-- Coherently constant functions
+
 -- Coherently constant functions.
 
 Coherently-constant :
@@ -170,264 +558,23 @@ Coherently-constant′ :
   {A : Set a} {B : Set b} (f : A → B) → Set (a ⊔ b)
 Coherently-constant′ = Coherently Constant′ (λ _ → proj₁)
 
--- Coherently-constant and Coherently-constant′ are pointwise equal
--- (assuming univalence).
-
-Coherently-constant≡Coherently-constant′ :
-  {A : Set a} {B : Set b} {f : A → B} →
-  Univalence (a ⊔ b) →
-  Coherently-constant f ≡ Coherently-constant′ f
-Coherently-constant≡Coherently-constant′
-  {a = a} {b = b} {A = A} {B = B} {f = f} univ =
-
-  cong (λ ((P , step) :
-           ∃ λ (P : (A : Set a) → (A → B) → Set (a ⊔ b)) →
-               {A : Set a} (f : A → B) → P A f → ∥ A ∥₁ → B) →
-          Coherently (P _) step f) $
-
-  Σ-≡,≡→≡
-
-    (⟨ext⟩ λ A → ⟨ext⟩ λ (f : A → B) →
-     ≃⇒≡ univ (Constant≃Constant′ f))
-
-    (implicit-extensionality ext λ A → ⟨ext⟩ λ f →
-       subst (λ P → {A : Set a} (f : A → B) → P A f → ∥ A ∥₁ → B)
-         (⟨ext⟩ λ A → ⟨ext⟩ λ (f : A → B) →
-          ≃⇒≡ univ (Constant≃Constant′ f))
-         O.rec′ f                                                  ≡⟨ trans (cong (_$ f) $ sym $
-                                                                             push-subst-implicit-application _ _) $
-                                                                      sym $ push-subst-application _ _ ⟩
-       subst (λ P → P A f → ∥ A ∥₁ → B)
-         (⟨ext⟩ λ A → ⟨ext⟩ λ (f : A → B) →
-          ≃⇒≡ univ (Constant≃Constant′ f))
-         (O.rec′ f)                                                ≡⟨ subst-ext _ _ ⟩
-
-       subst (λ P → P f → ∥ A ∥₁ → B)
-         (⟨ext⟩ λ (f : A → B) →
-          ≃⇒≡ univ (Constant≃Constant′ f))
-         (O.rec′ f)                                                ≡⟨ subst-ext {x = f} _ _ ⟩
-
-       subst (λ P → P → ∥ A ∥₁ → B)
-         (≃⇒≡ univ (Constant≃Constant′ f))
-         (O.rec′ f)                                                ≡⟨ sym $
-                                                                      transport-theorem
-                                                                        (λ P → P → ∥ A ∥₁ → B)
-                                                                        (→-cong₁ _)
-                                                                        refl
-                                                                        univ
-                                                                        (Constant≃Constant′ f)
-                                                                        (O.rec′ f) ⟩
-       →-cong₁ _ (Constant≃Constant′ f) (O.rec′ f)                 ≡⟨⟩
-
-       O.rec′ f ∘ _≃_.from (Constant≃Constant′ f)                  ≡⟨⟩
-
-       proj₁ ∘ _≃_.to (Constant≃Constant′ f) ∘
-       _≃_.from (Constant≃Constant′ f)                             ≡⟨ cong (proj₁ ∘_) $ ⟨ext⟩ $
-                                                                      _≃_.right-inverse-of (Constant≃Constant′ f) ⟩∎
-       proj₁                                                       ∎)
-
 -- Coherently-constant and Coherently-constant′ are pointwise
 -- equivalent (assuming univalence).
---
--- This lemma is defined in such a way that the "outermost" property
--- fields are transformed using Constant≃Constant′.
 
 Coherently-constant≃Coherently-constant′ :
   {A : Set a} {B : Set b} {f : A → B} →
-  Univalence (a ⊔ b) →
+  PU.Univalence (a ⊔ b) →
   Coherently-constant f ≃ Coherently-constant′ f
-Coherently-constant≃Coherently-constant′ {a = a} {b = b} {f = f} univ =
-  block λ bl →
-  Eq.↔→≃
-    to
-    (from bl)
-    (_↔_.from ≡↔≡ ∘ to-from bl)
-    (_↔_.from ≡↔≡ ∘ from-to bl)
-  where
-  c≡c :
-    {A : Set a} {B : Set b} {f : A → B} →
-    Coherently-constant f ≡ Coherently-constant′ f
-  c≡c = Coherently-constant≡Coherently-constant′ univ
+Coherently-constant≃Coherently-constant′ univ =
+  Coherently-cong univ
+    Constant≃Constant′
+    (λ f c →
+       O.rec′ f (_≃_.from (Constant≃Constant′ f) c)   ≡⟨⟩
 
-  to : Coherently-constant f → Coherently-constant′ f
-  to c .property = _≃_.to (Constant≃Constant′ f) (c .property)
-  to c .coherent = ≡⇒→ c≡c (c .coherent)
-
-  from-lemma :
-    Block "from-lemma" →
-    ∀ c → proj₁ c P.≡ O.rec′ f (_≃_.from (Constant≃Constant′ f) c)
-  from-lemma ⊠ c =
-    proj₁ c                                        P.≡⟨ P.sym $ P.cong proj₁ $ _↔_.to ≡↔≡ $
-                                                        _≃_.right-inverse-of (Constant≃Constant′ f) c ⟩∎
-    proj₁ (_≃_.to (Constant≃Constant′ f)
-             (_≃_.from (Constant≃Constant′ f) c))  ∎
-
-  from :
-    Block "from-lemma" →
-    Coherently-constant′ f → Coherently-constant f
-  from _  c .property = _≃_.from (Constant≃Constant′ f) (c .property)
-  from bl c .coherent =
-    P.subst Coherently-constant (from-lemma bl (c .property)) $
-    _≃_.from (≡⇒≃ c≡c) (c .coherent)
-
-  to-from-property :
-    ∀ c →
-    _≃_.to (Constant≃Constant′ f)
-      (_≃_.from (Constant≃Constant′ f) c) P.≡
-    c
-  to-from-property c =
-    _↔_.to ≡↔≡ (_≃_.right-inverse-of (Constant≃Constant′ f) c)
-
-  from-lemma-lemma₁ :
-    ∀ bl c →
-    P.cong proj₁ (to-from-property c) ≡ P.sym (from-lemma bl c)
-  from-lemma-lemma₁ ⊠ c =
-    P.cong proj₁
-      (_↔_.to ≡↔≡ (_≃_.right-inverse-of (Constant≃Constant′ f) c))  ≡⟨ sym $ _↔_.from ≡↔≡ $ P.sym-sym _ ⟩∎
-
-    (P.sym $ P.sym $ P.cong proj₁ $ _↔_.to ≡↔≡ $
-     _≃_.right-inverse-of (Constant≃Constant′ f) c)                 ∎
-
-  to-from : ∀ bl (c : Coherently-constant′ f) → to (from bl c) P.≡ c
-  to-from bl c i .property = to-from-property (c .property) i
-  to-from bl c i .coherent = lemma i
-    where
-    lemma :
-      P.[ (λ i → Coherently-constant′
-                   (proj₁ (to-from-property (c .property) i))) ]
-        ≡⇒→ c≡c (P.subst Coherently-constant
-                   (from-lemma bl (c .property))
-                   (_≃_.from (≡⇒≃ c≡c) (c .coherent))) ≡
-        c .coherent
-    lemma =
-      PB._↔_.from (P.heterogeneous↔homogeneous _) $ _↔_.to ≡↔≡
-        (P.subst Coherently-constant′
-           (P.cong proj₁ (to-from-property (c .property)))
-           (≡⇒→ c≡c
-              (P.subst Coherently-constant (from-lemma bl (c .property))
-                 (_≃_.from (≡⇒≃ c≡c) (c .coherent))))                     ≡⟨ cong (λ eq →
-                                                                                     P.subst Coherently-constant′
-                                                                                       (P.cong proj₁ (to-from-property (c .property)))
-                                                                                       (≡⇒→ (eq _)
-                                                                                          (P.subst Coherently-constant
-                                                                                             (from-lemma bl (c .property))
-                                                                                             (_≃_.from (≡⇒≃ (eq _)) (c .coherent))))) $ sym $
-                                                                             _≃_.left-inverse-of (Eq.extensionality-isomorphism bad-ext)
-                                                                               (λ f → c≡c {f = f}) ⟩
-         P.subst Coherently-constant′
-           (P.cong proj₁ (to-from-property (c .property)))
-           (≡⇒→ (ext⁻¹ (⟨ext⟩ λ f → c≡c {f = f}) _)
-              (P.subst Coherently-constant (from-lemma bl (c .property))
-                 (_≃_.from (≡⇒≃ (ext⁻¹ (⟨ext⟩ λ f → c≡c {f = f}) _))
-                    (c .coherent))))                                      ≡⟨ cong (P.subst Coherently-constant′
-                                                                                     (P.cong proj₁ (to-from-property (c .property)))) $
-                                                                             elim₁
-                                                                               (λ {C} c≡c →
-                                                                                  ≡⇒→ (ext⁻¹ c≡c _)
-                                                                                    (P.subst C (from-lemma bl (c .property))
-                                                                                       (_≃_.from (≡⇒≃ (ext⁻¹ c≡c _)) (c .coherent))) ≡
-                                                                                  P.subst Coherently-constant′ (from-lemma bl (c .property))
-                                                                                    (c .coherent))
-                                                                               (
-           ≡⇒→ (ext⁻¹ (refl Coherently-constant′) _)
-             (P.subst Coherently-constant′ (from-lemma bl (c .property))
-                (_≃_.from (≡⇒≃ (ext⁻¹ (refl Coherently-constant′) _))
-                   (c .coherent)))                                              ≡⟨ cong (_$ P.subst Coherently-constant′
-                                                                                              (from-lemma bl (c .property))
-                                                                                              (_≃_.from (≡⇒≃ (ext⁻¹ (refl Coherently-constant′) _))
-                                                                                                 (c .coherent))) $
-                                                                                   trans (cong ≡⇒→ $ ext⁻¹-refl _) $
-                                                                                   ≡⇒→-refl ⟩
-           P.subst Coherently-constant′ (from-lemma bl (c .property))
-             (_≃_.from (≡⇒≃ (ext⁻¹ (refl Coherently-constant′) _))
-                (c .coherent))                                                  ≡⟨ cong (λ eq → P.subst Coherently-constant′
-                                                                                                  (from-lemma bl (c .property))
-                                                                                                  (_≃_.from eq (c .coherent))) $
-                                                                                   trans (cong ≡⇒≃ $ ext⁻¹-refl _) $
-                                                                                   ≡⇒≃-refl ⟩∎
-           P.subst Coherently-constant′ (from-lemma bl (c .property))
-             (c .coherent)                                                      ∎)
-                                                                               _ ⟩
-         P.subst Coherently-constant′
-           (P.cong proj₁ (to-from-property (c .property)))
-           (P.subst Coherently-constant′ (from-lemma bl (c .property))
-              (c .coherent))                                              ≡⟨ cong (λ eq → P.subst Coherently-constant′ eq
-                                                                                            (P.subst Coherently-constant′
-                                                                                               (from-lemma bl (c .property)) (c .coherent))) $
-                                                                             from-lemma-lemma₁ bl _ ⟩
-         P.subst Coherently-constant′
-           (P.sym (from-lemma bl (c .property)))
-           (P.subst Coherently-constant′ (from-lemma bl (c .property))
-              (c .coherent))                                              ≡⟨ _↔_.from ≡↔≡ $
-                                                                             P.subst-subst-sym Coherently-constant′ _ _ ⟩∎
-         c .coherent                                                      ∎)
-
-  from-to-property :
-    ∀ (c : Constant f) →
-    _≃_.from (Constant≃Constant′ f)
-      (_≃_.to (Constant≃Constant′ f) c) P.≡
-    c
-  from-to-property c =
-    _↔_.to ≡↔≡ (_≃_.left-inverse-of (Constant≃Constant′ f) c)
-
-  from-lemma-lemma₂ :
-    ∀ bl c →
-    from-lemma bl (_≃_.to (Constant≃Constant′ f) c) ≡
-    (P.sym $ P.cong (O.rec′ f) $ from-to-property c)
-  from-lemma-lemma₂ ⊠ c =
-    P.sym $ P.cong proj₁ $ _↔_.to ≡↔≡ $
-    _≃_.right-inverse-of (Constant≃Constant′ f) $
-    _≃_.to (Constant≃Constant′ f) c                        ≡⟨ cong (P.sym ∘ P.cong proj₁ ∘ _↔_.to ≡↔≡) $ sym $
-                                                              _≃_.left-right-lemma (Constant≃Constant′ f) _ ⟩
-    P.sym $ P.cong proj₁ $ _↔_.to ≡↔≡ $
-    cong (_≃_.to (Constant≃Constant′ f)) $
-    _≃_.left-inverse-of (Constant≃Constant′ f) c           ≡⟨ cong (P.sym ∘ P.cong proj₁ ∘ _↔_.to ≡↔≡ ∘
-                                                                    cong (_≃_.to (Constant≃Constant′ f))) $ sym $
-                                                              _↔_.left-inverse-of ≡↔≡ _ ⟩
-    P.sym $ P.cong proj₁ $ _↔_.to ≡↔≡ $
-    cong (_≃_.to (Constant≃Constant′ f)) $
-    _↔_.from ≡↔≡ $ _↔_.to ≡↔≡ $
-    _≃_.left-inverse-of (Constant≃Constant′ f) c           ≡⟨ cong (P.sym ∘ P.cong proj₁) $ _↔_.from-to ≡↔≡ $ sym
-                                                              cong≡cong ⟩
-    P.sym $ P.cong proj₁ $
-    P.cong (_≃_.to (Constant≃Constant′ f)) $ _↔_.to ≡↔≡ $
-    _≃_.left-inverse-of (Constant≃Constant′ f) c           ≡⟨ cong P.sym $ _↔_.from ≡↔≡ $
-                                                              P.cong-∘ proj₁ (_≃_.to (Constant≃Constant′ f))
-                                                                (_↔_.to ≡↔≡ $ _≃_.left-inverse-of (Constant≃Constant′ f) c) ⟩∎
-    P.sym $ P.cong (O.rec′ f) $ _↔_.to ≡↔≡ $
-    _≃_.left-inverse-of (Constant≃Constant′ f) c           ∎
-
-  from-to : ∀ bl (c : Coherently-constant f) → from bl (to c) P.≡ c
-  from-to bl c i .property = from-to-property (c .property) i
-  from-to bl c i .coherent = lemma i
-    where
-    lemma :
-      P.[ (λ i → Coherently-constant
-                   (O.rec′ f (from-to-property (c .property) i))) ]
-        P.subst Coherently-constant
-          (from-lemma bl (_≃_.to (Constant≃Constant′ f) (c .property)))
-          (_≃_.from (≡⇒≃ c≡c) (≡⇒→ c≡c (c .coherent))) ≡
-        c .coherent
-    lemma =
-      PB._↔_.from (P.heterogeneous↔homogeneous _) $ _↔_.to ≡↔≡
-        (P.subst Coherently-constant
-           (P.cong (O.rec′ f) (from-to-property (c .property)))
-           (P.subst Coherently-constant
-              (from-lemma bl
-                 (_≃_.to (Constant≃Constant′ f) (c .property)))
-              (_≃_.from (≡⇒≃ c≡c) (≡⇒→ c≡c (c .coherent))))         ≡⟨ cong (λ eq → P.subst Coherently-constant (P.cong (O.rec′ f) _)
-                                                                                      (P.subst Coherently-constant eq _)) $
-                                                                       from-lemma-lemma₂ bl _ ⟩
-         P.subst Coherently-constant
-           (P.cong (O.rec′ f) $ from-to-property (c .property))
-           (P.subst Coherently-constant
-              (P.sym $ P.cong (O.rec′ f) $
-               from-to-property (c .property))
-              (_≃_.from (≡⇒≃ c≡c) (≡⇒→ c≡c (c .coherent))))         ≡⟨ _↔_.from ≡↔≡ $ P.subst-subst-sym Coherently-constant _ _ ⟩
-
-         _≃_.from (≡⇒≃ c≡c) (≡⇒→ c≡c (c .coherent))                 ≡⟨ _≃_.left-inverse-of (≡⇒≃ c≡c) _ ⟩∎
-
-         c .coherent                                                ∎)
+       proj₁ (_≃_.to (Constant≃Constant′ f)
+                (_≃_.from (Constant≃Constant′ f) c))  ≡⟨ cong proj₁ $
+                                                         _≃_.right-inverse-of (Constant≃Constant′ f) _ ⟩∎
+       proj₁ c                                        ∎)
 
 -- "Functions from A to B that are coherently constant" can be
 -- expressed in a different way.
@@ -524,7 +671,7 @@ Coherently-constant≃Coherently-constant′ {a = a} {b = b} {f = f} univ =
 
 ∥∥→≃ :
   ∀ {A : Set a} {B : Set b} →
-  Univalence (a ⊔ b) →
+  PU.Univalence (a ⊔ b) →
   (∥ A ∥ → B)
     ≃
   (∃ λ (f : A → B) → Coherently-constant f)
@@ -554,7 +701,7 @@ Coherently-constant≃Coherently-constant′ {a = a} {b = b} {f = f} univ =
 
 proj₁-to-∥∥→≃-constant :
   {A : Set a} {B : Set b}
-  (univ : Univalence (a ⊔ b)) →
+  (univ : PU.Univalence (a ⊔ b)) →
   (f : ∥ A ∥ → B) →
   Constant (proj₁ (_≃_.to (∥∥→≃ univ) f))
 proj₁-to-∥∥→≃-constant _ f x y =
@@ -565,7 +712,7 @@ proj₁-to-∥∥→≃-constant _ f x y =
 
 proj₂-to-∥∥→≃-property≡ :
   {A : Set a} {B : Set b}
-  (univ : Univalence (a ⊔ b)) →
+  (univ : PU.Univalence (a ⊔ b)) →
   {f : ∥ A ∥ → B} →
   proj₂ (_≃_.to (∥∥→≃ univ) f) .property ≡
   proj₁-to-∥∥→≃-constant univ f
@@ -695,7 +842,7 @@ instance
 Higher-lens≃Lens :
   {A : Set a} {B : Set b} →
   Block "Higher-lens≃Lens" →
-  Univalence (lsuc (a ⊔ b)) →
+  PU.Univalence (lsuc (a ⊔ b)) →
   Higher.Lens A B ≃ Lens A B
 Higher-lens≃Lens {a = a} {A = A} {B = B} ⊠ univ =
   Higher.Lens A B                                                    ↔⟨⟩
@@ -722,7 +869,7 @@ Higher-lens≃Lens {a = a} {A = A} {B = B} ⊠ univ =
 Higher-lens≃Lens-preserves-getters-and-setters :
   {A : Set a} {B : Set b}
   (bl : Block "Higher-lens≃Lens")
-  (univ : Univalence (lsuc (a ⊔ b))) →
+  (univ : PU.Univalence (lsuc (a ⊔ b))) →
   Preserves-getters-and-setters-⇔ A B
     (_≃_.logical-equivalence (Higher-lens≃Lens bl univ))
 Higher-lens≃Lens-preserves-getters-and-setters {A = A} {B = B} bl univ =
