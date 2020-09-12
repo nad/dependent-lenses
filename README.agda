@@ -15,6 +15,7 @@ import Lens.Non-dependent.Higher
 import Lens.Non-dependent.Higher.Capriotti
 import Lens.Non-dependent.Higher.Capriotti.Variant
 import Lens.Non-dependent.Higher.Coinductive
+import Lens.Non-dependent.Higher.Coinductive.Small
 import Lens.Non-dependent.Higher.Surjective-remainder
 import Lens.Non-dependent.Equivalent-preimages
 import Lens.Non-dependent.Bijection
