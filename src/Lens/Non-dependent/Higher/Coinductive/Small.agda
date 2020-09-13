@@ -23,8 +23,8 @@ open import Univalence-axiom equality-with-J
 import Univalence-axiom P.equality-with-J as PU
 
 open import Lens.Non-dependent eq
-open import Lens.Non-dependent.Higher.Coinductive eq as Coinductive
-  using (Coherently; property)
+import Lens.Non-dependent.Higher.Coinductive eq as Coinductive
+open import Lens.Non-dependent.Higher.Coinductive.Coherently eq
 
 private
   variable
@@ -111,7 +111,7 @@ Coinductive-lens≃Lens {A = A} {B = B} univ₁ univ₂ =
   Coinductive.Lens A B                                             ↔⟨⟩
 
   (∃ λ (get : A → B) → Coinductive.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ →
-                                                                       Coinductive.Coherently-cong
+                                                                       Coherently-cong
                                                                          univ₁
                                                                          (λ _ → Constant≃Constant-≃ univ₂)
                                                                          (λ _ _ → refl _)) ⟩
