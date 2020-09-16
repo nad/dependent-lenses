@@ -31,7 +31,7 @@ open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq as T using (∥_∥; ∣_∣)
 import H-level.Truncation.Propositional.Non-recursive eq as N
 open import H-level.Truncation.Propositional.One-step eq as O
-  using (∥_∥₁; ∥_∥₁-out-^; ∥_∥₁-in-^; ∣_∣; ∣_,_∣-in-^)
+  using (∥_∥¹; ∥_∥¹-out-^; ∥_∥¹-in-^; ∣_∣; ∣_,_∣-in-^)
 open import Preimage equality-with-J using (_⁻¹_)
 open import Univalence-axiom equality-with-J
 import Univalence-axiom P.equality-with-J as PU
@@ -54,7 +54,7 @@ Constant′ :
   {A : Set a} {B : Set b} →
   (A → B) → Set (a ⊔ b)
 Constant′ {A = A} {B = B} f =
-  ∃ λ (g : ∥ A ∥₁ → B) → ∀ x → g ∣ x ∣ ≡ f x
+  ∃ λ (g : ∥ A ∥¹ → B) → ∀ x → g ∣ x ∣ ≡ f x
 
 -- Constant and Constant′ are pointwise equivalent.
 
@@ -161,7 +161,7 @@ Coherently-constant≃Coherently-constant′ univ =
 ∃Coherently-constant′≃ :
   (∃ λ (f : A → B) → Coherently-constant′ f)
     ≃
-  (∃ λ (f : ∀ n → ∥ A ∥₁-in-^ n → B) →
+  (∃ λ (f : ∀ n → ∥ A ∥¹-in-^ n → B) →
      ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x)
 ∃Coherently-constant′≃ = Eq.↔→≃
   (λ (f , c) → to₁ f c , to₂ f c)
@@ -199,7 +199,7 @@ Coherently-constant≃Coherently-constant′ univ =
   where
   to₁ :
     (f : A → B) → Coherently-constant′ f →
-    ∀ n → ∥ A ∥₁-in-^ n → B
+    ∀ n → ∥ A ∥¹-in-^ n → B
   to₁ f c zero    = f
   to₁ f c (suc n) = to₁ (proj₁ (c .property)) (c .coherent) n
 
@@ -210,7 +210,7 @@ Coherently-constant≃Coherently-constant′ univ =
   to₂ f c (suc n) = to₂ (proj₁ (c .property)) (c .coherent) n
 
   from :
-    (f : ∀ n → ∥ A ∥₁-in-^ n → B) →
+    (f : ∀ n → ∥ A ∥¹-in-^ n → B) →
     (∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x) →
     Coherently-constant′ (f 0)
   from f c .property = f 1 , c 0
@@ -224,14 +224,14 @@ Coherently-constant≃Coherently-constant′ univ =
     from-to (proj₁ (c .property)) (c .coherent) i
 
   to₁-from :
-    (f : ∀ n → ∥ A ∥₁-in-^ n → B)
+    (f : ∀ n → ∥ A ∥¹-in-^ n → B)
     (c : ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x) →
     ∀ n x → to₁ (f 0) (from f c) n x ≡ f n x
   to₁-from f c zero    = refl ∘ f 0
   to₁-from f c (suc n) = to₁-from (f ∘ suc) (c ∘ suc) n
 
   to₂-from :
-    (f : ∀ n → ∥ A ∥₁-in-^ n → B)
+    (f : ∀ n → ∥ A ∥¹-in-^ n → B)
     (c : ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x) →
     ∀ n x →
     trans (sym (to₁-from f c (suc n) ∣ n , x ∣-in-^))
@@ -259,17 +259,17 @@ Coherently-constant≃Coherently-constant′ univ =
 
   (N.∥ A ∥ → B)                                       ↝⟨ C.universal-property ⟩
 
-  (∃ λ (f : ∀ n → ∥ A ∥₁-out-^ n → B) →
-     ∀ n x → f (suc n) ∣ x ∣ ≡ f n x)                 ↝⟨ (Σ-cong {k₁ = equivalence} (∀-cong ext λ n → →-cong₁ ext (O.∥∥₁-out-^≃∥∥₁-in-^ n)) λ f →
+  (∃ λ (f : ∀ n → ∥ A ∥¹-out-^ n → B) →
+     ∀ n x → f (suc n) ∣ x ∣ ≡ f n x)                 ↝⟨ (Σ-cong {k₁ = equivalence} (∀-cong ext λ n → →-cong₁ ext (O.∥∥¹-out-^≃∥∥¹-in-^ n)) λ f →
                                                           ∀-cong ext λ n →
-                                                          Π-cong-contra ext (inverse $ O.∥∥₁-out-^≃∥∥₁-in-^ n) λ x →
-                                                          ≡⇒↝ _ $ cong (λ y → f (suc n) y ≡ f n (_≃_.from (O.∥∥₁-out-^≃∥∥₁-in-^ n) x)) (
-    ∣ _≃_.from (O.∥∥₁-out-^≃∥∥₁-in-^ n) x ∣                 ≡⟨ sym $ O.∣,∣-in-^≡∣∣ n ⟩∎
+                                                          Π-cong-contra ext (inverse $ O.∥∥¹-out-^≃∥∥¹-in-^ n) λ x →
+                                                          ≡⇒↝ _ $ cong (λ y → f (suc n) y ≡ f n (_≃_.from (O.∥∥¹-out-^≃∥∥¹-in-^ n) x)) (
+    ∣ _≃_.from (O.∥∥¹-out-^≃∥∥¹-in-^ n) x ∣                 ≡⟨ sym $ O.∣,∣-in-^≡∣∣ n ⟩∎
 
-    _≃_.from (O.∥∥₁-out-^≃∥∥₁-in-^ (suc n))
+    _≃_.from (O.∥∥¹-out-^≃∥∥¹-in-^ (suc n))
       ∣ n , x ∣-in-^                                        ∎)) ⟩
 
-  (∃ λ (f : ∀ n → ∥ A ∥₁-in-^ n → B) →
+  (∃ λ (f : ∀ n → ∥ A ∥¹-in-^ n → B) →
      ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x)        ↝⟨ inverse ∃Coherently-constant′≃ ⟩
 
   (∃ λ (f : A → B) → Coherently-constant′ f)          ↝⟨ (∃-cong λ _ → inverse $ Coherently-constant≃Coherently-constant′ univ) ⟩□
@@ -367,7 +367,7 @@ proj₂-to-∥∥→≃-property≡ univ {f = f} = ⟨ext⟩ λ x → ⟨ext⟩ 
                                                                             mono₁ 1 T.truncation-is-proposition _ _ ⟩∎
   cong f (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)                       ∎
   where
-  oi = O.∥∥₁-out-^≃∥∥₁-in-^
+  oi = O.∥∥¹-out-^≃∥∥¹-in-^
 
 ------------------------------------------------------------------------
 -- Lenses, defined as getters with coherently constant fibres
