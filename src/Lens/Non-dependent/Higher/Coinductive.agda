@@ -369,6 +369,69 @@ proj₂-to-∥∥→≃-property≡ univ {f = f} = ⟨ext⟩ λ x → ⟨ext⟩ 
   where
   oi = O.∥∥¹-out-^≃∥∥¹-in-^
 
+-- Two variants of Coherently-constant are pointwise equivalent
+-- (assuming univalence).
+
+Coherently-constant≃Coherently-constant :
+  {A : Set a} {B : Set b} {f : A → B} →
+  PU.Univalence (a ⊔ b) →
+  Higher.Coherently-constant f ≃ Coherently-constant f
+Coherently-constant≃Coherently-constant {A = A} {B = B} {f = f} univ =
+  Higher.Coherently-constant f                                       ↔⟨⟩
+
+  (∃ λ (g : ∥ A ∥ → B) → f ≡ g ∘ ∣_∣)                                ↝⟨ (Σ-cong (∥∥→≃ univ) λ _ → F.id) ⟩
+
+  (∃ λ ((g , _) : ∃ λ (g : A → B) → Coherently-constant g) → f ≡ g)  ↔⟨ inverse Σ-assoc ⟩
+
+  (∃ λ (g : A → B) → Coherently-constant g × f ≡ g)                  ↝⟨ (∃-cong λ _ → ×-cong₁ λ eq → ≡⇒↝ _ $
+                                                                         cong Coherently-constant $ sym eq) ⟩
+
+  (∃ λ (g : A → B) → Coherently-constant f × f ≡ g)                  ↔⟨ ∃-comm ⟩
+
+  Coherently-constant f × (∃ λ (g : A → B) → f ≡ g)                  ↔⟨ (drop-⊤-right λ _ →
+                                                                         _⇔_.to contractible⇔↔⊤ (other-singleton-contractible _)) ⟩□
+  Coherently-constant f                                              □
+
+-- A "computation rule" for Coherently-constant≃Coherently-constant.
+
+to-Coherently-constant≃Coherently-constant-property :
+  ∀ {A : Set a} {B : Set b} {f : A → B}
+    {c : Higher.Coherently-constant f} {x y}
+  (univ : PU.Univalence (a ⊔ b)) →
+  _≃_.to (Coherently-constant≃Coherently-constant univ)
+    c .property x y ≡
+  trans (cong (_$ x) (proj₂ c))
+     (trans (proj₁-to-∥∥→≃-constant univ (proj₁ c) _ _)
+        (cong (_$ y) (sym (proj₂ c))))
+to-Coherently-constant≃Coherently-constant-property
+  {f = f} {c = c} {x = x} {y = y} univ =
+  _≃_.to (Coherently-constant≃Coherently-constant univ)
+    c .property x y                                       ≡⟨⟩
+
+  ≡⇒→ (cong Coherently-constant $ sym (proj₂ c))
+    (proj₂ (_≃_.to (∥∥→≃ univ) (proj₁ c))) .property x y  ≡⟨ cong (λ (c : Coherently-constant _) → c .property x y) $ sym $
+                                                             subst-in-terms-of-≡⇒↝ equivalence _ _ _ ⟩
+  subst Coherently-constant (sym (proj₂ c))
+    (proj₂ (_≃_.to (∥∥→≃ univ) (proj₁ c))) .property x y  ≡⟨ cong (λ (f : Constant _) → f x y)
+                                                             subst-Coherently-property ⟩
+  subst Constant (sym (proj₂ c))
+    (proj₂ (_≃_.to (∥∥→≃ univ) (proj₁ c)) .property) x y  ≡⟨ trans (cong (_$ y) $ sym $ push-subst-application _ _) $
+                                                             sym $ push-subst-application _ _ ⟩
+  subst (λ f → f x ≡ f y) (sym (proj₂ c))
+    (proj₂ (_≃_.to (∥∥→≃ univ) (proj₁ c)) .property x y)  ≡⟨ cong (λ (f : Constant _) → subst (λ f → f x ≡ f y) (sym (proj₂ c)) (f x y)) $
+                                                             proj₂-to-∥∥→≃-property≡ univ ⟩
+  subst (λ f → f x ≡ f y) (sym (proj₂ c))
+    (proj₁-to-∥∥→≃-constant univ (proj₁ c) x y)           ≡⟨ subst-in-terms-of-trans-and-cong ⟩
+
+  trans (sym (cong (_$ x) (sym (proj₂ c))))
+     (trans (proj₁-to-∥∥→≃-constant univ (proj₁ c) _ _)
+        (cong (_$ y) (sym (proj₂ c))))                    ≡⟨ cong (flip trans _) $
+                                                             trans (sym $ cong-sym _ _) $
+                                                             cong (cong (_$ x)) $ sym-sym _ ⟩∎
+  trans (cong (_$ x) (proj₂ c))
+     (trans (proj₁-to-∥∥→≃-constant univ (proj₁ c) _ _)
+        (cong (_$ y) (sym (proj₂ c))))                    ∎
+
 ------------------------------------------------------------------------
 -- Lenses, defined as getters with coherently constant fibres
 
@@ -423,25 +486,10 @@ Higher-lens≃Lens :
   Block "Higher-lens≃Lens" →
   PU.Univalence (lsuc (a ⊔ b)) →
   Higher.Lens A B ≃ Lens A B
-Higher-lens≃Lens {a = a} {A = A} {B = B} ⊠ univ =
-  Higher.Lens A B                                                    ↔⟨⟩
-
-  (∃ λ (get : A → B) → ∃ λ (H : Pow a ∥ B ∥) → (get ⁻¹_) ≡ H ∘ ∣_∣)  ↝⟨ (∃-cong λ _ → Σ-cong (∥∥→≃ univ) λ _ → F.id) ⟩
-
-  (∃ λ (get : A → B) →
-   ∃ λ ((H , _) : ∃ λ (H : Pow a B) → Coherently-constant H) →
-     (get ⁻¹_) ≡ H)                                                  ↔⟨ (∃-cong λ _ → inverse Σ-assoc) ⟩
-
-  (∃ λ (get : A → B) → ∃ λ (H : Pow a B) →
-     Coherently-constant H × (get ⁻¹_) ≡ H)                          ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ×-cong₁ λ eq → ≡⇒↝ _ $
-                                                                         cong Coherently-constant $ sym eq) ⟩
-  (∃ λ (get : A → B) → ∃ λ (H : Pow a B) →
-     Coherently-constant (get ⁻¹_) × (get ⁻¹_) ≡ H)                  ↔⟨ (∃-cong λ _ → ∃-comm) ⟩
-
-  (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_) ×
-   ∃ λ (H : Pow a B) → (get ⁻¹_) ≡ H)                                ↔⟨ (∃-cong λ _ → drop-⊤-right λ _ →
-                                                                         _⇔_.to contractible⇔↔⊤ (other-singleton-contractible _)) ⟩□
-  (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))                □
+Higher-lens≃Lens {A = A} {B = B} ⊠ univ =
+  Higher.Lens A B                                             ↔⟨⟩
+  (∃ λ (get : A → B) → Higher.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ → Coherently-constant≃Coherently-constant univ) ⟩□
+  (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))         □
 
 -- The equivalence preserves getters and setters.
 
