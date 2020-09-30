@@ -19,7 +19,7 @@ open import Equivalence equality-with-J as Eq using (_≃_)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
-open import H-level.Truncation.Propositional eq
+open import H-level.Truncation.Propositional eq as T using (∥_∥; ∣_∣)
 open import Preimage equality-with-J
 open import Univalence-axiom equality-with-J
 
@@ -29,17 +29,24 @@ import Lens.Non-dependent.Higher.Capriotti eq as Capriotti
 
 private
   variable
-    a b : Level
-    A B : Set a
+    a b p : Level
+    A B   : Set a
+
+-- Coherently constant type-valued functions.
+--
+-- This definition is based on Paolo Capriotti's definition of higher
+-- lenses, but uses a family of equivalences instead of an equality.
+
+Coherently-constant :
+  {A : Set a} → (A → Set p) → Set (a ⊔ lsuc p)
+Coherently-constant {p = p} {A = A} P =
+  ∃ λ (Q : ∥ A ∥ → Set p) → ∀ x → P x ≃ Q ∣ x ∣
 
 -- Paolo Capriotti's variant of higher lenses, but with a family of
 -- equivalences instead of an equality.
 
 Lens : Set a → Set b → Set (lsuc (a ⊔ b))
-Lens {a = a} A B =
-  ∃ λ (g : A → B) →
-  ∃ λ (H : Pow a ∥ B ∥) →
-    ∀ b → g ⁻¹ b ≃ H ∣ b ∣
+Lens A B = ∃ λ (get : A → B) → Coherently-constant (get ⁻¹_)
 
 -- Some derived definitions (based on Capriotti's).
 
@@ -65,7 +72,7 @@ module Lens {A : Set a} {B : Set b} (l : Lens A B) where
   get⁻¹-constant : (b₁ b₂ : B) → get ⁻¹ b₁ ≃ get ⁻¹ b₂
   get⁻¹-constant b₁ b₂ =
     get ⁻¹ b₁  ↝⟨ get⁻¹-≃ b₁ ⟩
-    H ∣ b₁ ∣   ↝⟨ ≡⇒≃ $ cong H $ truncation-is-proposition _ _ ⟩
+    H ∣ b₁ ∣   ↝⟨ ≡⇒≃ $ cong H $ T.truncation-is-proposition _ _ ⟩
     H ∣ b₂ ∣   ↝⟨ inverse $ get⁻¹-≃ b₂ ⟩□
     get ⁻¹ b₂  □
 
@@ -84,26 +91,26 @@ module Lens {A : Set a} {B : Set b} (l : Lens A B) where
     get⁻¹-const b₂ b₃ (get⁻¹-const b₁ b₂ p) ≡ get⁻¹-const b₁ b₃ p
   get⁻¹-const-∘ b₁ b₂ b₃ p =
     _≃_.from (get⁻¹-≃ b₃)
-      (≡⇒→ (cong H $ truncation-is-proposition _ _)
+      (≡⇒→ (cong H $ T.truncation-is-proposition _ _)
          (_≃_.to (get⁻¹-≃ b₂)
             (_≃_.from (get⁻¹-≃ b₂)
-               (≡⇒→ (cong H $ truncation-is-proposition _ _)
-                  (_≃_.to (get⁻¹-≃ b₁) p)))))                 ≡⟨ cong (_≃_.from (get⁻¹-≃ _) ∘ ≡⇒→ _) $
-                                                                 _≃_.right-inverse-of (get⁻¹-≃ _) _ ⟩
+               (≡⇒→ (cong H $ T.truncation-is-proposition _ _)
+                  (_≃_.to (get⁻¹-≃ b₁) p)))))                   ≡⟨ cong (_≃_.from (get⁻¹-≃ _) ∘ ≡⇒→ _) $
+                                                                   _≃_.right-inverse-of (get⁻¹-≃ _) _ ⟩
     _≃_.from (get⁻¹-≃ b₃)
-      (≡⇒→ (cong H $ truncation-is-proposition _ _)
-         (≡⇒→ (cong H $ truncation-is-proposition _ _)
-            (_≃_.to (get⁻¹-≃ b₁) p)))                         ≡⟨ cong (λ eq → _≃_.from (get⁻¹-≃ _) (_≃_.to eq (_≃_.to (get⁻¹-≃ _) _))) $ sym $
-                                                                 ≡⇒≃-trans ext _ _ ⟩
+      (≡⇒→ (cong H $ T.truncation-is-proposition _ _)
+         (≡⇒→ (cong H $ T.truncation-is-proposition _ _)
+            (_≃_.to (get⁻¹-≃ b₁) p)))                           ≡⟨ cong (λ eq → _≃_.from (get⁻¹-≃ _) (_≃_.to eq (_≃_.to (get⁻¹-≃ _) _))) $ sym $
+                                                                   ≡⇒≃-trans ext _ _ ⟩
     _≃_.from (get⁻¹-≃ b₃)
-      (≡⇒→ (trans (cong H $ truncation-is-proposition _ _)
-              (cong H $ truncation-is-proposition _ _))
-            (_≃_.to (get⁻¹-≃ b₁) p))                          ≡⟨ cong (λ eq → _≃_.from (get⁻¹-≃ b₃) (≡⇒→ eq _)) $
-                                                                 trans (sym $ cong-trans _ _ _) $
-                                                                 cong (cong H) $ mono₁ 1 truncation-is-proposition _ _ ⟩∎
+      (≡⇒→ (trans (cong H $ T.truncation-is-proposition _ _)
+              (cong H $ T.truncation-is-proposition _ _))
+            (_≃_.to (get⁻¹-≃ b₁) p))                            ≡⟨ cong (λ eq → _≃_.from (get⁻¹-≃ b₃) (≡⇒→ eq _)) $
+                                                                   trans (sym $ cong-trans _ _ _) $
+                                                                   cong (cong H) $ mono₁ 1 T.truncation-is-proposition _ _ ⟩∎
     _≃_.from (get⁻¹-≃ b₃)
-      (≡⇒→ (cong H $ truncation-is-proposition _ _)
-         (_≃_.to (get⁻¹-≃ b₁) p))                             ∎
+      (≡⇒→ (cong H $ T.truncation-is-proposition _ _)
+         (_≃_.to (get⁻¹-≃ b₁) p))                               ∎
 
   get⁻¹-const-id :
     (b : B) (p : get ⁻¹ b) → get⁻¹-const b b p ≡ p
@@ -199,7 +206,7 @@ instance
       refl _
     , ⟨ext⟩ λ a → ⟨ext⟩ λ b →
       (let eq₁ = cong (H l) $
-                   truncation-is-proposition ∣ get l a ∣ ∣ b ∣
+                   T.truncation-is-proposition ∣ get l a ∣ ∣ b ∣
            eq₂ = ⟨ext⟩ (≃⇒≡ univ ∘ get⁻¹-≃ l)
        in
        proj₁ (_≃_.from (≡⇒≃ (cong (_$ b) eq₂))
@@ -364,7 +371,7 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
 [codomain-inhabited→proposition]→proposition {B = B} {s = s} =
   block λ b →
 
-  (B → Is-proposition (Lens.set ⁻¹ s))      ↝⟨ inverse $ universal-property (H-level-propositional ext 1) ⟩
+  (B → Is-proposition (Lens.set ⁻¹ s))      ↝⟨ inverse $ T.universal-property (H-level-propositional ext 1) ⟩
   (∥ B ∥ → Is-proposition (Lens.set ⁻¹ s))  ↔⟨⟩
   (∥ B ∥ → (p q : Lens.set ⁻¹ s) → p ≡ q)   ↔⟨ (∀-cong ext λ _ → Π-comm) F.∘ Π-comm ⟩
   ((p q : Lens.set ⁻¹ s) → ∥ B ∥ → p ≡ q)   ↝⟨ (∀-cong ext λ _ → ∀-cong ext λ _ → lemma b _ _) ⟩
@@ -391,7 +398,7 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
        ∀ a → ext⁻¹ (subst (λ l → Lens.set l ≡ s)
                       (_≃_.from (equality-characterisation₂ b)
                          (g , h , f)) eq₁) a ≡
-             ext⁻¹ eq₂ a)                                       ↝⟨ push-∥∥ (∣_∣ ∘ get l₁) ⟩
+             ext⁻¹ eq₂ a)                                       ↝⟨ T.push-∥∥ (∣_∣ ∘ get l₁) ⟩
 
     (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
      ∥ B ∥ →
@@ -404,7 +411,7 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
        ∀ a → ext⁻¹ (subst (λ l → Lens.set l ≡ s)
                       (_≃_.from (equality-characterisation₂ b)
                          (g , h , f)) eq₁) a ≡
-             ext⁻¹ eq₂ a)                                       ↝⟨ (∃-cong λ _ → push-∥∥ id) ⟩
+             ext⁻¹ eq₂ a)                                       ↝⟨ (∃-cong λ _ → T.push-∥∥ id) ⟩
 
     (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
      ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
@@ -417,7 +424,7 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
        ∀ a → ext⁻¹ (subst (λ l → Lens.set l ≡ s)
                       (_≃_.from (equality-characterisation₂ b)
                          (g , h , f)) eq₁) a ≡
-             ext⁻¹ eq₂ a)                                       ↝⟨ (∃-cong λ _ → ∃-cong λ _ → push-∥∥ ∣_∣) ⟩
+             ext⁻¹ eq₂ a)                                       ↝⟨ (∃-cong λ _ → ∃-cong λ _ → T.push-∥∥ ∣_∣) ⟩
 
     (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
      ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
@@ -430,7 +437,7 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
        ∀ a → ext⁻¹ (subst (λ l → Lens.set l ≡ s)
                       (_≃_.from (equality-characterisation₂ b)
                          (g , h , f)) eq₁) a ≡
-             ext⁻¹ eq₂ a)                                       ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → drop-∥∥ (∣_∣ ∘ get l₁)) ⟩
+             ext⁻¹ eq₂ a)                                       ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → T.drop-∥∥ (∣_∣ ∘ get l₁)) ⟩
 
     (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
      ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
