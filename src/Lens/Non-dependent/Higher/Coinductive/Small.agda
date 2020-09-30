@@ -31,23 +31,15 @@ private
     a b p : Level
     A     : Set a
 
+------------------------------------------------------------------------
+-- The lens type family
+
 -- A variant of Constant for type-valued functions.
 
 Constant-≃ :
   {A : Set a} →
   (A → Set p) → Set (a ⊔ p)
 Constant-≃ P = ∀ x y → P x ≃ P y
-
--- Constant and Constant-≃ are pointwise equivalent (assuming
--- univalence).
-
-Constant≃Constant-≃ :
-  {P : A → Set p} →
-  Univalence p → Constant P ≃ Constant-≃ P
-Constant≃Constant-≃ univ =
-  ∀-cong ext λ _ →
-  ∀-cong ext λ _ →
-  ≡≃≃ univ
 
 -- Coherently constant type-valued functions.
 
@@ -98,6 +90,20 @@ instance
     { get = Lens.get
     ; set = Lens.set
     }
+
+------------------------------------------------------------------------
+-- Some conversion functions
+
+-- Constant and Constant-≃ are pointwise equivalent (assuming
+-- univalence).
+
+Constant≃Constant-≃ :
+  {P : A → Set p} →
+  Univalence p → Constant P ≃ Constant-≃ P
+Constant≃Constant-≃ univ =
+  ∀-cong ext λ _ →
+  ∀-cong ext λ _ →
+  ≡≃≃ univ
 
 -- Two variants of Coherently-constant are pointwise equivalent
 -- (when applicable, assuming univalence).
