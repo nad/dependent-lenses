@@ -99,6 +99,20 @@ instance
     ; set = Lens.set
     }
 
+-- Two variants of Coherently-constant are pointwise equivalent
+-- (when applicable, assuming univalence).
+
+Coherently-constant≃Coherently-constant :
+  {A : Set a} {P : A → Set p} →
+  PU.Univalence (a ⊔ lsuc p) →
+  (univ : Univalence p) →
+  Coinductive.Coherently-constant P ≃ Coherently-constant univ P
+Coherently-constant≃Coherently-constant univ′ univ =
+  Coherently-cong
+    univ′
+    (λ _ → Constant≃Constant-≃ univ)
+    (λ _ _ → refl _)
+
 -- Lens is pointwise equivalent to Coinductive.Lens (assuming
 -- univalence).
 
@@ -110,11 +124,7 @@ Coinductive-lens≃Lens :
 Coinductive-lens≃Lens {A = A} {B = B} univ₁ univ₂ =
   Coinductive.Lens A B                                             ↔⟨⟩
 
-  (∃ λ (get : A → B) → Coinductive.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ →
-                                                                       Coherently-cong
-                                                                         univ₁
-                                                                         (λ _ → Constant≃Constant-≃ univ₂)
-                                                                         (λ _ _ → refl _)) ⟩
+  (∃ λ (get : A → B) → Coinductive.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ → Coherently-constant≃Coherently-constant univ₁ univ₂) ⟩
 
   (∃ λ (get : A → B) → Coherently-constant univ₂ (get ⁻¹_))        ↝⟨ Eq.↔→≃
                                                                         (λ (g , c) → record { get = g; get⁻¹-coherently-constant = c })
