@@ -32,6 +32,9 @@ private
     a b p : Level
     A B   : Set a
 
+------------------------------------------------------------------------
+-- The lens type family
+
 -- Coherently constant type-valued functions.
 --
 -- This definition is based on Paolo Capriotti's definition of higher
@@ -179,6 +182,9 @@ instance
     ; set = Lens.set
     }
 
+------------------------------------------------------------------------
+-- Conversion between two kinds of lenses
+
 -- The lenses defined above are equivalent to Capriotti's (assuming
 -- univalence).
 
@@ -225,6 +231,9 @@ instance
     ≡⇒≃ (cong (_$ b) (⟨ext⟩ (≃⇒≡ univ ∘ get⁻¹-≃ l)))  ≡⟨ cong ≡⇒≃ $ cong-ext (≃⇒≡ univ ∘ get⁻¹-≃ l) ⟩
     ≡⇒≃ (≃⇒≡ univ (get⁻¹-≃ l b))                      ≡⟨ _≃_.right-inverse-of (≡≃≃ univ) _ ⟩∎
     get⁻¹-≃ l b                                       ∎
+
+------------------------------------------------------------------------
+-- Equality characterisation lemmas
 
 -- An equality characterisation lemma.
 
@@ -358,6 +367,9 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
      _≃_.to (get⁻¹-≃ l₂ b) p)                                       □
   where
   open Lens
+
+------------------------------------------------------------------------
+-- Some results related to fibres of Lens.set
 
 -- When proving that Lens.set ⁻¹ s is a proposition, for
 -- s : A → B → A, one can assume that B is inhabited.
