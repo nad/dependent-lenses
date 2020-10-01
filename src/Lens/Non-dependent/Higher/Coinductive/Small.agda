@@ -13,7 +13,6 @@ open P.Derived-definitions-and-properties eq
 
 open import Prelude
 
-import Bijection equality-with-J as B
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
@@ -253,21 +252,6 @@ Coherently-constant-map {P = P} {Q = Q} univ₁ univ₂ f P≃Q c .coherent =
   h = λ x y → ≃⇒≡ univ₂ ((P≃Q y F.∘ c .property (f x) (f y)) F.∘
                          inverse (P≃Q x))
 
--- It is sometimes possible to "lower" Coherently-constant's final
--- argument.
---
--- This lemma was suggested by Andrea Vezzosi.
-
-Coherently-constant-↑ :
-  {P : A → Set p}
-  (univ₁ : Univalence (p ⊔ q))
-  (univ₂ : Univalence p) →
-  Coherently-constant univ₁ (↑ q ∘ P) → Coherently-constant univ₂ P
-Coherently-constant-↑ {q = q} {P = P} univ₁ univ₂ =
-  Coherently-constant-map univ₁ univ₂ id λ x →
-    ↑ q (P x)  ↔⟨ B.↑↔ ⟩□
-    P x        □
-
 -- Coherently-constant is, in a certain sense, closed under Σ.
 --
 -- This lemma is based on a lemma due to Paolo Capriotti.
@@ -294,8 +278,10 @@ Coherently-constant-Σ {P = P} {Q = Q}
 
 -- Composition.
 --
--- Paolo Capriotti came up with the idea to use Coherently-constant-Σ,
--- and Andrea Vezzosi suggested the use of Coherently-constant-↑.
+-- Paolo Capriotti came up with the idea to use Coherently-constant-Σ.
+-- At first we had a problem related to universe levels. Andrea
+-- Vezzosi came up with a first workaround (involving lifting), and
+-- later I found a more direct solution.
 
 infix 9 ⟨_,_,_,_,_⟩_∘_
 
@@ -315,23 +301,17 @@ infix 9 ⟨_,_,_,_,_⟩_∘_
 ⟨_,_,_,_,_⟩_∘_ {b = ℓb} {univ₁ = univ₁} {univ₂ = univ₂}
   univ₃ univ₄ univ₅ univ₆ univ₇ l₁ l₂
   .Lens.get⁻¹-coherently-constant =
-                                                              $⟨ Coherently-constant-Σ
-                                                                   {P = get l₁ ⁻¹_}
-                                                                   {Q = λ (_ , b , _) → get l₂ ⁻¹ b}
-                                                                   univ₁ univ₂ univ₄ univ₅ univ₆ univ₇
-                                                                   (get⁻¹-coherently-constant l₁)
-                                                                   (Coherently-constant-map univ₂ univ₂
-                                                                      (proj₁ ∘ proj₂) (λ _ → F.id)
-                                                                      (get⁻¹-coherently-constant l₂)) ⟩
+                                                       $⟨ Coherently-constant-Σ
+                                                            {P = get l₁ ⁻¹_}
+                                                            {Q = λ (_ , b , _) → get l₂ ⁻¹ b}
+                                                            univ₁ univ₂ univ₄ univ₅ univ₆ univ₇
+                                                            (get⁻¹-coherently-constant l₁)
+                                                            (Coherently-constant-map univ₂ univ₂
+                                                               (proj₁ ∘ proj₂) (λ _ → F.id)
+                                                               (get⁻¹-coherently-constant l₂)) ⟩
   Coherently-constant univ₄
-    (λ c → ∃ λ ((b , _) : get l₁ ⁻¹ c) → get l₂ ⁻¹ b)         ↝⟨ (Coherently-constant-map univ₄ univ₄ id λ c →
-
-    (∃ λ ((b , _) : get l₁ ⁻¹ c) → get l₂ ⁻¹ b)                   ↝⟨ inverse $ ∘⁻¹≃ (get l₁) (get l₂) ⟩
-    (get l₁ ∘ get l₂) ⁻¹ c                                        ↔⟨ inverse B.↑↔ ⟩□
-    ↑ ℓb ((get l₁ ∘ get l₂) ⁻¹ c)                                 □) ⟩
-
-  Coherently-constant univ₄ (↑ ℓb ∘ ((get l₁ ∘ get l₂) ⁻¹_))  ↝⟨ Coherently-constant-↑ univ₄ univ₃ ⟩□
-
-  Coherently-constant univ₃ ((get l₁ ∘ get l₂) ⁻¹_)           □
+    (λ c → ∃ λ ((b , _) : get l₁ ⁻¹ c) → get l₂ ⁻¹ b)  ↝⟨ Coherently-constant-map univ₄ univ₃ id
+                                                            (λ _ → inverse $ ∘⁻¹≃ (get l₁) (get l₂)) ⟩□
+  Coherently-constant univ₃ ((get l₁ ∘ get l₂) ⁻¹_)    □
   where
   open Lens
