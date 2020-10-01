@@ -255,26 +255,26 @@ Coherently-constant≃Coherently-constant′ univ =
     ≃
   (∃ λ (f : A → B) → Coherently-constant f)
 ∥∥→≃ {A = A} {B = B} univ =
-  (∥ A ∥ → B)                                         ↝⟨ →-cong ext (inverse N.∥∥≃∥∥) F.id ⟩
+  (∥ A ∥ → B)                                   ↝⟨ →-cong ext (inverse N.∥∥≃∥∥) F.id ⟩
 
-  (N.∥ A ∥ → B)                                       ↝⟨ C.universal-property ⟩
+  (N.∥ A ∥ → B)                                 ↝⟨ C.universal-property ⟩
 
   (∃ λ (f : ∀ n → ∥ A ∥¹-out-^ n → B) →
-     ∀ n x → f (suc n) ∣ x ∣ ≡ f n x)                 ↝⟨ (Σ-cong {k₁ = equivalence} (∀-cong ext λ n → →-cong₁ ext (O.∥∥¹-out-^≃∥∥¹-in-^ n)) λ f →
-                                                          ∀-cong ext λ n →
-                                                          Π-cong-contra ext (inverse $ O.∥∥¹-out-^≃∥∥¹-in-^ n) λ x →
-                                                          ≡⇒↝ _ $ cong (λ y → f (suc n) y ≡ f n (_≃_.from (O.∥∥¹-out-^≃∥∥¹-in-^ n) x)) (
-    ∣ _≃_.from (O.∥∥¹-out-^≃∥∥¹-in-^ n) x ∣                 ≡⟨ sym $ O.∣,∣-in-^≡∣∣ n ⟩∎
+     ∀ n x → f (suc n) ∣ x ∣ ≡ f n x)           ↝⟨ (Σ-cong {k₁ = equivalence} (∀-cong ext λ n → →-cong₁ ext (O.∥∥¹-out-^≃∥∥¹-in-^ n)) λ f →
+                                                    ∀-cong ext λ n →
+                                                    Π-cong-contra ext (inverse $ O.∥∥¹-out-^≃∥∥¹-in-^ n) λ x →
+                                                    ≡⇒↝ _ $ cong (λ y → f (suc n) y ≡ f n (_≃_.from (O.∥∥¹-out-^≃∥∥¹-in-^ n) x)) (
+    ∣ _≃_.from (O.∥∥¹-out-^≃∥∥¹-in-^ n) x ∣           ≡⟨ sym $ O.∣,∣-in-^≡∣∣ n ⟩∎
 
     _≃_.from (O.∥∥¹-out-^≃∥∥¹-in-^ (suc n))
-      ∣ n , x ∣-in-^                                        ∎)) ⟩
+      ∣ n , x ∣-in-^                                  ∎)) ⟩
 
   (∃ λ (f : ∀ n → ∥ A ∥¹-in-^ n → B) →
-     ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x)        ↝⟨ inverse ∃Coherently-constant′≃ ⟩
+     ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x)  ↝⟨ inverse ∃Coherently-constant′≃ ⟩
 
-  (∃ λ (f : A → B) → Coherently-constant′ f)          ↝⟨ (∃-cong λ _ → inverse $ Coherently-constant≃Coherently-constant′ univ) ⟩□
+  (∃ λ (f : A → B) → Coherently-constant′ f)    ↝⟨ (∃-cong λ _ → inverse $ Coherently-constant≃Coherently-constant′ univ) ⟩□
 
-  (∃ λ (f : A → B) → Coherently-constant f)           □
+  (∃ λ (f : A → B) → Coherently-constant f)     □
 
 -- A function used in the statement of proj₂-to-∥∥→≃-property≡.
 
