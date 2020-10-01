@@ -17,7 +17,7 @@ open import Prelude
 open import Bijection equality-with-J as B using (_↔_)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
-open import Function-universe equality-with-J as F hiding (_∘_)
+open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq as T using (∥_∥; ∣_∣)
@@ -30,11 +30,12 @@ import Lens.Non-dependent.Traditional eq as Traditional
 
 private
   variable
-    a b : Level
-    A B : Set a
+    a b p : Level
+    A B   : Set a
+    P Q   : A → Set p
 
 ------------------------------------------------------------------------
--- The lens type family
+-- Coherently-constant
 
 -- Coherently constant functions.
 --
@@ -45,6 +46,40 @@ Coherently-constant :
   {A : Set a} {B : Set b} → (A → B) → Set (a ⊔ b)
 Coherently-constant {A = A} {B = B} f =
   ∃ λ (g : ∥ A ∥ → B) → f ≡ g ∘ ∣_∣
+
+-- Coherently-constant is, in a certain sense, closed under Σ.
+--
+-- This lemma is due to Paolo Capriotti.
+
+Coherently-constant-Σ :
+  Coherently-constant P →
+  Coherently-constant Q →
+  Coherently-constant (λ x → ∃ λ (y : P x) → Q (x , y))
+Coherently-constant-Σ {P = P} {Q = Q} (P′ , p) (Q′ , q) =
+    (λ x → ∃ λ (y : P′ x) →
+               Q′ (T.elim
+                     (λ x → P′ x → ∥ ∃ P ∥)
+                     (λ _ → Π-closure ext 1 λ _ →
+                            T.truncation-is-proposition)
+                     (λ x y → ∣ x , subst id (sym (p′ x)) y ∣)
+                     x y))
+  , (⟨ext⟩ λ x →
+
+     ((∃ λ (y : P x) → Q (x , y))                                ≡⟨ (cong (uncurry Σ) $ Σ-≡,≡→≡ (p′ x) $ ⟨ext⟩ λ y →
+
+        subst (λ P → P → Set _) (p′ x) (λ y → Q (x , y)) y           ≡⟨ subst-→-domain _ _ ⟩
+
+        Q (x , subst id (sym (p′ x)) y)                              ≡⟨ cong (_$ (x , subst id (sym (p′ x)) y)) q ⟩∎
+
+        Q′ ∣ x , subst id (sym (p′ x)) y ∣                           ∎) ⟩∎
+
+      (∃ λ (y : P′ ∣ x ∣) → Q′ ∣ x , subst id (sym (p′ x)) y ∣)  ∎))
+  where
+  p′ : ∀ _ → _
+  p′ x = cong (_$ x) p
+
+------------------------------------------------------------------------
+-- The lens type family
 
 -- Higher lenses, as presented by Paolo Capriotti, who seems to have
 -- been first to describe a notion of higher lens
