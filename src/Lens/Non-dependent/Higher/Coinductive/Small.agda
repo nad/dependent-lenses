@@ -263,67 +263,10 @@ Coherently-constant-↑ :
   (univ₁ : Univalence (p ⊔ q))
   (univ₂ : Univalence p) →
   Coherently-constant univ₁ (↑ q ∘ P) → Coherently-constant univ₂ P
-Coherently-constant-↑ {P = P} univ₁ _ c .property x y =
-  P x        ↔⟨ inverse B.↑↔ ⟩
-  ↑ _ (P x)  ↝⟨ c .property x y ⟩
-  ↑ _ (P y)  ↔⟨ B.↑↔ ⟩□
-  P y        □
-Coherently-constant-↑ {p = p} {q = q} {P = P} univ₁ univ₂ c .coherent =
-  Coherently-constant-↑ univ₁ univ₂
-    (subst (Coherently-constant univ₁)
-       (⟨ext⟩ $ O.elim λ where
-          .O.Elim.∣∣ʳ x →
-            ↑ q (P x)  ∎
-          .O.Elim.∣∣-constantʳ x y →
-            subst
-              (λ z → f z ≡ ↑ q (g z))
-              (O.∣∣-constant x y) (refl _)                             ≡⟨ subst-in-terms-of-trans-and-cong ⟩
-
-            trans (sym (cong f (O.∣∣-constant x y)))
-              (trans (refl _) (cong (↑ q ∘ g) (O.∣∣-constant x y)))    ≡⟨ cong₂ (trans ∘ sym)
-                                                                            O.rec-∣∣-constant
-                                                                            (trans (trans-reflˡ _) $
-                                                                             trans (sym $ cong-∘ _ _ _) $
-                                                                             cong (cong (↑ q)) O.rec-∣∣-constant) ⟩
-            trans (sym (≃⇒≡ univ₁ (c .property x y)))
-              (cong (↑ q) (g′ (c .property x y)))                      ≡⟨ cong (λ eq → trans (sym (≃⇒≡ univ₁ (c .property x y))) eq) $ sym $
-                                                                          _≃_.left-inverse-of (≡≃≃ univ₁) _ ⟩
-            trans (sym (≃⇒≡ univ₁ (c .property x y)))
-              (≃⇒≡ univ₁ (≡⇒≃ (cong (↑ q) (g′ (c .property x y)))))    ≡⟨ cong (trans (sym (≃⇒≡ univ₁ (c .property x y))) ∘ ≃⇒≡ univ₁) $
-                                                                          lemma _ ⟩
-            trans (sym (≃⇒≡ univ₁ (c .property x y)))
-              (≃⇒≡ univ₁ (c .property x y))                            ≡⟨ trans-symˡ _ ⟩∎
-
-            refl _                                                     ∎)
-       (c .coherent))
-  where
-  f = O.rec′ (↑ q ∘ P) (λ x y → ≃⇒≡ univ₁ (c .property x y))
-
-  g′ : {A B : Set p} → ↑ q A ≃ ↑ q B → A ≡ B
-  g′ eq = ≃⇒≡ univ₂ ((Eq.↔⇒≃ B.↑↔ F.∘ eq) F.∘ Eq.↔⇒≃ (inverse B.↑↔))
-
-  g = O.rec′ P (λ x y → g′ (c .property x y))
-
-  lemma :
-    {A B : Set p} (eq : ↑ q A ≃ ↑ q B) →
-    ≡⇒≃ (cong (↑ q) (g′ eq)) ≡ eq
-  lemma eq =
-    ≡⇒≃ (cong (↑ q) (g′ eq))                                 ≡⟨ ≡⇒↝-cong
-                                                                  (↑ q)
-                                                                  (λ eq → (Eq.↔⇒≃ (inverse B.↑↔) F.∘ eq) F.∘ Eq.↔⇒≃ B.↑↔)
-                                                                  (Eq.lift-equality ext (refl _)) ⟩
-    (Eq.↔⇒≃ (inverse B.↑↔) F.∘ ≡⇒≃ (g′ eq)) F.∘ Eq.↔⇒≃ B.↑↔  ≡⟨⟩
-
-    (Eq.↔⇒≃ (inverse B.↑↔) F.∘
-     ≡⇒≃ (≃⇒≡ univ₂ ((Eq.↔⇒≃ B.↑↔ F.∘ eq) F.∘
-                     Eq.↔⇒≃ (inverse B.↑↔)))) F.∘
-    Eq.↔⇒≃ B.↑↔                                              ≡⟨ cong (λ eq → (Eq.↔⇒≃ (inverse B.↑↔) F.∘ eq) F.∘ Eq.↔⇒≃ B.↑↔) $
-                                                                _≃_.right-inverse-of (≡≃≃ univ₂) _ ⟩
-    (Eq.↔⇒≃ (inverse B.↑↔) F.∘
-     ((Eq.↔⇒≃ B.↑↔ F.∘ eq) F.∘ Eq.↔⇒≃ (inverse B.↑↔))) F.∘
-    Eq.↔⇒≃ B.↑↔                                              ≡⟨ Eq.lift-equality ext (refl _) ⟩∎
-
-    eq                                                       ∎
+Coherently-constant-↑ {q = q} {P = P} univ₁ univ₂ =
+  Coherently-constant-map univ₁ univ₂ id λ x →
+    ↑ q (P x)  ↔⟨ B.↑↔ ⟩□
+    P x        □
 
 -- Coherently-constant is, in a certain sense, closed under Σ.
 --
