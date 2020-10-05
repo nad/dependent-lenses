@@ -11,16 +11,18 @@ module Lens.Non-dependent.Higher.Coinductive.Small
 
 open P.Derived-definitions-and-properties eq
 
-open import Prelude
+open import Logical-equivalence using (_⇔_)
+open import Prelude as P hiding (id)
 
-open import Bijection equality-with-J using (_↔_)
+open import Bijection equality-with-J as B using (_↔_)
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
+open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional.One-step eq as O
   using (∥_∥¹; ∣_∣)
-open import Preimage equality-with-J using (_⁻¹_)
+open import Preimage equality-with-J as Preimage using (_⁻¹_)
 open import Univalence-axiom equality-with-J
 import Univalence-axiom P.equality-with-J as PU
 
@@ -195,47 +197,47 @@ Coherently-constant-map {P = P} {Q = Q} univ₁ univ₂ f P≃Q c .coherent =
        .O.Elim.∣∣-constantʳ x y → Eq.lift-equality ext
          (_≃_.to (subst (λ z → O.rec′ P g (O.∥∥¹-map f z) ≃
                                O.rec′ Q h z)
-                    (O.∣∣-constant x y) (P≃Q x))                       ≡⟨ Eq.to-subst ⟩
+                    (O.∣∣-constant x y) (P≃Q x))                         ≡⟨ Eq.to-subst ⟩
 
           subst (λ z → O.rec′ P g (O.∥∥¹-map f z) → O.rec′ Q h z)
-            (O.∣∣-constant x y) (_≃_.to (P≃Q x))                       ≡⟨ (⟨ext⟩ λ _ → subst-→) ⟩
+            (O.∣∣-constant x y) (_≃_.to (P≃Q x))                         ≡⟨ (⟨ext⟩ λ _ → subst-→) ⟩
 
           subst (O.rec′ Q h) (O.∣∣-constant x y) ∘
           _≃_.to (P≃Q x) ∘
-          subst (O.rec′ P g ∘ O.∥∥¹-map f) (sym (O.∣∣-constant x y))   ≡⟨ cong₂ (λ f g → f ∘ _≃_.to (P≃Q x) ∘ g)
-                                                                            (⟨ext⟩ λ q → subst-∘ id (O.rec′ Q h) (O.∣∣-constant x y) {p = q})
-                                                                            (⟨ext⟩ λ p →
-                                                                             trans (subst-∘ id (O.rec′ P g ∘ O.∥∥¹-map f)
-                                                                                      (sym (O.∣∣-constant x y)) {p = p}) $
-                                                                             cong (λ eq → subst id eq p) $
-                                                                             trans (cong-sym _ _) $
-                                                                             cong sym $ sym $ cong-∘ _ _ _) ⟩
-          subst id (cong (O.rec′ Q h) (O.∣∣-constant x y)) ∘
+          subst (O.rec′ P g ∘ O.∥∥¹-map f) (sym (O.∣∣-constant x y))     ≡⟨ cong₂ (λ f g → f ∘ _≃_.to (P≃Q x) ∘ g)
+                                                                              (⟨ext⟩ λ q → subst-∘ P.id (O.rec′ Q h) (O.∣∣-constant x y) {p = q})
+                                                                              (⟨ext⟩ λ p →
+                                                                               trans (subst-∘ P.id (O.rec′ P g ∘ O.∥∥¹-map f)
+                                                                                        (sym (O.∣∣-constant x y)) {p = p}) $
+                                                                               cong (λ eq → subst P.id eq p) $
+                                                                               trans (cong-sym _ _) $
+                                                                               cong sym $ sym $ cong-∘ _ _ _) ⟩
+          subst P.id (cong (O.rec′ Q h) (O.∣∣-constant x y)) ∘
           _≃_.to (P≃Q x) ∘
-          subst id (sym (cong (O.rec′ P g)
-                           (cong (O.∥∥¹-map f) (O.∣∣-constant x y))))  ≡⟨ cong₂ (λ p q → subst id p ∘ _≃_.to (P≃Q x) ∘ subst id (sym q))
-                                                                            O.rec-∣∣-constant
-                                                                            (trans (cong (cong (O.rec′ P g)) O.rec-∣∣-constant) $
-                                                                             O.rec-∣∣-constant) ⟩
+          subst P.id (sym (cong (O.rec′ P g)
+                             (cong (O.∥∥¹-map f) (O.∣∣-constant x y))))  ≡⟨ cong₂ (λ p q → subst P.id p ∘ _≃_.to (P≃Q x) ∘ subst P.id (sym q))
+                                                                              O.rec-∣∣-constant
+                                                                              (trans (cong (cong (O.rec′ P g)) O.rec-∣∣-constant) $
+                                                                               O.rec-∣∣-constant) ⟩
 
-          subst id (h x y) ∘
+          subst P.id (h x y) ∘
           _≃_.to (P≃Q x) ∘
-          subst id (sym (g (f x) (f y)))                               ≡⟨ cong₂ (λ p q → p ∘ _≃_.to (P≃Q x) ∘ q)
-                                                                            (trans (⟨ext⟩ λ _ → subst-id-in-terms-of-≡⇒↝ equivalence) $
-                                                                             cong _≃_.to $ _≃_.right-inverse-of (≡≃≃ univ₂) _)
-                                                                            (trans (⟨ext⟩ λ _ → subst-id-in-terms-of-inverse∘≡⇒↝ equivalence) $
-                                                                             cong _≃_.from $ _≃_.right-inverse-of (≡≃≃ univ₁) _) ⟩
+          subst P.id (sym (g (f x) (f y)))                               ≡⟨ cong₂ (λ p q → p ∘ _≃_.to (P≃Q x) ∘ q)
+                                                                              (trans (⟨ext⟩ λ _ → subst-id-in-terms-of-≡⇒↝ equivalence) $
+                                                                               cong _≃_.to $ _≃_.right-inverse-of (≡≃≃ univ₂) _)
+                                                                              (trans (⟨ext⟩ λ _ → subst-id-in-terms-of-inverse∘≡⇒↝ equivalence) $
+                                                                               cong _≃_.from $ _≃_.right-inverse-of (≡≃≃ univ₁) _) ⟩
           _≃_.to (P≃Q y) ∘
           _≃_.to (c .property (f x) (f y)) ∘
           _≃_.from (P≃Q x) ∘
           _≃_.to (P≃Q x) ∘
-          _≃_.from (c .property (f x) (f y))                           ≡⟨ (⟨ext⟩ λ _ → cong (_≃_.to (P≃Q y) ∘ _≃_.to (c .property (f x) (f y))) $
-                                                                          _≃_.left-inverse-of (P≃Q x) _) ⟩
+          _≃_.from (c .property (f x) (f y))                             ≡⟨ (⟨ext⟩ λ _ → cong (_≃_.to (P≃Q y) ∘ _≃_.to (c .property (f x) (f y))) $
+                                                                            _≃_.left-inverse-of (P≃Q x) _) ⟩
           _≃_.to (P≃Q y) ∘
           _≃_.to (c .property (f x) (f y)) ∘
-          _≃_.from (c .property (f x) (f y))                           ≡⟨ (⟨ext⟩ λ _ → cong (_≃_.to (P≃Q y)) $
-                                                                           _≃_.right-inverse-of (c .property (f x) (f y)) _) ⟩∎
-          _≃_.to (P≃Q y)                                               ∎))
+          _≃_.from (c .property (f x) (f y))                             ≡⟨ (⟨ext⟩ λ _ → cong (_≃_.to (P≃Q y)) $
+                                                                             _≃_.right-inverse-of (c .property (f x) (f y)) _) ⟩∎
+          _≃_.to (P≃Q y)                                                 ∎))
     (c .coherent)
   where
   g = λ x y → ≃⇒≡ univ₁ (c .property x y)
@@ -410,11 +412,11 @@ Coherently-constant-Σ {p = p} {q = q} univ₁ univ₂ univ₃ =
                                 (_≃_.to (R≃ y) r)
 
              lemma₁ =
-               subst P′ (O.∣∣-constant x y) p′             ≡⟨ subst-∘ _ _ _ ⟩
-               subst id (cong P′ (O.∣∣-constant x y)) p′   ≡⟨ cong (λ eq → subst id eq _) O.rec-∣∣-constant ⟩
-               subst id (≃⇒≡ univ₁ (c₁ .property x y)) p′  ≡⟨ subst-id-in-terms-of-≡⇒↝ equivalence ⟩
-               ≡⇒→ (≃⇒≡ univ₁ (c₁ .property x y)) p′       ≡⟨ cong (λ eq → _≃_.to eq p′) $ _≃_.right-inverse-of (≡≃≃ univ₁) _ ⟩∎
-               _≃_.to (c₁ .property x y) p′                ∎
+               subst P′ (O.∣∣-constant x y) p′               ≡⟨ subst-∘ _ _ _ ⟩
+               subst P.id (cong P′ (O.∣∣-constant x y)) p′   ≡⟨ cong (λ eq → subst P.id eq _) O.rec-∣∣-constant ⟩
+               subst P.id (≃⇒≡ univ₁ (c₁ .property x y)) p′  ≡⟨ subst-id-in-terms-of-≡⇒↝ equivalence ⟩
+               ≡⇒→ (≃⇒≡ univ₁ (c₁ .property x y)) p′         ≡⟨ cong (λ eq → _≃_.to eq p′) $ _≃_.right-inverse-of (≡≃≃ univ₁) _ ⟩∎
+               _≃_.to (c₁ .property x y) p′                  ∎
 
              lemma₂ =
                subst (λ p → Q (y , p)) lemma₁
@@ -473,13 +475,13 @@ Coherently-constant-Σ {p = p} {q = q} univ₁ univ₂ univ₃ =
                        (O.∣∣-constant _ _))
                     q′)                                                  ≡⟨ cong (λ q → subst (λ p → Q (y , p)) lemma₁ q) $
                                                                             trans (subst-∘ _ _ _) $
-                                                                            cong (λ eq → subst id eq q′) $
+                                                                            cong (λ eq → subst P.id eq q′) $
                                                                             trans (cong-trans _ _ _) $
                                                                             cong₂ trans
                                                                               (cong-∘ _ _ _)
                                                                               O.rec-∣∣-constant ⟩
                subst (λ p → Q (y , p)) lemma₁
-                 (subst id
+                 (subst P.id
                     (trans
                        (cong (λ p → Q (x , p))
                           (sym (subst-sym-subst _)))
@@ -545,11 +547,11 @@ Coherently-constant-Σ {p = p} {q = q} univ₁ univ₂ univ₃ =
                    (sym (O.∣∣-constant x y)) r))                          ≡⟨ cong (subst (λ x → ∃ λ p → Q′ (x , p)) (O.∣∣-constant x y)) $
                                                                              cong (_≃_.to (R≃ x)) $
                                                                              trans (subst-∘ _ _ _) $
-                                                                             cong (flip (subst id) r) $
+                                                                             cong (flip (subst P.id) r) $
                                                                              trans (cong-sym _ _) $
                                                                              cong sym O.rec-∣∣-constant ⟩
            subst (λ x → ∃ λ (p : P′ x) → Q′ (x , p)) (O.∣∣-constant x y)
-             (_≃_.to (R≃ x) (subst id (sym (≃⇒≡ univ₃ (pr x y))) r))      ≡⟨ cong (subst (λ x → ∃ λ p → Q′ (x , p)) (O.∣∣-constant x y)) $
+             (_≃_.to (R≃ x) (subst P.id (sym (≃⇒≡ univ₃ (pr x y))) r))    ≡⟨ cong (subst (λ x → ∃ λ p → Q′ (x , p)) (O.∣∣-constant x y)) $
                                                                              cong (_≃_.to (R≃ x)) $
                                                                              trans (subst-id-in-terms-of-inverse∘≡⇒↝ equivalence) $
                                                                              cong (λ eq → _≃_.from eq r) $ _≃_.right-inverse-of (≡≃≃ univ₃) _ ⟩
@@ -658,6 +660,36 @@ Coherently-constant-Σ′ {P = P} {Q = Q}
    Coherently-constant univ₃ (λ x → ∃ λ (y : P x) → Q (x , y))   □)
 
 ------------------------------------------------------------------------
+-- Identity
+
+-- An identity lens.
+
+id :
+  {A : Set a}
+  (univ : Univalence a) →
+  Lens univ A A
+id univ .Lens.get                       = P.id
+id univ .Lens.get⁻¹-coherently-constant =
+  coherently-constant λ x →
+                              $⟨ Preimage.id⁻¹-contractible x ⟩
+    Contractible (P.id ⁻¹ x)  ↝⟨ Eq.↔⇒≃ ∘ _⇔_.to contractible⇔↔⊤ ⟩□
+    P.id ⁻¹ x ≃ ⊤             □
+  where
+  coherently-constant :
+    (∀ x → P x ≃ ⊤) →
+    Coherently-constant univ P
+  coherently-constant {P = P} P≃⊤ .property x y =
+    P x  ↝⟨ P≃⊤ x ⟩
+    ⊤    ↝⟨ inverse $ P≃⊤ y ⟩□
+    P y  □
+  coherently-constant P≃⊤ .coherent =
+    coherently-constant
+      (O.elim λ where
+         .O.Elim.∣∣ʳ → P≃⊤
+         .O.Elim.∣∣-constantʳ _ _ →
+           Eq.lift-equality ext $ refl (λ _ → tt))
+
+------------------------------------------------------------------------
 -- Composition
 
 -- A fibre of a composition can be expressed as a pair of fibres.
@@ -703,7 +735,7 @@ infix 9 ⟨_,_⟩_∘_
                                                                (proj₁ ∘ proj₂) (λ _ → F.id)
                                                                (get⁻¹-coherently-constant l₂)) ⟩
   Coherently-constant univ₄
-    (λ c → ∃ λ ((b , _) : get l₁ ⁻¹ c) → get l₂ ⁻¹ b)  ↝⟨ Coherently-constant-map univ₄ univ₃ id
+    (λ c → ∃ λ ((b , _) : get l₁ ⁻¹ c) → get l₂ ⁻¹ b)  ↝⟨ Coherently-constant-map univ₄ univ₃ P.id
                                                             (λ _ → inverse $ ∘⁻¹≃ (get l₁) (get l₂)) ⟩□
   Coherently-constant univ₃ ((get l₁ ∘ get l₂) ⁻¹_)    □
   where
