@@ -172,20 +172,7 @@ Coinductive-lens≃Lens-preserves-getters-and-setters univ₁ univ₂ =
     (λ _ → refl _ , refl _)
 
 ------------------------------------------------------------------------
--- Composition
-
--- A fibre of a composition can be expressed as a pair of fibres.
-
-∘⁻¹≃ :
-  (f : B → C) (g : A → B) →
-  f ∘ g ⁻¹ z ≃ ∃ λ ((y , _) : f ⁻¹ z) → g ⁻¹ y
-∘⁻¹≃ {z = z} f g =
-  f ∘ g ⁻¹ z                                  ↔⟨⟩
-  (∃ λ a → f (g a) ≡ z)                       ↔⟨ (∃-cong λ _ → ∃-intro _ _) ⟩
-  (∃ λ a → ∃ λ y → f y ≡ z × y ≡ g a)         ↔⟨ (∃-cong λ _ → Σ-assoc) ⟩
-  (∃ λ a → ∃ λ ((y , _) : f ⁻¹ z) → y ≡ g a)  ↔⟨ ∃-comm ⟩
-  (∃ λ ((y , _) : f ⁻¹ z) → ∃ λ a → y ≡ g a)  ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ≡-comm) ⟩□
-  (∃ λ ((y , _) : f ⁻¹ z) → g ⁻¹ y)           □
+-- Some lemmas related to Coherently-constant
 
 -- A map lemma for Coherently-constant.
 
@@ -669,6 +656,22 @@ Coherently-constant-Σ′ {P = P} {Q = Q}
      Higher.Coherently-constant P × Higher.Coherently-constant Q   ↝⟨ uncurry Higher.Coherently-constant-Σ ⟩
      Higher.Coherently-constant (λ x → ∃ λ (y : P x) → Q (x , y))  ↔⟨ Higher-coherently-constant≃Coherently-constant univ₆ univ₃ ⟩□
    Coherently-constant univ₃ (λ x → ∃ λ (y : P x) → Q (x , y))   □)
+
+------------------------------------------------------------------------
+-- Composition
+
+-- A fibre of a composition can be expressed as a pair of fibres.
+
+∘⁻¹≃ :
+  (f : B → C) (g : A → B) →
+  f ∘ g ⁻¹ z ≃ ∃ λ ((y , _) : f ⁻¹ z) → g ⁻¹ y
+∘⁻¹≃ {z = z} f g =
+  f ∘ g ⁻¹ z                                  ↔⟨⟩
+  (∃ λ a → f (g a) ≡ z)                       ↔⟨ (∃-cong λ _ → ∃-intro _ _) ⟩
+  (∃ λ a → ∃ λ y → f y ≡ z × y ≡ g a)         ↔⟨ (∃-cong λ _ → Σ-assoc) ⟩
+  (∃ λ a → ∃ λ ((y , _) : f ⁻¹ z) → y ≡ g a)  ↔⟨ ∃-comm ⟩
+  (∃ λ ((y , _) : f ⁻¹ z) → ∃ λ a → y ≡ g a)  ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ≡-comm) ⟩□
+  (∃ λ ((y , _) : f ⁻¹ z) → g ⁻¹ y)           □
 
 -- Composition.
 --
