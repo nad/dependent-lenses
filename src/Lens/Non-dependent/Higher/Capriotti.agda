@@ -25,7 +25,8 @@ open import Preimage equality-with-J
 open import Univalence-axiom equality-with-J
 
 open import Lens.Non-dependent eq
-import Lens.Non-dependent.Higher      eq as Higher
+import Lens.Non-dependent.Higher eq as Higher
+import Lens.Non-dependent.Higher.Capriotti.Variant eq as Variant
 import Lens.Non-dependent.Traditional eq as Traditional
 
 private
@@ -242,222 +243,70 @@ equality-characterisation₂ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} univ =
 ------------------------------------------------------------------------
 -- Conversions between different kinds of lenses
 
--- The lenses defined above can be converted to the lenses defined in
--- Higher.
+-- The lenses defined above are equivalent to those defined in Variant
+-- (assuming univalence).
 
-Lens→Higher-lens : Lens A B → Higher.Lens A B
-Lens→Higher-lens {A = A} {B = B} (g , H , eq) = record
-  { R = Σ ∥ B ∥ H
-
-  ; equiv =
-      A                                      ↔⟨ (inverse $ drop-⊤-right λ _ → _⇔_.to contractible⇔↔⊤ $
-                                                 other-singleton-contractible _) ⟩
-      (∃ λ (a : A) → ∃ λ (b : B) → g a ≡ b)  ↔⟨ ∃-comm ⟩
-      (∃ λ (b : B) → g ⁻¹ b)                 ↝⟨ (∃-cong λ b → ≡⇒↝ _ $ cong (_$ b) eq) ⟩
-      (∃ λ (b : B) → H ∣ b ∣)                ↝⟨ (Σ-cong (inverse T.∥∥×≃) λ _ → ≡⇒↝ _ $ cong H $ T.truncation-is-proposition _ _) ⟩
-      (∃ λ ((b , _) : ∥ B ∥ × B) → H b)      ↔⟨ Σ-assoc F.∘
-                                                (∃-cong λ _ → ×-comm) F.∘
-                                                inverse Σ-assoc ⟩□
-      Σ ∥ B ∥ H × B                          □
-
-  ; inhabited = proj₁
-  }
+Variant-lens≃Lens :
+  {A : Set a} {B : Set b} →
+  Block "conversion" →
+  Univalence (a ⊔ b) →
+  Variant.Lens A B ≃ Lens A B
+Variant-lens≃Lens {a = a} {A = A} {B = B} ⊠ univ =
+  Variant.Lens A B                                                    ↔⟨⟩
+  (∃ λ (g : A → B) → ∃ λ (H : Pow a ∥ B ∥) → ∀ b → g ⁻¹ b ≃ H ∣ b ∣)  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → inverse $ ≡≃≃ univ) ⟩
+  (∃ λ (g : A → B) → ∃ λ (H : Pow a ∥ B ∥) → ∀ b → g ⁻¹ b ≡ H ∣ b ∣)  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → Eq.extensionality-isomorphism bad-ext) ⟩
+  (∃ λ (g : A → B) → ∃ λ (H : Pow a ∥ B ∥) → g ⁻¹_ ≡ H ∘ ∣_∣)         ↔⟨⟩
+  Lens A B                                                            □
 
 -- The conversion preserves getters and setters.
 
-Lens→Higher-lens-preserves-getters-and-setters :
-  Preserves-getters-and-setters-→ A B Lens→Higher-lens
-Lens→Higher-lens-preserves-getters-and-setters l@(g , H , eq) =
-    refl _
-  , ⟨ext⟩ λ a → ⟨ext⟩ λ b →
-    let h₁ = ≡⇒→ (cong (_$ g a) eq) (a , refl _)
+Variant-lens≃Lens-preserves-getters-and-setters :
+  {A : Set a} {B : Set b}
+  (bc : Block "conversion")
+  (univ : Univalence (a ⊔ b)) →
+  Preserves-getters-and-setters-⇔ A B
+    (_≃_.logical-equivalence (Variant-lens≃Lens bc univ))
+Variant-lens≃Lens-preserves-getters-and-setters
+  {A = A} {B = B} bc@⊠ univ =
+  Preserves-getters-and-setters-→-↠-⇔
+    (_≃_.surjection (Variant-lens≃Lens bc univ)) λ l →
+      refl _
+    , ⟨ext⟩ λ a → ⟨ext⟩ λ b →
+      (let eq₁ = cong (H l) $
+                   T.truncation-is-proposition ∣ get l a ∣ ∣ b ∣
+           eq₂ = ⟨ext⟩ (≃⇒≡ univ ∘ get⁻¹-≃ l)
+       in
+       proj₁ (_≃_.from (≡⇒≃ (cong (_$ b) eq₂))
+                (≡⇒→ eq₁ (≡⇒→ (cong (_$ get l a) eq₂) (a , refl _))))   ≡⟨ cong₂ (λ p q → proj₁ (_≃_.from p (≡⇒→ eq₁ (_≃_.to q (a , refl _)))))
+                                                                             (lemma l _)
+                                                                             (lemma l _) ⟩∎
+       proj₁ (_≃_.from (get⁻¹-≃ l b)
+                (≡⇒→ eq₁ (_≃_.to (get⁻¹-≃ l (get l a)) (a , refl _))))  ∎)
+  where
+  open Variant.Lens
 
-        h₂ =
-          _≃_.from (≡⇒≃ (cong H _))
-            (subst (H ∘ proj₁) (sym (_≃_.left-inverse-of T.∥∥×≃ _))
-               (≡⇒→ (cong H _) h₁))
+  lemma :
+    ∀ (l : Variant.Lens A B) b →
+    ≡⇒≃ (cong (_$ b) (⟨ext⟩ (≃⇒≡ univ ∘ get⁻¹-≃ l))) ≡ get⁻¹-≃ l b
+  lemma l b =
+    ≡⇒≃ (cong (_$ b) (⟨ext⟩ (≃⇒≡ univ ∘ get⁻¹-≃ l)))  ≡⟨ cong ≡⇒≃ $ cong-ext (≃⇒≡ univ ∘ get⁻¹-≃ l) ⟩
+    ≡⇒≃ (≃⇒≡ univ (get⁻¹-≃ l b))                      ≡⟨ _≃_.right-inverse-of (≡≃≃ univ) _ ⟩∎
+    get⁻¹-≃ l b                                       ∎
 
-        h₃ = ≡⇒→ (cong H _) h₁
-
-        lemma =
-          h₂                                                         ≡⟨ sym $ subst-in-terms-of-inverse∘≡⇒↝ equivalence _ _ _ ⟩
-
-          subst H _
-            (subst (H ∘ proj₁) (sym (_≃_.left-inverse-of T.∥∥×≃ _))
-               (≡⇒→ (cong H _) h₁))                                  ≡⟨ cong (λ x → subst H (sym $ T.truncation-is-proposition _ _)
-                                                                                      (subst (H ∘ proj₁)
-                                                                                         (sym (_≃_.left-inverse-of T.∥∥×≃ (∣ g a ∣ , b)))
-                                                                                         x)) $ sym $
-                                                                        subst-in-terms-of-≡⇒↝ equivalence _ _ _ ⟩
-          subst H _
-            (subst (H ∘ proj₁) (sym (_≃_.left-inverse-of T.∥∥×≃ _))
-               (subst H _ h₁))                                       ≡⟨ cong (λ x → subst H (sym $ T.truncation-is-proposition _ _) x) $
-                                                                        subst-∘ _ _ _ ⟩
-
-          subst H _ (subst H _ (subst H _ h₁))                       ≡⟨ cong (λ x → subst H (sym $ T.truncation-is-proposition _ _) x) $
-                                                                        subst-subst _ _ _ _ ⟩
-
-          subst H _ (subst H _ h₁)                                   ≡⟨ subst-subst _ _ _ _ ⟩
-
-          subst H _ h₁                                               ≡⟨ cong (λ eq → subst H eq h₁) $
-                                                                        mono₁ 1 T.truncation-is-proposition _ _ ⟩
-
-          subst H _ h₁                                               ≡⟨ subst-in-terms-of-≡⇒↝ equivalence _ _ _ ⟩∎
-
-          ≡⇒→ (cong H _) h₁                                          ∎
-    in
-    (Higher.Lens.set (Lens→Higher-lens l) a b    ≡⟨⟩
-     proj₁ (_≃_.from (≡⇒≃ (cong (_$ b) eq)) h₂)  ≡⟨ cong (λ h → proj₁ (_≃_.from (≡⇒≃ (cong (_$ b) eq)) h)) lemma ⟩
-     proj₁ (_≃_.from (≡⇒≃ (cong (_$ b) eq)) h₃)  ≡⟨⟩
-     Lens.set l a b                              ∎)
-
--- Lens A B is equivalent to Higher.Lens A B (assuming univalence).
+-- The lenses defined above are equivalent to those defined in Higher
+-- (assuming univalence).
 
 Lens≃Higher-lens :
   {A : Set a} {B : Set b} →
   Block "conversion" →
   Univalence (a ⊔ b) →
   Lens A B ≃ Higher.Lens A B
-Lens≃Higher-lens {A = A} {B = B} ⊠ univ =
-  Eq.↔→≃ to from to∘from from∘to
-  where
-  to = Lens→Higher-lens
+Lens≃Higher-lens {A = A} {B = B} bc univ =
+  Lens A B          ↝⟨ inverse $ Variant-lens≃Lens bc univ ⟩
+  Variant.Lens A B  ↝⟨ Variant.Lens≃Higher-lens bc univ ⟩□
+  Higher.Lens A B   □
 
-  from : Higher.Lens A B → Lens A B
-  from l =
-      get
-    , (λ _ → R)
-    , (                      $⟨ (λ b → inverse (Higher.remainder≃get⁻¹ l b)) ⟩
-       (∀ b → get ⁻¹ b ≃ R)  ↝⟨ (∀-cong _ λ _ → ≃⇒≡ univ) ⟩
-       (∀ b → get ⁻¹ b ≡ R)  ↝⟨ ⟨ext⟩ ⟩□
-       get ⁻¹_ ≡ const R     □)
-    where
-    open Higher.Lens l
-
-  to∘from : ∀ l → to (from l) ≡ l
-  to∘from l = _↔_.from (Higher.equality-characterisation₂ univ)
-    ( (∥ B ∥ × R  ↔⟨ (drop-⊤-left-× λ r → _⇔_.to contractible⇔↔⊤ $
-                      propositional⇒inhabited⇒contractible
-                        T.truncation-is-proposition
-                        (inhabited r)) ⟩□
-       R          □)
-    , (λ a →
-         ≡⇒→ (cong (λ _ → R) (T.truncation-is-proposition _ _))
-           (≡⇒→ (cong (_$ get a)
-                   (⟨ext⟩ (≃⇒≡ univ ∘ inverse ∘
-                           Higher.remainder≃get⁻¹ l)))
-              (a , refl _))                                               ≡⟨ cong (λ eq → ≡⇒→ eq (≡⇒→ (cong (_$ get a)
-                                                                                                         (⟨ext⟩ (≃⇒≡ univ ∘ inverse ∘
-                                                                                                                 Higher.remainder≃get⁻¹ l)))
-                                                                                                    (a , refl _))) $
-                                                                             cong-const _ ⟩
-         ≡⇒→ (refl _)
-           (≡⇒→ (cong (_$ get a)
-                   (⟨ext⟩ (≃⇒≡ univ ∘ inverse ∘
-                           Higher.remainder≃get⁻¹ l)))
-              (a , refl _))                                               ≡⟨ cong (_$ ≡⇒→ (cong (_$ get a)
-                                                                                             (⟨ext⟩ (≃⇒≡ univ ∘ inverse ∘
-                                                                                                     Higher.remainder≃get⁻¹ l)))
-                                                                                        (a , refl _))
-                                                                             ≡⇒→-refl ⟩
-         ≡⇒→ (cong (_$ get a)
-                (⟨ext⟩ (≃⇒≡ univ ∘ inverse ∘ Higher.remainder≃get⁻¹ l)))
-           (a , refl _)                                                   ≡⟨ cong (λ eq → ≡⇒→ eq (a , refl _)) $
-                                                                             cong-ext (≃⇒≡ univ ∘ inverse ∘ Higher.remainder≃get⁻¹ l) ⟩
-         ≡⇒→ (≃⇒≡ univ (inverse (Higher.remainder≃get⁻¹ l (get a))))
-           (a , refl _)                                                   ≡⟨ cong (_$ a , refl _) $
-                                                                             ≡⇒→-≃⇒≡ equivalence univ ⟩
-
-         _≃_.from (Higher.remainder≃get⁻¹ l (get a)) (a , refl _)         ≡⟨⟩
-
-         remainder a                                                      ∎)
-    , (λ _ → refl _)
-    )
-    where
-    open Higher.Lens l
-
-  from∘to : ∀ l → from (to l) ≡ l
-  from∘to l = _≃_.from (equality-characterisation₂ univ)
-    ( (λ _ → refl _)
-    , Σ∥B∥H≃H
-    , (trans (sym (cong _⁻¹_ (⟨ext⟩ λ _ → refl _)))
-         (trans
-            (⟨ext⟩ (≃⇒≡ univ ∘ inverse ∘ Higher.remainder≃get⁻¹ (to l)))
-            (⟨ext⟩ (≃⇒≡ univ ∘ Σ∥B∥H≃H ∘ ∣_∣)))                           ≡⟨ cong (flip trans _) $
-                                                                             trans (cong (sym ∘ cong _⁻¹_) ext-refl) $
-                                                                             trans (cong sym $ cong-refl _) $
-                                                                             sym-refl ⟩
-       trans (refl _)
-         (trans
-            (⟨ext⟩ (≃⇒≡ univ ∘ inverse ∘ Higher.remainder≃get⁻¹ (to l)))
-            (⟨ext⟩ (≃⇒≡ univ ∘ Σ∥B∥H≃H ∘ ∣_∣)))                           ≡⟨ trans-reflˡ _ ⟩
-
-       trans
-         (⟨ext⟩ (≃⇒≡ univ ∘ inverse ∘ Higher.remainder≃get⁻¹ (to l)))
-         (⟨ext⟩ (≃⇒≡ univ ∘ Σ∥B∥H≃H ∘ ∣_∣))                               ≡⟨ sym $ ext-trans _ _ ⟩
-
-       (⟨ext⟩ λ b →
-        trans
-          (≃⇒≡ univ (inverse (Higher.remainder≃get⁻¹ (to l) b)))
-          (≃⇒≡ univ (Σ∥B∥H≃H ∣ b ∣)))                                     ≡⟨ (cong ⟨ext⟩ $ ⟨ext⟩ λ _ → sym $
-                                                                              ≃⇒≡-∘ univ ext _ _) ⟩
-       (⟨ext⟩ λ b →
-        ≃⇒≡ univ (Σ∥B∥H≃H ∣ b ∣ F.∘
-                  inverse (Higher.remainder≃get⁻¹ (to l) b)))             ≡⟨ (cong ⟨ext⟩ $ ⟨ext⟩ λ _ → cong (≃⇒≡ univ) $ Eq.lift-equality ext $
-                                                                              ⟨ext⟩ (lemma _)) ⟩
-
-       (⟨ext⟩ λ b → ≃⇒≡ univ (≡⇒≃ (ext⁻¹ get⁻¹-≡ b)))                     ≡⟨ (cong ⟨ext⟩ $ ⟨ext⟩ λ _ →
-                                                                              _≃_.left-inverse-of (≡≃≃ univ) _) ⟩
-
-       (⟨ext⟩ λ b → ext⁻¹ get⁻¹-≡ b)                                      ≡⟨ _≃_.right-inverse-of (Eq.extensionality-isomorphism bad-ext) _ ⟩∎
-
-       get⁻¹-≡                                                            ∎)
-    )
-    where
-    open Lens l
-
-    Σ∥B∥H≃H = λ b →
-      Σ ∥ B ∥ H  ↔⟨ (drop-⊤-left-Σ $ _⇔_.to contractible⇔↔⊤ $
-                     propositional⇒inhabited⇒contractible
-                       T.truncation-is-proposition b) ⟩□
-      H b        □
-
-    lemma : ∀ b (p : get ⁻¹ b) → _
-    lemma b p@(a , get-a≡b) =
-      _≃_.to (Σ∥B∥H≃H ∣ b ∣)
-        (_≃_.from (Higher.remainder≃get⁻¹ (to l) b) p)                    ≡⟨⟩
-
-      subst H _
-        (≡⇒→ (cong H _)
-           (≡⇒→ (cong (_$ get a) get⁻¹-≡) (a , refl _)))                  ≡⟨ cong (subst H _) $ sym $
-                                                                             subst-in-terms-of-≡⇒↝ equivalence _ _ _ ⟩
-
-      subst H _ (subst H _ (≡⇒→ (cong (_$ get a) get⁻¹-≡) (a , refl _)))  ≡⟨ subst-subst _ _ _ _ ⟩
-
-      subst H _ (≡⇒→ (cong (_$ get a) get⁻¹-≡) (a , refl _))              ≡⟨ cong (λ eq → subst H eq
-                                                                                            (≡⇒→ (cong (_$ get a) get⁻¹-≡) (a , refl _))) $
-                                                                             mono₁ 1 T.truncation-is-proposition _ _ ⟩
-      subst H (cong ∣_∣ get-a≡b)
-        (≡⇒→ (cong (_$ get a) get⁻¹-≡) (a , refl _))                      ≡⟨ elim¹
-                                                                               (λ {b} eq →
-                                                                                  subst H (cong ∣_∣ eq)
-                                                                                    (≡⇒→ (cong (_$ get a) get⁻¹-≡) (a , refl _)) ≡
-                                                                                  ≡⇒→ (cong (_$ b) get⁻¹-≡) (a , eq))
-                                                                               (
-          subst H (cong ∣_∣ (refl _))
-            (≡⇒→ (cong (_$ get a) get⁻¹-≡) (a , refl _))                        ≡⟨ cong (λ eq → subst H eq
-                                                                                                  (≡⇒→ (cong (_$ get a) get⁻¹-≡) (a , refl _))) $
-                                                                                   cong-refl _ ⟩
-          subst H (refl _)
-            (≡⇒→ (cong (_$ get a) get⁻¹-≡) (a , refl _))                        ≡⟨ subst-refl _ _ ⟩∎
-
-          ≡⇒→ (cong (_$ get a) get⁻¹-≡) (a , refl _)                            ∎)
-                                                                               get-a≡b ⟩
-      ≡⇒→ (cong (_$ b) get⁻¹-≡) p                                         ≡⟨⟩
-
-      ≡⇒→ (ext⁻¹ get⁻¹-≡ b) p                                             ∎
-
--- The equivalence preserves getters and setters.
+-- The conversion preserves getters and setters.
 
 Lens≃Higher-lens-preserves-getters-and-setters :
   {A : Set a} {B : Set b}
@@ -465,11 +314,13 @@ Lens≃Higher-lens-preserves-getters-and-setters :
   (univ : Univalence (a ⊔ b)) →
   Preserves-getters-and-setters-⇔ A B
     (_≃_.logical-equivalence (Lens≃Higher-lens bc univ))
-Lens≃Higher-lens-preserves-getters-and-setters ⊠ univ =
-  Preserves-getters-and-setters-→-↠-⇔
-    ⦃ L₂ = Higher.has-getter-and-setter ⦄
-    (_≃_.surjection (Lens≃Higher-lens ⊠ univ))
-    Lens→Higher-lens-preserves-getters-and-setters
+Lens≃Higher-lens-preserves-getters-and-setters bc univ =
+  Preserves-getters-and-setters-⇔-∘
+    {f = _≃_.logical-equivalence $ Variant.Lens≃Higher-lens bc univ}
+    (Variant.Lens≃Higher-lens-preserves-getters-and-setters bc univ)
+    (Preserves-getters-and-setters-⇔-inverse
+       {f = _≃_.logical-equivalence $ Variant-lens≃Lens bc univ}
+       (Variant-lens≃Lens-preserves-getters-and-setters bc univ))
 
 -- An alternative proof showing that Lens A B is equivalent to
 -- Higher.Lens A B (assuming univalence).
