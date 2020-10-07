@@ -1428,7 +1428,7 @@ private
     from∘to univ ⊠ l′ =
       _↔_.from (equality-characterisation₃ univ)
         ( ((∃ λ (f : B → A) → ∥ set ⁻¹ f ∥) × ∥ B ∥  ↝⟨ (×-cong₁ lemma₃) ⟩
-           (∥ B ∥ → R) × ∥ B ∥                       ↔⟨ lemma₂ ⟩□
+           (∥ B ∥ → R) × ∥ B ∥                       ↝⟨ lemma₂ ⟩□
            R                                         □)
         , λ p →
             _≃_.from l (subst (λ _ → R) (refl _) (proj₁ p) , proj₂ p)  ≡⟨ cong (λ r → _≃_.from l (r , proj₂ p)) $ subst-refl _ _ ⟩∎
@@ -1515,6 +1515,7 @@ private
         ((∃ λ (f : B → R) → Constant f) ×
          (∃ λ (g : B → B) → ∀ b → b ≡ g b))                                 ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
                                                                                 Eq.extensionality-isomorphism ext) ⟩
+
         ((∃ λ (f : B → R) → Constant f) × (∃ λ (g : B → B) → P.id ≡ g))     ↔⟨ (drop-⊤-right λ _ →
                                                                                 _⇔_.to contractible⇔↔⊤ $
                                                                                 other-singleton-contractible _) ⟩
@@ -2231,7 +2232,7 @@ set-grenrus-example₁≡set-grenrus-example₂ = ⟨ext⟩ (⟨ext⟩ ⊚ lemma
   lemma (false , false) true  = refl _
   lemma (false , false) false = refl _
 
--- Thus the lenses are equal (assuming univalence)
+-- Thus the lenses are equal (assuming univalence).
 
 grenrus-example₁≡grenrus-example₂ :
   Univalence lzero →
