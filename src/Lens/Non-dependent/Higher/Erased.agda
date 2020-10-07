@@ -2259,13 +2259,13 @@ Is-bi-invertibleᴱ→Is-equivalenceᴱ-get
 -- erased proofs)" and "the getter of l is an equivalence (with erased
 -- proofs)" (assuming univalence).
 
-Is-bi-invertible≃Is-equivalence-get :
+Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get :
   {A B : Set a}
   (b : Block "id") →
   @0 Univalence a →
   (l : Lens A B) →
   Is-bi-invertibleᴱ b l ≃ᴱ Is-equivalenceᴱ (Lens.get l)
-Is-bi-invertible≃Is-equivalence-get b univ l = EEq.⇔→≃ᴱ
+Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get b univ l = EEq.⇔→≃ᴱ
   (BM.Is-bi-invertibleᴱ-propositional b univ l)
   (EEq.Is-equivalenceᴱ-propositional ext _)
   (Is-bi-invertibleᴱ→Is-equivalenceᴱ-get b univ l)
