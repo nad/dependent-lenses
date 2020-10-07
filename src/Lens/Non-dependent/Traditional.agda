@@ -377,290 +377,6 @@ lens-preserves-h-level-of-domain n hA =
   ⊥                                          □
 
 ------------------------------------------------------------------------
--- More isomorphisms/equivalences related to lenses
-
--- Lens ⊤ B is equivalent to Contractible B.
-
-lens-from-⊤≃codomain-contractible :
-  Lens ⊤ B ≃ Contractible B
-lens-from-⊤≃codomain-contractible = Eq.⇔→≃
-  (lens-preserves-h-level-of-domain 0 (mono₁ 0 ⊤-contractible))
-  (H-level-propositional ext 0)
-  (λ l → contractible-to-contractible l ⊤-contractible)
-  (λ (b , irrB) → record
-     { get     = λ _ → b
-     ; get-set = λ _ → irrB
-     ; set-get = refl
-     ; set-set = λ _ _ _ → refl _
-     })
-
--- Lens ⊥ B is equivalent to the unit type.
-
-lens-from-⊥≃⊤ : Lens (⊥ {ℓ = a}) B ≃ ⊤
-lens-from-⊥≃⊤ = Eq.⇔→≃
-  (lens-preserves-h-level-of-domain 0 ⊥-propositional)
-  (mono₁ 0 ⊤-contractible)
-  _
-  (λ _ → record
-     { get = ⊥-elim
-     ; set = ⊥-elim
-     ; get-set = λ a → ⊥-elim a
-     ; set-get = λ a → ⊥-elim a
-     ; set-set = λ a → ⊥-elim a
-     })
-
--- If A is a set and there is a lens from A to B, then A is equivalent
--- to the cartesian product of some type (that can be expressed using
--- the setter of l) and B.
---
--- This result is based on Theorem 2.3.9 from "Lenses and View Update
--- Translation" by Pierce and Schmitt.
-
-≃Σ∥set⁻¹∥× :
-  Is-set A →
-  (l : Lens A B) →
-  A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ f ∥) × B)
-≃Σ∥set⁻¹∥× {A = A} {B = B} A-set l = Eq.↔→≃
-  (λ a → (set a , ∣ a , refl _ ∣) , get a)
-  (λ ((f , _) , b) → f b)
-  (λ ((f , p) , b) →
-     flip (Trunc.rec (×-closure 2
-                        (Σ-closure 2
-                           (Π-closure ext 2 λ _ → A-set) λ _ →
-                           mono₁ 1 Trunc.truncation-is-proposition)
-                        (B-set (f b))))
-       p λ (a , q) →
-     let
-       lemma₁ =
-         set (f b)      ≡⟨ cong (λ f → set (f b)) $ sym q ⟩
-         set (set a b)  ≡⟨ ⟨ext⟩ $ set-set a b ⟩
-         set a          ≡⟨ q ⟩∎
-         f              ∎
-
-       lemma₂ =
-         get (f b)      ≡⟨ cong (λ f → get (f b)) $ sym q ⟩
-         get (set a b)  ≡⟨ get-set _ _ ⟩∎
-         b              ∎
-     in
-     (set (f b) , ∣ f b , refl _ ∣) , get (f b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma₁ (Trunc.truncation-is-proposition _ _)) lemma₂ ⟩∎
-     (f         , p               ) , b          ∎)
-  (λ a →
-     set a (get a)  ≡⟨ set-get a ⟩∎
-     a              ∎)
-  where
-  open Lens l
-
-  B-set : A → Is-set B
-  B-set a =
-    h-level-respects-lens-from-inhabited 2 l a A-set
-
--- If B is an inhabited set and there is a lens from A to B, then A is
--- equivalent to the cartesian product of some type (that can be
--- expressed using the getter of l) and B.
---
--- This result is based on Corollary 13 from "Algebras and Update
--- Strategies" by Johnson, Rosebrugh and Wood.
-
-≃get⁻¹× :
-  Is-set B →
-  (b : B)
-  (l : Lens A B) →
-  A ≃ (Lens.get l ⁻¹ b × B)
-≃get⁻¹× {B = B} {A = A} B-set b₀ l = Eq.↔→≃
-  (λ a → (set a b₀ , get-set a b₀) , get a)
-  (λ ((a , _) , b) → set a b)
-  (λ ((a , h) , b) →
-     let
-       lemma =
-         set (set a b) b₀  ≡⟨ set-set a b b₀ ⟩
-         set a b₀          ≡⟨ cong (set a) (sym h) ⟩
-         set a (get a)     ≡⟨ set-get a ⟩∎
-         a                 ∎
-     in
-     (set (set a b) b₀ , get-set (set a b) b₀) , get (set a b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma (B-set _ _)) (get-set a b) ⟩∎
-     (a                , h                   ) , b              ∎)
-  (λ a →
-     set (set a b₀) (get a)  ≡⟨ set-set a b₀ (get a) ⟩
-     set a (get a)           ≡⟨ set-get a ⟩∎
-     a                       ∎)
-  where
-  open Lens l
-
--- For somewhat coherent lenses the previous result can be proved
--- without the assumption that the codomain is a set.
-
-≃get⁻¹×-coherent :
-  (b : B)
-  (l : Coherent-lens A B) →
-  A ≃ (Coherent-lens.get l ⁻¹ b × B)
-≃get⁻¹×-coherent {B = B} {A = A} b₀ l = Eq.↔→≃
-  (λ a → (set a b₀ , get-set a b₀) , get a)
-  (λ ((a , _) , b) → set a b)
-  (λ ((a , h) , b) →
-     let
-       lemma₁ =
-         set (set a b) b₀  ≡⟨ set-set a b b₀ ⟩
-         set a b₀          ≡⟨ cong (set a) (sym h) ⟩
-         set a (get a)     ≡⟨ set-get a ⟩∎
-         a                 ∎
-
-       lemma₂₁ =
-         cong get (trans (set-set a b b₀)
-                     (trans (cong (set a) (sym h))
-                        (set-get a)))               ≡⟨ trans (cong-trans _ _ _) $
-                                                       cong (trans _) $
-                                                       trans (cong-trans _ _ _) $
-                                                       cong (flip trans _) $
-                                                       cong-∘ _ _ _ ⟩
-         trans (cong get (set-set a b b₀))
-           (trans (cong (get ⊚ set a) (sym h))
-              (cong get (set-get a)))               ≡⟨ cong₂ (λ p q → trans p (trans (cong (get ⊚ set a) (sym h)) q))
-                                                         (get-set-set _ _ _)
-                                                         (get-set-get _) ⟩∎
-         trans (trans (get-set (set a b) b₀)
-                  (sym (get-set a b₀)))
-           (trans (cong (get ⊚ set a) (sym h))
-              (get-set a (get a)))                  ∎
-
-       lemma₂₂ =
-         sym (trans (trans (get-set (set a b) b₀)
-                       (sym (get-set a b₀)))
-                (trans (cong (get ⊚ set a) (sym h))
-                   (get-set a (get a))))               ≡⟨ trans (sym-trans _ _) $
-                                                          cong₂ trans
-                                                            (sym-trans _ _)
-                                                            (sym-trans _ _) ⟩
-         trans (trans (sym (get-set a (get a)))
-                  (sym (cong (get ⊚ set a) (sym h))))
-           (trans (sym (sym (get-set a b₀)))
-              (sym (get-set (set a b) b₀)))            ≡⟨ cong₂ (λ p q → trans (trans (sym (get-set a (get a))) p)
-                                                                           (trans q (sym (get-set (set a b) b₀))))
-                                                            (trans (cong sym $ cong-sym _ _) $
-                                                             sym-sym _)
-                                                            (sym-sym _) ⟩
-         trans (trans (sym (get-set a (get a)))
-                  (cong (get ⊚ set a) h))
-           (trans (get-set a b₀)
-              (sym (get-set (set a b) b₀)))            ≡⟨ trans (sym $ trans-assoc _ _ _) $
-                                                          cong (flip trans _) $ trans-assoc _ _ _ ⟩∎
-         trans (trans (sym (get-set a (get a)))
-                  (trans (cong (get ⊚ set a) h)
-                     (get-set a b₀)))
-           (sym (get-set (set a b) b₀))                ∎
-
-       lemma₂ =
-         subst (λ a → get a ≡ b₀)
-           (trans (set-set a b b₀)
-              (trans (cong (set a) (sym h)) (set-get a)))
-           (get-set (set a b) b₀)                            ≡⟨ subst-∘ _ _ _ ⟩
-
-         subst (_≡ b₀)
-           (cong get (trans (set-set a b b₀)
-                        (trans (cong (set a) (sym h))
-                           (set-get a))))
-           (get-set (set a b) b₀)                            ≡⟨ subst-trans-sym ⟩
-
-         trans
-           (sym (cong get (trans (set-set a b b₀)
-                             (trans (cong (set a) (sym h))
-                                (set-get a)))))
-           (get-set (set a b) b₀)                            ≡⟨ cong (flip (trans ⊚ sym) _) lemma₂₁ ⟩
-
-         trans
-           (sym (trans (trans (get-set (set a b) b₀)
-                          (sym (get-set a b₀)))
-                   (trans (cong (get ⊚ set a) (sym h))
-                      (get-set a (get a)))))
-           (get-set (set a b) b₀)                            ≡⟨ cong (flip trans _) lemma₂₂ ⟩
-
-         trans
-           (trans (trans (sym (get-set a (get a)))
-                     (trans (cong (get ⊚ set a) h)
-                        (get-set a b₀)))
-              (sym (get-set (set a b) b₀)))
-           (get-set (set a b) b₀)                            ≡⟨ trans-[trans-sym]- _ _ ⟩
-
-         trans (sym (get-set a (get a)))
-           (trans (cong (get ⊚ set a) h)
-              (get-set a b₀))                                ≡⟨ cong (λ f → trans (sym (f (get a))) (trans (cong (get ⊚ set a) h) (f b₀))) $ sym $
-                                                                _≃_.left-inverse-of (Eq.extensionality-isomorphism bad-ext) (get-set a) ⟩
-         trans (sym (ext⁻¹ (⟨ext⟩ (get-set a)) (get a)))
-           (trans (cong (get ⊚ set a) h)
-              (ext⁻¹ (⟨ext⟩ (get-set a)) b₀))                ≡⟨ elim₁
-                                                                  (λ {f} eq →
-                                                                     trans (sym (ext⁻¹ eq (get a)))
-                                                                       (trans (cong f h) (ext⁻¹ eq b₀)) ≡
-                                                                       h)
-                                                                  (
-             trans (sym (ext⁻¹ (refl P.id) (get a)))
-               (trans (cong P.id h) (ext⁻¹ (refl P.id) b₀))        ≡⟨ cong₂ (λ p q → trans p (trans (cong P.id h) q))
-                                                                        (trans (cong sym (ext⁻¹-refl _)) sym-refl)
-                                                                        (ext⁻¹-refl _) ⟩
-
-             trans (refl _) (trans (cong P.id h) (refl _))         ≡⟨ trans-reflˡ _ ⟩
-
-             trans (cong P.id h) (refl _)                          ≡⟨ trans-reflʳ _ ⟩
-
-             cong P.id h                                           ≡⟨ sym $ cong-id _ ⟩∎
-
-             h                                                     ∎)
-                                                                  _ ⟩∎
-         h                                                   ∎
-     in
-     ((set (set a b) b₀ , get-set (set a b) b₀) , get (set a b))  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma₁ lemma₂) (get-set a b) ⟩∎
-     ((a                , h                   ) , b            )  ∎)
-  (λ a →
-     set (set a b₀) (get a)  ≡⟨ set-set a b₀ (get a) ⟩
-     set a (get a)           ≡⟨ set-get a ⟩∎
-     a                       ∎)
-  where
-  open Coherent-lens l
-
-------------------------------------------------------------------------
--- A conversion function
-
--- If A is a set, then Lens A B is equivalent to Coherent-lens A B.
-
-≃coherent : Is-set A → Lens A B ≃ Coherent-lens A B
-≃coherent {A = A} {B = B} A-set = Eq.↔→≃
-  to
-  Coherent-lens.lens
-  (λ l → let l′ = Coherent-lens.lens l in
-                          $⟨ ×-closure 1
-                               (Π-closure ext 1 λ a →
-                                mono₁ 2 (B-set l′ a))
-                               (Π-closure ext 1 λ a →
-                                Π-closure ext 1 λ _ →
-                                Π-closure ext 1 λ _ →
-                                mono₁ 2 (B-set l′ a)) ⟩
-     Is-proposition _     ↝⟨ (λ p → cong (l′ ,_) (p _ _)) ⦂ (_ → _) ⟩
-     (l′ , _) ≡ (l′ , _)  ↔⟨ Eq.≃-≡ Coherent-lens-as-Σ ⟩□
-     to l′ ≡ l            □)
-  refl
-  where
-  B-set : Lens A B → A → Is-set B
-  B-set l a =
-    h-level-respects-lens-from-inhabited 2 l a A-set
-
-  to : Lens A B → Coherent-lens A B
-  to l = record
-    { lens        = l
-    ; get-set-get = λ a → B-set l a _ _
-    ; get-set-set = λ a _ _ → B-set l a _ _
-    }
-
--- The conversion preserves getters and setters.
-
-≃coherent-preserves-getters-and-setters :
-  {A : Set a}
-  (s : Is-set A) →
-  Preserves-getters-and-setters-⇔ A B
-    (_≃_.logical-equivalence (≃coherent s))
-≃coherent-preserves-getters-and-setters _ =
-    (λ _ → refl _ , refl _)
-  , (λ _ → refl _ , refl _)
-
-------------------------------------------------------------------------
 -- Some equality characterisation lemmas
 
 abstract
@@ -1404,6 +1120,290 @@ equality-characterisation-for-sets
 
   B-set : A → Is-set B
   B-set a = h-level-respects-lens-from-inhabited 2 l₁ a A-set
+
+------------------------------------------------------------------------
+-- More isomorphisms/equivalences related to lenses
+
+-- Lens ⊤ B is equivalent to Contractible B.
+
+lens-from-⊤≃codomain-contractible :
+  Lens ⊤ B ≃ Contractible B
+lens-from-⊤≃codomain-contractible = Eq.⇔→≃
+  (lens-preserves-h-level-of-domain 0 (mono₁ 0 ⊤-contractible))
+  (H-level-propositional ext 0)
+  (λ l → contractible-to-contractible l ⊤-contractible)
+  (λ (b , irrB) → record
+     { get     = λ _ → b
+     ; get-set = λ _ → irrB
+     ; set-get = refl
+     ; set-set = λ _ _ _ → refl _
+     })
+
+-- Lens ⊥ B is equivalent to the unit type.
+
+lens-from-⊥≃⊤ : Lens (⊥ {ℓ = a}) B ≃ ⊤
+lens-from-⊥≃⊤ = Eq.⇔→≃
+  (lens-preserves-h-level-of-domain 0 ⊥-propositional)
+  (mono₁ 0 ⊤-contractible)
+  _
+  (λ _ → record
+     { get = ⊥-elim
+     ; set = ⊥-elim
+     ; get-set = λ a → ⊥-elim a
+     ; set-get = λ a → ⊥-elim a
+     ; set-set = λ a → ⊥-elim a
+     })
+
+-- If A is a set and there is a lens from A to B, then A is equivalent
+-- to the cartesian product of some type (that can be expressed using
+-- the setter of l) and B.
+--
+-- This result is based on Theorem 2.3.9 from "Lenses and View Update
+-- Translation" by Pierce and Schmitt.
+
+≃Σ∥set⁻¹∥× :
+  Is-set A →
+  (l : Lens A B) →
+  A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ f ∥) × B)
+≃Σ∥set⁻¹∥× {A = A} {B = B} A-set l = Eq.↔→≃
+  (λ a → (set a , ∣ a , refl _ ∣) , get a)
+  (λ ((f , _) , b) → f b)
+  (λ ((f , p) , b) →
+     flip (Trunc.rec (×-closure 2
+                        (Σ-closure 2
+                           (Π-closure ext 2 λ _ → A-set) λ _ →
+                           mono₁ 1 Trunc.truncation-is-proposition)
+                        (B-set (f b))))
+       p λ (a , q) →
+     let
+       lemma₁ =
+         set (f b)      ≡⟨ cong (λ f → set (f b)) $ sym q ⟩
+         set (set a b)  ≡⟨ ⟨ext⟩ $ set-set a b ⟩
+         set a          ≡⟨ q ⟩∎
+         f              ∎
+
+       lemma₂ =
+         get (f b)      ≡⟨ cong (λ f → get (f b)) $ sym q ⟩
+         get (set a b)  ≡⟨ get-set _ _ ⟩∎
+         b              ∎
+     in
+     (set (f b) , ∣ f b , refl _ ∣) , get (f b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma₁ (Trunc.truncation-is-proposition _ _)) lemma₂ ⟩∎
+     (f         , p               ) , b          ∎)
+  (λ a →
+     set a (get a)  ≡⟨ set-get a ⟩∎
+     a              ∎)
+  where
+  open Lens l
+
+  B-set : A → Is-set B
+  B-set a =
+    h-level-respects-lens-from-inhabited 2 l a A-set
+
+-- If B is an inhabited set and there is a lens from A to B, then A is
+-- equivalent to the cartesian product of some type (that can be
+-- expressed using the getter of l) and B.
+--
+-- This result is based on Corollary 13 from "Algebras and Update
+-- Strategies" by Johnson, Rosebrugh and Wood.
+
+≃get⁻¹× :
+  Is-set B →
+  (b : B)
+  (l : Lens A B) →
+  A ≃ (Lens.get l ⁻¹ b × B)
+≃get⁻¹× {B = B} {A = A} B-set b₀ l = Eq.↔→≃
+  (λ a → (set a b₀ , get-set a b₀) , get a)
+  (λ ((a , _) , b) → set a b)
+  (λ ((a , h) , b) →
+     let
+       lemma =
+         set (set a b) b₀  ≡⟨ set-set a b b₀ ⟩
+         set a b₀          ≡⟨ cong (set a) (sym h) ⟩
+         set a (get a)     ≡⟨ set-get a ⟩∎
+         a                 ∎
+     in
+     (set (set a b) b₀ , get-set (set a b) b₀) , get (set a b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma (B-set _ _)) (get-set a b) ⟩∎
+     (a                , h                   ) , b              ∎)
+  (λ a →
+     set (set a b₀) (get a)  ≡⟨ set-set a b₀ (get a) ⟩
+     set a (get a)           ≡⟨ set-get a ⟩∎
+     a                       ∎)
+  where
+  open Lens l
+
+-- For somewhat coherent lenses the previous result can be proved
+-- without the assumption that the codomain is a set.
+
+≃get⁻¹×-coherent :
+  (b : B)
+  (l : Coherent-lens A B) →
+  A ≃ (Coherent-lens.get l ⁻¹ b × B)
+≃get⁻¹×-coherent {B = B} {A = A} b₀ l = Eq.↔→≃
+  (λ a → (set a b₀ , get-set a b₀) , get a)
+  (λ ((a , _) , b) → set a b)
+  (λ ((a , h) , b) →
+     let
+       lemma₁ =
+         set (set a b) b₀  ≡⟨ set-set a b b₀ ⟩
+         set a b₀          ≡⟨ cong (set a) (sym h) ⟩
+         set a (get a)     ≡⟨ set-get a ⟩∎
+         a                 ∎
+
+       lemma₂₁ =
+         cong get (trans (set-set a b b₀)
+                     (trans (cong (set a) (sym h))
+                        (set-get a)))               ≡⟨ trans (cong-trans _ _ _) $
+                                                       cong (trans _) $
+                                                       trans (cong-trans _ _ _) $
+                                                       cong (flip trans _) $
+                                                       cong-∘ _ _ _ ⟩
+         trans (cong get (set-set a b b₀))
+           (trans (cong (get ⊚ set a) (sym h))
+              (cong get (set-get a)))               ≡⟨ cong₂ (λ p q → trans p (trans (cong (get ⊚ set a) (sym h)) q))
+                                                         (get-set-set _ _ _)
+                                                         (get-set-get _) ⟩∎
+         trans (trans (get-set (set a b) b₀)
+                  (sym (get-set a b₀)))
+           (trans (cong (get ⊚ set a) (sym h))
+              (get-set a (get a)))                  ∎
+
+       lemma₂₂ =
+         sym (trans (trans (get-set (set a b) b₀)
+                       (sym (get-set a b₀)))
+                (trans (cong (get ⊚ set a) (sym h))
+                   (get-set a (get a))))               ≡⟨ trans (sym-trans _ _) $
+                                                          cong₂ trans
+                                                            (sym-trans _ _)
+                                                            (sym-trans _ _) ⟩
+         trans (trans (sym (get-set a (get a)))
+                  (sym (cong (get ⊚ set a) (sym h))))
+           (trans (sym (sym (get-set a b₀)))
+              (sym (get-set (set a b) b₀)))            ≡⟨ cong₂ (λ p q → trans (trans (sym (get-set a (get a))) p)
+                                                                           (trans q (sym (get-set (set a b) b₀))))
+                                                            (trans (cong sym $ cong-sym _ _) $
+                                                             sym-sym _)
+                                                            (sym-sym _) ⟩
+         trans (trans (sym (get-set a (get a)))
+                  (cong (get ⊚ set a) h))
+           (trans (get-set a b₀)
+              (sym (get-set (set a b) b₀)))            ≡⟨ trans (sym $ trans-assoc _ _ _) $
+                                                          cong (flip trans _) $ trans-assoc _ _ _ ⟩∎
+         trans (trans (sym (get-set a (get a)))
+                  (trans (cong (get ⊚ set a) h)
+                     (get-set a b₀)))
+           (sym (get-set (set a b) b₀))                ∎
+
+       lemma₂ =
+         subst (λ a → get a ≡ b₀)
+           (trans (set-set a b b₀)
+              (trans (cong (set a) (sym h)) (set-get a)))
+           (get-set (set a b) b₀)                            ≡⟨ subst-∘ _ _ _ ⟩
+
+         subst (_≡ b₀)
+           (cong get (trans (set-set a b b₀)
+                        (trans (cong (set a) (sym h))
+                           (set-get a))))
+           (get-set (set a b) b₀)                            ≡⟨ subst-trans-sym ⟩
+
+         trans
+           (sym (cong get (trans (set-set a b b₀)
+                             (trans (cong (set a) (sym h))
+                                (set-get a)))))
+           (get-set (set a b) b₀)                            ≡⟨ cong (flip (trans ⊚ sym) _) lemma₂₁ ⟩
+
+         trans
+           (sym (trans (trans (get-set (set a b) b₀)
+                          (sym (get-set a b₀)))
+                   (trans (cong (get ⊚ set a) (sym h))
+                      (get-set a (get a)))))
+           (get-set (set a b) b₀)                            ≡⟨ cong (flip trans _) lemma₂₂ ⟩
+
+         trans
+           (trans (trans (sym (get-set a (get a)))
+                     (trans (cong (get ⊚ set a) h)
+                        (get-set a b₀)))
+              (sym (get-set (set a b) b₀)))
+           (get-set (set a b) b₀)                            ≡⟨ trans-[trans-sym]- _ _ ⟩
+
+         trans (sym (get-set a (get a)))
+           (trans (cong (get ⊚ set a) h)
+              (get-set a b₀))                                ≡⟨ cong (λ f → trans (sym (f (get a))) (trans (cong (get ⊚ set a) h) (f b₀))) $ sym $
+                                                                _≃_.left-inverse-of (Eq.extensionality-isomorphism bad-ext) (get-set a) ⟩
+         trans (sym (ext⁻¹ (⟨ext⟩ (get-set a)) (get a)))
+           (trans (cong (get ⊚ set a) h)
+              (ext⁻¹ (⟨ext⟩ (get-set a)) b₀))                ≡⟨ elim₁
+                                                                  (λ {f} eq →
+                                                                     trans (sym (ext⁻¹ eq (get a)))
+                                                                       (trans (cong f h) (ext⁻¹ eq b₀)) ≡
+                                                                       h)
+                                                                  (
+             trans (sym (ext⁻¹ (refl P.id) (get a)))
+               (trans (cong P.id h) (ext⁻¹ (refl P.id) b₀))        ≡⟨ cong₂ (λ p q → trans p (trans (cong P.id h) q))
+                                                                        (trans (cong sym (ext⁻¹-refl _)) sym-refl)
+                                                                        (ext⁻¹-refl _) ⟩
+
+             trans (refl _) (trans (cong P.id h) (refl _))         ≡⟨ trans-reflˡ _ ⟩
+
+             trans (cong P.id h) (refl _)                          ≡⟨ trans-reflʳ _ ⟩
+
+             cong P.id h                                           ≡⟨ sym $ cong-id _ ⟩∎
+
+             h                                                     ∎)
+                                                                  _ ⟩∎
+         h                                                   ∎
+     in
+     ((set (set a b) b₀ , get-set (set a b) b₀) , get (set a b))  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma₁ lemma₂) (get-set a b) ⟩∎
+     ((a                , h                   ) , b            )  ∎)
+  (λ a →
+     set (set a b₀) (get a)  ≡⟨ set-set a b₀ (get a) ⟩
+     set a (get a)           ≡⟨ set-get a ⟩∎
+     a                       ∎)
+  where
+  open Coherent-lens l
+
+------------------------------------------------------------------------
+-- A conversion function
+
+-- If A is a set, then Lens A B is equivalent to Coherent-lens A B.
+
+≃coherent : Is-set A → Lens A B ≃ Coherent-lens A B
+≃coherent {A = A} {B = B} A-set = Eq.↔→≃
+  to
+  Coherent-lens.lens
+  (λ l → let l′ = Coherent-lens.lens l in
+                          $⟨ ×-closure 1
+                               (Π-closure ext 1 λ a →
+                                mono₁ 2 (B-set l′ a))
+                               (Π-closure ext 1 λ a →
+                                Π-closure ext 1 λ _ →
+                                Π-closure ext 1 λ _ →
+                                mono₁ 2 (B-set l′ a)) ⟩
+     Is-proposition _     ↝⟨ (λ p → cong (l′ ,_) (p _ _)) ⦂ (_ → _) ⟩
+     (l′ , _) ≡ (l′ , _)  ↔⟨ Eq.≃-≡ Coherent-lens-as-Σ ⟩□
+     to l′ ≡ l            □)
+  refl
+  where
+  B-set : Lens A B → A → Is-set B
+  B-set l a =
+    h-level-respects-lens-from-inhabited 2 l a A-set
+
+  to : Lens A B → Coherent-lens A B
+  to l = record
+    { lens        = l
+    ; get-set-get = λ a → B-set l a _ _
+    ; get-set-set = λ a _ _ → B-set l a _ _
+    }
+
+-- The conversion preserves getters and setters.
+
+≃coherent-preserves-getters-and-setters :
+  {A : Set a}
+  (s : Is-set A) →
+  Preserves-getters-and-setters-⇔ A B
+    (_≃_.logical-equivalence (≃coherent s))
+≃coherent-preserves-getters-and-setters _ =
+    (λ _ → refl _ , refl _)
+  , (λ _ → refl _ , refl _)
 
 ------------------------------------------------------------------------
 -- Lens combinators
