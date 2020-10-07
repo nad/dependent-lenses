@@ -23,6 +23,7 @@ open import Logical-equivalence using (_⇔_)
 open import Prelude as P hiding (id; [_,_]) renaming (_∘_ to _⊚_)
 
 open import Bijection equality-with-J as Bijection using (_↔_)
+import Bool equality-with-J as Bool
 open import Circle eq using (𝕊¹)
 open import Equality.Decidable-UIP equality-with-J
 open import Equality.Decision-procedures equality-with-J
@@ -33,7 +34,7 @@ open import Equivalence.Erased equality-with-J as EEq
   using (_≃ᴱ_; Is-equivalenceᴱ; Contractibleᴱ; _⁻¹ᴱ_)
 open import Erased.Cubical eq
 open import Function-universe equality-with-J as F hiding (id; _∘_)
-open import H-level equality-with-J
+open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq as PT
 open import Preimage equality-with-J using (_⁻¹_)
@@ -79,6 +80,14 @@ private
 
 open Temporarily-private public hiding (module Lens)
 
+-- An η-law for lenses.
+
+η :
+  (l : Lens A B)
+  (open Temporarily-private.Lens l) →
+  ⟨ R , equiv , inhabited ⟩ ≡ l
+η ⟨ _ , _ , _ ⟩ = refl _
+
 -- Lens can be expressed as a nested Σ-type.
 
 Lens-as-Σ :
@@ -95,9 +104,32 @@ Lens-as-Σ = Eq.↔→≃
      ; inhabited = inhabited
      })
   refl
-  (λ { ⟨ _ , _ , _ ⟩ → refl _ })
+  η
   where
   open Temporarily-private.Lens
+
+-- An equality rearrangement lemma.
+
+left-inverse-of-Lens-as-Σ :
+  (l : Lens A B) →
+  _≃_.left-inverse-of Lens-as-Σ l ≡ η l
+left-inverse-of-Lens-as-Σ l@(⟨ _ , _ , _ ⟩) =
+  _≃_.left-inverse-of Lens-as-Σ l                          ≡⟨⟩
+
+  _≃_.left-inverse-of Lens-as-Σ
+    (_≃_.from Lens-as-Σ (_≃_.to Lens-as-Σ l))              ≡⟨ sym $ _≃_.right-left-lemma Lens-as-Σ _ ⟩
+
+  cong (_≃_.from Lens-as-Σ)
+    (_≃_.right-inverse-of Lens-as-Σ (_≃_.to Lens-as-Σ l))  ≡⟨⟩
+
+  cong (_≃_.from Lens-as-Σ)
+    (trans (sym (sym (refl _))) (refl _))                  ≡⟨ cong (cong (_≃_.from Lens-as-Σ)) $
+                                                              trans (trans-reflʳ _) $
+                                                              sym-sym _ ⟩
+
+  cong (_≃_.from Lens-as-Σ) (refl _)                       ≡⟨ cong-refl _ ⟩∎
+
+  refl _                                                   ∎
 
 -- Lenses without erased proofs can be turned into lenses with erased
 -- proofs.
@@ -492,6 +524,27 @@ lenses-equal-if-setters-equal-and-remainder-propositional
   high l₁ ≡ high l₂  ↝⟨ Eq.≃-≡ Lens≃Higher-lens {x = l₁} {y = l₂} ⟩□
   l₁ ≡ l₂            □
 
+-- A generalisation of the previous result: If a lens has a remainder
+-- type that is a set, then this lens is equal to another lens if
+-- their setters are equal (assuming univalence).
+--
+-- The corresponding result in Lens.Non-dependent.Higher is due to
+-- Andrea Vezzosi.
+
+@0 lenses-equal-if-setters-equal-and-remainder-set :
+  {A : Set a} {B : Set b} →
+  Univalence (a ⊔ b) →
+  (l₁ l₂ : Lens A B) →
+  Is-set (Lens.R l₂) →
+  Lens.set l₁ ≡ Lens.set l₂ →
+  l₁ ≡ l₂
+lenses-equal-if-setters-equal-and-remainder-set
+  univ l₁ l₂ R₂-prop setters-equal =
+                     $⟨ H.lenses-equal-if-setters-equal-and-remainder-set
+                          univ (high l₁) (high l₂) R₂-prop setters-equal ⟩
+  high l₁ ≡ high l₂  ↝⟨ Eq.≃-≡ Lens≃Higher-lens {x = l₁} {y = l₂} ⟩□
+  l₁ ≡ l₂            □
+
 -- The functions ≃ᴱ→Lens and ≃ᴱ→Lens′ are pointwise equal (when
 -- applicable, in erased contexts, assuming univalence).
 
@@ -545,6 +598,29 @@ get-equivalence→≡≃ᴱ→Lens′ {A = A} {B = B} univ l eq =
   ≃ᴱ→Lens′ A≃B  ∎
   where
   A≃B = EEq.⟨ Lens.get l , eq ⟩
+
+------------------------------------------------------------------------
+-- Some equivalences
+
+-- "The getter is an equivalence" is equivalent to "the remainder type
+-- is equivalent to the propositional truncation of the codomain" (in
+-- erased contexts).
+
+@0 get-equivalence≃inhabited-equivalence :
+  (l : Lens A B) →
+  Is-equivalence (Lens.get l) ≃ Is-equivalence (Lens.inhabited l)
+get-equivalence≃inhabited-equivalence l =
+  H.get-equivalence≃inhabited-equivalence (high l)
+
+-- "The getter is an equivalence" is equivalent to "the remainder type
+-- is equivalent to the propositional truncation of the codomain" (in
+-- erased contexts).
+
+@0 get-equivalence≃remainder≃∥codomain∥ :
+  (l : Lens A B) →
+  Is-equivalence (Lens.get l) ≃ (Lens.R l ≃ ∥ B ∥)
+get-equivalence≃remainder≃∥codomain∥ l =
+  H.get-equivalence≃remainder≃∥codomain∥ (high l)
 
 ------------------------------------------------------------------------
 -- Some lens isomorphisms
@@ -775,43 +851,16 @@ private
 
     from : Block "conversion" → Traditionalᴱ.Lens A B → Lens A B
     from ⊠ l = ≃ᴱ×→Lens
-      {R = ∃ λ (f : B → A) → Erased (∀ b b′ → set (f b) b′ ≡ f b′)}
-      (EEq.↔→≃ᴱ
-         (λ a → (set a , [ set-set a ]) , get a)
-         (λ ((f , _) , b) → f b)
-         (λ ((f , [ h ]) , b) →
-
-              let
-                irr = {p q : Erased (∀ b b′ → set (f b) b′ ≡ f b′)} →
-                      p ≡ q
-                irr =
-                  (H-level-Erased 1 (
-                   Π-closure ext 1 λ _ →
-                   Π-closure ext 1 λ _ →
-                   A-set)) _ _
-
-                lemma =
-                  get (f b)          ≡⟨ cong get (sym (h b b)) ⟩
-                  get (set (f b) b)  ≡⟨ get-set (f b) b ⟩∎
-                  b                  ∎
-              in
-              (set (f b) , [ set-set (f b) ]) , get (f b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ (⟨ext⟩ (h b)) irr) lemma ⟩∎
-              (f         , [ h             ]) , b          ∎)
-         (λ a →
-            set a (get a)  ≡⟨ set-get a ⟩∎
-            a              ∎))
+      (A                                      ↝⟨ Traditionalᴱ.≃ᴱΣ∥set⁻¹ᴱ∥× A-set l ⟩□
+       (∃ λ (f : B → A) → ∥ set ⁻¹ᴱ f ∥) × B  □)
       where
       open Traditionalᴱ.Lens l
 
     to∘from : ∀ bc l → Lens.traditional-lens (from bc l) ≡ l
-    to∘from ⊠ l = _↔_.from Traditionalᴱ.equality-characterisation₁
-      ( refl _
-      , refl _
-      , [ (λ a _ → B-set a _ _)
-        , (λ _ → A-set _ _)
-        , (λ _ _ _ → A-set _ _)
-        ]
-      )
+    to∘from ⊠ l = Traditionalᴱ.equal-laws→≡
+      (λ a _ → B-set a _ _)
+      (λ _ → A-set _ _)
+      (λ _ _ _ → A-set _ _)
       where
       open Traditionalᴱ.Lens l
 
@@ -824,7 +873,10 @@ private
       ∀ bc l → from bc (Lens.traditional-lens l) ≡ l
     from∘to univ ⊠ l′ =
       _↔_.from (equality-characterisation₃ univ)
-        ( lemma
+        ( ((∃ λ (f : B → A) → ∥ set ⁻¹ᴱ f ∥) × Erased ∥ B ∥  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
+           (∃ λ (f : B → A) → ∥ set ⁻¹ᴱ f ∥) × ∥ B ∥         ↝⟨ (×-cong₁ lemma₃) ⟩
+           (∥ B ∥ → R) × ∥ B ∥                               ↝⟨ lemma₂ ⟩□
+           R                                                 □)
         , λ p →
             _≃ᴱ_.from l (subst (λ _ → R) (refl _) (proj₁ p) , proj₂ p)  ≡⟨ cong (λ r → _≃ᴱ_.from l (r , proj₂ p)) $ subst-refl _ _ ⟩∎
             _≃ᴱ_.from l p                                               ∎
@@ -832,97 +884,92 @@ private
       where
       open Lens l′ renaming (equiv to l)
 
-      B-set : (B → R) → ∥ B ∥ → Is-set B
-      B-set f = PT.rec
-        (H-level-propositional ext 2)
-        (λ b →            $⟨ (λ {_ _} → A-set) ⟩
-          Is-set A        ↝⟨ H-level-cong _ 2 (EEq.≃ᴱ→≃ l) ⟩
-          Is-set (R × B)  ↝⟨ proj₂-closure (f b) 2 ⟩□
-          Is-set B        □)
+      B-set : A → Is-set B
+      B-set a =
+        Traditionalᴱ.h-level-respects-lens-from-inhabited
+          2
+          (Lens.traditional-lens l′)
+          a
+          A-set
 
-      R-set : ∥ B ∥ → Is-set R
-      R-set = PT.rec
-        (H-level-propositional ext 2)
-        (λ b →            $⟨ (λ {_ _} → A-set) ⟩
-          Is-set A        ↝⟨ H-level-cong _ 2 (EEq.≃ᴱ→≃ l) ⟩
-          Is-set (R × B)  ↝⟨ proj₁-closure (const b) 2 ⟩□
-          Is-set R        □)
+      R-set : Is-set R
+      R-set =
+        [inhabited⇒+]⇒+ 1 λ r →
+        PT.rec
+          (H-level-propositional ext 2)
+          (λ b → proj₁-closure (const b) 2 $
+                 H-level.respects-surjection
+                   (_≃_.surjection (EEq.≃ᴱ→≃ l)) 2 A-set)
+          (inhabited r)
 
-      lemma′ : (∥ B ∥ × (∥ B ∥ → R)) ≃ R
-      lemma′ = Eq.↔→≃
-        (λ (b , f) → f b)
-        (λ r → inhabited r , λ _ → r)
+      lemma₁ :
+        ∥ B ∥ →
+        (f : B → A) →
+        ∥ set ⁻¹ᴱ f ∥ ≃ (∀ b b′ → set (f b) b′ ≡ f b′)
+      lemma₁ ∥b∥ f = Eq.⇔→≃
+        truncation-is-proposition
+        prop
+        (PT.rec prop λ (a , [ set-a≡f ]) b b′ →
+         set (f b) b′      ≡⟨ cong (λ f → set (f b) b′) $ sym set-a≡f ⟩
+         set (set a b) b′  ≡⟨ set-set _ _ _ ⟩
+         set a b′          ≡⟨ cong (_$ b′) set-a≡f ⟩∎
+         f b′              ∎)
+        (λ hyp →
+           flip ∥∥-map ∥b∥ λ b →
+           f b , [ ⟨ext⟩ (hyp b) ])
+        where
+        prop =
+          Π-closure ext 1 λ _ →
+          Π-closure ext 1 λ _ →
+          A-set
+
+      lemma₂ : ((∥ B ∥ → R) × ∥ B ∥) ≃ R
+      lemma₂ = Eq.↔→≃
+        (λ (f , ∥b∥) → f ∥b∥)
+        (λ r → (λ _ → r) , inhabited r)
         refl
-        (λ (b , f) → curry (_↔_.to ≡×≡↔≡)
-           (PT.truncation-is-proposition _ _)
-           (⟨ext⟩ λ b′ →
-              f b   ≡⟨ cong f (PT.truncation-is-proposition _ _) ⟩∎
-              f b′  ∎))
+        (λ (f , ∥b∥) → cong₂ _,_
+           (⟨ext⟩ λ ∥b∥′ →
+              f ∥b∥   ≡⟨ cong f (truncation-is-proposition _ _) ⟩∎
+              f ∥b∥′  ∎)
+           (truncation-is-proposition _ _))
 
-      lemma =
-        (∃ λ (f : B → A) →
-           Erased (∀ b b′ →
-                   _≃ᴱ_.from l (proj₁ (_≃ᴱ_.to l (f b)) , b′) ≡
-                   f b′)) ×
-        Erased ∥ B ∥                                                ↔⟨ (∃-cong λ _ → erased Erased↔) ×-cong erased Erased↔ ⟩
+      lemma₃ = λ ∥b∥ →
+        (∃ λ (f : B → A) → ∥ set ⁻¹ᴱ f ∥)                                   ↝⟨ ∃-cong (lemma₁ ∥b∥) ⟩
 
-        (∃ λ (f : B → A) → ∀ b b′ →
-             _≃ᴱ_.from l (proj₁ (_≃ᴱ_.to l (f b)) , b′) ≡ f b′) ×
-        ∥ B ∥                                                       ↔⟨ ×-comm ⟩
+        (∃ λ (f : B → A) → ∀ b b′ → set (f b) b′ ≡ f b′)                    ↝⟨ (Σ-cong (→-cong ext F.id (EEq.≃ᴱ→≃ l)) λ f →
+                                                                                ∀-cong ext λ b → ∀-cong ext λ b′ →
+                                                                                ≡⇒↝ _ $ cong (_≃ᴱ_.from l (proj₁ (_≃ᴱ_.to l (f b)) , b′) ≡_) $ sym $
+                                                                                _≃ᴱ_.left-inverse-of l _) ⟩
+        (∃ λ (f : B → R × B) →
+           ∀ b b′ → _≃ᴱ_.from l (proj₁ (f b) , b′) ≡ _≃ᴱ_.from l (f b′))    ↝⟨ (∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
+                                                                                Eq.≃-≡ (inverse (EEq.≃ᴱ→≃ l))) ⟩
 
-        (∥ B ∥ ×
-         ∃ λ (f : B → A) → ∀ b b′ →
-             _≃ᴱ_.from l (proj₁ (_≃ᴱ_.to l (f b)) , b′) ≡ f b′)     ↝⟨ (∃-cong λ _ →
-                                                                        Σ-cong (→-cong ext F.id (EEq.≃ᴱ→≃ l)) λ f →
-                                                                        ∀-cong ext λ b → ∀-cong ext λ b′ →
-                                                                        ≡⇒↝ _ $ cong (_≃ᴱ_.from l (proj₁ (_≃ᴱ_.to l (f b)) , b′) ≡_) $ sym $
-                                                                        _≃ᴱ_.left-inverse-of l _) ⟩
-        (∥ B ∥ ×
-         ∃ λ (f : B → R × B) → ∀ b b′ →
-             _≃ᴱ_.from l (proj₁ (f b) , b′) ≡ _≃ᴱ_.from l (f b′))   ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
-                                                                        Eq.≃-≡ (inverse (EEq.≃ᴱ→≃ l))) ⟩
-        (∥ B ∥ ×
-         ∃ λ (f : B → R × B) → ∀ b b′ → (proj₁ (f b) , b′) ≡ f b′)  ↔⟨ (∃-cong λ _ → Σ-cong ΠΣ-comm λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
-                                                                        inverse $ ≡×≡↔≡) ⟩
-        (∥ B ∥ ×
-         ∃ λ (p : (B → R) × (B → B)) →
-           ∀ b b′ → proj₁ p b ≡ proj₁ p b′ × b′ ≡ proj₂ p b′)       ↔⟨ (∃-cong λ _ → inverse Σ-assoc) ⟩
+        (∃ λ (f : B → R × B) → ∀ b b′ → (proj₁ (f b) , b′) ≡ f b′)          ↔⟨ (Σ-cong ΠΣ-comm λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
+                                                                                inverse $ ≡×≡↔≡) ⟩
+        (∃ λ ((f , g) : (B → R) × (B → B)) →
+           ∀ b b′ → f b ≡ f b′ × b′ ≡ g b′)                                 ↔⟨ (Σ-assoc F.∘
+                                                                                (∃-cong λ _ →
+                                                                                 ∃-comm F.∘
+                                                                                 ∃-cong λ _ →
+                                                                                 ΠΣ-comm F.∘
+                                                                                 ∀-cong ext λ _ →
+                                                                                 ΠΣ-comm) F.∘
+                                                                                inverse Σ-assoc) ⟩
+        ((∃ λ (f : B → R) → Constant f) ×
+         (∃ λ (g : B → B) → B → ∀ b → b ≡ g b))                             ↔⟨ (∃-cong $ uncurry λ f _ → ∃-cong λ _ → inverse $
+                                                                                →-intro ext (λ b → B-set (_≃ᴱ_.from l (f b , b)))) ⟩
+        ((∃ λ (f : B → R) → Constant f) ×
+         (∃ λ (g : B → B) → ∀ b → b ≡ g b))                                 ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
+                                                                                Eq.extensionality-isomorphism ext) ⟩
 
-        (∥ B ∥ ×
-         ∃ λ (f : B → R) → ∃ λ (g : B → B) →
-           ∀ b b′ → f b ≡ f b′ × b′ ≡ g b′)                         ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ →
-                                                                        ΠΣ-comm) ⟩
-        (∥ B ∥ ×
-         ∃ λ (f : B → R) → ∃ λ (g : B → B) →
-           ∀ b → (∀ b′ → f b ≡ f b′) × (∀ b′ → b′ ≡ g b′))          ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ΠΣ-comm) ⟩
+        ((∃ λ (f : B → R) → Constant f) × (∃ λ (g : B → B) → P.id ≡ g))     ↔⟨ (drop-⊤-right λ _ →
+                                                                                _⇔_.to contractible⇔↔⊤ $
+                                                                                other-singleton-contractible _) ⟩
 
-        (∥ B ∥ ×
-         ∃ λ (f : B → R) → ∃ λ (g : B → B) →
-           Constant f × (B → ∀ b → b ≡ g b))                        ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-comm) ⟩
+        (∃ λ (f : B → R) → Constant f)                                      ↝⟨ constant-function≃∥inhabited∥⇒inhabited R-set ⟩□
 
-        (∥ B ∥ ×
-         ∃ λ (f : B → R) → Constant f ×
-         ∃ λ (g : B → B) → B → ∀ b → b ≡ g b)                       ↔⟨ (∃-cong λ _ → Σ-assoc) ⟩
-
-        (∥ B ∥ ×
-         (∃ λ (f : B → R) → Constant f) ×
-         (∃ λ (g : B → B) → B → ∀ b → b ≡ g b))                     ↔⟨ (∃-cong λ ∥b∥ → ∃-cong $ uncurry λ f _ → ∃-cong λ _ → inverse $
-                                                                        →-intro ext (λ _ → B-set f ∥b∥)) ⟩
-        (∥ B ∥ ×
-         (∃ λ (f : B → R) → Constant f) ×
-         (∃ λ (g : B → B) → ∀ b → b ≡ g b))                         ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
-                                                                        Eq.extensionality-isomorphism ext) ⟩
-        (∥ B ∥ ×
-         (∃ λ (f : B → R) → Constant f) ×
-         (∃ λ (g : B → B) → F.id ≡ g))                              ↔⟨ (∃-cong λ _ → drop-⊤-right λ _ →
-                                                                        _⇔_.to contractible⇔↔⊤ $
-                                                                        other-singleton-contractible _) ⟩
-
-        (∥ B ∥ × ∃ λ (f : B → R) → Constant f)                      ↝⟨ (∃-cong λ ∥b∥ → PT.constant-function≃∥inhabited∥⇒inhabited (R-set ∥b∥)) ⟩
-
-        (∥ B ∥ × (∥ B ∥ → R))                                       ↔⟨ lemma′ ⟩□
-
-        R                                                           □
+        (∥ B ∥ → R)                                                         □
 
     equiv :
       Block "conversion" →
@@ -1002,25 +1049,8 @@ Lens⇔Traditional-lens {B = B} {A = A} B-set b₀ = record
   where
   from : Traditionalᴱ.Lens A B → Lens A B
   from l = ≃ᴱ×→Lens
-    {R = ∃ λ (a : A) → Erased (get a ≡ b₀)}
-    (EEq.↔→≃ᴱ
-       (λ a → (set a b₀ , [ get-set a b₀ ]) , get a)
-       (λ ((a , _) , b) → set a b)
-       (λ ((a , [ h ]) , b) →
-          let lemma =
-                set (set a b) b₀  ≡⟨ set-set a b b₀ ⟩
-                set a b₀          ≡⟨ cong (set a) (sym h) ⟩
-                set a (get a)     ≡⟨ set-get a ⟩∎
-                a                 ∎
-          in
-          ( (set (set a b) b₀ , [ get-set (set a b) b₀ ])
-          , get (set a b)
-          )                                                ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma (H-level-Erased 1 B-set _ _)) (get-set a b) ⟩∎
-          ((a , [ h ]) , b)                                ∎)
-       (λ a →
-          set (set a b₀) (get a)  ≡⟨ set-set a b₀ (get a) ⟩
-          set a (get a)           ≡⟨ set-get a ⟩∎
-          a                       ∎))
+    (A               ↝⟨ Traditionalᴱ.≃ᴱget⁻¹ᴱ× B-set b₀ l ⟩□
+     get ⁻¹ᴱ b₀ × B  □)
     where
     open Traditionalᴱ.Lens l
 
@@ -1382,6 +1412,18 @@ get⁻¹ᴱ-constant l b₁ b₂ =
   Lens.R l           ↝⟨ remainder≃ᴱget⁻¹ᴱ l b₂ ⟩□
   Lens.get l ⁻¹ᴱ b₂  □
 
+-- The two directions of get⁻¹ᴱ-constant.
+
+get⁻¹ᴱ-const :
+  (l : Lens A B) (b₁ b₂ : B) →
+  Lens.get l ⁻¹ᴱ b₁ → Lens.get l ⁻¹ᴱ b₂
+get⁻¹ᴱ-const l b₁ b₂ = _≃ᴱ_.to (get⁻¹ᴱ-constant l b₁ b₂)
+
+get⁻¹ᴱ-const⁻¹ :
+  (l : Lens A B) (b₁ b₂ : B) →
+  Lens.get l ⁻¹ᴱ b₂ → Lens.get l ⁻¹ᴱ b₁
+get⁻¹ᴱ-const⁻¹ l b₁ b₂ = _≃ᴱ_.from (get⁻¹ᴱ-constant l b₁ b₂)
+
 -- The set function can be expressed using get⁻¹ᴱ-constant and get.
 --
 -- Paolo Capriotti defines set in a similar way
@@ -1390,8 +1432,7 @@ get⁻¹ᴱ-constant l b₁ b₂ =
 set-in-terms-of-get⁻¹ᴱ-constant :
   (l : Lens A B) →
   Lens.set l ≡
-  λ a b → proj₁ (_≃ᴱ_.to (get⁻¹ᴱ-constant l (Lens.get l a) b)
-                   (a , [ refl _ ]))
+  λ a b → proj₁ (get⁻¹ᴱ-const l (Lens.get l a) b (a , [ refl _ ]))
 set-in-terms-of-get⁻¹ᴱ-constant l = refl _
 
 -- The remainder function can be expressed using remainder≃ᴱget⁻¹ᴱ and
@@ -1408,12 +1449,11 @@ remainder-in-terms-of-remainder≃ᴱget⁻¹ᴱ l = refl _
 -- The first and third properties are discussed by Paolo Capriotti
 -- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
 
-@0 get⁻¹ᴱ-constant-∘ :
+@0 get⁻¹ᴱ-const-∘ :
   (l : Lens A B) (b₁ b₂ b₃ : B) (p : Lens.get l ⁻¹ᴱ b₁) →
-  _≃ᴱ_.to (get⁻¹ᴱ-constant l b₂ b₃)
-    (_≃ᴱ_.to (get⁻¹ᴱ-constant l b₁ b₂) p) ≡
-  _≃ᴱ_.to (get⁻¹ᴱ-constant l b₁ b₃) p
-get⁻¹ᴱ-constant-∘ l _ b₂ b₃ p =
+  get⁻¹ᴱ-const l b₂ b₃ (get⁻¹ᴱ-const l b₁ b₂ p) ≡
+  get⁻¹ᴱ-const l b₁ b₃ p
+get⁻¹ᴱ-const-∘ l _ b₂ b₃ p =
   from (r₂ , b₃) , [ cong proj₂ (right-inverse-of (r₂ , b₃)) ]  ≡⟨ cong (λ r → from (r , b₃) , [ cong proj₂ (right-inverse-of (r , b₃)) ]) $
                                                                    cong proj₁ $ right-inverse-of _ ⟩∎
   from (r₁ , b₃) , [ cong proj₂ (right-inverse-of (r₁ , b₃)) ]  ∎
@@ -1425,40 +1465,39 @@ get⁻¹ᴱ-constant-∘ l _ b₂ b₃ p =
   r₁ = proj₁ (to (proj₁ p))
   r₂ = proj₁ (to (from (r₁ , b₂)))
 
-get⁻¹ᴱ-constant-inverse :
+get⁻¹ᴱ-const-inverse :
   (l : Lens A B) (b₁ b₂ : B) (p : Lens.get l ⁻¹ᴱ b₁) →
-  _≃ᴱ_.to (get⁻¹ᴱ-constant l b₁ b₂) p ≡
-  _≃ᴱ_.from (get⁻¹ᴱ-constant l b₂ b₁) p
-get⁻¹ᴱ-constant-inverse _ _ _ _ = refl _
+  get⁻¹ᴱ-const l b₁ b₂ p ≡ get⁻¹ᴱ-const⁻¹ l b₂ b₁ p
+get⁻¹ᴱ-const-inverse _ _ _ _ = refl _
 
-@0 get⁻¹ᴱ-constant-id :
+@0 get⁻¹ᴱ-const-id :
   (l : Lens A B) (b : B) (p : Lens.get l ⁻¹ᴱ b) →
-  _≃ᴱ_.to (get⁻¹ᴱ-constant l b b) p ≡ p
-get⁻¹ᴱ-constant-id l b p =
-  _≃ᴱ_.to (get⁻¹ᴱ-constant l b b) p                                      ≡⟨ sym $ get⁻¹ᴱ-constant-∘ l b _ _ p ⟩
-  _≃ᴱ_.to (get⁻¹ᴱ-constant l b b) (_≃ᴱ_.to (get⁻¹ᴱ-constant l b b) p)    ≡⟨⟩
-  _≃ᴱ_.from (get⁻¹ᴱ-constant l b b) (_≃ᴱ_.to (get⁻¹ᴱ-constant l b b) p)  ≡⟨ _≃ᴱ_.left-inverse-of (get⁻¹ᴱ-constant l b b) _ ⟩∎
-  p                                                                      ∎
+  get⁻¹ᴱ-const l b b p ≡ p
+get⁻¹ᴱ-const-id l b p =
+  get⁻¹ᴱ-const l b b p                          ≡⟨ sym $ get⁻¹ᴱ-const-∘ l b _ _ p ⟩
+  get⁻¹ᴱ-const l b b (get⁻¹ᴱ-const l b b p)     ≡⟨⟩
+  get⁻¹ᴱ-const⁻¹ l b b (get⁻¹ᴱ-const l b b p)   ≡⟨ _≃ᴱ_.left-inverse-of (get⁻¹ᴱ-constant l b b) _ ⟩∎
+  p                                             ∎
 
 -- Another kind of coherence property does not hold for
 -- get⁻¹ᴱ-constant.
 --
 -- This kind of property came up in a discussion with Andrea Vezzosi.
 
-get⁻¹ᴱ-constant-not-coherent :
+get⁻¹ᴱ-const-not-coherent :
   ¬ ({A B : Set} (l : Lens A B) (b₁ b₂ : B)
      (f : ∀ b → Lens.get l ⁻¹ᴱ b) →
-     _≃ᴱ_.to (get⁻¹ᴱ-constant l b₁ b₂) (f b₁) ≡ f b₂)
-get⁻¹ᴱ-constant-not-coherent =
+     get⁻¹ᴱ-const l b₁ b₂ (f b₁) ≡ f b₂)
+get⁻¹ᴱ-const-not-coherent =
   ({A B : Set} (l : Lens A B) (b₁ b₂ : B)
    (f : ∀ b → Lens.get l ⁻¹ᴱ b) →
-   _≃ᴱ_.to (get⁻¹ᴱ-constant l b₁ b₂) (f b₁) ≡ f b₂)          ↝⟨ (λ hyp → hyp l true false f) ⟩
+   get⁻¹ᴱ-const l b₁ b₂ (f b₁) ≡ f b₂)          ↝⟨ (λ hyp → hyp l true false f) ⟩
 
-  _≃ᴱ_.to (get⁻¹ᴱ-constant l true false) (f true) ≡ f false  ↝⟨ cong (proj₁ ⊚ proj₁) ⟩
+  get⁻¹ᴱ-const l true false (f true) ≡ f false  ↝⟨ cong (proj₁ ⊚ proj₁) ⟩
 
-  true ≡ false                                               ↝⟨ Bool.true≢false ⟩□
+  true ≡ false                                  ↝⟨ Bool.true≢false ⟩□
 
-  ⊥                                                          □
+  ⊥                                             □
   where
   l : Lens (Bool × Bool) Bool
   l = record
@@ -1482,6 +1521,77 @@ get⁻¹ᴱ-constant-not-coherent =
   (l : Lens A B) (∥B∥→B : ∥ B ∥ → B) →
   Lens.R l ≃ ∃ λ (b : ∥ B ∥) → Lens.get l ⁻¹ (∥B∥→B b)
 remainder≃∃get⁻¹ = H.remainder≃∃get⁻¹ ⊚ high
+
+-- Two lenses of type Lens A B are equal if B is inhabited and the
+-- lenses' setters are equal (in erased contexts, assuming
+-- univalence).
+--
+-- Note that some results above are more general than this one.
+
+@0 lenses-with-inhabited-codomains-equal-if-setters-equal :
+  {A : Set a} {B : Set b} →
+  Univalence (a ⊔ b) →
+  (l₁ l₂ : Lens A B) →
+  B →
+  Lens.set l₁ ≡ Lens.set l₂ →
+  l₁ ≡ l₂
+lenses-with-inhabited-codomains-equal-if-setters-equal
+  univ l₁ l₂ b =
+  Lens.set l₁ ≡ Lens.set l₂  ↝⟨ H.lenses-with-inhabited-codomains-equal-if-setters-equal univ (high l₁) (high l₂) b ⟩
+  high l₁ ≡ high l₂          ↔⟨ Eq.≃-≡ Lens≃Higher-lens ⟩□
+  l₁ ≡ l₂                    □
+
+------------------------------------------------------------------------
+-- Equal lenses can be "observably different"
+
+-- An example based on one presented in "Shattered lens" by Oleg
+-- Grenrus.
+--
+-- Grenrus states that there are two lenses with equal getters and
+-- setters that are "observably different".
+
+-- A lemma used to construct the two lenses of the example.
+
+grenrus-example : (Bool → Bool ↔ Bool) → Lens (Bool × Bool) Bool
+grenrus-example eq = record
+  { R         = Bool
+  ; inhabited = ∣_∣
+  ; equiv     = Bool × Bool  ↔⟨ ×-cong₁ eq ⟩□
+                Bool × Bool  □
+  }
+
+-- The two lenses.
+
+grenrus-example₁ = grenrus-example (if_then F.id else Bool.swap)
+grenrus-example₂ = grenrus-example (if_then Bool.swap else F.id)
+
+-- The two lenses have equal setters.
+
+set-grenrus-example₁≡set-grenrus-example₂ :
+  Lens.set grenrus-example₁ ≡ Lens.set grenrus-example₂
+set-grenrus-example₁≡set-grenrus-example₂ =
+  H.set-grenrus-example₁≡set-grenrus-example₂
+
+-- Thus the lenses are equal (in erased contexts, assuming
+-- univalence).
+
+@0 grenrus-example₁≡grenrus-example₂ :
+  Univalence lzero →
+  grenrus-example₁ ≡ grenrus-example₂
+grenrus-example₁≡grenrus-example₂ univ =
+  lenses-with-inhabited-codomains-equal-if-setters-equal
+    univ _ _ true
+    set-grenrus-example₁≡set-grenrus-example₂
+
+-- However, in a certain sense the lenses are "observably different".
+
+grenrus-example₁-true :
+  Lens.remainder grenrus-example₁ (true , true) ≡ true
+grenrus-example₁-true = refl _
+
+grenrus-example₂-false :
+  Lens.remainder grenrus-example₂ (true , true) ≡ false
+grenrus-example₂-false = refl _
 
 ------------------------------------------------------------------------
 -- Lens combinators
@@ -1584,6 +1694,15 @@ module Lens-combinators where
       }
     where
     open Lens
+
+  -- The composition operation implements set in a certain way.
+
+  ∘-set :
+    let open Lens in
+    ∀ ℓa ℓb {A : Set (ℓa ⊔ ℓb ⊔ c)} {B : Set (ℓb ⊔ c)} {C : Set c}
+    (l₁ : Lens B C) (l₂ : Lens A B) a c →
+    set (⟨ ℓa , ℓb ⟩ l₁ ∘ l₂) a c ≡ set l₂ a (set l₁ (get l₂ a) c)
+  ∘-set _ _ ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ _ _ = refl _
 
   -- Higher-lens→Lens commutes with composition (in erased contexts,
   -- assuming univalence).
@@ -1716,7 +1835,10 @@ private
 
 -- A form of isomorphism between types, expressed using lenses.
 
-open B public renaming (_≅ᴱ_ to [_]_≅ᴱ_) using (Has-quasi-inverseᴱ)
+open B public
+  using ()
+  renaming (_≅ᴱ_ to [_]_≅ᴱ_;
+            Has-quasi-inverseᴱ to Has-quasi-inverseᴱ)
 
 private
 
@@ -1954,9 +2076,15 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
 -- A form of equivalence between types, expressed using lenses.
 
 open B public
-  renaming (_≊ᴱ_ to [_]_≊ᴱ_)
-  using (Has-left-inverseᴱ; Has-right-inverseᴱ; Is-bi-invertibleᴱ)
-open BM public using (equality-characterisation-≊ᴱ)
+  using ()
+  renaming (_≊ᴱ_ to [_]_≊ᴱ_;
+            Has-left-inverseᴱ to Has-left-inverseᴱ;
+            Has-right-inverseᴱ to Has-right-inverseᴱ;
+            Is-bi-invertibleᴱ to Is-bi-invertibleᴱ)
+open BM public
+  using ()
+  renaming (equality-characterisation-≊ᴱ to
+            equality-characterisation-≊ᴱ)
 
 -- H.Has-left-inverse b l implies
 -- Has-left-inverseᴱ b (Higher-lens→Lens l) (assuming univalence).
