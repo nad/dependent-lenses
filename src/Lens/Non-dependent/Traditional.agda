@@ -2739,7 +2739,7 @@ open B public
 open BM public
   using ()
   renaming (Is-bi-invertible-propositional to
-              Is-bi-invertible-propositional)
+            Is-bi-invertible-propositional)
 
 -- An equality characterisation lemma for A ≊ B that applies when A is
 -- a set.
