@@ -160,7 +160,6 @@ module Lens {A : Set a} {B : Set b} (l : Lens A B) where
                                                                          proj₁ (get⁻¹-const b b₂ (set a b₁ , eq)))
                                                                       (refl _)
                                                                       (get-set a b₁) ⟩
-
     proj₁ (get⁻¹-const b₁ b₂ (set a b₁ , get-set a b₁))          ≡⟨⟩
 
     proj₁ (get⁻¹-const b₁ b₂
@@ -238,7 +237,7 @@ equality-characterisation₁ {a = a} {l₁ = l₁} {l₂ = l₂} ⊠ =
      _≃_.to (subst (λ (g , H) → g ⁻¹ b ≃ H ∣ b ∣)
                (cong₂ _,_ g h) (get⁻¹-≃ l₁ b)) p ≡
      _≃_.to (get⁻¹-≃ l₂ b) p)                                      ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
-                                                                       ≡⇒↝ _ $ cong (_≡ _) $ lemma _ _ _ _) ⟩
+                                                                       ≡⇒↝ _ $ cong (_≡ _) $ lemma _ _ _ _) ⟩□
   (∃ λ (g : get l₁ ≡ get l₂) →
    ∃ λ (h : H l₁ ≡ H l₂) →
      ∀ b p →
@@ -457,7 +456,7 @@ Lens⇔Higher-lens-preserves-getters-and-setters =
            (≡⇒→ (refl _) (Higher.Lens.remainder l a) , b)  ≡⟨ cong (λ f → _≃_.from (Higher.Lens.equiv l) (f _ , b)) $
                                                               ≡⇒→-refl ⟩
          _≃_.from (Higher.Lens.equiv l)
-           (Higher.Lens.remainder l a , b)  ≡⟨⟩
+           (Higher.Lens.remainder l a , b)                 ≡⟨⟩
 
          Higher.Lens.set l a b                             ∎)
 
