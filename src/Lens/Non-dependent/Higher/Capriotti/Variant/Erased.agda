@@ -34,7 +34,7 @@ import Lens.Non-dependent.Higher.Capriotti.Variant eq as V
 private
   variable
     a b p : Level
-    A B   : Set a
+    A B   : Type a
 
 ------------------------------------------------------------------------
 -- The lens type family
@@ -42,13 +42,13 @@ private
 -- Coherently constant type-valued functions.
 
 Coherently-constant :
-  {A : Set a} → (A → Set p) → Set (a ⊔ lsuc p)
+  {A : Type a} → (A → Type p) → Type (a ⊔ lsuc p)
 Coherently-constant {p = p} {A = A} P =
-  ∃ λ (Q : ∥ A ∥ → Set p) → ∀ x → P x ≃ᴱ Q ∣ x ∣
+  ∃ λ (Q : ∥ A ∥ → Type p) → ∀ x → P x ≃ᴱ Q ∣ x ∣
 
 -- Higher lenses with erased "proofs".
 
-Lens : Set a → Set b → Set (lsuc (a ⊔ b))
+Lens : Type a → Type b → Type (lsuc (a ⊔ b))
 Lens A B = ∃ λ (get : A → B) → Coherently-constant (get ⁻¹ᴱ_)
 
 -- In erased contexts Lens A B is equivalent to V.Lens A B.
@@ -63,7 +63,7 @@ Lens≃Variant-lens =
 
 -- Some derived definitions.
 
-module Lens {A : Set a} {B : Set b} (l : Lens A B) where
+module Lens {A : Type a} {B : Type b} (l : Lens A B) where
 
   -- A getter.
 
@@ -197,7 +197,7 @@ instance
 -- An equality characterisation lemma.
 
 @0 equality-characterisation₁ :
-  {A : Set a} {B : Set b} {l₁ l₂ : Lens A B} →
+  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
   Block "equality-characterisation" →
   let open Lens in
 
@@ -300,7 +300,7 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
 -- Yet another equality characterisation lemma.
 
 @0 equality-characterisation₃ :
-  {A : Set a} {B : Set b}
+  {A : Type a} {B : Type b}
   {l₁ l₂ : Lens A B} →
   Block "equality-characterisation" →
   Univalence (a ⊔ b) →
@@ -445,7 +445,7 @@ Lens⇔Higher-lens-preserves-getters-and-setters bl@⊠ =
 -- assuming univalence).
 
 Lens≃ᴱHigher-lens :
-  {A : Set a} {B : Set b} →
+  {A : Type a} {B : Type b} →
   Block "conversion" →
   @0 Univalence (a ⊔ b) →
   Lens A B ≃ᴱ Higher.Lens A B
@@ -541,7 +541,7 @@ Lens≃ᴱHigher-lens {A = A} {B = B} bl univ =
 -- The equivalence preserves getters and setters.
 
 Lens≃ᴱHigher-lens-preserves-getters-and-setters :
-  {A : Set a} {B : Set b}
+  {A : Type a} {B : Type b}
   (bl : Block "conversion")
   (@0 univ : Univalence (a ⊔ b)) →
   Preserves-getters-and-setters-⇔ A B

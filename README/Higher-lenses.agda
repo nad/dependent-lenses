@@ -12,8 +12,7 @@
 
 -- Note that the code does not follow the paper exactly. For instance,
 -- some definitions use bijections (functions with quasi-inverses)
--- instead of equivalences. Furthermore the universes of types are
--- called Set a, not Type a.
+-- instead of equivalences.
 --
 -- An attempt has also been made to track uses of univalence by
 -- passing around explicit proofs of the univalence axiom. However,

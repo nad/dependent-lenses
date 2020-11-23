@@ -36,7 +36,7 @@ open import Lens.Non-dependent eq as Non-dependent
 private
   variable
     a b c p         : Level
-    A B C D         : Set a
+    A B C D         : Type a
     u v x₁ x₂ y₁ y₂ : A
 
 ------------------------------------------------------------------------
@@ -44,7 +44,7 @@ private
 
 -- Lenses.
 
-record Lens (A : Set a) (B : Set b) : Set (a ⊔ b) where
+record Lens (A : Type a) (B : Type b) : Type (a ⊔ b) where
   field
     -- Getter and setter.
     get : A → B
@@ -110,7 +110,7 @@ private
 
 -- Traditional lenses that satisfy some extra coherence properties.
 
-record Coherent-lens (A : Set a) (B : Set b) : Set (a ⊔ b) where
+record Coherent-lens (A : Type a) (B : Type b) : Type (a ⊔ b) where
   field
     lens : Lens A B
 
@@ -612,7 +612,7 @@ abstract
     abstract
 
       lemma₁ :
-        ∀ (C : A → B → Set c) (eq : u ≡ v) {f g} →
+        ∀ (C : A → B → Type c) (eq : u ≡ v) {f g} →
         (subst (λ x → ∀ y → C x y) eq f ≡ g)
           ↔
         (∀ y → subst (λ x → C x y) eq (f y) ≡ g y)
@@ -623,7 +623,8 @@ abstract
         (∀ y → subst (λ x → C x y) eq (f y) ≡ g y)      □
 
     lemma₂ :
-      ∀ (P : A × B → Set p) (x₁≡x₂ : x₁ ≡ x₂) (y₁≡y₂ : y₁ ≡ y₂) {p p′} →
+      (P : A × B → Type p) (x₁≡x₂ : x₁ ≡ x₂) (y₁≡y₂ : y₁ ≡ y₂) →
+      ∀ {p p′} →
       (subst P (_↔_.to ≡×≡↔≡ (x₁≡x₂ , y₁≡y₂)) p ≡ p′)
         ↔
       (subst (λ x → P (x , y₂)) x₁≡x₂ (subst (λ y → P (x₁ , y)) y₁≡y₂ p)
@@ -1397,7 +1398,7 @@ lens-from-⊥≃⊤ = Eq.⇔→≃
 -- The conversion preserves getters and setters.
 
 ≃coherent-preserves-getters-and-setters :
-  {A : Set a}
+  {A : Type a}
   (s : Is-set A) →
   Preserves-getters-and-setters-⇔ A B
     (_≃_.logical-equivalence (≃coherent s))
@@ -1413,7 +1414,7 @@ module Lens-combinators where
   -- If two types are isomorphic, then there is a lens between them.
 
   ↔→lens :
-    {A : Set a} {B : Set b} →
+    {A : Type a} {B : Type b} →
     A ↔ B → Lens A B
   ↔→lens A↔B = record
     { get     = to
@@ -1428,7 +1429,7 @@ module Lens-combinators where
   -- If two types are equivalent, then there is a lens between them.
 
   ≃→lens :
-    {A : Set a} {B : Set b} →
+    {A : Type a} {B : Type b} →
     A ≃ B → Lens A B
   ≃→lens = ↔→lens ⊚ _≃_.bijection
 
@@ -2210,8 +2211,8 @@ no-first-projection-lens =
 
 equal-setters-but-not-equal :
   Univalence lzero →
-  ∃ λ (A : Set) →
-  ∃ λ (B : Set) →
+  ∃ λ (A : Type) →
+  ∃ λ (B : Type) →
   ∃ λ (l₁ : Lens A B) →
   ∃ λ (l₂ : Lens A B) →
     Lens.set l₁ ≡ Lens.set l₂ ×
@@ -2387,7 +2388,7 @@ private
 
   module B {a} =
     Bi-invertibility
-      equality-with-J (Set a) Lens
+      equality-with-J (Type a) Lens
       Lens-combinators.id Lens-combinators._∘_
   module BM {a} =
     B.More {a = a}
@@ -2635,7 +2636,7 @@ equality-characterisation-for-sets-≅
 Has-quasi-inverse-id-not-proposition :
   Univalence lzero →
   let open Lens-combinators in
-  ∃ λ (A : Set a) →
+  ∃ λ (A : Type a) →
     ¬ Is-proposition (Has-quasi-inverse (id {A = A}))
 Has-quasi-inverse-id-not-proposition _ =
     X
@@ -2705,7 +2706,7 @@ Has-quasi-inverse-id-not-proposition _ =
 
 ¬Is-equivalence↠Has-quasi-inverse :
   Univalence lzero →
-  ¬ ({A B : Set a}
+  ¬ ({A B : Type a}
      (l : Lens A B) →
      Is-equivalence (Lens.get l) ↠ Has-quasi-inverse l)
 ¬Is-equivalence↠Has-quasi-inverse univ surj =
@@ -3278,7 +3279,7 @@ Is-bi-invertible≃Is-equivalence-get l = Eq.⇔→≃
 precategory : Precategory (lsuc a) a
 precategory {a = a} = record
   { precategory =
-      SET a
+      Set a
     , (λ (A , A-set) (B , _) →
            Lens A B
          , lens-preserves-h-level-of-domain 1 A-set)
@@ -3298,7 +3299,7 @@ category :
   Univalence a →
   Category (lsuc a) a
 category {a = a} univ =
-  C.precategory-with-SET-to-category
+  C.precategory-with-Set-to-category
     ext
     (λ _ _ → univ)
     (proj₂ Pre.precategory)

@@ -43,7 +43,7 @@ open import Lens.Non-dependent.Higher.Coinductive.Coherently eq
 private
   variable
     a b : Level
-    A B : Set a
+    A B : Type a
 
 ------------------------------------------------------------------------
 -- Weakly constant functions
@@ -51,8 +51,8 @@ private
 -- A variant of Constant.
 
 Constant′ :
-  {A : Set a} {B : Set b} →
-  (A → B) → Set (a ⊔ b)
+  {A : Type a} {B : Type b} →
+  (A → B) → Type (a ⊔ b)
 Constant′ {A = A} {B = B} f =
   ∃ λ (g : ∥ A ∥¹ → B) → ∀ x → g ∣ x ∣ ≡ f x
 
@@ -128,20 +128,20 @@ Constant≃Constant′ f = Eq.↔→≃
 -- Coherently constant functions.
 
 Coherently-constant :
-  {A : Set a} {B : Set b} (f : A → B) → Set (a ⊔ b)
+  {A : Type a} {B : Type b} (f : A → B) → Type (a ⊔ b)
 Coherently-constant = Coherently Constant O.rec′
 
 -- An alternative to Coherently-constant.
 
 Coherently-constant′ :
-  {A : Set a} {B : Set b} (f : A → B) → Set (a ⊔ b)
+  {A : Type a} {B : Type b} (f : A → B) → Type (a ⊔ b)
 Coherently-constant′ = Coherently Constant′ (λ _ → proj₁)
 
 -- Coherently-constant and Coherently-constant′ are pointwise
 -- equivalent (assuming univalence).
 
 Coherently-constant≃Coherently-constant′ :
-  {A : Set a} {B : Set b} {f : A → B} →
+  {A : Type a} {B : Type b} {f : A → B} →
   PU.Univalence (a ⊔ b) →
   Coherently-constant f ≃ Coherently-constant′ f
 Coherently-constant≃Coherently-constant′ univ =
@@ -249,7 +249,7 @@ Coherently-constant≃Coherently-constant′ univ =
 -- functions from A (assuming univalence).
 
 ∥∥→≃ :
-  ∀ {A : Set a} {B : Set b} →
+  ∀ {A : Type a} {B : Type b} →
   PU.Univalence (a ⊔ b) →
   (∥ A ∥ → B)
     ≃
@@ -279,7 +279,7 @@ Coherently-constant≃Coherently-constant′ univ =
 -- A function used in the statement of proj₂-to-∥∥→≃-property≡.
 
 proj₁-to-∥∥→≃-constant :
-  {A : Set a} {B : Set b}
+  {A : Type a} {B : Type b}
   (univ : PU.Univalence (a ⊔ b)) →
   (f : ∥ A ∥ → B) →
   Constant (proj₁ (_≃_.to (∥∥→≃ univ) f))
@@ -290,7 +290,7 @@ proj₁-to-∥∥→≃-constant _ f x y =
 -- A "computation rule" for ∥∥→≃.
 
 proj₂-to-∥∥→≃-property≡ :
-  {A : Set a} {B : Set b}
+  {A : Type a} {B : Type b}
   (univ : PU.Univalence (a ⊔ b)) →
   {f : ∥ A ∥ → B} →
   proj₂ (_≃_.to (∥∥→≃ univ) f) .property ≡
@@ -373,7 +373,7 @@ proj₂-to-∥∥→≃-property≡ univ {f = f} = ⟨ext⟩ λ x → ⟨ext⟩ 
 -- (assuming univalence).
 
 Coherently-constant≃Coherently-constant :
-  {A : Set a} {B : Set b} {f : A → B} →
+  {A : Type a} {B : Type b} {f : A → B} →
   PU.Univalence (a ⊔ b) →
   Higher.Coherently-constant f ≃ Coherently-constant f
 Coherently-constant≃Coherently-constant {A = A} {B = B} {f = f} univ =
@@ -395,7 +395,7 @@ Coherently-constant≃Coherently-constant {A = A} {B = B} {f = f} univ =
 -- A "computation rule" for Coherently-constant≃Coherently-constant.
 
 to-Coherently-constant≃Coherently-constant-property :
-  ∀ {A : Set a} {B : Set b} {f : A → B}
+  ∀ {A : Type a} {B : Type b} {f : A → B}
     {c : Higher.Coherently-constant f} {x y}
   (univ : PU.Univalence (a ⊔ b)) →
   _≃_.to (Coherently-constant≃Coherently-constant univ)
@@ -437,12 +437,12 @@ to-Coherently-constant≃Coherently-constant-property
 
 -- The lens type family.
 
-Lens : Set a → Set b → Set (lsuc (a ⊔ b))
+Lens : Type a → Type b → Type (lsuc (a ⊔ b))
 Lens A B = ∃ λ (get : A → B) → Coherently-constant (get ⁻¹_)
 
 -- Some derived definitions.
 
-module Lens {A : Set a} {B : Set b} (l : Lens A B) where
+module Lens {A : Type a} {B : Type b} (l : Lens A B) where
 
   -- A getter.
 
@@ -482,7 +482,7 @@ instance
 -- Lens is pointwise equivalent to Higher.Lens (assuming univalence).
 
 Higher-lens≃Lens :
-  {A : Set a} {B : Set b} →
+  {A : Type a} {B : Type b} →
   Block "Higher-lens≃Lens" →
   PU.Univalence (lsuc (a ⊔ b)) →
   Higher.Lens A B ≃ Lens A B
@@ -494,7 +494,7 @@ Higher-lens≃Lens {A = A} {B = B} ⊠ univ =
 -- The equivalence preserves getters and setters.
 
 Higher-lens≃Lens-preserves-getters-and-setters :
-  {A : Set a} {B : Set b}
+  {A : Type a} {B : Type b}
   (bl : Block "Higher-lens≃Lens")
   (univ : PU.Univalence (lsuc (a ⊔ b))) →
   Preserves-getters-and-setters-⇔ A B

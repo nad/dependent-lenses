@@ -34,8 +34,8 @@ open import Lens.Non-dependent.Higher.Coinductive.Coherently eq
 private
   variable
     a b c p q : Level
-    A B C     : Set a
-    P         : A → Set p
+    A B C     : Type a
+    P         : A → Type p
     z         : A
 
 ------------------------------------------------------------------------
@@ -44,15 +44,15 @@ private
 -- A variant of Constant for type-valued functions.
 
 Constant-≃ :
-  {A : Set a} →
-  (A → Set p) → Set (a ⊔ p)
+  {A : Type a} →
+  (A → Type p) → Type (a ⊔ p)
 Constant-≃ P = ∀ x y → P x ≃ P y
 
 -- Coherently constant type-valued functions.
 
 Coherently-constant :
   Univalence p →
-  {A : Set a} → (A → Set p) → Set (a ⊔ p)
+  {A : Type a} → (A → Type p) → Type (a ⊔ p)
 Coherently-constant univ =
   Coherently
     Constant-≃
@@ -63,8 +63,8 @@ Coherently-constant univ =
 -- The lenses are defined as a record type to make it easier for Agda
 -- to infer the argument univ from a value of type Lens univ A B.
 
-record Lens (univ : Univalence (a ⊔ b)) (A : Set a) (B : Set b) :
-            Set (a ⊔ b) where
+record Lens (univ : Univalence (a ⊔ b)) (A : Type a) (B : Type b) :
+            Type (a ⊔ b) where
   field
 
     -- A getter.
@@ -105,7 +105,7 @@ instance
 -- univalence).
 
 Constant≃Constant-≃ :
-  {P : A → Set p} →
+  {P : A → Type p} →
   Univalence p → Constant P ≃ Constant-≃ P
 Constant≃Constant-≃ univ =
   ∀-cong ext λ _ →
@@ -116,7 +116,7 @@ Constant≃Constant-≃ univ =
 -- (when applicable, assuming univalence).
 
 Coinductive-coherently-constant≃Coherently-constant :
-  {A : Set a} {P : A → Set p} →
+  {A : Type a} {P : A → Type p} →
   PU.Univalence (a ⊔ lsuc p) →
   (univ : Univalence p) →
   Coinductive.Coherently-constant P ≃ Coherently-constant univ P
@@ -130,7 +130,7 @@ Coinductive-coherently-constant≃Coherently-constant univ′ univ =
 -- (when applicable, assuming univalence).
 
 Higher-coherently-constant≃Coherently-constant :
-  {A : Set a} {P : A → Set p} →
+  {A : Type a} {P : A → Type p} →
   PU.Univalence (a ⊔ lsuc p) →
   (univ : Univalence p) →
   Higher.Coherently-constant P ≃ Coherently-constant univ P
@@ -143,7 +143,7 @@ Higher-coherently-constant≃Coherently-constant {P = P} univ′ univ =
 -- univalence).
 
 Coinductive-lens≃Lens :
-  {A : Set a} {B : Set b} →
+  {A : Type a} {B : Type b} →
   PU.Univalence (lsuc (a ⊔ b)) →
   (univ : Univalence (a ⊔ b)) →
   Coinductive.Lens A B ≃ Lens univ A B
@@ -163,7 +163,7 @@ Coinductive-lens≃Lens {A = A} {B = B} univ₁ univ₂ =
 -- The equivalence preserves getters and setters.
 
 Coinductive-lens≃Lens-preserves-getters-and-setters :
-  {A : Set a} {B : Set b}
+  {A : Type a} {B : Type b}
   (univ₁ : PU.Univalence (lsuc (a ⊔ b)))
   (univ₂ : Univalence (a ⊔ b)) →
   Preserves-getters-and-setters-⇔ A B
@@ -179,7 +179,7 @@ Coinductive-lens≃Lens-preserves-getters-and-setters univ₁ univ₂ =
 -- A map lemma for Coherently-constant.
 
 Coherently-constant-map :
-  {P : A → Set p} {Q : B → Set q}
+  {P : A → Type p} {Q : B → Type q}
   (univ₁ : Univalence p) →
   (univ₂ : Univalence q) →
   (f : B → A) →
@@ -375,7 +375,7 @@ private
 -- TODO: Can the ".coherent" clause be simplified?
 
 Coherently-constant-Σ :
-  {P : A → Set p} {Q : ∃ P → Set q}
+  {P : A → Type p} {Q : ∃ P → Type q}
   (univ₁ : Univalence p)
   (univ₂ : Univalence q)
   (univ₃ : Univalence (p ⊔ q)) →
@@ -386,7 +386,7 @@ Coherently-constant-Σ {p = p} {q = q} univ₁ univ₂ univ₃ =
   Coherently-constant-Σ′ (λ _ → F.id)
   where
   Coherently-constant-Σ′ :
-    {P : A → Set p} {Q : ∃ P → Set q} {R : A → Set (p ⊔ q)} →
+    {P : A → Type p} {Q : ∃ P → Type q} {R : A → Type (p ⊔ q)} →
     (∀ x → R x ≃ ∃ λ (p : P x) → Q (x , p)) →
     Coherently-constant univ₁ P →
     Coherently-constant univ₂ Q →
@@ -621,7 +621,7 @@ private
   -- certain definitional equality.
 
   _ :
-    ∀ {P : A → Set p} {Q : ∃ P → Set q}
+    ∀ {P : A → Type p} {Q : ∃ P → Type q}
       {univ₁ : Univalence p}
       {univ₂ : Univalence q}
       {univ₃ : Univalence (p ⊔ q)}
@@ -640,7 +640,7 @@ private
 -- definitional equality above (rephrased in an obvious way).
 
 Coherently-constant-Σ′ :
-  {A : Set a} {P : A → Set p} {Q : ∃ P → Set q}
+  {A : Type a} {P : A → Type p} {Q : ∃ P → Type q}
   (univ₁ : Univalence p)
   (univ₂ : Univalence q)
   (univ₃ : Univalence (p ⊔ q)) →
@@ -665,7 +665,7 @@ Coherently-constant-Σ′ {P = P} {Q = Q}
 -- An identity lens.
 
 id :
-  {A : Set a}
+  {A : Type a}
   (univ : Univalence a) →
   Lens univ A A
 id univ .Lens.get                       = P.id
@@ -715,7 +715,7 @@ id univ .Lens.get⁻¹-coherently-constant =
 infix 9 ⟨_,_⟩_∘_
 
 ⟨_,_⟩_∘_ :
-  {A : Set a} {B : Set b} {C : Set c}
+  {A : Type a} {B : Type b} {C : Type c}
   {univ₁ : Univalence (b ⊔ c)}
   {univ₂ : Univalence (a ⊔ b)}
   (univ₃ : Univalence (a ⊔ c)) →
@@ -745,7 +745,7 @@ infix 9 ⟨_,_⟩_∘_
 -- "right" way.
 
 set-∘ :
-  ∀ {A : Set a} {B : Set b} {C : Set c}
+  ∀ {A : Type a} {B : Type b} {C : Type c}
     {univ₁ : Univalence (b ⊔ c)}
     {univ₂ : Univalence (a ⊔ b)}
   (univ₃ : Univalence (a ⊔ c))

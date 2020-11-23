@@ -32,8 +32,8 @@ import Lens.Non-dependent.Traditional eq as Traditional
 private
   variable
     a b p : Level
-    A B   : Set a
-    P Q   : A → Set p
+    A B   : Type a
+    P Q   : A → Type p
 
 ------------------------------------------------------------------------
 -- Coherently-constant
@@ -44,7 +44,7 @@ private
 -- lenses.
 
 Coherently-constant :
-  {A : Set a} {B : Set b} → (A → B) → Set (a ⊔ b)
+  {A : Type a} {B : Type b} → (A → B) → Type (a ⊔ b)
 Coherently-constant {A = A} {B = B} f =
   ∃ λ (g : ∥ A ∥ → B) → f ≡ g ∘ ∣_∣
 
@@ -68,7 +68,7 @@ Coherently-constant-Σ {P = P} {Q = Q} (P′ , p) (Q′ , q) =
 
      ((∃ λ (y : P x) → Q (x , y))                                ≡⟨ (cong (uncurry Σ) $ Σ-≡,≡→≡ (p′ x) $ ⟨ext⟩ λ y →
 
-        subst (λ P → P → Set _) (p′ x) (λ y → Q (x , y)) y           ≡⟨ subst-→-domain _ _ ⟩
+        subst (λ P → P → Type _) (p′ x) (λ y → Q (x , y)) y          ≡⟨ subst-→-domain _ _ ⟩
 
         Q (x , subst id (sym (p′ x)) y)                              ≡⟨ cong (_$ (x , subst id (sym (p′ x)) y)) q ⟩∎
 
@@ -86,12 +86,12 @@ Coherently-constant-Σ {P = P} {Q = Q} (P′ , p) (Q′ , q) =
 -- been first to describe a notion of higher lens
 -- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
 
-Lens : Set a → Set b → Set (lsuc (a ⊔ b))
+Lens : Type a → Type b → Type (lsuc (a ⊔ b))
 Lens A B = ∃ λ (get : A → B) → Coherently-constant (get ⁻¹_)
 
 -- Some derived definitions (based on Paolo's presentation).
 
-module Lens {A : Set a} {B : Set b} (l : Lens A B) where
+module Lens {A : Type a} {B : Type b} (l : Lens A B) where
 
   -- A getter.
 
@@ -211,7 +211,7 @@ equality-characterisation₁ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
 -- Another equality characterisation lemma.
 
 equality-characterisation₂ :
-  {A : Set a} {B : Set b} {l₁ l₂ : Lens A B}
+  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B}
   (univ : Univalence (a ⊔ b)) →
 
   let open Lens in
@@ -247,7 +247,7 @@ equality-characterisation₂ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} univ =
 -- (assuming univalence).
 
 Variant-lens≃Lens :
-  {A : Set a} {B : Set b} →
+  {A : Type a} {B : Type b} →
   Block "conversion" →
   Univalence (a ⊔ b) →
   Variant.Lens A B ≃ Lens A B
@@ -261,7 +261,7 @@ Variant-lens≃Lens {a = a} {A = A} {B = B} ⊠ univ =
 -- The conversion preserves getters and setters.
 
 Variant-lens≃Lens-preserves-getters-and-setters :
-  {A : Set a} {B : Set b}
+  {A : Type a} {B : Type b}
   (bc : Block "conversion")
   (univ : Univalence (a ⊔ b)) →
   Preserves-getters-and-setters-⇔ A B
@@ -297,7 +297,7 @@ Variant-lens≃Lens-preserves-getters-and-setters
 -- (assuming univalence).
 
 Lens≃Higher-lens :
-  {A : Set a} {B : Set b} →
+  {A : Type a} {B : Type b} →
   Block "conversion" →
   Univalence (a ⊔ b) →
   Lens A B ≃ Higher.Lens A B
@@ -309,7 +309,7 @@ Lens≃Higher-lens {A = A} {B = B} bc univ =
 -- The conversion preserves getters and setters.
 
 Lens≃Higher-lens-preserves-getters-and-setters :
-  {A : Set a} {B : Set b}
+  {A : Type a} {B : Type b}
   (bc : Block "conversion")
   (univ : Univalence (a ⊔ b)) →
   Preserves-getters-and-setters-⇔ A B
@@ -332,7 +332,7 @@ Lens≃Higher-lens-preserves-getters-and-setters bc univ =
 -- setters.
 
 Lens≃Higher-lens′ :
-  {A : Set a} {B : Set b} →
+  {A : Type a} {B : Type b} →
   Univalence (a ⊔ b) →
   Lens A B ≃ Higher.Lens A B
 Lens≃Higher-lens′ {a = a} {b = b} {A = A} {B = B} univ =
@@ -372,7 +372,7 @@ Lens≃Higher-lens′ {a = a} {b = b} {A = A} {B = B} univ =
 
   (∃ λ (H : Fam a ∥ B ∥) → A ≃ ∃ ((proj₂ H ⁻¹_) ∘ ∣_∣))  ↔⟨ inverse Σ-assoc ⟩
 
-  (∃ λ (R : Set ℓ) →
+  (∃ λ (R : Type ℓ) →
    ∃ λ (f : R → ∥ B ∥) → A ≃ ∃ ((f ⁻¹_) ∘ ∣_∣))          ↔⟨ (∃-cong λ R → ∃-cong λ f →
                                                              Eq.≃-preserves ext F.id
                             (∃ ((f ⁻¹_) ∘ ∣_∣)                 ↔⟨ (∃-cong λ b → drop-⊤-right λ r →
@@ -381,9 +381,9 @@ Lens≃Higher-lens′ {a = a} {b = b} {A = A} {B = B} univ =
                              B × R                             ↔⟨ ×-comm ⟩□
                              R × B                             □)) ⟩
 
-  (∃ λ (R : Set ℓ) → (R → ∥ B ∥) × (A ≃ (R × B)))        ↔⟨ (∃-cong λ _ → ×-comm) ⟩
+  (∃ λ (R : Type ℓ) → (R → ∥ B ∥) × (A ≃ (R × B)))       ↔⟨ (∃-cong λ _ → ×-comm) ⟩
 
-  (∃ λ (R : Set ℓ) → (A ≃ (R × B)) × (R → ∥ B ∥))        ↔⟨ inverse Higher.Lens-as-Σ ⟩□
+  (∃ λ (R : Type ℓ) → (A ≃ (R × B)) × (R → ∥ B ∥))       ↔⟨ inverse Higher.Lens-as-Σ ⟩□
 
   Higher.Lens A B                                        □
 
@@ -432,7 +432,7 @@ Lens≃Higher-lens′ {a = a} {b = b} {A = A} {B = B} univ =
 -- are isomorphic (assuming univalence).
 
 Lens↔Traditional-lens :
-  {A : Set a} {B : Set b} →
+  {A : Type a} {B : Type b} →
   Block "conversion" →
   Univalence (a ⊔ b) →
   Is-set A →
@@ -445,7 +445,7 @@ Lens↔Traditional-lens {A = A} {B} bc univ A-set =
 -- The isomorphism preserves getters and setters.
 
 Lens↔Traditional-lens-preserves-getters-and-setters :
-  {A : Set a} {B : Set b}
+  {A : Type a} {B : Type b}
   (bc : Block "conversion")
   (univ : Univalence (a ⊔ b))
   (s : Is-set A) →

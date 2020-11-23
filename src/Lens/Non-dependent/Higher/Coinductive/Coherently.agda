@@ -30,7 +30,7 @@ import Univalence-axiom P.equality-with-J as PU
 private
   variable
     a b ℓ p p₁ p₂ : Level
-    A B C         : Set a
+    A B C         : Type a
     x y           : A
     f             : A → B
 
@@ -45,10 +45,10 @@ private
 -- that he suggested.
 
 record Coherently
-         {A : Set a} {B : Set b}
-         (P : {A : Set a} → (A → B) → Set p)
-         (step : {A : Set a} (f : A → B) → P f → ∥ A ∥¹ → B)
-         (f : A → B) : Set p where
+         {A : Type a} {B : Type b}
+         (P : {A : Type a} → (A → B) → Type p)
+         (step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B)
+         (f : A → B) : Type p where
   coinductive
   field
     property : P f
@@ -65,14 +65,14 @@ private
 
   Coherently-cong-≡ :
     Block "Coherently-cong-≡" →
-    {A : Set a}
-    {P₁ P₂ : {A : Set a} → (A → B) → Set p}
-    {step₁ : {A : Set a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
-    {step₂ : {A : Set a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
+    {A : Type a}
+    {P₁ P₂ : {A : Type a} → (A → B) → Type p}
+    {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
+    {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
     {f : A → B} →
     PU.Univalence p →
-    (P₁≃P₂ : {A : Set a} (f : A → B) → P₁ f ≃ P₂ f) →
-    ({A : Set a} (f : A → B) (x : P₂ f) →
+    (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f) →
+    ({A : Type a} (f : A → B) (x : P₂ f) →
      step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
     Coherently P₁ step₁ f P.≡ Coherently P₂ step₂ f
   Coherently-cong-≡
@@ -80,8 +80,8 @@ private
     {step₁ = step₁} {step₂ = step₂} {f = f} _ P₁≃P₂′ step₁≡step₂ =
 
     P.cong (λ ((P , step) :
-              ∃ λ (P : (A : Set a) → (A → B) → Set p) →
-                  {A : Set a} (f : A → B) → P A f → ∥ A ∥¹ → B) →
+              ∃ λ (P : (A : Type a) → (A → B) → Type p) →
+                  {A : Type a} (f : A → B) → P A f → ∥ A ∥¹ → B) →
              Coherently (P _) step f) $
 
     Σ-≡,≡→≡′
@@ -90,44 +90,44 @@ private
        P.≃⇒≡ (P₁≃P₂ f))
 
       (P.implicit-extensionality P.ext λ A → P.⟨ext⟩ λ f →
-         P.subst (λ P → {A : Set a} (f : A → B) → P A f → ∥ A ∥¹ → B)
+         P.subst (λ P → {A : Type a} (f : A → B) → P A f → ∥ A ∥¹ → B)
            (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) →
             P.≃⇒≡ (P₁≃P₂ f))
-           step₁ f                                                     P.≡⟨ P.trans (P.cong (_$ f) $ P.sym $
-                                                                                     P.push-subst-implicit-application
+           step₁ f                                                      P.≡⟨ P.trans (P.cong (_$ f) $ P.sym $
+                                                                                      P.push-subst-implicit-application
+                                                                                        (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) → P.≃⇒≡ (P₁≃P₂ f))
+                                                                                        (λ P A → (f : A → B) → P A f → ∥ A ∥¹ → B)
+                                                                                        {f = const _} {g = step₁}) $
+                                                                             P.sym $ P.push-subst-application
                                                                                        (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) → P.≃⇒≡ (P₁≃P₂ f))
-                                                                                       (λ P A → (f : A → B) → P A f → ∥ A ∥¹ → B)
-                                                                                       {f = const _} {g = step₁}) $
-                                                                            P.sym $ P.push-subst-application
-                                                                                      (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) → P.≃⇒≡ (P₁≃P₂ f))
-                                                                                      (λ P f → P A f → ∥ A ∥¹ → B)
-                                                                                      {f = const f} {g = step₁} ⟩
+                                                                                       (λ P f → P A f → ∥ A ∥¹ → B)
+                                                                                       {f = const f} {g = step₁} ⟩
          P.subst (λ P → P A f → ∥ A ∥¹ → B)
            (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) →
             P.≃⇒≡ (P₁≃P₂ f))
-           (step₁ f)                                                   P.≡⟨⟩
+           (step₁ f)                                                    P.≡⟨⟩
 
          P.subst (λ P → P → ∥ A ∥¹ → B)
            (P.≃⇒≡ (P₁≃P₂ f))
-           (step₁ f)                                                   P.≡⟨ P.sym $
-                                                                            PU.transport-theorem
-                                                                              (λ P → P → ∥ A ∥¹ → B)
-                                                                              (PF.→-cong₁ _)
-                                                                              (λ _ → P.refl)
-                                                                              P.univ
-                                                                              (P₁≃P₂ f)
-                                                                              (step₁ f) ⟩
-         PF.→-cong₁ _ (P₁≃P₂ f) (step₁ f)                              P.≡⟨⟩
+           (step₁ f)                                                    P.≡⟨ P.sym $
+                                                                             PU.transport-theorem
+                                                                               (λ P → P → ∥ A ∥¹ → B)
+                                                                               (PF.→-cong₁ _)
+                                                                               (λ _ → P.refl)
+                                                                               P.univ
+                                                                               (P₁≃P₂ f)
+                                                                               (step₁ f) ⟩
+         PF.→-cong₁ _ (P₁≃P₂ f) (step₁ f)                               P.≡⟨⟩
 
-         step₁ f ∘ PEq._≃_.from (P₁≃P₂ f)                              P.≡⟨ P.⟨ext⟩ (_↔_.to ≡↔≡ ∘ step₁≡step₂ f) ⟩∎
+         step₁ f ∘ PEq._≃_.from (P₁≃P₂ f)                               P.≡⟨ P.⟨ext⟩ (_↔_.to ≡↔≡ ∘ step₁≡step₂ f) ⟩∎
 
-         step₂ f                                                       ∎)
+         step₂ f                                                        ∎)
     where
-    P₁≃P₂ : {A : Set a} (f : A → B) → P₁ f PEq.≃ P₂ f
+    P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f PEq.≃ P₂ f
     P₁≃P₂ f = _↔_.to ≃↔≃ (P₁≃P₂′ f)
 
     Σ-≡,≡→≡′ :
-      {P : A → Set b} {p₁ p₂ : Σ A P} →
+      {P : A → Type b} {p₁ p₂ : Σ A P} →
       (p : proj₁ p₁ P.≡ proj₁ p₂) →
       P.subst P p (proj₂ p₁) P.≡ proj₂ p₂ →
       p₁ P.≡ p₂
@@ -141,15 +141,15 @@ private
 
   to-Coherently-cong-≡-property :
     (bl : Block "Coherently-cong-≡")
-    {A : Set a} {B : Set b}
-    {P₁ P₂ : {A : Set a} → (A → B) → Set p}
-    {step₁ : {A : Set a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
-    {step₂ : {A : Set a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
+    {A : Type a} {B : Type b}
+    {P₁ P₂ : {A : Type a} → (A → B) → Type p}
+    {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
+    {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
     {f : A → B}
     (univ : PU.Univalence p)
-    (P₁≃P₂ : {A : Set a} (f : A → B) → P₁ f ≃ P₂ f)
+    (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f)
     (step₁≡step₂ :
-       {A : Set a} (f : A → B) (x : P₂ f) →
+       {A : Type a} (f : A → B) (x : P₂ f) →
        step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x)
     (c : Coherently P₁ step₁ f) →
     PU.≡⇒→ (Coherently-cong-≡ bl univ P₁≃P₂ step₁≡step₂) c .property P.≡
@@ -170,15 +170,15 @@ private
 
   from-Coherently-cong-≡-property :
     (bl : Block "Coherently-cong-≡")
-    {A : Set a} {B : Set b}
-    {P₁ P₂ : {A : Set a} → (A → B) → Set p}
-    {step₁ : {A : Set a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
-    {step₂ : {A : Set a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
+    {A : Type a} {B : Type b}
+    {P₁ P₂ : {A : Type a} → (A → B) → Type p}
+    {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
+    {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
     {f : A → B}
     (univ : PU.Univalence p)
-    (P₁≃P₂ : {A : Set a} (f : A → B) → P₁ f ≃ P₂ f)
+    (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f)
     (step₁≡step₂ :
-       {A : Set a} (f : A → B) (x : P₂ f) →
+       {A : Type a} (f : A → B) (x : P₂ f) →
        step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x)
     (c : Coherently P₂ step₂ f) →
     PEq._≃_.from
@@ -207,14 +207,14 @@ private
   -- general result is given below (Coherently-cong).
 
   Coherently-cong-≃ :
-    {A : Set a}
-    {P₁ P₂ : {A : Set a} → (A → B) → Set p}
-    {step₁ : {A : Set a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
-    {step₂ : {A : Set a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
+    {A : Type a}
+    {P₁ P₂ : {A : Type a} → (A → B) → Type p}
+    {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
+    {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
     {f : A → B} →
     PU.Univalence p →
-    (P₁≃P₂ : {A : Set a} (f : A → B) → P₁ f ≃ P₂ f) →
-    ({A : Set a} (f : A → B) (x : P₂ f) →
+    (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f) →
+    ({A : Type a} (f : A → B) (x : P₂ f) →
      step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
     Coherently P₁ step₁ f ≃ Coherently P₂ step₂ f
   Coherently-cong-≃
@@ -304,15 +304,15 @@ private
   -- property fields in certain ways.
 
   module _
-    {A : Set a}
-    {P₁ P₂ : {A : Set a} → (A → B) → Set p}
-    {step₁ : {A : Set a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
-    {step₂ : {A : Set a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
+    {A : Type a}
+    {P₁ P₂ : {A : Type a} → (A → B) → Type p}
+    {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
+    {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
     {f : A → B}
     {univ : PU.Univalence p}
-    {P₁≃P₂ : {A : Set a} (f : A → B) → P₁ f ≃ P₂ f}
+    {P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f}
     {step₁≡step₂ :
-       {A : Set a} (f : A → B) (x : P₂ f) →
+       {A : Type a} (f : A → B) (x : P₂ f) →
        step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x}
     where
 
@@ -333,9 +333,9 @@ private
   -- A lemma involving Coherently and ↑.
 
   Coherently-↑ :
-    {A : Set a}
-    {P : {A : Set a} → (A → B) → Set p}
-    {step : {A : Set a} (f : A → B) → P f → ∥ A ∥¹ → B}
+    {A : Type a}
+    {P : {A : Type a} → (A → B) → Type p}
+    {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B}
     {f : A → B} →
     Coherently (↑ ℓ ∘ P) ((_∘ lower) ∘ step) f ≃
     Coherently P step f
@@ -376,15 +376,15 @@ private
 -- fields in certain ways, see the "unit tests" below.
 
 Coherently-cong :
-  {A : Set a}
-  {P₁ : {A : Set a} → (A → B) → Set p₁}
-  {P₂ : {A : Set a} → (A → B) → Set p₂}
-  {step₁ : {A : Set a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
-  {step₂ : {A : Set a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
+  {A : Type a}
+  {P₁ : {A : Type a} → (A → B) → Type p₁}
+  {P₂ : {A : Type a} → (A → B) → Type p₂}
+  {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
+  {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
   {f : A → B} →
   PU.Univalence (p₁ ⊔ p₂) →
-  (P₁≃P₂ : {A : Set a} (f : A → B) → P₁ f ≃ P₂ f) →
-  ({A : Set a} (f : A → B) (x : P₂ f) →
+  (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f) →
+  ({A : Type a} (f : A → B) (x : P₂ f) →
    step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
   Coherently P₁ step₁ f ≃ Coherently P₂ step₂ f
 Coherently-cong
@@ -411,16 +411,16 @@ Coherently-cong
 -- property fields in certain ways.
 
 module _
-  {A : Set a}
-  {P₁ : {A : Set a} → (A → B) → Set p₁}
-  {P₂ : {A : Set a} → (A → B) → Set p₂}
-  {step₁ : {A : Set a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
-  {step₂ : {A : Set a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
+  {A : Type a}
+  {P₁ : {A : Type a} → (A → B) → Type p₁}
+  {P₂ : {A : Type a} → (A → B) → Type p₂}
+  {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
+  {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
   {f : A → B}
   {univ : PU.Univalence (p₁ ⊔ p₂)}
-  {P₁≃P₂ : {A : Set a} (f : A → B) → P₁ f ≃ P₂ f}
+  {P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f}
   {step₁≡step₂ :
-     {A : Set a} (f : A → B) (x : P₂ f) →
+     {A : Type a} (f : A → B) (x : P₂ f) →
      step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x}
   where
 
@@ -440,8 +440,8 @@ module _
 -- A "computation rule".
 
 subst-Coherently-property :
-  ∀ {B : Set b} {P : C → {A : Set a} → (A → B) → Set p}
-    {step : (c : C) {A : Set a} (f : A → B) → P c f → ∥ A ∥¹ → B}
+  ∀ {B : Type b} {P : C → {A : Type a} → (A → B) → Type p}
+    {step : (c : C) {A : Type a} (f : A → B) → P c f → ∥ A ∥¹ → B}
     {f : C → A → B} {eq : x ≡ y} {c} →
   subst (λ x → Coherently (P x) (step x) (f x)) eq c .property ≡
   subst (λ x → P x (f x)) eq (c .property)

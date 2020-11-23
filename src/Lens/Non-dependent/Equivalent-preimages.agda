@@ -34,7 +34,7 @@ import Lens.Non-dependent.Traditional eq as Traditional
 private
   variable
     ℓ       : Level
-    A B C   : Set ℓ
+    A B C   : Type ℓ
     a b c z : A
 
 ------------------------------------------------------------------------
@@ -48,7 +48,7 @@ private
 -- discussed by Paolo Capriotti in the context of his higher lenses
 -- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
 
-record Lens (A : Set a) (B : Set b) : Set (a ⊔ b) where
+record Lens (A : Type a) (B : Type b) : Type (a ⊔ b) where
   no-eta-equality
   pattern
   constructor lens
@@ -294,7 +294,7 @@ lens-preserves-h-level-of-domain n hA =
 
 equality-characterisation :
   let open Lens in
-  {A : Set a} {B : Set b} {l₁ l₂ : Lens A B} →
+  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
 
   (l₁ ≡ l₂)
     ≃
@@ -386,7 +386,7 @@ equality-characterisation {l₁ = l₁} {l₂ = l₂} =
   open Lens
 
   lemma₁ :
-    {P : A → Set ℓ} {Q R : (x : A) → P x → Set ℓ} →
+    {P : A → Type ℓ} {Q R : (x : A) → P x → Type ℓ} →
     (∃ λ (x : A) → ∃ λ (y : P x) → Q x y × R x y) ≃
     (∃ λ (((x , y) , _) : Σ (Σ A P) (uncurry R)) → Q x y)
   lemma₁ {A = A} {P = P} {Q = Q} {R = R} =
@@ -419,7 +419,7 @@ equality-characterisation {l₁ = l₁} {l₂ = l₂} =
 
 equality-characterisation-for-sets :
   let open Lens in
-  {A : Set a} {B : Set b} {l₁ l₂ : Lens A B} →
+  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
 
   Is-set A →
 
@@ -556,7 +556,7 @@ higher→-preserves-getters-and-setters Higher.⟨ _ , _ , _ ⟩ =
 -- The conversion preserves getters and setters.
 
 →higher-preserves-getters-and-setters :
-  {B : Set b}
+  {B : Type b}
   (∥B∥→B : ∥ B ∥ → B) →
   Preserves-getters-and-setters-→ A B (→higher ∥B∥→B)
 →higher-preserves-getters-and-setters {A = A} ∥B∥→B l@(lens _ _ _ _) =
@@ -622,7 +622,7 @@ higher→-preserves-getters-and-setters Higher.⟨ _ , _ , _ ⟩ =
 -- is inhabited when it is merely inhabited (assuming univalence).
 
 ↠higher :
-  {A : Set a} {B : Set b} →
+  {A : Type a} {B : Type b} →
   Univalence (a ⊔ b) →
   (∥ B ∥ → B) →
   Lens A B ↠ Higher.Lens A B
@@ -645,7 +645,7 @@ higher→-preserves-getters-and-setters Higher.⟨ _ , _ , _ ⟩ =
 -- The split surjection preserves getters and setters.
 
 ↠higher-preserves-getters-and-setters :
-  {A : Set a} {B : Set b}
+  {A : Type a} {B : Type b}
   (univ : Univalence (a ⊔ b))
   (∥B∥→B : ∥ B ∥ → B) →
   Preserves-getters-and-setters-⇔ A B
@@ -659,7 +659,7 @@ higher→-preserves-getters-and-setters Higher.⟨ _ , _ , _ ⟩ =
 -- univalence).
 
 higher-lens-preserves-h-level-of-domain :
-  {A : Set a} {B : Set b} →
+  {A : Type a} {B : Type b} →
   Univalence (a ⊔ b) →
   (∥ B ∥ → B) →
   ∀ n → H-level (1 + n) A → H-level (1 + n) (Higher.Lens A B)
@@ -870,7 +870,7 @@ traditional≃ {A = A} {B = B} b@⊠ A-set = Eq.↔→≃
 -- The equivalence preserves getters and setters.
 
 traditional≃-preserves-getters-and-setters :
-  {A : Set a}
+  {A : Type a}
   (b : Block "conversion")
   (s : Is-set A) →
   Preserves-getters-and-setters-⇔ A B
@@ -897,7 +897,7 @@ coherent⇔higher {B = B} {A = A} b ∥B∥→B = record
 -- The logical equivalence preserves getters and setters.
 
 coherent⇔higher-preserves-getters-and-setters :
-  {B : Set b}
+  {B : Type b}
   (bc : Block "conversion")
   (∥B∥→B : ∥ B ∥ → B) →
   Preserves-getters-and-setters-⇔ A B (coherent⇔higher bc ∥B∥→B)
@@ -914,7 +914,7 @@ coherent⇔higher-preserves-getters-and-setters b ∥B∥→B =
 -- Higher.Lens A B (assuming univalence).
 
 coherent↠higher :
-  {A : Set a} {B : Set b} →
+  {A : Type a} {B : Type b} →
   Block "conversion" →
   Univalence (a ⊔ b) →
   (∥ B ∥ → B) →
@@ -931,7 +931,7 @@ coherent↠higher {A = A} {B = B} b univ ∥B∥→B = record
 -- The split surjection preserves getters and setters.
 
 coherent↠higher-preserves-getters-and-setters :
-  {A : Set a} {B : Set b}
+  {A : Type a} {B : Type b}
   (bc : Block "conversion")
   (univ : Univalence (a ⊔ b))
   (∥B∥→B : ∥ B ∥ → B) →
@@ -1101,7 +1101,7 @@ set-⊚≡ {a = a} {c = c} ∥C∥→C l₁ l₂ =
 -- univalence).
 
 ⊚≡∘ :
-  ∀ a b {A : Set (a ⊔ b ⊔ c)} {B : Set (b ⊔ c)} {C : Set c} →
+  ∀ a b {A : Type (a ⊔ b ⊔ c)} {B : Type (b ⊔ c)} {C : Type c} →
   Univalence (a ⊔ b ⊔ c) →
   (∥C∥→C : ∥ C ∥ → C) →
   ⟨_⟩_⊚_ {B = B} {A = A} ∥C∥→C ≡

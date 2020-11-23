@@ -30,7 +30,7 @@ import Lens.Non-dependent.Higher eq as Higher
 private
   variable
     a b p : Level
-    A B   : Set a
+    A B   : Type a
 
 ------------------------------------------------------------------------
 -- The lens type family
@@ -41,19 +41,19 @@ private
 -- lenses, but uses a family of equivalences instead of an equality.
 
 Coherently-constant :
-  {A : Set a} → (A → Set p) → Set (a ⊔ lsuc p)
+  {A : Type a} → (A → Type p) → Type (a ⊔ lsuc p)
 Coherently-constant {p = p} {A = A} P =
-  ∃ λ (Q : ∥ A ∥ → Set p) → ∀ x → P x ≃ Q ∣ x ∣
+  ∃ λ (Q : ∥ A ∥ → Type p) → ∀ x → P x ≃ Q ∣ x ∣
 
 -- Paolo Capriotti's variant of higher lenses, but with a family of
 -- equivalences instead of an equality.
 
-Lens : Set a → Set b → Set (lsuc (a ⊔ b))
+Lens : Type a → Type b → Type (lsuc (a ⊔ b))
 Lens A B = ∃ λ (get : A → B) → Coherently-constant (get ⁻¹_)
 
 -- Some derived definitions (based on Capriotti's).
 
-module Lens {A : Set a} {B : Set b} (l : Lens A B) where
+module Lens {A : Type a} {B : Type b} (l : Lens A B) where
 
   -- A getter.
 
@@ -187,7 +187,7 @@ instance
 -- An equality characterisation lemma.
 
 equality-characterisation₁ :
-  {A : Set a} {B : Set b} {l₁ l₂ : Lens A B} →
+  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
   Block "equality-characterisation" →
   let open Lens in
 
@@ -320,7 +320,7 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
 -- Yet another equality characterisation lemma.
 
 equality-characterisation₃ :
-  {A : Set a} {B : Set b}
+  {A : Type a} {B : Type b}
   {l₁ l₂ : Lens A B} →
   Block "equality-characterisation" →
   Univalence (a ⊔ b) →
@@ -463,7 +463,7 @@ Lens⇔Higher-lens-preserves-getters-and-setters =
 -- Lens A B is equivalent to Higher.Lens A B (assuming univalence).
 
 Lens≃Higher-lens :
-  {A : Set a} {B : Set b} →
+  {A : Type a} {B : Type b} →
   Block "conversion" →
   Univalence (a ⊔ b) →
   Lens A B ≃ Higher.Lens A B
@@ -545,7 +545,7 @@ Lens≃Higher-lens {A = A} {B = B} ⊠ univ =
 -- The equivalence preserves getters and setters.
 
 Lens≃Higher-lens-preserves-getters-and-setters :
-  {A : Set a} {B : Set b}
+  {A : Type a} {B : Type b}
   (bl : Block "conversion")
   (univ : Univalence (a ⊔ b)) →
   Preserves-getters-and-setters-⇔ A B
@@ -691,7 +691,7 @@ Lens≃Higher-lens-preserves-getters-and-setters ⊠ _ =
 -- univalence).
 
 [codomain-inhabited→proposition]→proposition-for-higher :
-  {A : Set a} {B : Set b} {s : A → B → A} →
+  {A : Type a} {B : Type b} {s : A → B → A} →
   Univalence (a ⊔ b) →
   (B → Is-proposition (Higher.Lens.set ⁻¹ s)) ≃
   Is-proposition (Higher.Lens.set ⁻¹ s)
@@ -715,7 +715,7 @@ Lens≃Higher-lens-preserves-getters-and-setters ⊠ _ =
 -- univalence).
 
 lenses-equal-if-setters-equal→set⁻¹-proposition :
-  {A : Set a} {B : Set b}
+  {A : Type a} {B : Type b}
   (univ : Univalence (a ⊔ b)) →
   ((l₁ l₂ : Higher.Lens A B) →
    B →
@@ -759,7 +759,7 @@ lenses-equal-if-setters-equal→set⁻¹-proposition
 -- Higher.Lens.set is an embedding?
 
 lenses-equal-if-setters-equal→lenses-equal-if-setters-equal :
-  {A : Set a} {B : Set b} →
+  {A : Type a} {B : Type b} →
   Univalence (a ⊔ b) →
   ((l₁ l₂ : Higher.Lens A B) →
    B →

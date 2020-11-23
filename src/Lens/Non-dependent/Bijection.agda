@@ -37,9 +37,9 @@ private
 -- not even if A and B are sets (consider the case in which A and B
 -- are empty; see ¬Higher-lens↠Lens below).
 
-Lens : Set a → Set b → Set (lsuc (a ⊔ b))
+Lens : Type a → Type b → Type (lsuc (a ⊔ b))
 Lens {a = a} {b = b} A B =
-  ∃ λ (R : Set (a ⊔ b)) → A ↔ (R × B)
+  ∃ λ (R : Type (a ⊔ b)) → A ↔ (R × B)
 
 instance
 
@@ -52,22 +52,22 @@ instance
     ; set = λ (_ , bij) a b → _↔_.from bij (proj₁ (_↔_.to bij a) , b)
     }
 
--- Lens ⊥ ⊥ is isomorphic to Set something.
+-- Lens ⊥ ⊥ is isomorphic to Type something.
 
 Lens-⊥-⊥↔Set :
-  Lens (⊥ {ℓ = a}) (⊥ {ℓ = b}) ↔ Set (a ⊔ b)
+  Lens (⊥ {ℓ = a}) (⊥ {ℓ = b}) ↔ Type (a ⊔ b)
 Lens-⊥-⊥↔Set =
   Lens ⊥ ⊥               ↔⟨ (∃-cong λ _ → Eq.↔↔≃ ext (mono₁ 1 ⊥-propositional)) ⟩
   (∃ λ R → ⊥ ≃ (R × ⊥))  ↔⟨ (∃-cong λ _ → Eq.≃-preserves-bijections ext F.id ×-right-zero) ⟩
   (∃ λ R → ⊥ ≃ ⊥₀)       ↔⟨ (∃-cong λ _ → ≃⊥≃¬ ext) ⟩
   (∃ λ R → ¬ ⊥)          ↔⟨ drop-⊤-right (λ _ → ¬⊥↔⊤ {k = bijection} ext) ⟩□
-  Set _                  □
+  Type _                 □
 
 -- There is a split surjection from Lens A B to Higher.Lens A B
 -- (assuming univalence).
 
 Lens↠Higher-lens :
-  {A : Set a} {B : Set b} →
+  {A : Type a} {B : Type b} →
   Univalence (a ⊔ b) →
   Lens A B ↠ Higher.Lens A B
 Lens↠Higher-lens {A = A} {B} univ = record
@@ -90,7 +90,7 @@ Lens↠Higher-lens {A = A} {B} univ = record
 
 ¬Higher-lens↠Lens :
   Univalence (a ⊔ b) →
-  ¬ ({A : Set a} {B : Set b} →
+  ¬ ({A : Type a} {B : Type b} →
      Is-set A → Is-set B →
      Higher.Lens A B ↠ Lens A B)
 ¬Higher-lens↠Lens univ surj =
@@ -103,7 +103,7 @@ Lens↠Higher-lens {A = A} {B} univ = record
     ⊤                ↔⟨ inverse $ Higher.lens-from-⊥↔⊤ univ ⟩
     Higher.Lens ⊥ ⊥  ↝⟨ surj ⊥-is-set ⊥-is-set ⟩
     Lens ⊥ ⊥         ↔⟨ Lens-⊥-⊥↔Set ⟩□
-    Set _            □
+    Type _           □
 
   ⊤≡⊥ : ↑ _ ⊤ ≡ ⊥
   ⊤≡⊥ =
@@ -118,7 +118,7 @@ Lens↠Higher-lens {A = A} {B} univ = record
 -- setters.
 
 Lens↠Higher-lens-preserves-getters-and-setters :
-  {A : Set a} {B : Set b}
+  {A : Type a} {B : Type b}
   (univ : Univalence (a ⊔ b)) →
   Preserves-getters-and-setters-⇔ A B
     (_↠_.logical-equivalence (Lens↠Higher-lens univ))

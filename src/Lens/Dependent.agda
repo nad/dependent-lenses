@@ -2,12 +2,12 @@
 -- Dependent lenses
 ------------------------------------------------------------------------
 
--- Some code below depends on UIP for Set ℓ (for some ℓ). This kind of
--- assumption is inconsistent in Cubical Agda. However, Andrea Vezzosi
--- and I have discussed whether UIP, the propositional truncation, and
--- extensionality are mutually consistent, and it seems plausible that
--- some form of extensional type theory with squash types would
--- provide a model for these things.
+-- Some code below depends on UIP for Type ℓ (for some ℓ). This kind
+-- of assumption is inconsistent in Cubical Agda. However, Andrea
+-- Vezzosi and I have discussed whether UIP, the propositional
+-- truncation, and extensionality are mutually consistent, and it
+-- seems plausible that some form of extensional type theory with
+-- squash types would provide a model for these things.
 --
 -- Note that the code that depends on UIP does not make use of
 -- univalence, or at least it did not use to do this, library code may
@@ -44,7 +44,7 @@ import Lens.Non-dependent.Higher equality-with-paths as ND
 private
   variable
     a b b₁ b₂ b₃ c r r₁ r₂ r₃ : Level
-    A                         : Set a
+    A                         : Type a
 
 ------------------------------------------------------------------------
 -- Dependent lenses with "remainder types" visible in the type
@@ -52,10 +52,10 @@ private
 -- If Lens₃ A R B is inhabited, then a value of type A can be split up
 -- into a "remainder" r of type R and a value of type B r.
 
-Lens₃ : Set a → (R : Set r) → (R → Set b) → Set _
+Lens₃ : Type a → (R : Type r) → (R → Type b) → Type _
 Lens₃ A R B = A ≃ Σ R B
 
-module Lens₃ {R : Set r} {B : R → Set b} (lens : Lens₃ A R B) where
+module Lens₃ {R : Type r} {B : R → Type b} (lens : Lens₃ A R B) where
 
   open _≃_
 
@@ -153,8 +153,8 @@ id₃ {A = A} =
 
 infixr 9 _₃∘₃_
 
-_₃∘₃_ : {R₁ : Set r₁} {B₁ : R₁ → Set b₁}
-        {R₂ : R₁ → Set r₂} {B₂ : (r : R₁) → R₂ r → Set b₂} →
+_₃∘₃_ : {R₁ : Type r₁} {B₁ : R₁ → Type b₁}
+        {R₂ : R₁ → Type r₂} {B₂ : (r : R₁) → R₂ r → Type b₂} →
         (∀ {r} → Lens₃ (B₁ r) (R₂ r) (B₂ r)) → Lens₃ A R₁ B₁ →
         Lens₃ A (Σ R₁ R₂) (uncurry B₂)
 _₃∘₃_ {A = A} {R₁ = R₁} {B₁ = B₁} {R₂ = R₂} {B₂ = B₂} l₁ l₂ =
@@ -169,7 +169,7 @@ _₃∘₃_ {A = A} {R₁ = R₁} {B₁ = B₁} {R₂ = R₂} {B₂ = B₂} l₁
 -- id₃ and _₃∘₃_ form a kind of precategory.
 
 left-identity₃ :
-  {R : Set r} {B : R → Set b} →
+  {R : Type r} {B : R → Type b} →
   (l : Lens₃ A R B) →
   id₃ ₃∘₃ l
     ≡
@@ -179,7 +179,7 @@ left-identity₃ :
 left-identity₃ _ = Eq.lift-equality ext refl
 
 right-identity₃ :
-  {R : Set r} {B : R → Set b} →
+  {R : Type r} {B : R → Type b} →
   (l : Lens₃ A R B) →
   l ₃∘₃ id₃
     ≡
@@ -189,10 +189,10 @@ right-identity₃ :
 right-identity₃ _ = Eq.lift-equality ext refl
 
 associativity₃ :
-  {R₁ : Set r₁} {B₁ : R₁ → Set b₁}
-  {R₂ : R₁ → Set r₂} {B₂ : (r₁ : R₁) → R₂ r₁ → Set b₂}
-  {R₃ : (r₁ : R₁) → R₂ r₁ → Set r₃}
-  {B₃ : (r₁ : R₁) (r₂ : R₂ r₁) → R₃ r₁ r₂ → Set b₃} →
+  {R₁ : Type r₁} {B₁ : R₁ → Type b₁}
+  {R₂ : R₁ → Type r₂} {B₂ : (r₁ : R₁) → R₂ r₁ → Type b₂}
+  {R₃ : (r₁ : R₁) → R₂ r₁ → Type r₃}
+  {B₃ : (r₁ : R₁) (r₂ : R₂ r₁) → R₃ r₁ r₂ → Type b₃} →
   (l₁ : ∀ {r₁ r₂} → Lens₃ (B₂ r₁ r₂) (R₃ r₁ r₂) (B₃ r₁ r₂))
   (l₂ : ∀ {r} → Lens₃ (B₁ r) (R₂ r) (B₂ r))
   (l₃ : Lens₃ A R₁ B₁) →
@@ -208,10 +208,10 @@ associativity₃ _ _ _ = Eq.lift-equality ext refl
 
 -- One definition.
 
-Lens : (A : Set a) → (A → Set b) → Set (lsuc (a ⊔ b))
+Lens : (A : Type a) → (A → Type b) → Type (lsuc (a ⊔ b))
 Lens {a = a} {b = b} A B =
-  ∃ λ (R : Set (a ⊔ b)) →
-  ∃ λ (B′ : R → Set b) →
+  ∃ λ (R : Type (a ⊔ b)) →
+  ∃ λ (B′ : R → Type b) →
   ∃ λ (lens : Lens₃ A R B′) →
   ((r : R) → ∥ B′ r ∥)
     ×
@@ -220,29 +220,29 @@ Lens {a = a} {b = b} A B =
 -- An alternative definition. This definition is pointwise isomorphic
 -- to the previous one, see Lens↔Lens′ below.
 
-Lens′ : (A : Set a) → (A → Set b) → Set (lsuc (a ⊔ b))
+Lens′ : (A : Type a) → (A → Type b) → Type (lsuc (a ⊔ b))
 Lens′ {a = a} {b = b} A B =
   ∃ λ (get : (a : A) → B a) →
-  ∃ λ (R : Set (a ⊔ b)) →
+  ∃ λ (R : Type (a ⊔ b)) →
   ∃ λ (remainder : A → R) →
   Surjective remainder
     ×
-  ∃ λ (B′ : R → Set b) →
+  ∃ λ (B′ : R → Type b) →
   ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
   Eq.Is-equivalence {B = ∃ B′}
                     (λ a → remainder a , subst P.id variant (get a))
 
-module Lens {A : Set a} {B : A → Set b} (l : Lens A B) where
+module Lens {A : Type a} {B : A → Type b} (l : Lens A B) where
 
   -- The remainder type: what remains of A when B is removed
   -- (roughly).
 
-  R : Set (a ⊔ b)
+  R : Type (a ⊔ b)
   R = proj₁ l
 
   -- A variant of B, indexed by Rs instead of As.
 
-  B′ : R → Set b
+  B′ : R → Type b
   B′ = proj₁ (proj₂ l)
 
   -- The main lens isomorphism.
@@ -297,19 +297,19 @@ module Lens {A : Set a} {B : A → Set b} (l : Lens A B) where
     B′ r                        ≡⟨ other-variant _ _ ⟩∎
     B (_≃_.from lens (r , b₂))  ∎
 
-  -- Thus we can, assuming that Set b is a set, define a variant of B
+  -- Thus we can, assuming that Type b is a set, define a variant of B
   -- that only depends on R.
 
-  module First-variant-of-B (uip : Is-set (Set b)) where
+  module First-variant-of-B (uip : Is-set (Type b)) where
 
     private
 
-      B̲′ : (r : R) → ∥ B′ r ∥ → Set b
+      B̲′ : (r : R) → ∥ B′ r ∥ → Type b
       B̲′ r =
         to (constant-function≃∥inhabited∥⇒inhabited uip)
            (B ⊚ _≃_.from lens ⊚ (r ,_) , independent-of-B′ r)
 
-    B̲ : R → Set b
+    B̲ : R → Type b
     B̲ r = B̲′ r (inhabited r)
 
     -- This type family is pointwise equal to B′ (given the same
@@ -335,7 +335,7 @@ module Lens {A : Set a} {B : A → Set b} (l : Lens A B) where
     private
      abstract
 
-      B̲-triple : (r : R) → ∃ λ (X : SET b) → B′ r ≡ proj₁ X
+      B̲-triple : (r : R) → ∃ λ (X : Set b) → B′ r ≡ proj₁ X
       B̲-triple r =
         to (coherently-constant-function≃∥inhabited∥⇒inhabited
               (Σ-closure 3
@@ -420,11 +420,11 @@ module Lens {A : Set a} {B : A → Set b} (l : Lens A B) where
           (inhabited r)
         where
         Is-set-is-propositional :
-          {B : Set b} → Is-proposition (Is-set B)
+          {B : Type b} → Is-proposition (Is-set B)
         Is-set-is-propositional =
           H-level-propositional ext 2
 
-    B̲ : R → Set b
+    B̲ : R → Type b
     B̲ r = proj₁ (proj₁ (B̲-triple r))
 
     B̲-set : ∀ r → Is-set (B̲ r)
@@ -539,8 +539,8 @@ module Lens {A : Set a} {B : A → Set b} (l : Lens A B) where
 -- codomain's universe, codomain-set-≃ is equal to the identity.
 
 codomain-set-≃≡id :
-  {B : Set b} →
-  Is-set (Set b) →
+  {B : Type b} →
+  Is-set (Type b) →
   (l : Lens A (λ _ → B)) →
   ∀ {a b} → Lens.codomain-set-≃ l {a = a} {b = b} ≡ Eq.id
 codomain-set-≃≡id uip l =
@@ -557,14 +557,14 @@ codomain-set-≃≡id uip l =
 -- Lens preserves level-preserving equivalences (assuming univalence).
 
 Lens-cong :
-  {A₁ A₂ : Set a} {B₁ : A₁ → Set b} {B₂ : A₂ → Set b} →
+  {A₁ A₂ : Type a} {B₁ : A₁ → Type b} {B₂ : A₂ → Type b} →
   Univalence b →
   (A₁≃A₂ : A₁ ≃ A₂) →
   (∀ a → B₁ a ≃ B₂ (_≃_.to A₁≃A₂ a)) →
   Lens A₁ B₁ ≃ Lens A₂ B₂
 Lens-cong {A₁ = A₁} {A₂} {B₁} {B₂} univ A₁≃A₂ B₁≃B₂ =
-  (∃ λ (R : Set _) →
-   ∃ λ (B′ : R → Set _) →
+  (∃ λ (R : Type _) →
+   ∃ λ (B′ : R → Type _) →
    ∃ λ (lens : Lens₃ A₁ R B′) →
    ((r : R) → ∥ B′ r ∥)
      ×
@@ -577,8 +577,8 @@ Lens-cong {A₁ = A₁} {A₂} {B₁} {B₂} univ A₁≃A₂ B₁≃B₂ =
       B′ (proj₁ (to lens a))                                      ≡⟨ cong (λ a → B′ (proj₁ (to lens a))) $ sym $ left-inverse-of A₁≃A₂ _ ⟩∎
       B′ (proj₁ (to lens (from A₁≃A₂ (to A₁≃A₂ a))))              ∎))
                                                             (B₁≃B₂ a)) ⟩□
-  (∃ λ (R : Set _) →
-   ∃ λ (B′ : R → Set _) →
+  (∃ λ (R : Type _) →
+   ∃ λ (B′ : R → Type _) →
    ∃ λ (lens : Lens₃ A₂ R B′) →
    ((r : R) → ∥ B′ r ∥)
      ×
@@ -591,119 +591,119 @@ Lens-cong {A₁ = A₁} {A₂} {B₁} {B₂} univ A₁≃A₂ B₁≃B₂ =
 -- (x : A) → B x (assuming univalence).
 
 lens-to-proposition↔get :
-  {A : Set a} {B : A → Set b} →
+  {A : Type a} {B : A → Type b} →
   Univalence (a ⊔ b) →
   Univalence b →
   (∀ x → Is-proposition (B x)) →
   Lens A B ↔ ((x : A) → B x)
 lens-to-proposition↔get {b = b} {A = A} {B = B} univ₁ univ₂ B-prop =
-  (∃ λ (R : Set _) →
-   ∃ λ (B′ : R → Set _) →
+  (∃ λ (R : Type _) →
+   ∃ λ (B′ : R → Type _) →
    ∃ λ (lens : A ≃ Σ R B′) →
    ((r : R) → ∥ B′ r ∥)
      ×
    (∀ a → B′ (Lens₃.remainder lens a) ≡ B a))                ↝⟨ (∃-cong λ _ → ∃-cong λ B′ → ∃-cong λ l → ∃-cong λ _ →
                                                                  Π-cong ext l λ _ →
                                                                  ≡⇒↝ _ $ cong (λ x → B′ _ ≡ B x) $ sym $ _≃_.left-inverse-of l _) ⟩
-  (∃ λ (R : Set _) →
-   ∃ λ (B′ : R → Set _) →
+  (∃ λ (R : Type _) →
+   ∃ λ (B′ : R → Type _) →
    ∃ λ (lens : A ≃ Σ R B′) →
    ((r : R) → ∥ B′ r ∥)
      ×
    (∀ p → B′ (proj₁ p) ≡ B (_≃_.from lens p)))               ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → currying) ⟩
 
-  (∃ λ (R : Set _) →
-   ∃ λ (B′ : R → Set _) →
+  (∃ λ (R : Type _) →
+   ∃ λ (B′ : R → Type _) →
    ∃ λ (lens : A ≃ Σ R B′) →
    ((r : R) → ∥ B′ r ∥)
      ×
    ((r : R) (b : B′ r) → B′ r ≡ B (_≃_.from lens (r , b))))  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → inverse ΠΣ-comm) ⟩
 
-  (∃ λ (R : Set _) →
-   ∃ λ (B′ : R → Set _) →
+  (∃ λ (R : Type _) →
+   ∃ λ (B′ : R → Type _) →
    ∃ λ (lens : A ≃ Σ R B′) →
    ((r : R) →
       ∥ B′ r ∥
         ×
       ((b : B′ r) → B′ r ≡ B (_≃_.from lens (r , b)))))      ↔⟨ (∃-cong λ _ → ∃-cong λ B′ → ∃-cong λ lens → ∀-cong ext $
                                                                  lemma₁ B′ lens) ⟩
-  (∃ λ (R : Set _) →
-   ∃ λ (B′ : R → Set _) →
+  (∃ λ (R : Type _) →
+   ∃ λ (B′ : R → Type _) →
    ∃ λ (lens : A ≃ Σ R B′) →
    ((r : R) → ∃ λ (⊤≃B′ : ⊤ ≃ B′ r) →
                 B (_≃_.from lens (r , _≃_.to ⊤≃B′ _))))      ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ΠΣ-comm) ⟩
 
-  (∃ λ (R : Set _) →
-   ∃ λ (B′ : R → Set _) →
+  (∃ λ (R : Type _) →
+   ∃ λ (B′ : R → Type _) →
    ∃ λ (lens : A ≃ Σ R B′) →
    ∃ λ (⊤≃B′ : ∀ r → ⊤ ≃ B′ r) →
    ∀ r → B (_≃_.from lens (r , _≃_.to (⊤≃B′ r) _)))          ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-comm) ⟩
 
-  (∃ λ (R : Set _) →
-   ∃ λ (B′ : R → Set _) →
+  (∃ λ (R : Type _) →
+   ∃ λ (B′ : R → Type _) →
    ∃ λ (⊤≃B′ : ∀ r → ⊤ ≃ B′ r) →
    ∃ λ (lens : A ≃ Σ R B′) →
    ∀ r → B (_≃_.from lens (r , _≃_.to (⊤≃B′ r) _)))          ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ ⊤≃B′ →
                                                                  Σ-cong (Eq.≃-preserves ext F.id
                                                                            (drop-⊤-right (λ r → inverse (⊤≃B′ r)))) λ _ →
                                                                  F.id) ⟩
-  (∃ λ (R : Set _) →
-   ∃ λ (B′ : R → Set _) →
+  (∃ λ (R : Type _) →
+   ∃ λ (B′ : R → Type _) →
    (∀ r → ⊤ ≃ B′ r)
      ×
    ∃ λ (lens : A ≃ R) →
    ∀ r → B (_≃_.from lens r))                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-comm) ⟩
 
-  (∃ λ (R : Set _) →
-   ∃ λ (B′ : R → Set _) →
+  (∃ λ (R : Type _) →
+   ∃ λ (B′ : R → Type _) →
    ∃ λ (lens : A ≃ R) →
    (∀ r → ⊤ ≃ B′ r)
      ×
    ∀ r → B (_≃_.from lens r))                                ↝⟨ (∃-cong λ _ → ∃-comm) ⟩
 
-  (∃ λ (R : Set _) →
+  (∃ λ (R : Type _) →
    ∃ λ (lens : A ≃ R) →
-   ∃ λ (B′ : R → Set _) →
+   ∃ λ (B′ : R → Type _) →
    (∀ r → ⊤ ≃ B′ r)
      ×
    ∀ r → B (_≃_.from lens r))                                ↝⟨ Σ-assoc ⟩
 
-  (Σ (∃ λ (R : Set _) → A ≃ R) λ { (R , lens) →
-   ∃ λ (B′ : R → Set _) →
+  (Σ (∃ λ (R : Type _) → A ≃ R) λ { (R , lens) →
+   ∃ λ (B′ : R → Type _) →
    (∀ r → ⊤ ≃ B′ r)
      ×
    ∀ r → B (_≃_.from lens r) })                              ↝⟨ drop-⊤-left-Σ (other-singleton-with-≃-↔-⊤ {b = b} ext univ₁) ⟩
 
-  (∃ λ (B′ : ↑ _ A → Set _) →
+  (∃ λ (B′ : ↑ _ A → Type _) →
    (∀ a → ⊤ ≃ B′ a)
      ×
    (∀ a → B (lower a)))                                      ↝⟨ Σ-assoc ⟩
 
-  (∃ λ (B′ : ↑ _ A → Set _) → ∀ a → ⊤ ≃ B′ a)
+  (∃ λ (B′ : ↑ _ A → Type _) → ∀ a → ⊤ ≃ B′ a)
     ×
   (∀ a → B (lower a))                                        ↔⟨ ((∃-cong λ _ → ∀-cong ext λ _ →
                                                                   Eq.≃-preserves ext (inverse $ Eq.↔⇒≃ Bij.↑↔) F.id)
                                                                    ×-cong
                                                                  Π-cong ext (Eq.↔⇒≃ Bij.↑↔) (λ _ → F.id)) ⟩
-  (∃ λ (B′ : ↑ _ A → Set _) → ∀ a → ↑ _ ⊤ ≃ B′ a)
+  (∃ λ (B′ : ↑ _ A → Type _) → ∀ a → ↑ _ ⊤ ≃ B′ a)
     ×
   (∀ a → B a)                                                ↔⟨ (∃-cong λ B′ → ∀-cong ext λ _ →
                                                                  inverse $ ≡≃≃ univ₂)
                                                                   ×-cong
                                                                 F.id ⟩
-  (∃ λ (B′ : ↑ _ A → Set _) → ∀ a → ↑ _ ⊤ ≡ B′ a)
+  (∃ λ (B′ : ↑ _ A → Type _) → ∀ a → ↑ _ ⊤ ≡ B′ a)
     ×
   (∀ a → B a)                                                ↔⟨ (∃-cong λ _ →
                                                                  Eq.extensionality-isomorphism ext)
                                                                   ×-cong
                                                                 F.id ⟩
-  (∃ λ (B′ : ↑ _ A → Set _) → const (↑ _ ⊤) ≡ B′)
+  (∃ λ (B′ : ↑ _ A → Type _) → const (↑ _ ⊤) ≡ B′)
     ×
   (∀ a → B a)                                                ↝⟨ drop-⊤-left-× (λ _ →
                                                                 _⇔_.to contractible⇔↔⊤ (other-singleton-contractible _)) ⟩□
   (∀ a → B a)                                                □
   where
-  lemma₂ : {R : Set _} (B′ : R → Set _) (r : R) → _
+  lemma₂ : {R : Type _} (B′ : R → Type _) (r : R) → _
   lemma₂ B′ r =
     (∥ B′ r ∥ × Is-proposition (B′ r))  ↝⟨ ×-comm ⟩
 
@@ -721,7 +721,9 @@ lens-to-proposition↔get {b = b} {A = A} {B = B} univ₁ univ₂ B-prop =
 
     ⊤ ≃ B′ r                            □
 
-  lemma₁ : {R : Set _} (B′ : R → Set _) (lens : A ≃ Σ R B′) (r : R) → _
+  lemma₁ :
+    {R : Type _}
+    (B′ : R → Type _) (lens : A ≃ Σ R B′) (r : R) → _
   lemma₁ B′ lens r =
     ∥ B′ r ∥
       ×
@@ -787,7 +789,7 @@ lens-to-proposition↔get {b = b} {A = A} {B = B} univ₁ univ₂ B-prop =
 -- (assuming univalence).
 
 lens-to-contractible↔⊤ :
-  {A : Set a} {B : A → Set b} →
+  {A : Type a} {B : A → Type b} →
   Univalence (a ⊔ b) →
   Univalence b →
   (∀ x → Contractible (B x)) →
@@ -802,7 +804,7 @@ lens-to-contractible↔⊤ {A = A} {B} univ₁ univ₂ cB =
 -- Lens A (const ⊥) is isomorphic to ¬ A (assuming univalence).
 
 lens-to-⊥↔¬ :
-  {A : Set a} →
+  {A : Type a} →
   Univalence (a ⊔ b) →
   Univalence b →
   Lens A (const (⊥ {ℓ = b})) ↔ ¬ A
@@ -823,7 +825,7 @@ lens-to-⊥↔¬ {A = A} univ₁ univ₂ =
 -- be changed so that it can be proved?
 
 non-dependent-lenses-isomorphic :
-  {B : Set b} →
+  {B : Type b} →
   (∀ {B′} → Is-proposition (B′ ≡ B)) →
   ∃ λ (iso : Lens A (const B) ↔ ND.Lens A B) →
     ∀ {l a} → Lens.get l a ≡ ND.Lens.get (_↔_.to iso l) a
@@ -847,20 +849,20 @@ non-dependent-lenses-isomorphic {A = A} {B = B} ≡B-prop =
   open Lens
 
   lemma = λ R →
-    (∃ λ (B′ : R → Set _) →
+    (∃ λ (B′ : R → Type _) →
      ∃ λ (lens : A ≃ Σ R B′) →
      ((r : R) → ∥ B′ r ∥)
        ×
      (∀ a → B′ (Lens₃.remainder lens a) ≡ B))     ↝⟨ (∃-cong λ _ → ∃-cong λ l → ∃-cong λ _ →
                                                       Π-cong ext l (λ _ → F.id)) ⟩
-    (∃ λ (B′ : R → Set _) →
+    (∃ λ (B′ : R → Type _) →
      (A ≃ Σ R B′)
        ×
      ((r : R) → ∥ B′ r ∥)
        ×
      (∀ p → B′ (proj₁ p) ≡ B))                    ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → currying) ⟩
 
-    (∃ λ (B′ : R → Set _) →
+    (∃ λ (B′ : R → Type _) →
      (A ≃ Σ R B′)
        ×
      ((r : R) → ∥ B′ r ∥)
@@ -873,21 +875,21 @@ non-dependent-lenses-isomorphic {A = A} {B = B} ≡B-prop =
                                                         (record { from = λ B′r≡B     → const B′r≡B
                                                                 ; to   = λ B′r→B′r≡B → Trunc.rec ≡B-prop B′r→B′r≡B (inh r)
                                                                 })) ⟩
-    (∃ λ (B′ : R → Set _) →
+    (∃ λ (B′ : R → Type _) →
      (A ≃ Σ R B′)
        ×
      ((r : R) → ∥ B′ r ∥)
        ×
      ((r : R) → B′ r ≡ B))                        ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ×-comm) ⟩
 
-    (∃ λ (B′ : R → Set _) →
+    (∃ λ (B′ : R → Type _) →
      (A ≃ Σ R B′)
        ×
      ((r : R) → B′ r ≡ B)
        ×
      ((r : R) → ∥ B′ r ∥))                        ↝⟨ (∃-cong λ _ → ∃-comm) ⟩
 
-    (∃ λ (B′ : R → Set _) →
+    (∃ λ (B′ : R → Type _) →
      ((r : R) → B′ r ≡ B)
        ×
      (A ≃ Σ R B′)
@@ -897,14 +899,14 @@ non-dependent-lenses-isomorphic {A = A} {B = B} ≡B-prop =
                                                       Eq.≃-preserves ext F.id (∃-cong λ _ → ≡⇒↝ _ (B′≡B _))
                                                         ×-cong
                                                       ∀-cong ext (λ _ → Eq.↔⇒≃ $ ∥∥-cong (≡⇒↝ _ (B′≡B _)))) ⟩
-    (∃ λ (B′ : R → Set _) →
+    (∃ λ (B′ : R → Type _) →
      B′ ≡ const B
        ×
      (A ≃ (R × B))
        ×
      (R → ∥ B ∥))                                 ↝⟨ Σ-assoc ⟩
 
-    ((∃ λ (B′ : R → Set _) → B′ ≡ const B)
+    ((∃ λ (B′ : R → Type _) → B′ ≡ const B)
        ×
      (A ≃ (R × B))
        ×
@@ -919,8 +921,8 @@ non-dependent-lenses-isomorphic {A = A} {B = B} ≡B-prop =
 -- holds for B.
 
 non-dependent-lenses-isomorphic-UIP :
-  {B : Set b} →
-  Is-set (Set b) →
+  {B : Type b} →
+  Is-set (Type b) →
   ∃ λ (iso : Lens A (const B) ↔ ND.Lens A B) →
     ∀ {l a} → Lens.get l a ≡ ND.Lens.get (_↔_.to iso l) a
 non-dependent-lenses-isomorphic-UIP uip =
@@ -928,25 +930,25 @@ non-dependent-lenses-isomorphic-UIP uip =
 
 -- Lens and Lens′ are pointwise isomorphic.
 
-Lens↔Lens′ : {A : Set a} {B : A → Set b} →
+Lens↔Lens′ : {A : Type a} {B : A → Type b} →
              Lens A B ↔ Lens′ A B
 Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
-  (∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+  (∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (lens : Lens₃ A R B′) →
    ((r : R) → ∥ B′ r ∥)
      ×
    (∀ a → B′ (Lens₃.remainder lens a) ≡ B a))                           ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
                                                                             Σ-cong (Eq.≃-as-Σ) λ _ → F.id) ⟩
-  (∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+  (∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (lens : ∃ λ (rg : A → Σ R B′) → Eq.Is-equivalence rg) →
    ((r : R) → ∥ B′ r ∥)
      ×
    (∀ a → B′ (proj₁ (proj₁ lens a)) ≡ B a))                             ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
                                                                             inverse Σ-assoc) ⟩
-  (∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+  (∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (rg : A → Σ R B′) →
    Eq.Is-equivalence rg
      ×
@@ -954,8 +956,8 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
      ×
    (∀ a → B′ (proj₁ (rg a)) ≡ B a))                                     ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
                                                                             Σ-cong ΠΣ-comm λ _ → F.id) ⟩
-  (∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+  (∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (rg : ∃ λ (remainder : A → R) →
              (a : A) → B′ (remainder a)) →
    Eq.Is-equivalence {B = ∃ B′} (λ a → proj₁ rg a , proj₂ rg a)
@@ -964,8 +966,8 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
      ×
    (∀ a → B′ (proj₁ rg a) ≡ B a))                                       ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
                                                                             inverse Σ-assoc) ⟩
-  (∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+  (∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (remainder : A → R) →
    ∃ λ (get′ : (a : A) → B′ (remainder a)) →
    Eq.Is-equivalence {B = ∃ B′} (λ a → remainder a , get′ a)
@@ -976,8 +978,8 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
                                                                             ∀-cong ext (λ r → ∥∥-cong (lemma R B′ rem get′ eq r))
                                                                               ×-cong
                                                                             F.id) ⟩
-  (∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+  (∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (remainder : A → R) →
    ∃ λ (get′ : (a : A) → B′ (remainder a)) →
    Eq.Is-equivalence {B = ∃ B′} (λ a → remainder a , get′ a)
@@ -986,8 +988,8 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
      ×
    (∀ a → B′ (remainder a) ≡ B a))                                      ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
                                                                             ×-comm) ⟩
-  (∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+  (∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (remainder : A → R) →
    ∃ λ (get′ : (a : A) → B′ (remainder a)) →
    Eq.Is-equivalence {B = ∃ B′} (λ a → remainder a , get′ a)
@@ -996,8 +998,8 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
      ×
    Surjective remainder)                                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
                                                                             ∃-comm) ⟩
-  (∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+  (∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (remainder : A → R) →
    ∃ λ (get′ : (a : A) → B′ (remainder a)) →
    (∀ a → B′ (remainder a) ≡ B a)
@@ -1006,8 +1008,8 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
      ×
    Surjective remainder)                                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
                                                                             ∃-comm) ⟩
-  (∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+  (∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (remainder : A → R) →
    (∀ a → B′ (remainder a) ≡ B a)
      ×
@@ -1017,8 +1019,8 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
    Surjective remainder)                                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ×-cong₁ λ _ →
                                                                             ∀-cong ext λ _ →
                                                                             Groupoid.⁻¹-bijection (EG.groupoid _)) ⟩
-  (∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+  (∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (remainder : A → R) →
    (∀ a → B a ≡ B′ (remainder a))
      ×
@@ -1027,8 +1029,8 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
      ×
    Surjective remainder)                                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ×-cong₁ λ _ →
                                                                             inverse Bij.implicit-Π↔Π) ⟩
-  (∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+  (∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (remainder : A → R) →
    (∀ {a} → B a ≡ B′ (remainder a))
      ×
@@ -1039,8 +1041,8 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
                                                                             Σ-cong (∀-cong ext λ _ →
                                                                                     Eq.subst-as-equivalence P.id (variant {_})) λ _ →
                                                                             F.id) ⟩
-  (∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+  (∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (remainder : A → R) →
    ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
    ∃ λ (get : (a : A) → B a) →
@@ -1049,8 +1051,8 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
      ×
    Surjective remainder)                                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
                                                                             ∃-comm) ⟩
-  (∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+  (∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (remainder : A → R) →
    ∃ λ (get : (a : A) → B a) →
    ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
@@ -1059,8 +1061,8 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
      ×
    Surjective remainder)                                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
                                                                             ∃-comm) ⟩
-  (∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+  (∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (get : (a : A) → B a) →
    ∃ λ (remainder : A → R) →
    ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
@@ -1069,9 +1071,9 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
      ×
    Surjective remainder)                                                ↝⟨ (∃-cong λ _ →
                                                                             ∃-comm) ⟩
-  (∃ λ (R : Set (a ⊔ b)) →
+  (∃ λ (R : Type (a ⊔ b)) →
    ∃ λ (get : (a : A) → B a) →
-   ∃ λ (B′ : R → Set b) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (remainder : A → R) →
    ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
    Eq.Is-equivalence {B = ∃ B′}
@@ -1080,8 +1082,8 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
    Surjective remainder)                                                ↝⟨ ∃-comm ⟩
 
   (∃ λ (get : (a : A) → B a) →
-   ∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+   ∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (remainder : A → R) →
    ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
    Eq.Is-equivalence {B = ∃ B′}
@@ -1090,8 +1092,8 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
    Surjective remainder)                                                ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
                                                                             ×-comm) ⟩
   (∃ λ (get : (a : A) → B a) →
-   ∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+   ∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (remainder : A → R) →
    ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
    Surjective remainder
@@ -1100,8 +1102,8 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
                      (λ a → remainder a , subst P.id variant (get a)))  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
                                                                             ∃-comm) ⟩
   (∃ λ (get : (a : A) → B a) →
-   ∃ λ (R : Set (a ⊔ b)) →
-   ∃ λ (B′ : R → Set b) →
+   ∃ λ (R : Type (a ⊔ b)) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (remainder : A → R) →
    Surjective remainder
      ×
@@ -1110,9 +1112,9 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
                      (λ a → remainder a , subst P.id variant (get a)))  ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
                                                                             ∃-comm) ⟩
   (∃ λ (get : (a : A) → B a) →
-   ∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (R : Type (a ⊔ b)) →
    ∃ λ (remainder : A → R) →
-   ∃ λ (B′ : R → Set b) →
+   ∃ λ (B′ : R → Type b) →
    Surjective remainder
      ×
    ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
@@ -1120,11 +1122,11 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
                      (λ a → remainder a , subst P.id variant (get a)))  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
                                                                             ∃-comm) ⟩□
   (∃ λ (get : (a : A) → B a) →
-   ∃ λ (R : Set (a ⊔ b)) →
+   ∃ λ (R : Type (a ⊔ b)) →
    ∃ λ (remainder : A → R) →
    Surjective remainder
      ×
-   ∃ λ (B′ : R → Set b) →
+   ∃ λ (B′ : R → Type b) →
    ∃ λ (variant : ∀ {a} → B a ≡ B′ (remainder a)) →
    Eq.Is-equivalence {B = ∃ B′}
                      (λ a → remainder a , subst P.id variant (get a)))  □
@@ -1146,7 +1148,7 @@ Lens↔Lens′ {a = a} {b = b} {A = A} {B = B} =
 -- Conversion from Lens₃ to Lens.
 
 Lens₃-to-Lens :
-  {A : Set a} {R : Set (a ⊔ b)} {B : R → Set b} →
+  {A : Type a} {R : Type (a ⊔ b)} {B : R → Type b} →
   (l : Lens₃ A R B) →
   Lens A (B ⊚ Lens₃.remainder l)
 Lens₃-to-Lens {A = A} {R} {B} l =
@@ -1162,7 +1164,7 @@ Lens₃-to-Lens {A = A} {R} {B} l =
 -- A variant of Lens₃-to-Lens.
 
 Lens₃-to-Lens′ :
-  {A : Set (a ⊔ r)} {R : Set r} {B : R → Set b} →
+  {A : Type (a ⊔ r)} {R : Type r} {B : R → Type b} →
   (l : Lens₃ A R B) →
   Lens A (B ⊚ Lens₃.remainder l)
 Lens₃-to-Lens′ {a = a} {b = b} {A = A} {R = R} {B = B} l =
@@ -1185,8 +1187,8 @@ id {A = A} = Lens₃-to-Lens′
 infixr 9 _∘₃_
 
 _∘₃_ :
-  {A : Set (a ⊔ b ⊔ c)} {R : Set (a ⊔ b ⊔ c)}
-  {B : R → Set (b ⊔ c)} {C : {r : R} → B r → Set c} →
+  {A : Type (a ⊔ b ⊔ c)} {R : Type (a ⊔ b ⊔ c)}
+  {B : R → Type (b ⊔ c)} {C : {r : R} → B r → Type c} →
   (∀ {r} → Lens (B r) C) → (l₂ : Lens₃ A R B) →
   Lens A (C ⊚ Lens₃.get l₂)
 _∘₃_ {R = R} l₁ l₂ =
@@ -1204,7 +1206,7 @@ _∘₃_ {R = R} l₁ l₂ =
 
 infixr 9 _⨾_
 
-_⨾_ : {A : Set (a ⊔ b ⊔ c)} {B : A → Set (b ⊔ c)} {C : A → Set c} →
+_⨾_ : {A : Type (a ⊔ b ⊔ c)} {B : A → Type (b ⊔ c)} {C : A → Type c} →
       (l₁ : Lens A B) →
       let open Lens l₁; open _≃_ lens in
       (∀ {r} → Lens (B′ r) (λ b′ → C (from (r , b′)))) →
@@ -1228,16 +1230,16 @@ _⨾_ {C = C} l₁ l₂ =
 -- implementation of Lens.
 
 module No-fully-general-composition-operator
-  (Lens′ : (A : Set) → (A → Set) → Set₁)
+  (Lens′ : (A : Type) → (A → Type) → Type₁)
   (get′  : ∀ {A B} → Lens′ A B → (a : A) → B a)
   where
 
   -- The following type signature—and partial specification—might seem
-  -- like a reasonable goal (if we restrict attention to Set₀).
+  -- like a reasonable goal (if we restrict attention to Type₀).
 
-  Type-of-composition : Set₁
+  Type-of-composition : Type₁
   Type-of-composition =
-    {A : Set} {B : A → Set} {C : (a : A) → B a → Set}
+    {A : Type} {B : A → Type} {C : (a : A) → B a → Type}
     (l₁ : Lens′ A B)
     (l₂ : ∀ a → Lens′ (B a) (C a)) →
     ∃ λ (l₃ : Lens′ A (λ a → C a (get′ l₁ a))) →
@@ -1248,7 +1250,7 @@ module No-fully-general-composition-operator
 
   no-corresponding-non-dependent-composition-operator :
     let open ND.Lens in
-    ¬ ({A B C : Set}
+    ¬ ({A B C : Type}
        (l₁ : ND.Lens A B)
        (l₂ : A → ND.Lens B C) →
        ∃ λ (l₃ : ND.Lens A C) →
@@ -1292,7 +1294,7 @@ module No-fully-general-composition-operator
   -- non-dependent lenses.
 
   no-composition-operator :
-    ({A B : Set} →
+    ({A B : Type} →
      ∃ λ (iso : Lens′ A (λ _ → B) ↔ ND.Lens A B) →
        ∀ {l a} → get′ l a ≡ ND.Lens.get (_↔_.to iso l) a) →
     ¬ Type-of-composition
@@ -1312,16 +1314,16 @@ module No-fully-general-composition-operator
            get (l₂ a) (get l₁ a)                          ∎)
     where
     open ND.Lens
-    open module Lens↔Lens {A B : Set} =
+    open module Lens↔Lens {A B : Type} =
       _↔_ (proj₁ (Lens↔Lens {A = A} {B = B}))
 
--- In the presence of UIP for Set it is impossible to define a fully
+-- In the presence of UIP for Type it is impossible to define a fully
 -- general composition operator.
 
 no-fully-general-composition-operator-UIP :
   let open Lens in
-  Is-set Set →
-  ¬ ({A : Set} {B : A → Set} {C : (a : A) → B a → Set}
+  Is-set Type →
+  ¬ ({A : Type} {B : A → Type} {C : (a : A) → B a → Type}
      (l₁ : Lens A B)
      (l₂ : ∀ a → Lens (B a) (C a)) →
      ∃ λ (l₃ : Lens A (λ a → C a (Lens.get l₁ a))) →
@@ -1357,7 +1359,7 @@ module Observation where
 
   -- The first projection Lens₃ cannot be defined for Unit.
 
-  not-proj₁₃ : ∀ {r} {R : Set r} → ¬ Lens₃ Unit R (λ _ → Bool)
+  not-proj₁₃ : ∀ {r} {R : Type r} → ¬ Lens₃ Unit R (λ _ → Bool)
   not-proj₁₃ l = Bool.true≢false (
     true                                                    ≡⟨ sym $ subst-const (sym $ remainder-set u true) ⟩
     subst (λ _ → Bool) (sym $ remainder-set u true) true    ≡⟨ sym $ get-set₁ u true ⟩
@@ -1369,9 +1371,9 @@ module Observation where
     open Lens₃ l
 
   -- The first projection Lens cannot be defined for Unit /if/ we
-  -- assume that UIP holds for Set.
+  -- assume that UIP holds for Type.
 
-  not-proj₁ : Is-set Set → ¬ Lens Unit (λ _ → Bool)
+  not-proj₁ : Is-set Type → ¬ Lens Unit (λ _ → Bool)
   not-proj₁ uip l = Bool.true≢false (
     true                       ≡⟨ sym $ cong (λ eq → from eq true) $ codomain-set-≃≡id uip l ⟩
     from codomain-set-≃ true   ≡⟨ sym $ get-set u true ⟩

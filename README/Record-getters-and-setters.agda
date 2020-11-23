@@ -32,15 +32,15 @@ module Dependent₃ where
 
   -- Nested records.
 
-  record R₁ (A : Set) : Set where
+  record R₁ (A : Type) : Type where
     field
       f     : A → A
       x     : A
       lemma : ∀ y → f y ≡ y
 
-  record R₂ : Set₁ where
+  record R₂ : Type₁ where
     field
-      A  : Set
+      A  : Type
       r₁ : R₁ A
 
   -- Lenses for each of the three fields of R₁.
@@ -49,7 +49,7 @@ module Dependent₃ where
   --
   -- (Note that the from function is inferred automatically.)
 
-  x : {A : Set} →
+  x : {A : Type} →
       Lens₃ (R₁ A) (∃ λ (f : A → A) → ∀ y → f y ≡ y) (λ _ → A)
   x = Eq.↔⇒≃ (record
     { surjection = record
@@ -65,7 +65,7 @@ module Dependent₃ where
   -- The lemma field depends on the f field, so whenever the f field
   -- is set the lemma field needs to be updated as well.
 
-  f : {A : Set} →
+  f : {A : Type} →
       Lens₃ (R₁ A) A (λ _ → ∃ λ (f : A → A) → ∀ y → f y ≡ y)
   f = Eq.↔⇒≃ (record
     { surjection = record
@@ -80,7 +80,7 @@ module Dependent₃ where
 
   -- The lemma field can be updated independently.
 
-  lemma : {A : Set} →
+  lemma : {A : Type} →
           Lens₃ (R₁ A) (A × (A → A)) (λ r → ∀ y → proj₂ r y ≡ y)
   lemma = Eq.↔⇒≃ (record
     { surjection = record
@@ -98,7 +98,7 @@ module Dependent₃ where
   -- lemma applies to the input's f field. The following lemma may
   -- provide some form of consolation:
 
-  consolation : {A : Set} (r : R₁ A) → ∀ y → R₁.f r y ≡ y
+  consolation : {A : Type} (r : R₁ A) → ∀ y → R₁.f r y ≡ y
   consolation = Lens₃.get lemma
 
   -- Let us now construct lenses for the same fields, but accessed
@@ -110,7 +110,7 @@ module Dependent₃ where
   A : Lens₃ R₂ ⊤ (λ _ → R₂)
   A = id₃
 
-  r₁ : Lens₃ R₂ Set R₁
+  r₁ : Lens₃ R₂ Type R₁
   r₁ = Eq.↔⇒≃ (record
     { surjection = record
       { logical-equivalence = record
@@ -147,13 +147,13 @@ module Dependent where
 
   -- Lenses for each of the three fields of R₁.
 
-  x : {A : Set} → Lens (R₁ A) (λ _ → A)
+  x : {A : Type} → Lens (R₁ A) (λ _ → A)
   x = Lens₃-to-Lens Dependent₃.x
 
-  f : {A : Set} → Lens (R₁ A) (λ _ → ∃ λ (f : A → A) → ∀ y → f y ≡ y)
+  f : {A : Type} → Lens (R₁ A) (λ _ → ∃ λ (f : A → A) → ∀ y → f y ≡ y)
   f = Lens₃-to-Lens Dependent₃.f
 
-  lemma : {A : Set} → Lens (R₁ A) (λ r → ∀ y → R₁.f r y ≡ y)
+  lemma : {A : Type} → Lens (R₁ A) (λ r → ∀ y → R₁.f r y ≡ y)
   lemma = Lens₃-to-Lens Dependent₃.lemma
 
   -- Note that the type of lemma is now more satisfactory: the type of
@@ -187,7 +187,7 @@ module Non-dependent where
 
   -- Labels.
 
-  data Label : Set where
+  data Label : Type where
     ″f″ ″x″ ″lemma″ ″A″ ″r₁″ : Label
 
   -- Labels come with decidable equality.
@@ -245,20 +245,20 @@ module Non-dependent where
   -- Nested records (defined using the record language from Record, so
   -- that we can use manifest fields).
 
-  R₁ : Set → Signature _
+  R₁ : Type → Signature _
   R₁ A = ∅ , ″f″     ∶ (λ _ → A → A)
            , ″x″     ∶ (λ _ → A)
            , ″lemma″ ∶ (λ r → ∀ y → (r · ″f″) y ≡ y)
 
   R₂ : Signature _
-  R₂ = ∅ , ″A″  ∶ (λ _ → Set)
+  R₂ = ∅ , ″A″  ∶ (λ _ → Type)
          , ″r₁″ ∶ (λ r → ↑ _ (Record (R₁ (r · ″A″))))
 
   -- Lenses for each of the three fields of R₁.
 
   -- The x field is easiest, because it is independent of the others.
 
-  x : {A : Set} → Lens (Record (R₁ A)) A
+  x : {A : Type} → Lens (Record (R₁ A)) A
   x {A} = isomorphism-to-lens
 
     (Record (R₁ A)                                    ↝⟨ Record↔Recʳ ⟩
@@ -269,7 +269,7 @@ module Non-dependent where
   -- The lemma field depends on the f field, so whenever the f field
   -- is set the lemma field needs to be updated as well.
 
-  f : {A : Set} →
+  f : {A : Type} →
       Lens (Record (R₁ A))
            (Record (∅ , ″f″     ∶ (λ _ → A → A)
                       , ″lemma″ ∶ (λ r → ∀ x → (r · ″f″) x ≡ x)))
@@ -284,7 +284,7 @@ module Non-dependent where
   -- manifest field in the type of the lens to capture the dependency
   -- between the two lens parameters.
 
-  lemma : {A : Set} {f : A → A} →
+  lemma : {A : Type} {f : A → A} →
           Lens (Record (R₁ A With ″f″ ≔ (λ _ → f)))
                (∀ x → f x ≡ x)
   lemma {A} {f} = isomorphism-to-lens
@@ -297,7 +297,7 @@ module Non-dependent where
   -- records into the required form, but this conversion is not a
   -- non-dependent lens (due to the dependency).
 
-  convert : {A : Set} (r : Record (R₁ A)) →
+  convert : {A : Type} (r : Record (R₁ A)) →
             Record (R₁ A With ″f″ ≔ (λ _ → r · ″f″))
   convert (rec (rec (rec (_ , f) , x) , lemma)) =
     rec (rec (_ , x) , lemma)
@@ -307,7 +307,7 @@ module Non-dependent where
 
   -- First we define a lens for the r₁ field.
 
-  r₁ : {A : Set} →
+  r₁ : {A : Type} →
        Lens (Record (R₂ With ″A″ ≔ λ _ → A)) (Record (R₁ A))
   r₁ {A} = isomorphism-to-lens
 
@@ -320,11 +320,11 @@ module Non-dependent where
   -- It is now easy to construct lenses for the embedded x and f
   -- fields using composition of lenses.
 
-  x₂ : {A : Set} →
+  x₂ : {A : Type} →
        Lens (Record (R₂ With ″A″ ≔ λ _ → A)) A
   x₂ = ⟨ _ , _ ⟩ x ∘ r₁
 
-  f₂ : {A : Set} →
+  f₂ : {A : Type} →
        Lens (Record (R₂ With ″A″ ≔ λ _ → A))
             (Record (∅ , ″f″     ∶ (λ _ → A → A)
                        , ″lemma″ ∶ (λ r → ∀ x → (r · ″f″) x ≡ x)))
@@ -334,7 +334,7 @@ module Non-dependent where
   -- the embedded lemma field.
 
   module Lemma-lens
-    (r₁₂ : {A : Set} {r : Record (R₁ A)} →
+    (r₁₂ : {A : Type} {r : Record (R₁ A)} →
            Lens (Record (R₂ With ″A″  ≔ (λ _ → A)
                             With ″r₁″ ≔ (λ _ → lift r)))
                 (Record (R₁ A With ″f″ ≔ (λ _ → r · ″f″)))) where
@@ -342,7 +342,7 @@ module Non-dependent where
     -- To start with, what should the type of the lemma lens be? The
     -- type used below is an obvious choice.
 
-    lemma₂ : {A : Set} {r : Record (R₁ A)} →
+    lemma₂ : {A : Type} {r : Record (R₁ A)} →
              Lens (Record (R₂ With ″A″  ≔ (λ _ → A)
                               With ″r₁″ ≔ (λ _ → lift r)))
                   (∀ x → (r · ″f″) x ≡ x)
@@ -369,7 +369,7 @@ module Non-dependent where
         R r₁₂ × Record (R₁ A With ″f″ ≔ (λ _ → r · ″f″))  ↝⟨ F.id ×-cong Record↔Recʳ ⟩□
         R r₁₂ × A × (∀ y → (r · ″f″) y ≡ y)               □
 
-      isomorphism : ∃ λ (A : Set₁) → ⊤ ↔ A × Bool
+      isomorphism : ∃ λ (A : Type₁) → ⊤ ↔ A × Bool
       isomorphism =
         _ ,
         (⊤                               ↝⟨ isomorphisms Bool r ⟩
@@ -380,7 +380,7 @@ module Non-dependent where
         r : Record (R₁ Bool)
         r = rec (rec (rec (_ , F.id) , true) , λ _ → refl)
 
-      no-isomorphism : ¬ ∃ λ (A : Set₁) → ⊤ ↔ A × Bool
+      no-isomorphism : ¬ ∃ λ (A : Type₁) → ⊤ ↔ A × Bool
       no-isomorphism (A , iso) = Bool.true≢false (
         true                           ≡⟨⟩
         proj₂ (a , true)               ≡⟨ cong proj₂ $ sym $ right-inverse-of (a , true) ⟩

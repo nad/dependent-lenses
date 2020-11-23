@@ -42,7 +42,7 @@ import Lens.Non-dependent.Traditional eq as T
 private
   variable
     a b c p         : Level
-    A B C D         : Set a
+    A B C D         : Type a
     u v x₁ x₂ y₁ y₂ : A
 
 ------------------------------------------------------------------------
@@ -50,7 +50,7 @@ private
 
 -- Lenses with erased lens laws.
 
-record Lens (A : Set a) (B : Set b) : Set (a ⊔ b) where
+record Lens (A : Type a) (B : Type b) : Type (a ⊔ b) where
   field
     -- Getter and setter.
     get : A → B
@@ -166,7 +166,7 @@ private
 -- Traditional lenses with erased lens laws that satisfy some extra
 -- coherence properties (that are also erased).
 
-record Coherent-lens (A : Set a) (B : Set b) : Set (a ⊔ b) where
+record Coherent-lens (A : Type a) (B : Type b) : Type (a ⊔ b) where
   field
     lens : Lens A B
 
@@ -818,7 +818,7 @@ abstract
     abstract
 
       lemma₁ :
-        ∀ (C : A → B → Set c) (eq : u ≡ v) {f g} →
+        ∀ (C : A → B → Type c) (eq : u ≡ v) {f g} →
         (subst (λ x → ∀ y → C x y) eq f ≡ g)
           ↔
         (∀ y → subst (λ x → C x y) eq (f y) ≡ g y)
@@ -829,7 +829,8 @@ abstract
         (∀ y → subst (λ x → C x y) eq (f y) ≡ g y)      □
 
     lemma₂ :
-      ∀ (P : A × B → Set p) (x₁≡x₂ : x₁ ≡ x₂) (y₁≡y₂ : y₁ ≡ y₂) {p p′} →
+      (P : A × B → Type p) (x₁≡x₂ : x₁ ≡ x₂) (y₁≡y₂ : y₁ ≡ y₂) →
+      ∀ {p p′} →
       (subst P (_↔_.to ≡×≡↔≡ (x₁≡x₂ , y₁≡y₂)) p ≡ p′)
         ↔
       (subst (λ x → P (x , y₂)) x₁≡x₂ (subst (λ y → P (x₁ , y)) y₁≡y₂ p)
@@ -1586,7 +1587,7 @@ lens-from-⊥≃⊤ =
 -- The conversion preserves getters and setters.
 
 ≃coherent-preserves-getters-and-setters :
-  {A : Set a}
+  {A : Type a}
   (@0 s : Is-set A) →
   Preserves-getters-and-setters-⇔ A B
     (_≃_.logical-equivalence (≃coherent s))
@@ -2285,8 +2286,8 @@ no-first-projection-lens =
 
 equal-setters-but-not-equal :
   Univalence lzero →
-  ∃ λ (A : Set) →
-  ∃ λ (B : Set) →
+  ∃ λ (A : Type) →
+  ∃ λ (B : Type) →
   ∃ λ (l₁ : Lens A B) →
   ∃ λ (l₂ : Lens A B) →
     Lens.set l₁ ≡ Lens.set l₂ ×
@@ -2423,7 +2424,7 @@ private
 
   module B {a} =
     Bi-invertibility.Erased
-      equality-with-J (Set a) Lens
+      equality-with-J (Type a) Lens
       Lens-combinators.id Lens-combinators._∘_
   module BM {a} =
     B.More {a = a}
@@ -2724,7 +2725,7 @@ equality-characterisation-for-sets-≅ᴱ
 Has-quasi-inverseᴱ-id-not-proposition :
   @0 Univalence lzero →
   let open Lens-combinators in
-  ∃ λ (A : Set a) →
+  ∃ λ (A : Type a) →
     ¬ Is-proposition (Has-quasi-inverseᴱ (id {A = A}))
 Has-quasi-inverseᴱ-id-not-proposition univ =
     _
@@ -2740,18 +2741,18 @@ Has-quasi-inverseᴱ-id-not-proposition univ =
 
 ¬Is-equivalenceᴱ↠Has-quasi-inverseᴱ :
   Univalence lzero →
-  ¬ ({A B : Set a}
+  ¬ ({A B : Type a}
      (l : Lens A B) →
      Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ l)
 ¬Is-equivalenceᴱ↠Has-quasi-inverseᴱ {a = a} univ =
   Stable-¬ _
-    [ ({A B : Set a}
+    [ ({A B : Type a}
        (l : Lens A B) →
        Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ l)    ↝⟨ (λ hyp l →
                                                                      from-equivalence (Has-quasi-inverseᴱ≃Has-quasi-inverse l) F.∘
                                                                      hyp (Traditional-lens→Lens l) F.∘
                                                                      EEq.Is-equivalence≃Is-equivalenceᴱ ext) ⟩
-      ({A B : Set a}
+      ({A B : Type a}
        (l : T.Lens A B) →
        Is-equivalence (T.Lens.get l) ↠ T.Has-quasi-inverse l)  ↝⟨ T.¬Is-equivalence↠Has-quasi-inverse univ ⟩□
 
@@ -2764,16 +2765,16 @@ Has-quasi-inverseᴱ-id-not-proposition univ =
 
 ¬Is-equivalenceᴱ≃Has-quasi-inverseᴱ :
   Univalence lzero →
-  ¬ ({A B : Set a}
+  ¬ ({A B : Type a}
      (l : Lens A B) →
      Is-equivalenceᴱ (Lens.get l) ≃ᴱ Has-quasi-inverseᴱ l)
 ¬Is-equivalenceᴱ≃Has-quasi-inverseᴱ {a = a} univ =
   Stable-¬ _
-    [ ({A B : Set a}
+    [ ({A B : Type a}
        (l : Lens A B) →
        Is-equivalenceᴱ (Lens.get l) ≃ᴱ Has-quasi-inverseᴱ l)  ↝⟨ (λ hyp → _≃_.surjection ⊚ EEq.≃ᴱ→≃ ⊚ hyp) ⟩
 
-      ({A B : Set a}
+      ({A B : Type a}
        (l : Lens A B) →
        Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ l)   ↝⟨ ¬Is-equivalenceᴱ↠Has-quasi-inverseᴱ univ ⟩□
 

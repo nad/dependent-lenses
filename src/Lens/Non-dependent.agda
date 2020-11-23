@@ -25,8 +25,8 @@ open import Surjection equality-with-J using (_↠_)
 private
   variable
     a b c c₁ c₂ c₃    : Level
-    A B               : Set a
-    Lens₁ Lens₂ Lens₃ : Set a → Set b → Set c
+    A B               : Type a
+    Lens₁ Lens₂ Lens₃ : Type a → Type b → Type c
 
 ------------------------------------------------------------------------
 -- An existence result
@@ -36,7 +36,7 @@ private
 -- contractible codomains.
 
 no-first-projection-lens :
-  (Lens : Set → Set → Set a) →
+  (Lens : Type → Type → Type a) →
   @0 (∀ {A B} → Lens A B → Contractible A → Contractible B) →
   ¬ Lens (∃ λ (b : Bool) → b ≡ true) Bool
 no-first-projection-lens _ contractible-to-contractible l =
@@ -54,25 +54,25 @@ no-first-projection-lens _ contractible-to-contractible l =
 -- Lens-like things with getters and setters.
 
 record Has-getter-and-setter
-         (Lens : Set a → Set b → Set c) :
-         Set (lsuc (a ⊔ b ⊔ c)) where
+         (Lens : Type a → Type b → Type c) :
+         Type (lsuc (a ⊔ b ⊔ c)) where
   field
     -- Getter.
-    get : {A : Set a} {B : Set b} → Lens A B → A → B
+    get : {A : Type a} {B : Type b} → Lens A B → A → B
 
-    -- Setter.
-    set : {A : Set a} {B : Set b} → Lens A B → A → B → A
+    -- Typeter.
+    set : {A : Type a} {B : Type b} → Lens A B → A → B → A
 
 -- A statement of what it means for two lenses to have the same getter
 -- and setter.
 
 Same-getter-and-setter :
-  {Lens₁ : Set a → Set b → Set c₁}
-  {Lens₂ : Set a → Set b → Set c₂}
+  {Lens₁ : Type a → Type b → Type c₁}
+  {Lens₂ : Type a → Type b → Type c₂}
   ⦃ L₁ : Has-getter-and-setter Lens₁ ⦄
   ⦃ L₂ : Has-getter-and-setter Lens₂ ⦄
-  {A : Set a} {B : Set b} →
-  Lens₁ A B → Lens₂ A B → Set (a ⊔ b)
+  {A : Type a} {B : Type b} →
+  Lens₁ A B → Lens₂ A B → Type (a ⊔ b)
 Same-getter-and-setter ⦃ L₁ = L₁ ⦄ ⦃ L₂ = L₂ ⦄ l₁ l₂ =
   get L₁ l₁ ≡ get L₂ l₂ ×
   set L₁ l₁ ≡ set L₂ l₂
@@ -83,13 +83,13 @@ Same-getter-and-setter ⦃ L₁ = L₁ ⦄ ⦃ L₂ = L₂ ⦄ l₁ l₂ =
 -- setters for all inputs.
 
 Preserves-getters-and-setters-→ :
-  {Lens₁ : Set a → Set b → Set c₁}
-  {Lens₂ : Set a → Set b → Set c₂}
+  {Lens₁ : Type a → Type b → Type c₁}
+  {Lens₂ : Type a → Type b → Type c₂}
   ⦃ L₁ : Has-getter-and-setter Lens₁ ⦄
   ⦃ L₂ : Has-getter-and-setter Lens₂ ⦄
-  (A : Set a) (B : Set b) →
+  (A : Type a) (B : Type b) →
   (Lens₁ A B → Lens₂ A B) →
-  Set (a ⊔ b ⊔ c₁)
+  Type (a ⊔ b ⊔ c₁)
 Preserves-getters-and-setters-→ {Lens₁ = Lens₁} A B f =
   (l : Lens₁ A B) → Same-getter-and-setter (f l) l
 
@@ -97,13 +97,13 @@ Preserves-getters-and-setters-→ {Lens₁ = Lens₁} A B f =
 -- getters and setters.
 
 Preserves-getters-and-setters-⇔ :
-  {Lens₁ : Set a → Set b → Set c₁}
-  {Lens₂ : Set a → Set b → Set c₂}
+  {Lens₁ : Type a → Type b → Type c₁}
+  {Lens₂ : Type a → Type b → Type c₂}
   ⦃ L₁ : Has-getter-and-setter Lens₁ ⦄
   ⦃ L₂ : Has-getter-and-setter Lens₂ ⦄
-  (A : Set a) (B : Set b) →
+  (A : Type a) (B : Type b) →
   (Lens₁ A B ⇔ Lens₂ A B) →
-  Set (a ⊔ b ⊔ c₁ ⊔ c₂)
+  Type (a ⊔ b ⊔ c₁ ⊔ c₂)
 Preserves-getters-and-setters-⇔ A B eq =
   Preserves-getters-and-setters-→ A B (_⇔_.to eq) ×
   Preserves-getters-and-setters-→ A B (_⇔_.from eq)
@@ -126,9 +126,9 @@ Preserves-getters-and-setters-→-∘ p-f p-g _ =
 -- Composition preserves Preserves-getters-and-setters-⇔.
 
 Preserves-getters-and-setters-⇔-∘ :
-  {Lens₁ : Set a → Set b → Set c₁}
-  {Lens₂ : Set a → Set b → Set c₂}
-  {Lens₃ : Set a → Set b → Set c₃}
+  {Lens₁ : Type a → Type b → Type c₁}
+  {Lens₂ : Type a → Type b → Type c₂}
+  {Lens₃ : Type a → Type b → Type c₃}
   ⦃ L₁ : Has-getter-and-setter Lens₁ ⦄
   ⦃ L₂ : Has-getter-and-setter Lens₂ ⦄
   ⦃ L₃ : Has-getter-and-setter Lens₃ ⦄
@@ -144,8 +144,8 @@ Preserves-getters-and-setters-⇔-∘ p-f p-g =
 -- The function inverse preserves Preserves-getters-and-setters-⇔.
 
 Preserves-getters-and-setters-⇔-inverse :
-  {Lens₁ : Set a → Set b → Set c₁}
-  {Lens₂ : Set a → Set b → Set c₂}
+  {Lens₁ : Type a → Type b → Type c₁}
+  {Lens₂ : Type a → Type b → Type c₂}
   ⦃ L₁ : Has-getter-and-setter Lens₁ ⦄
   ⦃ L₂ : Has-getter-and-setter Lens₂ ⦄
   {f : Lens₁ A B ⇔ Lens₂ A B} →
@@ -157,8 +157,8 @@ Preserves-getters-and-setters-⇔-inverse = swap
 -- and setters, then both directions do.
 
 Preserves-getters-and-setters-→-↠-⇔ :
-  {Lens₁ : Set a → Set b → Set c₁}
-  {Lens₂ : Set a → Set b → Set c₂}
+  {Lens₁ : Type a → Type b → Type c₁}
+  {Lens₂ : Type a → Type b → Type c₂}
   ⦃ L₁ : Has-getter-and-setter Lens₁ ⦄
   ⦃ L₂ : Has-getter-and-setter Lens₂ ⦄
   (f : Lens₁ A B ↠ Lens₂ A B) →

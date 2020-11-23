@@ -29,16 +29,16 @@ import Lens.Non-dependent.Higher eq as Higher
 private
   variable
     a b : Level
-    A B : Set a
+    A B : Type a
 
 -- A variant of the lenses defined in Lens.Non-dependent.Higher. In
 -- this definition the function called inhabited is replaced by a
 -- requirement that the remainder function should be surjective.
 
-Lens : Set a → Set b → Set (lsuc (a ⊔ b))
+Lens : Type a → Type b → Type (lsuc (a ⊔ b))
 Lens {a = a} {b = b} A B =
   ∃ λ (get       : A → B) →
-  ∃ λ (R         : Set (a ⊔ b)) →
+  ∃ λ (R         : Type (a ⊔ b)) →
   ∃ λ (remainder : A → R) →
     Is-equivalence (λ a → remainder a , get a) ×
     Surjective remainder
@@ -62,45 +62,45 @@ Higher-lens↔Lens {A = A} {B = B} =
 
   Higher.Lens A B                                         ↔⟨ Higher.Lens-as-Σ ⟩
 
-  (∃ λ (R : Set _) →
+  (∃ λ (R : Type _) →
      (A ≃ (R × B)) ×
      (R → ∥ B ∥))                                         ↝⟨ (∃-cong λ _ → Eq.≃-as-Σ ×-cong F.id) ⟩
 
-  (∃ λ (R : Set _) →
+  (∃ λ (R : Type _) →
      (∃ λ (f : A → R × B) → Eq.Is-equivalence f) ×
      (R → ∥ B ∥))                                         ↝⟨ (∃-cong λ _ → inverse Σ-assoc) ⟩
 
-  (∃ λ (R : Set _) →
+  (∃ λ (R : Type _) →
    ∃ λ (f : A → R × B) →
      Eq.Is-equivalence f ×
      (R → ∥ B ∥))                                         ↝⟨ (∃-cong λ _ → Σ-cong ΠΣ-comm λ _ → F.id) ⟩
 
-  (∃ λ (R  : Set _) →
+  (∃ λ (R  : Type _) →
    ∃ λ (rg : (A → R) × (A → B)) →
      Eq.Is-equivalence (λ a → proj₁ rg a , proj₂ rg a) ×
      (R → ∥ B ∥))                                         ↝⟨ (∃-cong λ _ → inverse Σ-assoc) ⟩
 
-  (∃ λ (R         : Set _) →
+  (∃ λ (R         : Type _) →
    ∃ λ (remainder : A → R) →
    ∃ λ (get       : A → B) →
      Eq.Is-equivalence (λ a → remainder a , get a) ×
      (R → ∥ B ∥))                                         ↝⟨ (∃-cong λ _ → ∃-comm) ⟩
 
-  (∃ λ (R         : Set _) →
+  (∃ λ (R         : Type _) →
    ∃ λ (get       : A → B) →
    ∃ λ (remainder : A → R) →
      Eq.Is-equivalence (λ a → remainder a , get a) ×
      (R → ∥ B ∥))                                         ↝⟨ ∃-comm ⟩
 
   (∃ λ (get       : A → B) →
-   ∃ λ (R         : Set _) →
+   ∃ λ (R         : Type _) →
    ∃ λ (remainder : A → R) →
      Eq.Is-equivalence (λ a → remainder a , get a) ×
      (R → ∥ B ∥))                                         ↝⟨ (∃-cong λ get → ∃-cong λ R → ∃-cong λ rem → ∃-cong λ eq →
                                                               ∀-cong ext λ _ → ∥∥-cong $
                                                               lemma get R rem eq _) ⟩□
   (∃ λ (get       : A → B) →
-   ∃ λ (R         : Set _) →
+   ∃ λ (R         : Type _) →
    ∃ λ (remainder : A → R) →
      Eq.Is-equivalence (λ a → remainder a , get a) ×
      Surjective remainder)                                □
