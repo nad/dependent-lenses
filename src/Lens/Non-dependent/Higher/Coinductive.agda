@@ -34,7 +34,6 @@ open import H-level.Truncation.Propositional.One-step eq as O
   using (∥_∥¹; ∥_∥¹-out-^; ∥_∥¹-in-^; ∣_∣; ∣_,_∣-in-^)
 open import Preimage equality-with-J using (_⁻¹_)
 open import Univalence-axiom equality-with-J
-import Univalence-axiom P.equality-with-J as PU
 
 open import Lens.Non-dependent eq
 import Lens.Non-dependent.Higher.Capriotti eq as Higher
@@ -142,7 +141,7 @@ Coherently-constant′ = Coherently Constant′ (λ _ → proj₁)
 
 Coherently-constant≃Coherently-constant′ :
   {A : Type a} {B : Type b} {f : A → B} →
-  PU.Univalence (a ⊔ b) →
+  Univalence (a ⊔ b) →
   Coherently-constant f ≃ Coherently-constant′ f
 Coherently-constant≃Coherently-constant′ univ =
   Coherently-cong univ
@@ -250,7 +249,7 @@ Coherently-constant≃Coherently-constant′ univ =
 
 ∥∥→≃ :
   ∀ {A : Type a} {B : Type b} →
-  PU.Univalence (a ⊔ b) →
+  Univalence (a ⊔ b) →
   (∥ A ∥ → B)
     ≃
   (∃ λ (f : A → B) → Coherently-constant f)
@@ -280,7 +279,7 @@ Coherently-constant≃Coherently-constant′ univ =
 
 proj₁-to-∥∥→≃-constant :
   {A : Type a} {B : Type b}
-  (univ : PU.Univalence (a ⊔ b)) →
+  (univ : Univalence (a ⊔ b)) →
   (f : ∥ A ∥ → B) →
   Constant (proj₁ (_≃_.to (∥∥→≃ univ) f))
 proj₁-to-∥∥→≃-constant _ f x y =
@@ -291,7 +290,7 @@ proj₁-to-∥∥→≃-constant _ f x y =
 
 proj₂-to-∥∥→≃-property≡ :
   {A : Type a} {B : Type b}
-  (univ : PU.Univalence (a ⊔ b)) →
+  (univ : Univalence (a ⊔ b)) →
   {f : ∥ A ∥ → B} →
   proj₂ (_≃_.to (∥∥→≃ univ) f) .property ≡
   proj₁-to-∥∥→≃-constant univ f
@@ -374,7 +373,7 @@ proj₂-to-∥∥→≃-property≡ univ {f = f} = ⟨ext⟩ λ x → ⟨ext⟩ 
 
 Coherently-constant≃Coherently-constant :
   {A : Type a} {B : Type b} {f : A → B} →
-  PU.Univalence (a ⊔ b) →
+  Univalence (a ⊔ b) →
   Higher.Coherently-constant f ≃ Coherently-constant f
 Coherently-constant≃Coherently-constant {A = A} {B = B} {f = f} univ =
   Higher.Coherently-constant f                                       ↔⟨⟩
@@ -397,7 +396,7 @@ Coherently-constant≃Coherently-constant {A = A} {B = B} {f = f} univ =
 to-Coherently-constant≃Coherently-constant-property :
   ∀ {A : Type a} {B : Type b} {f : A → B}
     {c : Higher.Coherently-constant f} {x y}
-  (univ : PU.Univalence (a ⊔ b)) →
+  (univ : Univalence (a ⊔ b)) →
   _≃_.to (Coherently-constant≃Coherently-constant univ)
     c .property x y ≡
   trans (cong (_$ x) (proj₂ c))
@@ -484,7 +483,7 @@ instance
 Higher-lens≃Lens :
   {A : Type a} {B : Type b} →
   Block "Higher-lens≃Lens" →
-  PU.Univalence (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
   Higher.Lens A B ≃ Lens A B
 Higher-lens≃Lens {A = A} {B = B} ⊠ univ =
   Higher.Lens A B                                             ↔⟨⟩
@@ -496,7 +495,7 @@ Higher-lens≃Lens {A = A} {B = B} ⊠ univ =
 Higher-lens≃Lens-preserves-getters-and-setters :
   {A : Type a} {B : Type b}
   (bl : Block "Higher-lens≃Lens")
-  (univ : PU.Univalence (lsuc (a ⊔ b))) →
+  (univ : Univalence (lsuc (a ⊔ b))) →
   Preserves-getters-and-setters-⇔ A B
     (_≃_.logical-equivalence (Higher-lens≃Lens bl univ))
 Higher-lens≃Lens-preserves-getters-and-setters {A = A} {B = B} bl univ =

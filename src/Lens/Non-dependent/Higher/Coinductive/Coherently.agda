@@ -25,6 +25,7 @@ import Equivalence P.equality-with-J as PEq
 open import Function-universe equality-with-J hiding (_∘_)
 import Function-universe P.equality-with-J as PF
 open import H-level.Truncation.Propositional.One-step eq using (∥_∥¹)
+open import Univalence-axiom equality-with-J
 import Univalence-axiom P.equality-with-J as PU
 
 private
@@ -70,7 +71,7 @@ private
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
     {f : A → B} →
-    PU.Univalence p →
+    Univalence p →
     (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f) →
     ({A : Type a} (f : A → B) (x : P₂ f) →
      step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
@@ -146,7 +147,7 @@ private
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
     {f : A → B}
-    (univ : PU.Univalence p)
+    (univ : Univalence p)
     (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f)
     (step₁≡step₂ :
        {A : Type a} (f : A → B) (x : P₂ f) →
@@ -175,7 +176,7 @@ private
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
     {f : A → B}
-    (univ : PU.Univalence p)
+    (univ : Univalence p)
     (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f)
     (step₁≡step₂ :
        {A : Type a} (f : A → B) (x : P₂ f) →
@@ -212,7 +213,7 @@ private
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
     {f : A → B} →
-    PU.Univalence p →
+    Univalence p →
     (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f) →
     ({A : Type a} (f : A → B) (x : P₂ f) →
      step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
@@ -309,7 +310,7 @@ private
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
     {f : A → B}
-    {univ : PU.Univalence p}
+    {univ : Univalence p}
     {P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f}
     {step₁≡step₂ :
        {A : Type a} (f : A → B) (x : P₂ f) →
@@ -382,7 +383,7 @@ Coherently-cong :
   {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
   {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
   {f : A → B} →
-  PU.Univalence (p₁ ⊔ p₂) →
+  Univalence (p₁ ⊔ p₂) →
   (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f) →
   ({A : Type a} (f : A → B) (x : P₂ f) →
    step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
@@ -417,7 +418,7 @@ module _
   {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
   {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
   {f : A → B}
-  {univ : PU.Univalence (p₁ ⊔ p₂)}
+  {univ : Univalence (p₁ ⊔ p₂)}
   {P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f}
   {step₁≡step₂ :
      {A : Type a} (f : A → B) (x : P₂ f) →

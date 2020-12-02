@@ -24,7 +24,6 @@ open import H-level.Truncation.Propositional.One-step eq as O
   using (∥_∥¹; ∣_∣)
 open import Preimage equality-with-J as Preimage using (_⁻¹_)
 open import Univalence-axiom equality-with-J
-import Univalence-axiom P.equality-with-J as PU
 
 open import Lens.Non-dependent eq
 import Lens.Non-dependent.Higher.Capriotti eq as Higher
@@ -117,7 +116,7 @@ Constant≃Constant-≃ univ =
 
 Coinductive-coherently-constant≃Coherently-constant :
   {A : Type a} {P : A → Type p} →
-  PU.Univalence (a ⊔ lsuc p) →
+  Univalence (a ⊔ lsuc p) →
   (univ : Univalence p) →
   Coinductive.Coherently-constant P ≃ Coherently-constant univ P
 Coinductive-coherently-constant≃Coherently-constant univ′ univ =
@@ -131,7 +130,7 @@ Coinductive-coherently-constant≃Coherently-constant univ′ univ =
 
 Higher-coherently-constant≃Coherently-constant :
   {A : Type a} {P : A → Type p} →
-  PU.Univalence (a ⊔ lsuc p) →
+  Univalence (a ⊔ lsuc p) →
   (univ : Univalence p) →
   Higher.Coherently-constant P ≃ Coherently-constant univ P
 Higher-coherently-constant≃Coherently-constant {P = P} univ′ univ =
@@ -144,7 +143,7 @@ Higher-coherently-constant≃Coherently-constant {P = P} univ′ univ =
 
 Coinductive-lens≃Lens :
   {A : Type a} {B : Type b} →
-  PU.Univalence (lsuc (a ⊔ b)) →
+  Univalence (lsuc (a ⊔ b)) →
   (univ : Univalence (a ⊔ b)) →
   Coinductive.Lens A B ≃ Lens univ A B
 Coinductive-lens≃Lens {A = A} {B = B} univ₁ univ₂ =
@@ -164,7 +163,7 @@ Coinductive-lens≃Lens {A = A} {B = B} univ₁ univ₂ =
 
 Coinductive-lens≃Lens-preserves-getters-and-setters :
   {A : Type a} {B : Type b}
-  (univ₁ : PU.Univalence (lsuc (a ⊔ b)))
+  (univ₁ : Univalence (lsuc (a ⊔ b)))
   (univ₂ : Univalence (a ⊔ b)) →
   Preserves-getters-and-setters-⇔ A B
     (_≃_.logical-equivalence (Coinductive-lens≃Lens univ₁ univ₂))
@@ -644,9 +643,9 @@ Coherently-constant-Σ′ :
   (univ₁ : Univalence p)
   (univ₂ : Univalence q)
   (univ₃ : Univalence (p ⊔ q)) →
-  PU.Univalence (a ⊔ lsuc p) →
-  PU.Univalence (a ⊔ p ⊔ lsuc q) →
-  PU.Univalence (a ⊔ lsuc (p ⊔ q)) →
+  Univalence (a ⊔ lsuc p) →
+  Univalence (a ⊔ p ⊔ lsuc q) →
+  Univalence (a ⊔ lsuc (p ⊔ q)) →
   Coherently-constant univ₁ P →
   Coherently-constant univ₂ Q →
   Coherently-constant univ₃ (λ x → ∃ λ (y : P x) → Q (x , y))
