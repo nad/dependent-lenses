@@ -27,6 +27,7 @@ import Lens.Non-dependent.Traditional.Erased
 import Lens.Non-dependent.Higher.Erased
 import Lens.Non-dependent.Higher.Capriotti.Variant.Erased
 import Lens.Non-dependent.Higher.Capriotti.Variant.Erased.Variant
+import Lens.Non-dependent.Higher.Coinductive.Coherently.Erased
 
 -- Dependent lenses.
 
