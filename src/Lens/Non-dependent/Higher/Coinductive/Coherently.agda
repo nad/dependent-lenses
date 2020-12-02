@@ -31,7 +31,7 @@ import Univalence-axiom P.equality-with-J as PU
 private
   variable
     a b ℓ p p₁ p₂ : Level
-    A B C         : Type a
+    A A₁ A₂ B C   : Type a
     x y           : A
     f             : A → B
 
@@ -437,6 +437,22 @@ module _
       c .property ≡
     _≃_.from (P₁≃P₂ f) (c .property)
   _ = refl _
+
+-- Another preservation lemma for Coherently.
+
+Coherently-cong′ :
+  {P : {A : Type a} → (A → B) → Type p}
+  {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B} →
+  Univalence a →
+  (A₁≃A₂ : A₁ ≃ A₂) →
+  Coherently P step (f ∘ _≃_.to A₁≃A₂) ≃ Coherently P step f
+Coherently-cong′ {f = f} {P = P} {step = step} univ A₁≃A₂ =
+  ≃-elim₁ univ
+    (λ A₁≃A₂ →
+       Coherently P step (f ∘ _≃_.to A₁≃A₂) ≃
+       Coherently P step f)
+    Eq.id
+    A₁≃A₂
 
 -- A "computation rule".
 
