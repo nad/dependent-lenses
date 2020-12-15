@@ -543,7 +543,8 @@ cong-set-from-equality-characterisation₀
                                                                                      (cong-sym _ _)
                                                                                      (proj₁-push-subst-,-refl _ _) ⟩
            trans (sym $ cong proj₁ $ subst-refl _ _)
-             (trans (cong proj₁ (subst-refl _ _)) (sym $ subst-refl _ _))       ≡⟨ trans-sym-[trans] _ _ ⟩
+             (trans (cong proj₁ (subst-refl _ _))
+                (sym $ subst-refl _ _))                                         ≡⟨ trans-sym-[trans] _ _ ⟩
 
            sym (subst-refl _ _)                                                 ≡⟨ sym $ trans-reflʳ _ ⟩∎
 
