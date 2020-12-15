@@ -25,7 +25,9 @@ open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Equivalence.Erased equality-with-J as EEq
-  using (_≃ᴱ_; Is-equivalenceᴱ; Contractibleᴱ; _⁻¹ᴱ_)
+  using (_≃ᴱ_; Is-equivalenceᴱ)
+open import Equivalence.Erased.Contractible-preimages equality-with-J
+  as ECP using (Contractibleᴱ; _⁻¹ᴱ_)
 open import Erased.Cubical eq
 open import Function-universe equality-with-J as F
   hiding (id; _∘_)
@@ -494,7 +496,7 @@ contractible-to-contractible l =
 Contractibleᴱ→Contractibleᴱ :
   Lens A B → Contractibleᴱ A → Contractibleᴱ B
 Contractibleᴱ→Contractibleᴱ l c@(a , _) =
-  EEq.Contractibleᴱ-respects-surjection
+  ECP.Contractibleᴱ-respects-surjection
     (Lens.get l)
     (λ b → Lens.set l a b
          , (Lens.get l (Lens.set l a b)  ≡⟨ Lens.get-set l _ _ ⟩∎
@@ -1298,9 +1300,9 @@ lens-from-⊤≃codomain-contractible :
   Lens ⊤ B ≃ᴱ Contractibleᴱ B
 lens-from-⊤≃codomain-contractible = EEq.⇔→≃ᴱ
   (lens-preserves-h-level-of-domain 0 (mono₁ 0 ⊤-contractible))
-  (EEq.Contractibleᴱ-propositional ext)
+  (ECP.Contractibleᴱ-propositional ext)
   (λ l → Contractibleᴱ→Contractibleᴱ l
-           (EEq.Contractible→Contractibleᴱ ⊤-contractible))
+           (ECP.Contractible→Contractibleᴱ ⊤-contractible))
   (λ (b , irrB) → record
      { get     = λ _ → b
      ; get-set = λ _ → erased irrB
@@ -2751,7 +2753,7 @@ Has-quasi-inverseᴱ-id-not-proposition univ =
        Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ l)    ↝⟨ (λ hyp l →
                                                                      from-equivalence (Has-quasi-inverseᴱ≃Has-quasi-inverse l) F.∘
                                                                      hyp (Traditional-lens→Lens l) F.∘
-                                                                     EEq.Is-equivalence≃Is-equivalenceᴱ ext) ⟩
+                                                                     from-equivalence EEq.Is-equivalence≃Is-equivalenceᴱ) ⟩
       ({A B : Type a}
        (l : T.Lens A B) →
        Is-equivalence (T.Lens.get l) ↠ T.Has-quasi-inverse l)  ↝⟨ T.¬Is-equivalence↠Has-quasi-inverse univ ⟩□

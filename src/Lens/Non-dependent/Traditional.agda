@@ -2441,7 +2441,7 @@ equality-characterisation-for-sets-≅
                    , ≃→lens (inverse A≃B)
                    , lemma A≃B
                    , (≃→lens (inverse A≃B) ∘ ≃→lens A≃B  ≡⟨ cong (λ A≃B′ → ≃→lens (inverse A≃B) ∘ ≃→lens A≃B′) $
-                                                            sym $ Eq.inverse-involutive ext _ ⟩
+                                                            sym $ Eq.inverse-involutive ext A≃B ⟩
                       ≃→lens (inverse A≃B) ∘
                       ≃→lens (inverse $ inverse A≃B)     ≡⟨ lemma (inverse A≃B) ⟩∎
 

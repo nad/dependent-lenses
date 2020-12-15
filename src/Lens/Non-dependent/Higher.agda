@@ -24,6 +24,7 @@ open import Equality.Decision-procedures equality-with-J
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
+import Equivalence.Half-adjoint equality-with-J as HA
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
@@ -244,11 +245,6 @@ left-inverse-of-Lens-as-Σ l@(⟨ _ , _ , _ ⟩) =
 
   cong (_≃_.from Lens-as-Σ)
     (_≃_.right-inverse-of Lens-as-Σ (_≃_.to Lens-as-Σ l))  ≡⟨⟩
-
-  cong (_≃_.from Lens-as-Σ)
-    (trans (sym (sym (refl _))) (refl _))                  ≡⟨ cong (cong (_≃_.from Lens-as-Σ)) $
-                                                              trans (trans-reflʳ _) $
-                                                              sym-sym _ ⟩
 
   cong (_≃_.from Lens-as-Σ) (refl _)                       ≡⟨ cong-refl _ ⟩∎
 
@@ -917,10 +913,11 @@ lenses-equal-if-setters-equal′
     (is-equivalence BR≃BR)
 
   f≃ : Eq.Is-equivalence f
-  f≃ r =
+  f≃ =
+    HA.[inhabited→Is-equivalence]→Is-equivalence λ r →
     Trunc.rec
-      (H-level-propositional ext 0)
-      (λ b → Eq.drop-Σ-map-id _ id-f≃ b r)
+      (Eq.propositional ext _)
+      (Eq.drop-Σ-map-id _ id-f≃)
       (inhabited l₂ r)
 
   R≃R : R l₁ ≃ R l₂

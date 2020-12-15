@@ -20,8 +20,9 @@ open import Prelude
 open import Bijection equality-with-J as B using (_↔_)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
-open import Equivalence.Erased.Cubical eq as EEq
-  using (_≃ᴱ_; _⁻¹ᴱ_; Contractibleᴱ)
+open import Equivalence.Erased.Cubical eq as EEq using (_≃ᴱ_)
+open import Equivalence.Erased.Contractible-preimages.Cubical eq as ECP
+  using (_⁻¹ᴱ_; Contractibleᴱ)
 open import Erased.Cubical eq
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J
@@ -69,14 +70,14 @@ Contractible-last-part-of-Coherently-constant {Q = Q} =                  $⟨ Co
   Contractibleᴱ
     (∃ λ (Q≃Q : ∀ x y → Q x ≃ᴱ Q y) →
      Erased (Q≃Q ≡ λ x y →
-                   ≡⇒↝ _ (cong Q (T.truncation-is-proposition x y))))    ↝⟨ (EEq.Contractibleᴱ-cong _ $
+                   ≡⇒↝ _ (cong Q (T.truncation-is-proposition x y))))    ↝⟨ (ECP.Contractibleᴱ-cong _ $
                                                                              ∃-cong λ _ → Erased-cong (inverse $
                                                                              Eq.extensionality-isomorphism ext F.∘
                                                                              ∀-cong ext λ _ → Eq.extensionality-isomorphism ext)) ⦂ (_ → _) ⟩
   Contractibleᴱ
     (∃ λ (Q≃Q : ∀ x y → Q x ≃ᴱ Q y) →
      Erased (∀ x y → Q≃Q x y ≡
-                     ≡⇒↝ _ (cong Q (T.truncation-is-proposition x y))))  ↝⟨ EEq.Contractibleᴱ→Contractible ⟩□
+                     ≡⇒↝ _ (cong Q (T.truncation-is-proposition x y))))  ↝⟨ ECP.Contractibleᴱ→Contractible ⟩□
 
   Contractible
     (∃ λ (Q≃Q : ∀ x y → Q x ≃ᴱ Q y) →
@@ -95,10 +96,10 @@ Lens≃Variant-lens {B = B} =
   (∃ λ get → ∃ λ (Q : ∥ B ∥ᴱ → _) → (∀ x → get ⁻¹ᴱ x ≃ᴱ Q ∣ x ∣) × _)  ↔⟨ (∃-cong λ _ → ∃-cong λ _ → drop-⊤-right λ _ →
                                                                            _⇔_.to contractible⇔↔⊤
                                                                            Contractible-last-part-of-Coherently-constant) ⟩
-  (∃ λ get → ∃ λ (Q : ∥ B ∥ᴱ → _) → ∀ x → get ⁻¹ᴱ x ≃ᴱ Q ∣ x ∣)        ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → inverse $
-                                                                           EEq.≃≃≃ᴱ ext) ⟩
+  (∃ λ get → ∃ λ (Q : ∥ B ∥ᴱ → _) → ∀ x → get ⁻¹ᴱ x ≃ᴱ Q ∣ x ∣)        ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → inverse
+                                                                           EEq.≃≃≃ᴱ) ⟩
   (∃ λ get → ∃ λ (Q : ∥ B ∥ᴱ → _) → ∀ x → get ⁻¹ᴱ x ≃  Q ∣ x ∣)        ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ →
-                                                                           Eq.≃-preserves ext (inverse EEq.⁻¹≃⁻¹ᴱ) F.id) ⟩
+                                                                           Eq.≃-preserves ext (inverse ECP.⁻¹≃⁻¹ᴱ) F.id) ⟩
   (∃ λ get → ∃ λ (Q : ∥ B ∥ᴱ → _) → ∀ x → get ⁻¹  x ≃  Q ∣ x ∣)        ↝⟨ (∃-cong λ _ →
                                                                            Σ-cong {k₁ = equivalence} (→-cong₁ ext T.∥∥ᴱ≃∥∥) λ _ → F.id) ⟩□
   (∃ λ get → ∃ λ (Q : ∥ B ∥  → _) → ∀ x → get ⁻¹  x ≃  Q ∣ x ∣)        □

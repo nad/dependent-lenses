@@ -18,7 +18,9 @@ open import Prelude
 open import Bijection equality-with-J using (_↔_)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
-open import Equivalence.Erased.Cubical eq as EEq using (_≃ᴱ_; _⁻¹ᴱ_)
+open import Equivalence.Erased.Cubical eq as EEq using (_≃ᴱ_)
+open import Equivalence.Erased.Contractible-preimages.Cubical eq as ECP
+  using (_⁻¹ᴱ_)
 open import Erased.Cubical eq
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J
@@ -55,10 +57,10 @@ Lens A B = ∃ λ (get : A → B) → Coherently-constant (get ⁻¹ᴱ_)
 
 @0 Lens≃Variant-lens : Lens A B ≃ V.Lens A B
 Lens≃Variant-lens =
-  (∃ λ get → ∃ λ Q → ∀ x → get ⁻¹ᴱ x ≃ᴱ Q ∣ x ∣)  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → inverse $
-                                                      EEq.≃≃≃ᴱ ext) ⟩
+  (∃ λ get → ∃ λ Q → ∀ x → get ⁻¹ᴱ x ≃ᴱ Q ∣ x ∣)  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → inverse
+                                                      EEq.≃≃≃ᴱ) ⟩
   (∃ λ get → ∃ λ Q → ∀ x → get ⁻¹ᴱ x ≃  Q ∣ x ∣)  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ →
-                                                      Eq.≃-preserves ext (inverse EEq.⁻¹≃⁻¹ᴱ) F.id) ⟩□
+                                                      Eq.≃-preserves ext (inverse ECP.⁻¹≃⁻¹ᴱ) F.id) ⟩□
   (∃ λ get → ∃ λ Q → ∀ x → get ⁻¹  x ≃  Q ∣ x ∣)  □
 
 -- Some derived definitions.
@@ -220,7 +222,7 @@ equality-characterisation₁ {a = a} {l₁ = l₁} {l₂ = l₂} ⊠ =
      subst (_$ ∣ b ∣) h
        (_≃_.to (V.Lens.get⁻¹-≃ l₁′ b) (subst (_⁻¹ b) (sym g) p)) ≡
      _≃_.to (V.Lens.get⁻¹-≃ l₂′ b) p)                               ↝⟨ (∃-cong λ g → ∃-cong λ h → ∀-cong ext λ b →
-                                                                        Π-cong ext EEq.⁻¹≃⁻¹ᴱ λ p →
+                                                                        Π-cong ext ECP.⁻¹≃⁻¹ᴱ λ p →
                                                                         ≡⇒↝ _ $ cong (λ p′ → subst (_$ _) h (_≃_.to (V.Lens.get⁻¹-≃ l₁′ _) p′) ≡
                                                                                              _≃_.to (V.Lens.get⁻¹-≃ l₂′ _) p)
                                                                           (
@@ -239,8 +241,8 @@ equality-characterisation₁ {a = a} {l₁ = l₁} {l₂ = l₂} ⊠ =
                                                                                 _ ⟩
      Σ-map id erased (subst (_⁻¹ᴱ b) (sym g) (Σ-map id [_]→ p))            ≡⟨⟩
 
-     _≃_.from EEq.⁻¹≃⁻¹ᴱ
-       (subst (_⁻¹ᴱ b) (sym g) (_≃_.to EEq.⁻¹≃⁻¹ᴱ p))                      ∎)) ⟩□
+     _≃_.from ECP.⁻¹≃⁻¹ᴱ
+       (subst (_⁻¹ᴱ b) (sym g) (_≃_.to ECP.⁻¹≃⁻¹ᴱ p))                      ∎)) ⟩□
 
   (∃ λ (g : get l₁ ≡ get l₂) →
    ∃ λ (h : H l₁ ≡ H l₂) →

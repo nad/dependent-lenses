@@ -31,7 +31,9 @@ open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Equivalence.Erased equality-with-J as EEq
-  using (_≃ᴱ_; Is-equivalenceᴱ; Contractibleᴱ; _⁻¹ᴱ_)
+  using (_≃ᴱ_; Is-equivalenceᴱ)
+open import Equivalence.Erased.Contractible-preimages equality-with-J
+  as ECP using (Contractibleᴱ; _⁻¹ᴱ_)
 open import Erased.Cubical eq
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
@@ -122,11 +124,6 @@ left-inverse-of-Lens-as-Σ l@(⟨ _ , _ , _ ⟩) =
   cong (_≃_.from Lens-as-Σ)
     (_≃_.right-inverse-of Lens-as-Σ (_≃_.to Lens-as-Σ l))  ≡⟨⟩
 
-  cong (_≃_.from Lens-as-Σ)
-    (trans (sym (sym (refl _))) (refl _))                  ≡⟨ cong (cong (_≃_.from Lens-as-Σ)) $
-                                                              trans (trans-reflʳ _) $
-                                                              sym-sym _ ⟩
-
   cong (_≃_.from Lens-as-Σ) (refl _)                       ≡⟨ cong-refl _ ⟩∎
 
   refl _                                                   ∎
@@ -148,7 +145,7 @@ Lens≃Higher-lens {A = A} {B = B} =
   Eq.with-other-inverse
     (Lens A B                                                  ↝⟨ Lens-as-Σ ⟩
      (∃ λ (R : Type _) → (A ≃ᴱ (R × B)) × Erased (R → ∥ B ∥))  ↝⟨ (∃-cong λ _ →
-                                                                   inverse (EEq.≃≃≃ᴱ ext) ×-cong Eq.↔⇒≃ (erased Erased↔)) ⟩
+                                                                   inverse EEq.≃≃≃ᴱ ×-cong Eq.↔⇒≃ (erased Erased↔)) ⟩
      (∃ λ (R : Type _) → (A ≃ (R × B)) × (R → ∥ B ∥))          ↔⟨ inverse H.Lens-as-Σ ⟩□
      H.Lens A B                                                □)
     Higher-lens→Lens
@@ -668,8 +665,8 @@ lens-to-proposition≃ᴱget {b = b} {A = A} {B = B} univ prop = EEq.↔→≃�
            A        ↝⟨ EEq.≃ᴱ→≃ (equiv l) ⟩
            R l × B  ↝⟨ (EEq.≃ᴱ→≃ $ drop-⊤-right λ r → _⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ $
                         PT.rec
-                          (EEq.Contractibleᴱ-propositional ext)
-                          (λ b → EEq.inhabited→Is-proposition→Contractibleᴱ b prop)
+                          (ECP.Contractibleᴱ-propositional ext)
+                          (λ b → ECP.inhabited→Is-proposition→Contractibleᴱ b prop)
                           (inhabited l r)) ⟩□
            R l      □
      in
@@ -704,7 +701,7 @@ lens-to-contractible≃ᴱ⊤ :
   Contractibleᴱ B →
   Lens A B ≃ᴱ ⊤
 lens-to-contractible≃ᴱ⊤ {A = A} {B} univ cB =
-  Lens A B  ↝⟨ lens-to-proposition≃ᴱget univ (mono₁ 0 (EEq.Contractibleᴱ→Contractible cB)) ⟩
+  Lens A B  ↝⟨ lens-to-proposition≃ᴱget univ (mono₁ 0 (ECP.Contractibleᴱ→Contractible cB)) ⟩
   (A → B)   ↝⟨ →-cong ext F.id $ _⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ cB ⟩
   (A → ⊤)   ↔⟨ →-right-zero ⟩□
   ⊤         □
@@ -1139,7 +1136,7 @@ Contractibleᴱ→Contractibleᴱ =
 domain-Contractibleᴱ⇒remainder-Contractibleᴱ :
   (l : Lens A B) → Contractibleᴱ A → Contractibleᴱ (Lens.R l)
 domain-Contractibleᴱ⇒remainder-Contractibleᴱ {A = A} {B = B} l =
-  Contractibleᴱ A                    ↝⟨ EEq.Contractibleᴱ-respects-surjection
+  Contractibleᴱ A                    ↝⟨ ECP.Contractibleᴱ-respects-surjection
                                           (_≃ᴱ_.to equiv) (_≃_.split-surjective (EEq.≃ᴱ→≃ equiv)) ⟩
   Contractibleᴱ (R × B)              ↝⟨ _≃ᴱ_.to (EEq.Contractibleᴱ-commutes-with-× ext) ⟩
   Contractibleᴱ R × Contractibleᴱ B  ↝⟨ proj₁ ⟩□
@@ -2040,7 +2037,7 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
   where
   @0 lemma : ∀ {A B : Type a} _ (l : H.Lens A B) → _
   lemma hyp l@(H.⟨ _ , _ , _ ⟩) =
-    Is-equivalence (Lens.get (Higher-lens→Lens l))   ↝⟨ EEq.Is-equivalence≃Is-equivalenceᴱ ext ⟩
+    Is-equivalence (Lens.get (Higher-lens→Lens l))   ↔⟨ EEq.Is-equivalence≃Is-equivalenceᴱ ⟩
     Is-equivalenceᴱ (Lens.get (Higher-lens→Lens l))  ↝⟨ hyp (Higher-lens→Lens l) ⟩
     Has-quasi-inverseᴱ b (Higher-lens→Lens l)        ↔⟨ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l ⟩□
     H.Has-quasi-inverse b l                          □
