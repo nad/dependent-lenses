@@ -244,6 +244,38 @@ Coherently-constant≃Coherently-constant′ univ =
     trans (c 0 x) (refl _)                         ≡⟨ trans-reflʳ _ ⟩∎
     c 0 x                                          ∎
 
+-- Coherently-constant′ can be expressed in a different way.
+
+Coherently-constant′≃ :
+  {f : A → B} →
+  Coherently-constant′ f
+    ≃
+  (∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
+     (∀ x → g 0 ∣ x ∣ ≡ f x) ×
+     (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x))
+Coherently-constant′≃ {A = A} {B = B} {f = f} =
+  Eq.⟨ _
+     , Eq.drop-Σ-map-id _ (_≃_.is-equivalence lemma) _
+     ⟩
+  where
+  lemma =
+    (∃ λ (f : A → B) → Coherently-constant′ f)          ↝⟨ ∃Coherently-constant′≃ ⟩
+
+    (∃ λ (f : ∀ n → ∥ A ∥¹-in-^ n → B) →
+       ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x)        ↔⟨ inverse $
+                                                           (Σ-cong (inverse $ Πℕ≃ {k = equivalence} ext) λ _ → F.id) F.∘
+                                                           Σ-assoc ⟩
+    (∃ λ (f : A → B) →
+     ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
+       ∀ n x →
+         g n ∣ n , x ∣-in-^ ≡
+         ℕ-case {P = λ n → ∥ A ∥¹-in-^ n → B} f g n x)  ↝⟨ (∃-cong λ _ → ∃-cong λ _ →
+                                                            Πℕ≃ ext) ⟩□
+    (∃ λ (f : A → B) →
+     ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
+       (∀ x → g 0 ∣ x ∣ ≡ f x) ×
+       (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x))      □
+
 -- Functions from ∥ A ∥ can be expressed as coherently constant
 -- functions from A (assuming univalence).
 
