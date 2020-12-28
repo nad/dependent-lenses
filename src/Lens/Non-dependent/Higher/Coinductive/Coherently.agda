@@ -466,9 +466,10 @@ Coherently-cong′ {f = f} {P = P} {step = step} univ A₁≃A₂ =
 -- A "computation rule".
 
 subst-Coherently-property :
-  ∀ {B : Type b} {P : C → {A : Type a} → (A → B) → Type p}
+  ∀ {A : C → Type a} {B : Type b}
+    {P : C → {A : Type a} → (A → B) → Type p}
     {step : (c : C) {A : Type a} (f : A → B) → P c f → ∥ A ∥¹ → B}
-    {f : C → A → B} {eq : x ≡ y} {c} →
+    {f : (c : C) → A c → B} {eq : x ≡ y} {c} →
   subst (λ x → Coherently (P x) (step x) (f x)) eq c .property ≡
   subst (λ x → P x (f x)) eq (c .property)
 subst-Coherently-property
