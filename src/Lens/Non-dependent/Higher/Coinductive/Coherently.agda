@@ -35,6 +35,9 @@ private
     x y           : A
     f             : A → B
 
+------------------------------------------------------------------------
+-- The type family
+
 -- Coherently P step f means that f and all variants of f built using
 -- step (in a certain way) satisfy the property P.
 --
@@ -56,6 +59,9 @@ record Coherently
     coherent : Coherently P step (step f property)
 
 open Coherently public
+
+------------------------------------------------------------------------
+-- Preservation lemmas
 
 private
 
@@ -453,6 +459,9 @@ Coherently-cong′ {f = f} {P = P} {step = step} univ A₁≃A₂ =
        Coherently P step f)
     Eq.id
     A₁≃A₂
+
+------------------------------------------------------------------------
+-- Another lemma
 
 -- A "computation rule".
 
