@@ -91,7 +91,7 @@ private
                   {A : Type a} (f : A → B) → P A f → ∥ A ∥¹ → B) →
              Coherently (P _) step f) $
 
-    Σ-≡,≡→≡′
+    P.Σ-≡,≡→≡′
 
       (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) →
        P.≃⇒≡ (P₁≃P₂ f))
@@ -132,17 +132,6 @@ private
     where
     P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f PEq.≃ P₂ f
     P₁≃P₂ f = _↔_.to ≃↔≃ (P₁≃P₂′ f)
-
-    Σ-≡,≡→≡′ :
-      {P : A → Type b} {p₁ p₂ : Σ A P} →
-      (p : proj₁ p₁ P.≡ proj₁ p₂) →
-      P.subst P p (proj₂ p₁) P.≡ proj₂ p₂ →
-      p₁ P.≡ p₂
-    Σ-≡,≡→≡′ {P = P} {p₁ = _ , y₁} {p₂ = _ , y₂} p q i =
-      p i , lemma i
-      where
-      lemma : P.[ (λ i → P (p i)) ] y₁ ≡ y₂
-      lemma = PB._↔_.from (P.heterogeneous↔homogeneous _) q
 
   -- A "computation rule".
 
