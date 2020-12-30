@@ -19,6 +19,8 @@ open import Prelude
 
 open import Bijection equality-with-J as B using (_↔_)
 import Bijection P.equality-with-J as PB
+open import Container.Indexed equality-with-J
+open import Container.Indexed.M.Codata eq
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
 import Equivalence P.equality-with-J as PEq
@@ -32,7 +34,7 @@ private
   variable
     a b ℓ p p₁ p₂ : Level
     A A₁ A₂ B C   : Type a
-    x y           : A
+    q x y         : A
     f             : A → B
 
 ------------------------------------------------------------------------
@@ -46,7 +48,8 @@ private
 -- M-type to make it easier to prove that two variants of coinductive
 -- lenses are equivalent: the lemma Coherently-cong-≡ below is based
 -- on his idea, and Coherently is a less general variant of the M-type
--- that he suggested.
+-- that he suggested. See also Coherently-with-restriction below,
+-- which is defined as an indexed M-type.
 
 record Coherently
          {A : Type a} {B : Type b}
@@ -471,3 +474,75 @@ subst-Coherently-property
      c .property                                                         ≡⟨ sym $ subst-refl _ _ ⟩∎
      subst (λ x → P x (f x)) (refl _) (c .property)                      ∎)
     eq
+
+------------------------------------------------------------------------
+-- A variant of Coherently, defined using an indexed container
+
+-- A container that is used to define Coherently-with-restriction.
+
+Coherently-with-restriction-container :
+  {B : Type b}
+  (P : {A : Type a} → (A → B) → Type p)
+  (step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B) →
+  (Q : {A : Type a} → (A → B) → Type q) →
+  ({A : Type a} {f : A → B} {p : P f} → Q f → Q (step f p)) →
+  Container (∃ λ (A : Type a) → ∃ λ (f : A → B) → Q f) p lzero
+Coherently-with-restriction-container P step _ pres = λ where
+  .Shape (_ , f , _)               → P f
+  .Position _                      → ⊤
+  .index {o = A , f , q} {s = p} _ → ∥ A ∥¹ , step f p , pres q
+
+-- A variant of Coherently. An extra predicate Q is included, so that
+-- one can restrict the "f" functions (and their domains).
+
+Coherently-with-restriction :
+  {A : Type a} {B : Type b}
+  (P : {A : Type a} → (A → B) → Type p)
+  (step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B) →
+  (f : A → B) →
+  (Q : {A : Type a} → (A → B) → Type q) →
+  ({A : Type a} {f : A → B} {p : P f} → Q f → Q (step f p)) →
+  Q f →
+  Type (lsuc a ⊔ b ⊔ p ⊔ q)
+Coherently-with-restriction P step f Q pres q =
+  M (Coherently-with-restriction-container P step Q pres) (_ , f , q)
+
+-- Coherently P step f is equivalent to
+-- Coherently-with-restriction P step f Q pres q.
+
+Coherently≃Coherently-with-restriction :
+  {P : {A : Type a} → (A → B) → Type p}
+  {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B}
+  {f : A → B}
+  {Q : {A : Type a} → (A → B) → Type q}
+  {pres : {A : Type a} {f : A → B} {p : P f} → Q f → Q (step f p)}
+  {q : Q f} →
+  Coherently P step f ≃ Coherently-with-restriction P step f Q pres q
+Coherently≃Coherently-with-restriction
+  {P = P} {step = step} {Q = Q} {pres = pres} =
+  Eq.↔→≃ to (from _)
+    (λ c → _↔_.from ≡↔≡ (to-from c))
+    (λ c → _↔_.from ≡↔≡ (from-to _ c))
+  where
+  to :
+    Coherently P step f →
+    Coherently-with-restriction P step f Q pres q
+  to c .out-M .proj₁   = c .property
+  to c .out-M .proj₂ _ = to (c .coherent)
+
+  from :
+    ∀ q →
+    Coherently-with-restriction P step f Q pres q →
+    Coherently P step f
+  from _ c .property = c .out-M .proj₁
+  from _ c .coherent = from _ (c .out-M .proj₂ _)
+
+  to-from :
+    (c : Coherently-with-restriction P step f Q pres q) →
+    to (from q c) P.≡ c
+  to-from c i .out-M .proj₁   = c .out-M .proj₁
+  to-from c i .out-M .proj₂ _ = to-from (c .out-M .proj₂ _) i
+
+  from-to : ∀ q (c : Coherently P step f) → from q (to c) P.≡ c
+  from-to _ c i .property = c .property
+  from-to q c i .coherent = from-to (pres q) (c .coherent) i
