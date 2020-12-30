@@ -1859,7 +1859,7 @@ Is-set-closed-domain {A = A} {B} univ A-set =
 -- univalence).
 --
 -- See also
--- Lens.Non-dependent.Equivalent-preimages.higher-lens-preserves-h-level-of-domain.
+-- Lens.Non-dependent.Higher.Coinductive.lens-preserves-h-level-of-domain.
 
 domain-0+⇒lens-1+ :
   {A : Type a} {B : Type b} →
