@@ -38,7 +38,7 @@ private
     z         : A
 
 ------------------------------------------------------------------------
--- The lens type family
+-- Constant-≃
 
 -- A variant of Constant for type-valued functions.
 
@@ -46,59 +46,6 @@ Constant-≃ :
   {A : Type a} →
   (A → Type p) → Type (a ⊔ p)
 Constant-≃ P = ∀ x y → P x ≃ P y
-
--- Coherently constant type-valued functions.
-
-Coherently-constant :
-  Univalence p →
-  {A : Type a} → (A → Type p) → Type (a ⊔ p)
-Coherently-constant univ =
-  Coherently
-    Constant-≃
-    (λ P c → O.rec′ P (λ x y → ≃⇒≡ univ (c x y)))
-
--- Small coinductive lenses, based on an idea due to Paolo Capriotti.
---
--- The lenses are defined as a record type to make it easier for Agda
--- to infer the argument univ from a value of type Lens univ A B.
-
-record Lens (univ : Univalence (a ⊔ b)) (A : Type a) (B : Type b) :
-            Type (a ⊔ b) where
-  field
-
-    -- A getter.
-    get : A → B
-
-    -- The family of fibres of the getter is coherently constant.
-    get⁻¹-coherently-constant : Coherently-constant univ (get ⁻¹_)
-
-  -- All the getter's fibres are equivalent.
-
-  get⁻¹-constant : (b₁ b₂ : B) → get ⁻¹ b₁ ≃ get ⁻¹ b₂
-  get⁻¹-constant = get⁻¹-coherently-constant .property
-
-  -- A setter.
-
-  set : A → B → A
-  set a b =                    $⟨ _≃_.to (get⁻¹-constant (get a) b) ⟩
-    (get ⁻¹ get a → get ⁻¹ b)  ↝⟨ _$ (a , refl _) ⟩
-    get ⁻¹ b                   ↝⟨ proj₁ ⟩□
-    A                          □
-
-instance
-
-  -- The lenses defined above have getters and setters.
-
-  has-getter-and-setter :
-    {univ : Univalence (a ⊔ b)} →
-    Has-getter-and-setter (Lens {a = a} {b = b} univ)
-  has-getter-and-setter = record
-    { get = Lens.get
-    ; set = Lens.set
-    }
-
-------------------------------------------------------------------------
--- Some conversion functions
 
 -- Constant and Constant-≃ are pointwise equivalent (assuming
 -- univalence).
@@ -110,6 +57,19 @@ Constant≃Constant-≃ univ =
   ∀-cong ext λ _ →
   ∀-cong ext λ _ →
   ≡≃≃ univ
+
+------------------------------------------------------------------------
+-- Coherently-constant
+
+-- Coherently constant type-valued functions.
+
+Coherently-constant :
+  Univalence p →
+  {A : Type a} → (A → Type p) → Type (a ⊔ p)
+Coherently-constant univ =
+  Coherently
+    Constant-≃
+    (λ P c → O.rec′ P (λ x y → ≃⇒≡ univ (c x y)))
 
 -- Two variants of Coherently-constant are pointwise equivalent
 -- (when applicable, assuming univalence).
@@ -137,43 +97,6 @@ Higher-coherently-constant≃Coherently-constant {P = P} univ′ univ =
   Higher.Coherently-constant P       ↝⟨ Coinductive.Coherently-constant≃Coherently-constant univ′ ⟩
   Coinductive.Coherently-constant P  ↝⟨ Coinductive-coherently-constant≃Coherently-constant univ′ univ ⟩□
   Coherently-constant univ P         □
-
--- Lens is pointwise equivalent to Coinductive.Lens (assuming
--- univalence).
-
-Coinductive-lens≃Lens :
-  {A : Type a} {B : Type b} →
-  Univalence (lsuc (a ⊔ b)) →
-  (univ : Univalence (a ⊔ b)) →
-  Coinductive.Lens A B ≃ Lens univ A B
-Coinductive-lens≃Lens {A = A} {B = B} univ₁ univ₂ =
-  Coinductive.Lens A B                                             ↔⟨⟩
-
-  (∃ λ (get : A → B) → Coinductive.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ →
-                                                                       Coinductive-coherently-constant≃Coherently-constant univ₁ univ₂) ⟩
-
-  (∃ λ (get : A → B) → Coherently-constant univ₂ (get ⁻¹_))        ↝⟨ Eq.↔→≃
-                                                                        (λ (g , c) → record { get = g; get⁻¹-coherently-constant = c })
-                                                                        (λ l → Lens.get l , Lens.get⁻¹-coherently-constant l)
-                                                                        refl
-                                                                        refl ⟩□
-  Lens univ₂ A B                                                   □
-
--- The equivalence preserves getters and setters.
-
-Coinductive-lens≃Lens-preserves-getters-and-setters :
-  {A : Type a} {B : Type b}
-  (univ₁ : Univalence (lsuc (a ⊔ b)))
-  (univ₂ : Univalence (a ⊔ b)) →
-  Preserves-getters-and-setters-⇔ A B
-    (_≃_.logical-equivalence (Coinductive-lens≃Lens univ₁ univ₂))
-Coinductive-lens≃Lens-preserves-getters-and-setters univ₁ univ₂ =
-  Preserves-getters-and-setters-→-↠-⇔
-    (_≃_.surjection (Coinductive-lens≃Lens univ₁ univ₂))
-    (λ _ → refl _ , refl _)
-
-------------------------------------------------------------------------
--- Some lemmas related to Coherently-constant
 
 -- A map lemma for Coherently-constant.
 
@@ -656,7 +579,84 @@ Coherently-constant-Σ′ {P = P} {Q = Q}
                                                                                Higher-coherently-constant≃Coherently-constant univ₅ univ₂) ⟩
      Higher.Coherently-constant P × Higher.Coherently-constant Q   ↝⟨ uncurry Higher.Coherently-constant-Σ ⟩
      Higher.Coherently-constant (λ x → ∃ λ (y : P x) → Q (x , y))  ↔⟨ Higher-coherently-constant≃Coherently-constant univ₆ univ₃ ⟩□
-   Coherently-constant univ₃ (λ x → ∃ λ (y : P x) → Q (x , y))   □)
+     Coherently-constant univ₃ (λ x → ∃ λ (y : P x) → Q (x , y))   □)
+
+------------------------------------------------------------------------
+-- The lens type family
+
+-- Small coinductive lenses, based on an idea due to Paolo Capriotti.
+--
+-- The lenses are defined as a record type to make it easier for Agda
+-- to infer the argument univ from a value of type Lens univ A B.
+
+record Lens (univ : Univalence (a ⊔ b)) (A : Type a) (B : Type b) :
+            Type (a ⊔ b) where
+  field
+
+    -- A getter.
+    get : A → B
+
+    -- The family of fibres of the getter is coherently constant.
+    get⁻¹-coherently-constant : Coherently-constant univ (get ⁻¹_)
+
+  -- All the getter's fibres are equivalent.
+
+  get⁻¹-constant : (b₁ b₂ : B) → get ⁻¹ b₁ ≃ get ⁻¹ b₂
+  get⁻¹-constant = get⁻¹-coherently-constant .property
+
+  -- A setter.
+
+  set : A → B → A
+  set a b =                    $⟨ _≃_.to (get⁻¹-constant (get a) b) ⟩
+    (get ⁻¹ get a → get ⁻¹ b)  ↝⟨ _$ (a , refl _) ⟩
+    get ⁻¹ b                   ↝⟨ proj₁ ⟩□
+    A                          □
+
+instance
+
+  -- The lenses defined above have getters and setters.
+
+  has-getter-and-setter :
+    {univ : Univalence (a ⊔ b)} →
+    Has-getter-and-setter (Lens {a = a} {b = b} univ)
+  has-getter-and-setter = record
+    { get = Lens.get
+    ; set = Lens.set
+    }
+
+-- Lens is pointwise equivalent to Coinductive.Lens (assuming
+-- univalence).
+
+Coinductive-lens≃Lens :
+  {A : Type a} {B : Type b} →
+  Univalence (lsuc (a ⊔ b)) →
+  (univ : Univalence (a ⊔ b)) →
+  Coinductive.Lens A B ≃ Lens univ A B
+Coinductive-lens≃Lens {A = A} {B = B} univ₁ univ₂ =
+  Coinductive.Lens A B                                             ↔⟨⟩
+
+  (∃ λ (get : A → B) → Coinductive.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ →
+                                                                       Coinductive-coherently-constant≃Coherently-constant univ₁ univ₂) ⟩
+
+  (∃ λ (get : A → B) → Coherently-constant univ₂ (get ⁻¹_))        ↝⟨ Eq.↔→≃
+                                                                        (λ (g , c) → record { get = g; get⁻¹-coherently-constant = c })
+                                                                        (λ l → Lens.get l , Lens.get⁻¹-coherently-constant l)
+                                                                        refl
+                                                                        refl ⟩□
+  Lens univ₂ A B                                                   □
+
+-- The equivalence preserves getters and setters.
+
+Coinductive-lens≃Lens-preserves-getters-and-setters :
+  {A : Type a} {B : Type b}
+  (univ₁ : Univalence (lsuc (a ⊔ b)))
+  (univ₂ : Univalence (a ⊔ b)) →
+  Preserves-getters-and-setters-⇔ A B
+    (_≃_.logical-equivalence (Coinductive-lens≃Lens univ₁ univ₂))
+Coinductive-lens≃Lens-preserves-getters-and-setters univ₁ univ₂ =
+  Preserves-getters-and-setters-→-↠-⇔
+    (_≃_.surjection (Coinductive-lens≃Lens univ₁ univ₂))
+    (λ _ → refl _ , refl _)
 
 ------------------------------------------------------------------------
 -- Identity
