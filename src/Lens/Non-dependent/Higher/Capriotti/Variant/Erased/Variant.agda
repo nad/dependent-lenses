@@ -42,8 +42,9 @@ private
   variable
     a b p q  : Level
     A B      : Type a
-    Q        : A → Type q
+    P Q      : A → Type p
     b₁ b₂ b₃ : A
+    f        : (x : A) → P x
 
 ------------------------------------------------------------------------
 -- The lens type family
@@ -90,20 +91,40 @@ Contractible-last-part-of-Coherently-constant {Q = Q} =           $⟨ Contracti
 Lens : Type a → Type b → Type (lsuc (a ⊔ b))
 Lens A B = ∃ λ (get : A → B) → Coherently-constant (get ⁻¹ᴱ_)
 
+-- In erased contexts Coherently-constant P is equivalent to
+-- V.Coherently-constant P.
+
+@0 Coherently-constant≃Variant-coherently-constant :
+  {P : A → Type p} →
+  Coherently-constant P ≃ V.Coherently-constant P
+Coherently-constant≃Variant-coherently-constant {A = A} {P = P} =
+  (∃ λ (Q : ∥ A ∥ᴱ → _) → (∀ x → P x ≃ᴱ Q ∣ x ∣) × _)  ↔⟨ (∃-cong λ _ → drop-⊤-right λ _ →
+                                                           _⇔_.to contractible⇔↔⊤
+                                                           Contractible-last-part-of-Coherently-constant) ⟩
+  (∃ λ (Q : ∥ A ∥ᴱ → _) → ∀ x → P x ≃ᴱ Q ∣ x ∣)        ↝⟨ (∃-cong λ _ → ∀-cong ext λ _ → inverse
+                                                           EEq.≃≃≃ᴱ) ⟩
+  (∃ λ (Q : ∥ A ∥ᴱ → _) → ∀ x → P x ≃  Q ∣ x ∣)        ↝⟨ (Σ-cong {k₁ = equivalence} (→-cong₁ ext T.∥∥ᴱ≃∥∥) λ _ → F.id) ⟩□
+  (∃ λ (Q : ∥ A ∥  → _) → ∀ x → P x ≃  Q ∣ x ∣)        □
+
+-- In erased contexts Coherently-constant (f ⁻¹ᴱ_) is equivalent to
+-- V.Coherently-constant (f ⁻¹_).
+
+@0 Coherently-constant-⁻¹ᴱ≃Variant-coherently-constant-⁻¹ :
+  Coherently-constant (f ⁻¹ᴱ_) ≃ V.Coherently-constant (f ⁻¹_)
+Coherently-constant-⁻¹ᴱ≃Variant-coherently-constant-⁻¹ {f = f} =
+  Coherently-constant (f ⁻¹ᴱ_)        ↝⟨ Coherently-constant≃Variant-coherently-constant ⟩
+  V.Coherently-constant (f ⁻¹ᴱ_)      ↔⟨⟩
+  (∃ λ Q → ∀ x → f ⁻¹ᴱ x ≃  Q ∣ x ∣)  ↝⟨ (∃-cong λ _ → ∀-cong ext λ _ →
+                                          Eq.≃-preserves ext (inverse ECP.⁻¹≃⁻¹ᴱ) F.id) ⟩
+  (∃ λ Q → ∀ x → f ⁻¹ x ≃  Q ∣ x ∣)   ↔⟨⟩
+  V.Coherently-constant (f ⁻¹_)       □
+
 -- In erased contexts Lens A B is equivalent to V.Lens A B.
 
 @0 Lens≃Variant-lens : Lens A B ≃ V.Lens A B
 Lens≃Variant-lens {B = B} =
-  (∃ λ get → ∃ λ (Q : ∥ B ∥ᴱ → _) → (∀ x → get ⁻¹ᴱ x ≃ᴱ Q ∣ x ∣) × _)  ↔⟨ (∃-cong λ _ → ∃-cong λ _ → drop-⊤-right λ _ →
-                                                                           _⇔_.to contractible⇔↔⊤
-                                                                           Contractible-last-part-of-Coherently-constant) ⟩
-  (∃ λ get → ∃ λ (Q : ∥ B ∥ᴱ → _) → ∀ x → get ⁻¹ᴱ x ≃ᴱ Q ∣ x ∣)        ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → inverse
-                                                                           EEq.≃≃≃ᴱ) ⟩
-  (∃ λ get → ∃ λ (Q : ∥ B ∥ᴱ → _) → ∀ x → get ⁻¹ᴱ x ≃  Q ∣ x ∣)        ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ →
-                                                                           Eq.≃-preserves ext (inverse ECP.⁻¹≃⁻¹ᴱ) F.id) ⟩
-  (∃ λ get → ∃ λ (Q : ∥ B ∥ᴱ → _) → ∀ x → get ⁻¹  x ≃  Q ∣ x ∣)        ↝⟨ (∃-cong λ _ →
-                                                                           Σ-cong {k₁ = equivalence} (→-cong₁ ext T.∥∥ᴱ≃∥∥) λ _ → F.id) ⟩□
-  (∃ λ get → ∃ λ (Q : ∥ B ∥  → _) → ∀ x → get ⁻¹  x ≃  Q ∣ x ∣)        □
+  (∃ λ get → Coherently-constant (get ⁻¹ᴱ_))   ↝⟨ (∃-cong λ _ → Coherently-constant-⁻¹ᴱ≃Variant-coherently-constant-⁻¹) ⟩□
+  (∃ λ get → V.Coherently-constant (get ⁻¹_))  □
 
 -- Some derived definitions.
 
