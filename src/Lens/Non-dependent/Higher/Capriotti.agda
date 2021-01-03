@@ -243,6 +243,22 @@ equality-characterisation₂ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} univ =
 ------------------------------------------------------------------------
 -- Conversions between different kinds of lenses
 
+-- Variant.Coherently-constant P is equivalent to
+-- Coherently-constant P (assuming univalence).
+
+Variant-coherently-constant≃Coherently-constant :
+  {P : A → Type p} →
+  Univalence p →
+  Variant.Coherently-constant P ≃ Coherently-constant P
+Variant-coherently-constant≃Coherently-constant
+  {A = A} {p = p} {P = P} univ =
+
+  Variant.Coherently-constant P                     ↔⟨⟩
+  (∃ λ (H : ∥ A ∥ → Type p) → ∀ b → P b ≃ H ∣ b ∣)  ↝⟨ (∃-cong λ _ → ∀-cong ext λ _ → inverse $ ≡≃≃ univ) ⟩
+  (∃ λ (H : ∥ A ∥ → Type p) → ∀ b → P b ≡ H ∣ b ∣)  ↝⟨ (∃-cong λ _ → Eq.extensionality-isomorphism bad-ext) ⟩
+  (∃ λ (H : ∥ A ∥ → Type p) → P ≡ H ∘ ∣_∣)          ↔⟨⟩
+  Coherently-constant P                             □
+
 -- The lenses defined above are equivalent to those defined in Variant
 -- (assuming univalence).
 
@@ -252,11 +268,10 @@ Variant-lens≃Lens :
   Univalence (a ⊔ b) →
   Variant.Lens A B ≃ Lens A B
 Variant-lens≃Lens {a = a} {A = A} {B = B} ⊠ univ =
-  Variant.Lens A B                                                    ↔⟨⟩
-  (∃ λ (g : A → B) → ∃ λ (H : Pow a ∥ B ∥) → ∀ b → g ⁻¹ b ≃ H ∣ b ∣)  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → inverse $ ≡≃≃ univ) ⟩
-  (∃ λ (g : A → B) → ∃ λ (H : Pow a ∥ B ∥) → ∀ b → g ⁻¹ b ≡ H ∣ b ∣)  ↝⟨ (∃-cong λ _ → ∃-cong λ _ → Eq.extensionality-isomorphism bad-ext) ⟩
-  (∃ λ (g : A → B) → ∃ λ (H : Pow a ∥ B ∥) → g ⁻¹_ ≡ H ∘ ∣_∣)         ↔⟨⟩
-  Lens A B                                                            □
+  Variant.Lens A B                                             ↔⟨⟩
+  (∃ λ (get : A → B) → Variant.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ → Variant-coherently-constant≃Coherently-constant univ) ⟩
+  (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))          ↔⟨⟩
+  Lens A B                                                     □
 
 -- The conversion preserves getters and setters.
 
