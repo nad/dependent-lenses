@@ -26,7 +26,10 @@ open import Equivalence equality-with-J as Eq using (_≃_)
 import Equivalence P.equality-with-J as PEq
 open import Function-universe equality-with-J hiding (_∘_)
 import Function-universe P.equality-with-J as PF
-open import H-level.Truncation.Propositional.One-step eq using (∥_∥¹)
+open import H-level equality-with-J
+open import H-level.Closure equality-with-J
+open import H-level.Truncation.Propositional.One-step eq as O
+  using (∥_∥¹; ∣_∣)
 open import Univalence-axiom equality-with-J
 import Univalence-axiom P.equality-with-J as PU
 
@@ -36,6 +39,7 @@ private
     A A₁ A₂ B C   : Type a
     q x y         : A
     f             : A → B
+    n             : ℕ
 
 ------------------------------------------------------------------------
 -- The type family
@@ -546,3 +550,68 @@ Coherently≃Coherently-with-restriction
   from-to : ∀ q (c : Coherently P step f) → from q (to c) P.≡ c
   from-to _ c i .property = c .property
   from-to q c i .coherent = from-to (pres q) (c .coherent) i
+
+------------------------------------------------------------------------
+-- H-levels
+
+-- I think that Paolo Capriotti suggested that one could prove that
+-- certain instances of Coherently have certain h-levels by using the
+-- result (due to Ahrens, Capriotti and Spadotti, see "Non-wellfounded
+-- trees in Homotopy Type Theory") that M-types for indexed containers
+-- have h-level n if all shapes have h-level n. The use of containers
+-- with "restrictions" is my idea.
+
+-- If P f has h-level n, and (for any f and p) P (step f p) has
+-- h-level n when P f has h-level n, then Coherently P step f has
+-- h-level n (assuming univalence).
+
+H-level-Coherently :
+  {B : Type b}
+  {P : {A : Type a} → (A → B) → Type p}
+  {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B}
+  {f : A → B} →
+  Univalence (lsuc a ⊔ b ⊔ p) →
+  H-level n (P f) →
+  ({A : Type a} {f : A → B} {p : P f} →
+   H-level n (P f) → H-level n (P (step f p))) →
+  H-level n (Coherently P step f)
+H-level-Coherently {n = n} {P = P} {step = step} {f = f} univ h₁ h₂ =
+                                           $⟨ H-level-M univ univ (λ (_ , _ , h) → h) ⟩
+  H-level n
+    (Coherently-with-restriction P step f
+       (λ f → H-level n (P f)) h₂ h₁)      ↝⟨ H-level-cong _ n (inverse Coherently≃Coherently-with-restriction) ⦂ (_ → _) ⟩□
+
+  H-level n (Coherently P step f)          □
+
+-- A variant of H-level-Coherently for type-valued functions.
+
+H-level-Coherently-→Type :
+  {Q : {A : Type a} → (A → Type p) → Type q}
+  {step : {A : Type a} (P : A → Type p) → Q P → ∥ A ∥¹ → Type p}
+  {P : A → Type p} →
+  Univalence (lsuc (a ⊔ p) ⊔ q) →
+  Univalence (lsuc (a ⊔ p)) →
+  ((a : A) → H-level n (P a)) →
+  ({A : Type a} {P : A → Type p} →
+   ((a : A) → H-level n (P a)) → H-level n (Q P)) →
+  ({A : Type a} {P : A → Type p} {q : Q P} →
+   ((a : A) → H-level n (P a)) →
+   (a : A) → H-level n (step P q ∣ a ∣)) →
+  H-level n (Coherently Q step P)
+H-level-Coherently-→Type
+  {a = a} {p = p} {n = n} {Q = Q} {step = step} {P = P}
+  univ₁ univ₂ h₁ h₂ h₃ =
+                                                $⟨ H-level-M univ₁ univ₂ (λ (_ , _ , h) → h₂ h) ⟩
+  H-level n
+    (Coherently-with-restriction Q step P
+       (λ P → ∀ a → H-level n (P a)) lemma h₁)  ↝⟨ H-level-cong _ n (inverse Coherently≃Coherently-with-restriction) ⦂ (_ → _) ⟩□
+
+  H-level n (Coherently Q step P)               □
+  where
+  lemma :
+    {A : Type a} {P : A → Type p} {q : Q P} →
+    ((a : A) → H-level n (P a)) →
+    (a : ∥ A ∥¹) → H-level n (step P q a)
+  lemma h = O.elim λ where
+    .O.∣∣ʳ              → h₃ h
+    .O.∣∣-constantʳ _ _ → H-level-propositional ext n _ _

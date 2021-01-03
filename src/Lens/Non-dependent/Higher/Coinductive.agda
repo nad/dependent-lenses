@@ -22,11 +22,10 @@ open import Prelude
 
 open import Bijection equality-with-J using (_↔_)
 open import Colimit.Sequential eq as C using (∣_∣)
-open import Container.Indexed.M.Codata eq
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
-open import Function-universe equality-with-J as F hiding (_∘_)
+open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq as T using (∥_∥; ∣_∣)
@@ -469,10 +468,11 @@ to-Coherently-constant≃Coherently-constant-property
 -- If P has h-level n (pointwise), then Coherently-constant P has
 -- h-level n (assuming univalence).
 --
--- I think that Paolo Capriotti suggested that this could be proved by
--- using the result (due to Ahrens, Capriotti and Spadotti, see
--- "Non-wellfounded trees in Homotopy Type Theory") that M-types for
--- indexed containers have h-level n if all shapes have h-level n.
+-- I think that Paolo Capriotti suggested that something like this
+-- could be proved by using the result (due to Ahrens, Capriotti and
+-- Spadotti, see "Non-wellfounded trees in Homotopy Type Theory") that
+-- M-types for indexed containers have h-level n if all shapes have
+-- h-level n.
 
 H-level-Coherently-constant :
   {A : Type a} {P : A → Type p} →
@@ -480,31 +480,17 @@ H-level-Coherently-constant :
   Univalence p →
   ((a : A) → H-level n (P a)) →
   H-level n (Coherently-constant P)
-H-level-Coherently-constant
-  {a = a} {p = p} {n = n} {P = P} univ₁ univ₂ h =
-                                                    $⟨ H-level-M univ₁ univ₁ (λ (_ , _ , h) → lemma₁ h) ⟩
-  H-level n
-    (Coherently-with-restriction Constant O.rec′ P
-       (λ P → ∀ a → H-level n (P a)) lemma₂ h)      ↝⟨ H-level-cong _ n (inverse Coherently≃Coherently-with-restriction) ⦂ (_ → _) ⟩□
-
-  H-level n (Coherently Constant O.rec′ P)          □
+H-level-Coherently-constant {a = a} {p = p} {n = n} univ₁ univ₂ h =
+  H-level-Coherently-→Type univ₁ univ₁ h lemma id
   where
-  lemma₁ :
+  lemma :
     {A : Type a} {P : A → Type p} →
     ((a : A) → H-level n (P a)) →
     H-level n (Constant P)
-  lemma₁ h =
+  lemma h =
     Π-closure ext n λ _ →
     Π-closure ext n λ _ →
     H-level-H-level-≡ ext univ₂ n (h _) (h _)
-
-  lemma₂ :
-    {A : Type a} {P : A → Type p} {c : Constant P} →
-    ((a : A) → H-level n (P a)) →
-    (a : ∥ A ∥¹) → H-level n (O.rec′ P c a)
-  lemma₂ h = O.elim λ where
-    .O.∣∣ʳ              → h
-    .O.∣∣-constantʳ _ _ → H-level-propositional ext n _ _
 
 ------------------------------------------------------------------------
 -- Lenses, defined as getters with coherently constant fibres
