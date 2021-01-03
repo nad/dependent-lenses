@@ -17,12 +17,14 @@ open import Prelude as P hiding (id)
 open import Bijection equality-with-J as B using (_↔_)
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq hiding (univ)
-open import Equivalence equality-with-J as Eq using (_≃_)
+open import Equivalence equality-with-J as Eq
+  using (_≃_; Is-equivalence)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional.One-step eq as O
   using (∥_∥¹; ∣_∣)
 open import Preimage equality-with-J as Preimage using (_⁻¹_)
+open import Tactic.Sigma-cong equality-with-J
 open import Univalence-axiom equality-with-J
 
 open import Lens.Non-dependent eq
@@ -57,6 +59,76 @@ Constant≃Constant-≃ univ =
   ∀-cong ext λ _ →
   ∀-cong ext λ _ →
   ≡≃≃ univ
+
+-- Constant-≃ (get ⁻¹_) can be expressed in terms of a "setter" and a
+-- "get-set" law that form a family of equivalences in a certain way.
+--
+-- This lemma was suggested by Andrea Vezzosi when we discussed
+-- coinductive lenses with erased "proofs".
+
+Constant-≃-get-⁻¹-≃ :
+  Block "Constant-≃-get-⁻¹-≃" →
+  {A : Type a} {B : Type b} {get : A → B} →
+  Constant-≃ (get ⁻¹_) ≃
+  (∃ λ (set : A → B → A) →
+   ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
+   ∀ b₁ b₂ →
+   let f : get ⁻¹ b₁ → get ⁻¹ b₂
+       f = λ (a , _) → set a b₂ , get-set a b₂
+   in
+   Is-equivalence f)
+Constant-≃-get-⁻¹-≃ ⊠ {A = A} {B = B} {get = get} =
+  Constant-≃ (get ⁻¹_)                                            ↔⟨⟩
+
+  (∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)                               ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ →
+                                                                      Eq.≃-as-Σ) ⟩
+  (∀ b₁ b₂ →
+   ∃ λ (f : get ⁻¹ b₁ → get ⁻¹ b₂) →
+   Is-equivalence f)                                              ↔⟨ Π-comm ⟩
+
+  (∀ b₂ b₁ →
+   ∃ λ (f : get ⁻¹ b₁ → get ⁻¹ b₂) →
+   Is-equivalence f)                                              ↝⟨ (∀-cong ext λ _ → ∀-cong ext λ _ →
+                                                                      Σ-cong-id currying) ⟩
+  (∀ b₂ b₁ →
+   ∃ λ (f : ∀ a → get a ≡ b₁ → get ⁻¹ b₂) →
+   Is-equivalence (uncurry f))                                    ↔⟨ (∀-cong ext λ _ →
+                                                                      ΠΣ-comm) ⟩
+  (∀ b₂ →
+   ∃ λ (f : ∀ b₁ a → get a ≡ b₁ → get ⁻¹ b₂) →
+   ∀ b₁ → Is-equivalence (uncurry (f b₁)))                        ↝⟨ (∀-cong ext λ _ →
+                                                                      Σ-cong-id Π-comm) ⟩
+  (∀ b₂ →
+   ∃ λ (f : ∀ a b₁ → get a ≡ b₁ → get ⁻¹ b₂) →
+   ∀ b₁ → Is-equivalence (uncurry (flip f b₁)))                   ↝⟨ (∀-cong ext λ _ →
+                                                                      Σ-cong (∀-cong ext λ _ → inverse $ ∀-intro {k = equivalence} ext _) λ f →
+                                                                      ∀-cong ext λ b₁ →
+                                                                      Is-equivalence-cong {k = equivalence} ext λ (a , eq) →
+      uncurry (f a) (b₁ , eq)                                           ≡⟨ cong (uncurry (f a)) $ sym $
+                                                                           proj₂ (other-singleton-contractible _) _ ⟩∎
+      uncurry (f a) (get a , refl _)                                    ∎) ⟩
+
+  (∀ b₂ →
+   ∃ λ (f : A → get ⁻¹ b₂) →
+   ∀ b₁ → Is-equivalence (f ∘ proj₁))                             ↔⟨ ΠΣ-comm ⟩
+
+  (∃ λ (f : (b : B) → A → get ⁻¹ b) →
+   ∀ b₂ b₁ → Is-equivalence (f b₂ ∘ proj₁))                       ↝⟨ Σ-cong-refl Π-comm (λ _ → Π-comm) ⟩
+
+  (∃ λ (f : A → (b : B) → get ⁻¹ b) →
+   ∀ b₁ b₂ → Is-equivalence ((_$ b₂) ∘ f ∘ proj₁))                ↝⟨ Σ-cong-refl (∀-cong ext λ _ → ΠΣ-comm) (λ _ → Eq.id) ⟩
+
+  (∃ λ (f : A → ∃ λ (set : B → A) → (b : B) → get (set b) ≡ b) →
+   ∀ b₁ b₂ → Is-equivalence (Σ-map (_$ b₂) (_$ b₂) ∘ f ∘ proj₁))  ↝⟨ Σ-cong-id ΠΣ-comm ⟩
+
+  (∃ λ ((set , get-set) :
+        ∃ λ (set : A → B → A) →
+          (a : A) (b : B) → get (set a b) ≡ b) →
+   ∀ b₁ b₂ → Is-equivalence λ (a , _) → set a b₂ , get-set a b₂)  ↔⟨ inverse Σ-assoc ⟩□
+
+  (∃ λ (set : A → B → A) →
+   ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
+   ∀ b₁ b₂ → Is-equivalence λ (a , _) → set a b₂ , get-set a b₂)  □
 
 ------------------------------------------------------------------------
 -- Coherently-constant
