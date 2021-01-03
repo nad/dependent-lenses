@@ -19,7 +19,8 @@ open import Prelude
 
 open import Bijection equality-with-J as B using (_↔_)
 open import Equality.Path.Isomorphisms eq hiding (univ)
-open import Equivalence equality-with-J as Eq using (_≃_)
+open import Equivalence equality-with-J as Eq
+  using (_≃_; Is-equivalence)
 open import Equivalence.Erased.Cubical eq as EEq using (_≃ᴱ_)
 open import Equivalence.Erased.Contractible-preimages.Cubical eq as ECP
   using (_⁻¹ᴱ_; Contractibleᴱ)
@@ -54,35 +55,35 @@ Coherently-constant :
 Coherently-constant {p = p} {A = A} P =
   ∃ λ (Q : ∥ A ∥ᴱ → Type p) →
     (∀ x → P x ≃ᴱ Q ∣ x ∣) ×
-    ∃ λ (Q≃Q : ∀ x y → Q x ≃ᴱ Q y) →
-      Erased (∀ x y → Q≃Q x y ≡
-                      ≡⇒↝ _ (cong Q (T.truncation-is-proposition x y)))
+    ∃ λ (Q→Q : ∀ x y → Q x → Q y) →
+      Erased (∀ x y → Q→Q x y ≡
+                      subst Q (T.truncation-is-proposition x y))
 
 -- The "last part" of Coherently-constant is contractible (in erased
 -- contexts).
 
 @0 Contractible-last-part-of-Coherently-constant :
   Contractible
-    (∃ λ (Q≃Q : ∀ x y → Q x ≃ᴱ Q y) →
-     Erased (∀ x y → Q≃Q x y ≡
-                     ≡⇒↝ _ (cong Q (T.truncation-is-proposition x y))))
-Contractible-last-part-of-Coherently-constant {Q = Q} =                  $⟨ Contractibleᴱ-Erased-singleton ⟩
+    (∃ λ (Q→Q : ∀ x y → Q x → Q y) →
+     Erased (∀ x y → Q→Q x y ≡
+                     subst Q (T.truncation-is-proposition x y)))
+Contractible-last-part-of-Coherently-constant {Q = Q} =           $⟨ Contractibleᴱ-Erased-singleton ⟩
   Contractibleᴱ
-    (∃ λ (Q≃Q : ∀ x y → Q x ≃ᴱ Q y) →
-     Erased (Q≃Q ≡ λ x y →
-                   ≡⇒↝ _ (cong Q (T.truncation-is-proposition x y))))    ↝⟨ (ECP.Contractibleᴱ-cong _ $
-                                                                             ∃-cong λ _ → Erased-cong (inverse $
-                                                                             Eq.extensionality-isomorphism ext F.∘
-                                                                             ∀-cong ext λ _ → Eq.extensionality-isomorphism ext)) ⦂ (_ → _) ⟩
+    (∃ λ (Q→Q : ∀ x y → Q x → Q y) →
+     Erased (Q→Q ≡ λ x y →
+                   subst Q (T.truncation-is-proposition x y)))    ↝⟨ (ECP.Contractibleᴱ-cong _ $
+                                                                      ∃-cong λ _ → Erased-cong (inverse $
+                                                                      Eq.extensionality-isomorphism ext F.∘
+                                                                      ∀-cong ext λ _ → Eq.extensionality-isomorphism ext)) ⦂ (_ → _) ⟩
   Contractibleᴱ
-    (∃ λ (Q≃Q : ∀ x y → Q x ≃ᴱ Q y) →
-     Erased (∀ x y → Q≃Q x y ≡
-                     ≡⇒↝ _ (cong Q (T.truncation-is-proposition x y))))  ↝⟨ ECP.Contractibleᴱ→Contractible ⟩□
+    (∃ λ (Q→Q : ∀ x y → Q x → Q y) →
+     Erased (∀ x y → Q→Q x y ≡
+                     subst Q (T.truncation-is-proposition x y)))  ↝⟨ ECP.Contractibleᴱ→Contractible ⟩□
 
   Contractible
-    (∃ λ (Q≃Q : ∀ x y → Q x ≃ᴱ Q y) →
-     Erased (∀ x y → Q≃Q x y ≡
-                     ≡⇒↝ _ (cong Q (T.truncation-is-proposition x y))))  □
+    (∃ λ (Q→Q : ∀ x y → Q x → Q y) →
+     Erased (∀ x y → Q→Q x y ≡
+                     subst Q (T.truncation-is-proposition x y)))  □
 
 -- Higher lenses with erased "proofs".
 
@@ -123,50 +124,50 @@ module Lens {A : Type a} {B : Type b} (l : Lens A B) where
   get⁻¹ᴱ-≃ᴱ : ∀ b → get ⁻¹ᴱ b ≃ᴱ H ∣ b ∣
   get⁻¹ᴱ-≃ᴱ = proj₁ (proj₂ (proj₂ l))
 
-  -- The predicate H is weakly constant (up to _≃ᴱ_).
+  -- The predicate H is, in a certain sense, constant.
 
-  H≃ᴱH : ∀ b₁ b₂ → H b₁ ≃ᴱ H b₂
-  H≃ᴱH = proj₁ (proj₂ (proj₂ (proj₂ l)))
+  H→H : ∀ b₁ b₂ → H b₁ → H b₂
+  H→H = proj₁ (proj₂ (proj₂ (proj₂ l)))
 
-  -- In erased contexts H≃ᴱH can be expressed using
+  -- In erased contexts H→H can be expressed using
   -- T.truncation-is-proposition.
 
-  @0 H≃ᴱH≡ :
-    H≃ᴱH b₁ b₂ ≡ ≡⇒↝ _ (cong H (T.truncation-is-proposition b₁ b₂))
-  H≃ᴱH≡ = erased (proj₂ (proj₂ (proj₂ (proj₂ l)))) _ _
+  @0 H→H≡ : H→H b₁ b₂ ≡ subst H (T.truncation-is-proposition b₁ b₂)
+  H→H≡ = erased (proj₂ (proj₂ (proj₂ (proj₂ l)))) _ _
 
-  -- A variant of the previous result.
+  -- In erased contexts H→H b₁ b₂ is an equivalence.
 
-  @0 to-H≃ᴱH≡ :
-    _≃ᴱ_.to (H≃ᴱH b₁ b₂) ≡ subst H (T.truncation-is-proposition b₁ b₂)
-  to-H≃ᴱH≡ {b₁ = b₁} {b₂ = b₂} =
-    _≃ᴱ_.to (H≃ᴱH b₁ b₂)                                          ≡⟨ cong _≃ᴱ_.to H≃ᴱH≡ ⟩
-    _≃ᴱ_.to (≡⇒↝ _ (cong H (T.truncation-is-proposition b₁ b₂)))  ≡⟨ (⟨ext⟩ λ _ → sym $ subst-in-terms-of-≡⇒↝ equivalenceᴱ _ _ _) ⟩∎
-    subst H (T.truncation-is-proposition b₁ b₂)                   ∎
+  @0 H→H-equivalence : ∀ b₁ b₂ → Is-equivalence (H→H b₁ b₂)
+  H→H-equivalence b₁ b₂ =                                         $⟨ _≃_.is-equivalence $ Eq.subst-as-equivalence _ _ ⟩
+    Is-equivalence (subst H (T.truncation-is-proposition b₁ b₂))  ↝⟨ subst Is-equivalence $ sym H→H≡ ⟩□
+    Is-equivalence (H→H b₁ b₂)                                    □
 
-  -- All the getter's "preimages" are equivalent (with erased proofs).
-
-  get⁻¹ᴱ-constant : (b₁ b₂ : B) → get ⁻¹ᴱ b₁ ≃ᴱ get ⁻¹ᴱ b₂
-  get⁻¹ᴱ-constant b₁ b₂ =
-    get ⁻¹ᴱ b₁  ↝⟨ get⁻¹ᴱ-≃ᴱ b₁ ⟩
-    H ∣ b₁ ∣    ↝⟨ H≃ᴱH ∣ b₁ ∣ ∣ b₂ ∣ ⟩
-    H ∣ b₂ ∣    ↝⟨ inverse $ get⁻¹ᴱ-≃ᴱ b₂ ⟩□
-    get ⁻¹ᴱ b₂  □
-
-  -- The two directions of get⁻¹ᴱ-constant.
+  -- One can convert from any "preimage" (with erased proofs) of the
+  -- getter to any other.
 
   get⁻¹ᴱ-const : (b₁ b₂ : B) → get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂
-  get⁻¹ᴱ-const b₁ b₂ = _≃ᴱ_.to (get⁻¹ᴱ-constant b₁ b₂)
+  get⁻¹ᴱ-const b₁ b₂ =
+    get ⁻¹ᴱ b₁  ↝⟨ _≃ᴱ_.to $ get⁻¹ᴱ-≃ᴱ b₁ ⟩
+    H ∣ b₁ ∣    ↝⟨ H→H ∣ b₁ ∣ ∣ b₂ ∣ ⟩
+    H ∣ b₂ ∣    ↝⟨ _≃ᴱ_.from $ get⁻¹ᴱ-≃ᴱ b₂ ⟩□
+    get ⁻¹ᴱ b₂  □
 
-  get⁻¹ᴱ-const⁻¹ᴱ : (b₁ b₂ : B) → get ⁻¹ᴱ b₂ → get ⁻¹ᴱ b₁
-  get⁻¹ᴱ-const⁻¹ᴱ b₁ b₂ = _≃ᴱ_.from (get⁻¹ᴱ-constant b₁ b₂)
+  -- The function get⁻¹ᴱ-const b₁ b₂ is an equivalence (in erased
+  -- contexts).
+
+  @0 get⁻¹ᴱ-const-equivalence :
+    (b₁ b₂ : B) → Is-equivalence (get⁻¹ᴱ-const b₁ b₂)
+  get⁻¹ᴱ-const-equivalence b₁ b₂ = _≃_.is-equivalence (
+    get ⁻¹ᴱ b₁  ↝⟨ EEq.≃ᴱ→≃ $ get⁻¹ᴱ-≃ᴱ b₁ ⟩
+    H ∣ b₁ ∣    ↝⟨ Eq.⟨ _ , H→H-equivalence ∣ b₁ ∣ ∣ b₂ ∣ ⟩ ⟩
+    H ∣ b₂ ∣    ↝⟨ EEq.≃ᴱ→≃ $ inverse $ get⁻¹ᴱ-≃ᴱ b₂ ⟩□
+    get ⁻¹ᴱ b₂  □)
 
   -- Some coherence properties.
 
-  @0 H≃ᴱH-∘ :
-    _≃ᴱ_.to (H≃ᴱH b₂ b₃) ∘ _≃ᴱ_.to (H≃ᴱH b₁ b₂) ≡ _≃ᴱ_.to (H≃ᴱH b₁ b₃)
-  H≃ᴱH-∘ {b₂ = b₂} {b₃ = b₃} {b₁ = b₁} =
-    _≃ᴱ_.to (H≃ᴱH b₂ b₃) ∘ _≃ᴱ_.to (H≃ᴱH b₁ b₂)         ≡⟨ cong₂ (λ f g → f ∘ g) to-H≃ᴱH≡ to-H≃ᴱH≡ ⟩
+  @0 H→H-∘ : H→H b₂ b₃ ∘ H→H b₁ b₂ ≡ H→H b₁ b₃
+  H→H-∘ {b₂ = b₂} {b₃ = b₃} {b₁ = b₁} =
+    H→H b₂ b₃ ∘ H→H b₁ b₂                               ≡⟨ cong₂ (λ f g → f ∘ g) H→H≡ H→H≡ ⟩
 
     subst H (T.truncation-is-proposition b₂ b₃) ∘
     subst H (T.truncation-is-proposition b₁ b₂)         ≡⟨ (⟨ext⟩ λ _ → subst-subst _ _ _ _) ⟩
@@ -175,63 +176,50 @@ module Lens {A : Type a} {B : Type b} (l : Lens A B) where
                (T.truncation-is-proposition b₂ b₃))     ≡⟨ cong (subst H) $
                                                            mono₁ 1 T.truncation-is-proposition _ _ ⟩
 
-    subst H (T.truncation-is-proposition b₁ b₃)         ≡⟨ sym to-H≃ᴱH≡ ⟩∎
+    subst H (T.truncation-is-proposition b₁ b₃)         ≡⟨ sym H→H≡ ⟩∎
 
-    _≃ᴱ_.to (H≃ᴱH b₁ b₃)                                ∎
+    H→H b₁ b₃                                           ∎
 
-  @0 H≃ᴱH-id : ∀ {b} → _≃ᴱ_.to (H≃ᴱH b b) ≡ id
-  H≃ᴱH-id {b = b} =
-    _≃ᴱ_.to (H≃ᴱH b b)                         ≡⟨ to-H≃ᴱH≡ ⟩
+  @0 H→H-id : ∀ {b} → H→H b b ≡ id
+  H→H-id {b = b} =
+    H→H b b                                    ≡⟨ H→H≡ ⟩
     subst H (T.truncation-is-proposition b b)  ≡⟨ cong (subst H) $
                                                   mono₁ 1 T.truncation-is-proposition _ _ ⟩
     subst H (refl b)                           ≡⟨ (⟨ext⟩ λ _ → subst-refl _ _) ⟩∎
     id                                         ∎
 
-  @0 H≃ᴱH-inverse : _≃ᴱ_.to (H≃ᴱH b₁ b₂) ≡ _≃ᴱ_.from (H≃ᴱH b₂ b₁)
-  H≃ᴱH-inverse {b₁ = b₁} {b₂ = b₂} =
-    _≃ᴱ_.to (H≃ᴱH b₁ b₂)                                            ≡⟨ to-H≃ᴱH≡ ⟩
-    subst H (T.truncation-is-proposition b₁ b₂)                     ≡⟨ cong (subst H) $
-                                                                       mono₁ 1 T.truncation-is-proposition _ _ ⟩
-    subst H (sym $ T.truncation-is-proposition b₂ b₁)               ≡⟨ (⟨ext⟩ λ _ → subst-in-terms-of-inverse∘≡⇒↝ equivalenceᴱ _ _ _) ⟩
-    _≃ᴱ_.from (≡⇒↝ _ (cong H (T.truncation-is-proposition b₂ b₁)))  ≡⟨ cong _≃ᴱ_.from $ sym H≃ᴱH≡ ⟩∎
-    _≃ᴱ_.from (H≃ᴱH b₂ b₁)                                          ∎
+  @0 H→H-inverse : H→H b₁ b₂ ∘ H→H b₂ b₁ ≡ id
+  H→H-inverse {b₁ = b₁} {b₂ = b₂} =
+    H→H b₁ b₂ ∘ H→H b₂ b₁  ≡⟨ H→H-∘ ⟩
+    H→H b₂ b₂              ≡⟨ H→H-id ⟩∎
+    id                     ∎
 
   @0 get⁻¹ᴱ-const-∘ :
-    (b₁ b₂ b₃ : B) (p : get ⁻¹ᴱ b₁) →
-    get⁻¹ᴱ-const b₂ b₃ (get⁻¹ᴱ-const b₁ b₂ p) ≡ get⁻¹ᴱ-const b₁ b₃ p
-  get⁻¹ᴱ-const-∘ b₁ b₂ b₃ p =
+    get⁻¹ᴱ-const b₂ b₃ ∘ get⁻¹ᴱ-const b₁ b₂ ≡ get⁻¹ᴱ-const b₁ b₃
+  get⁻¹ᴱ-const-∘ {b₂ = b₂} {b₃ = b₃} {b₁ = b₁} = ⟨ext⟩ λ p →
     _≃ᴱ_.from (get⁻¹ᴱ-≃ᴱ b₃)
-      (_≃ᴱ_.to (H≃ᴱH _ _)
+      (H→H _ _
          (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b₂)
             (_≃ᴱ_.from (get⁻¹ᴱ-≃ᴱ b₂)
-               (_≃ᴱ_.to (H≃ᴱH _ _)
-                  (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b₁) p)))))                ≡⟨ cong (_≃ᴱ_.from (get⁻¹ᴱ-≃ᴱ _) ∘ _≃ᴱ_.to (H≃ᴱH _ _)) $
-                                                                   _≃ᴱ_.right-inverse-of (get⁻¹ᴱ-≃ᴱ _) _ ⟩
+               (H→H _ _ (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b₁) p)))))             ≡⟨ cong (_≃ᴱ_.from (get⁻¹ᴱ-≃ᴱ _) ∘ H→H _ _) $
+                                                                      _≃ᴱ_.right-inverse-of (get⁻¹ᴱ-≃ᴱ _) _ ⟩
     _≃ᴱ_.from (get⁻¹ᴱ-≃ᴱ b₃)
-      (_≃ᴱ_.to (H≃ᴱH _ _)
-         (_≃ᴱ_.to (H≃ᴱH _ _)
-            (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b₁) p)))                        ≡⟨ cong (λ f → _≃ᴱ_.from (get⁻¹ᴱ-≃ᴱ _) (f (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ _) _)))
-                                                                   H≃ᴱH-∘ ⟩∎
-    _≃ᴱ_.from (get⁻¹ᴱ-≃ᴱ b₃)
-      (_≃ᴱ_.to (H≃ᴱH _ _)
-         (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b₁) p))                            ∎
+      (H→H _ _ (H→H _ _ (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b₁) p)))               ≡⟨ cong (λ f → _≃ᴱ_.from (get⁻¹ᴱ-≃ᴱ _) (f (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ _) _)))
+                                                                      H→H-∘ ⟩∎
+    _≃ᴱ_.from (get⁻¹ᴱ-≃ᴱ b₃) (H→H _ _ (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b₁) p))  ∎
 
-  @0 get⁻¹ᴱ-const-id :
-    (b : B) (p : get ⁻¹ᴱ b) → get⁻¹ᴱ-const b b p ≡ p
-  get⁻¹ᴱ-const-id b p =
-    get⁻¹ᴱ-const b b p                                           ≡⟨ sym $ _≃ᴱ_.left-inverse-of (get⁻¹ᴱ-constant _ _) _ ⟩
-    get⁻¹ᴱ-const⁻¹ᴱ b b (get⁻¹ᴱ-const b b (get⁻¹ᴱ-const b b p))  ≡⟨ cong (get⁻¹ᴱ-const⁻¹ᴱ b b) $ get⁻¹ᴱ-const-∘ _ _ _ _ ⟩
-    get⁻¹ᴱ-const⁻¹ᴱ b b (get⁻¹ᴱ-const b b p)                     ≡⟨ _≃ᴱ_.left-inverse-of (get⁻¹ᴱ-constant _ _) _ ⟩∎
+  @0 get⁻¹ᴱ-const-id : ∀ {b} → get⁻¹ᴱ-const b b ≡ id
+  get⁻¹ᴱ-const-id {b = b} = ⟨ext⟩ λ p →
+    _≃ᴱ_.from (get⁻¹ᴱ-≃ᴱ b) (H→H _ _ (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b) p))  ≡⟨ cong (_≃ᴱ_.from (get⁻¹ᴱ-≃ᴱ b)) $ cong (_$ _) H→H-id  ⟩
+    _≃ᴱ_.from (get⁻¹ᴱ-≃ᴱ b) (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b) p)            ≡⟨ _≃ᴱ_.left-inverse-of (get⁻¹ᴱ-≃ᴱ b) _ ⟩∎
     p                                                            ∎
 
   @0 get⁻¹ᴱ-const-inverse :
-    (b₁ b₂ : B) (p : get ⁻¹ᴱ b₁) →
-    get⁻¹ᴱ-const b₁ b₂ p ≡ get⁻¹ᴱ-const⁻¹ᴱ b₂ b₁ p
-  get⁻¹ᴱ-const-inverse b₁ b₂ p =
-    sym $ _≃_.to-from (EEq.≃ᴱ→≃ (get⁻¹ᴱ-constant _ _)) (
-      get⁻¹ᴱ-const b₂ b₁ (get⁻¹ᴱ-const b₁ b₂ p)  ≡⟨ get⁻¹ᴱ-const-∘ _ _ _ _ ⟩
-      get⁻¹ᴱ-const b₁ b₁ p                       ≡⟨ get⁻¹ᴱ-const-id _ _ ⟩∎
-      p                                          ∎)
+    get⁻¹ᴱ-const b₁ b₂ ∘ get⁻¹ᴱ-const b₂ b₁ ≡ id
+  get⁻¹ᴱ-const-inverse {b₁ = b₁} {b₂ = b₂} =
+    get⁻¹ᴱ-const b₁ b₂ ∘ get⁻¹ᴱ-const b₂ b₁  ≡⟨ get⁻¹ᴱ-const-∘ ⟩
+    get⁻¹ᴱ-const b₂ b₂                       ≡⟨ get⁻¹ᴱ-const-id ⟩∎
+    id                                       ∎
 
   -- A setter.
 
@@ -250,7 +238,7 @@ module Lens {A : Type a} {B : Type b} (l : Lens A B) where
 
   @0 set-get : ∀ a → set a (get a) ≡ a
   set-get a =
-    proj₁ (get⁻¹ᴱ-const (get a) (get a) (a , [ refl _ ]))  ≡⟨ cong proj₁ $ get⁻¹ᴱ-const-id _ _ ⟩∎
+    proj₁ (get⁻¹ᴱ-const (get a) (get a) (a , [ refl _ ]))  ≡⟨ cong proj₁ $ cong (_$ a , [ refl _ ]) get⁻¹ᴱ-const-id ⟩∎
     a                                                      ∎
 
   @0 set-set : ∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂
@@ -264,7 +252,7 @@ module Lens {A : Type a} {B : Type b} (l : Lens A B) where
     proj₁ (get⁻¹ᴱ-const b₁ b₂ (set a b₁ , [ get-set a b₁ ]))          ≡⟨⟩
 
     proj₁ (get⁻¹ᴱ-const b₁ b₂
-             (get⁻¹ᴱ-const (get a) b₁ (a , [ refl _ ])))              ≡⟨ cong proj₁ $ get⁻¹ᴱ-const-∘ _ _ _ _ ⟩∎
+             (get⁻¹ᴱ-const (get a) b₁ (a , [ refl _ ])))              ≡⟨ cong proj₁ $ cong (_$ a , [ refl _ ]) get⁻¹ᴱ-const-∘ ⟩∎
 
     proj₁ (get⁻¹ᴱ-const (get a) b₂ (a , [ refl _ ]))                  ∎
 
@@ -494,24 +482,24 @@ Lens⇔Higher-lens {A = A} {B = B} ⊠ = record
           (∃ λ (b : B) → get ⁻¹ᴱ b)                              ↝⟨ ∃-cong get⁻¹ᴱ-≃ᴱ ⟩
           (∃ λ (b : B) → H ∣ b ∣)                                ↝⟨ EEq.↔→≃ᴱ
                                                                       (λ (b , h) → (∣ b ∣ , b) , h)
-                                                                      (λ ((∥b∥ , b) , h) → b , _≃ᴱ_.to (H≃ᴱH ∥b∥ ∣ b ∣) h)
+                                                                      (λ ((∥b∥ , b) , h) → b , H→H ∥b∥ ∣ b ∣ h)
                                                                       (λ ((∥b∥ , b) , h) →
                                                                          Σ-≡,≡→≡ (cong (_, _) (T.truncation-is-proposition _ _)) (
               subst (H ∘ proj₁)
                 (cong (_, _) (T.truncation-is-proposition _ _))
-                (_≃ᴱ_.to (H≃ᴱH _ _) h)                                     ≡⟨ trans (subst-∘ _ _ _) $
+                (H→H _ _ h)                                                ≡⟨ trans (subst-∘ _ _ _) $
                                                                               trans (cong (flip (subst H) _) $ cong-∘ _ _ _) $
                                                                               cong (flip (subst H) _) $ sym $ cong-id _ ⟩
               subst H (T.truncation-is-proposition _ _)
-                (_≃ᴱ_.to (H≃ᴱH _ _) h)                                     ≡⟨ cong (_$ _) $ sym to-H≃ᴱH≡ ⟩
+                (H→H _ _ h)                                                ≡⟨ cong (_$ _) $ sym H→H≡ ⟩
 
-              _≃ᴱ_.to (H≃ᴱH _ _) (_≃ᴱ_.to (H≃ᴱH _ _) h)                    ≡⟨ cong (_$ h) H≃ᴱH-∘ ⟩
+              H→H _ _ (H→H _ _ h)                                          ≡⟨ cong (_$ h) H→H-∘ ⟩
 
-              _≃ᴱ_.to (H≃ᴱH _ _) h                                         ≡⟨ cong (_$ h) H≃ᴱH-id ⟩∎
+              H→H _ _ h                                                    ≡⟨ cong (_$ h) H→H-id ⟩∎
 
               h                                                            ∎))
                                                                       (λ (b , h) → cong (_ ,_) (
-              _≃ᴱ_.to (H≃ᴱH _ _) h                                       ≡⟨ cong (_$ h) H≃ᴱH-id ⟩∎
+              H→H _ _ h                                                  ≡⟨ cong (_$ h) H→H-id ⟩∎
               h                                                          ∎)) ⟩
 
           (∃ λ ((b , _) : ∥ B ∥ᴱ × B) → H b)                     ↔⟨ Σ-assoc F.∘
@@ -525,11 +513,10 @@ Lens⇔Higher-lens {A = A} {B = B} ⊠ = record
         Higher.Lens.get l
       , (λ _ → Higher.Lens.R l)
       , (λ b → inverse (Higher.remainder≃ᴱget⁻¹ᴱ l b))
-      , (λ _ _ → F.id)
-      , [ (λ x y → EEq.to≡to→≡ ext (⟨ext⟩ λ r →
-             r                                                     ≡⟨ cong (λ f → _≃ᴱ_.to f r) $ sym ≡⇒↝-refl ⟩
-             _≃ᴱ_.to (≡⇒↝ _ (refl _)) r                            ≡⟨ cong (λ eq → _≃ᴱ_.to (≡⇒↝ _ eq) r) $ sym $ cong-const _ ⟩∎
-             _≃ᴱ_.to (≡⇒↝ _ (cong (const (Higher.Lens.R l)) _)) r  ∎))
+      , (λ _ _ → id)
+      , [ (λ _ _ → ⟨ext⟩ λ r →
+             r                                    ≡⟨ sym $ subst-const _ ⟩∎
+             subst (const (Higher.Lens.R l)) _ r  ∎)
         ]
   }
 
@@ -539,14 +526,7 @@ Lens⇔Higher-lens-preserves-getters-and-setters :
   (bl : Block "conversion") →
   Preserves-getters-and-setters-⇔ A B (Lens⇔Higher-lens bl)
 Lens⇔Higher-lens-preserves-getters-and-setters ⊠ =
-    (λ l →
-       let open Lens l in
-         refl _
-       , ⟨ext⟩ λ a → ⟨ext⟩ λ b →
-         proj₁ (_≃ᴱ_.from (get⁻¹ᴱ-≃ᴱ b)
-                  (_≃ᴱ_.to (H≃ᴱH ∣ get a ∣ ∣ b ∣)
-                     (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a))
-                        (a , [ refl (get a) ]))))  ∎)
+    (λ _ → refl _ , refl _)
   , (λ _ → refl _ , refl _)
 
 -- Lens A B is equivalent to Higher.Lens A B (with erased proofs,
