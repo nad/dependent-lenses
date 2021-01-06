@@ -130,6 +130,32 @@ Constant-≃-get-⁻¹-≃ ⊠ {A = A} {B = B} {get = get} =
    ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
    ∀ b₁ b₂ → Is-equivalence λ (a , _) → set a b₂ , get-set a b₂)  □
 
+-- A "computation" rule.
+
+to-from-Constant-≃-get-⁻¹-≃-≡ :
+  {A : Type a} {B : Type b}
+  (b : Block "Constant-≃-get-⁻¹-≃") →
+  ∀ {get : A → B} {set : A → B → A}
+    {get-set : (a : A) (b : B) → get (set a b) ≡ b}
+    {eq :
+     ∀ b₁ b₂ →
+     let f : get ⁻¹ b₁ → get ⁻¹ b₂
+         f = λ (a , _) → set a b₂ , get-set a b₂
+     in
+     Is-equivalence f}
+    {b₁ b₂} →
+  _≃_.to (_≃_.from (Constant-≃-get-⁻¹-≃ b) (set , get-set , eq) b₁ b₂) ≡
+  (λ (a , _) → set a b₂ , get-set a b₂)
+to-from-Constant-≃-get-⁻¹-≃-≡ ⊠
+  {get = get} {set = set} {get-set = get-set} {b₁ = b₁} {b₂ = b₂} =
+  ⟨ext⟩ λ (a , eq) →
+
+  subst (const (get ⁻¹ b₂))
+    (proj₂ (other-singleton-contractible (get a)) (b₁ , eq))
+    (set a b₂ , get-set a b₂)                                 ≡⟨ subst-const _ ⟩∎
+
+  set a b₂ , get-set a b₂                                     ∎
+
 ------------------------------------------------------------------------
 -- Coherently-constant
 
