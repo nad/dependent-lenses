@@ -25,6 +25,7 @@ open import Colimit.Sequential eq as C using (∣_∣)
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
+import Equivalence.Half-adjoint equality-with-J as HA
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
@@ -156,6 +157,61 @@ Coherently-constant≃Coherently-constant′ univ =
                                                          _≃_.right-inverse-of (Constant≃Constant′ f) _ ⟩∎
        proj₁ c                                        ∎)
 
+private
+
+  -- Some definitions used in the implementation of
+  -- ∃Coherently-constant′≃.
+
+  module ∃Coherently-constant′≃ where
+
+    to₁ :
+      (f : A → B) → Coherently-constant′ f →
+      ∀ n → ∥ A ∥¹-in-^ n → B
+    to₁ f c zero    = f
+    to₁ f c (suc n) = to₁ (proj₁ (c .property)) (c .coherent) n
+
+    to₂ :
+      ∀ (f : A → B) (c : Coherently-constant′ f) n x →
+      to₁ f c (suc n) ∣ n , x ∣-in-^ ≡ to₁ f c n x
+    to₂ f c zero    = proj₂ (c .property)
+    to₂ f c (suc n) = to₂ (proj₁ (c .property)) (c .coherent) n
+
+    from :
+      (f : ∀ n → ∥ A ∥¹-in-^ n → B) →
+      (∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x) →
+      Coherently-constant′ (f 0)
+    from f c .property = f 1 , c 0
+    from f c .coherent = from (f ∘ suc) (c ∘ suc)
+
+    from-to :
+      (f : A → B) (c : Coherently-constant′ f) →
+      from (to₁ f c) (to₂ f c) P.≡ c
+    from-to f c i .property = (c .property  P.∎) i
+    from-to f c i .coherent =
+      from-to (proj₁ (c .property)) (c .coherent) i
+
+    to₁-from :
+      (f : ∀ n → ∥ A ∥¹-in-^ n → B)
+      (c : ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x) →
+      ∀ n x → to₁ (f 0) (from f c) n x ≡ f n x
+    to₁-from f c zero    = refl ∘ f 0
+    to₁-from f c (suc n) = to₁-from (f ∘ suc) (c ∘ suc) n
+
+    to₂-from :
+      (f : ∀ n → ∥ A ∥¹-in-^ n → B)
+      (c : ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x) →
+      ∀ n x →
+      trans (sym (to₁-from f c (suc n) ∣ n , x ∣-in-^))
+        (trans (to₂ (f 0) (from f c) n x)
+           (to₁-from f c n x)) ≡
+      c n x
+    to₂-from f c (suc n) = to₂-from (f ∘ suc) (c ∘ suc) n
+    to₂-from f c zero    = λ x →
+      trans (sym (refl _)) (trans (c 0 x) (refl _))  ≡⟨ trans (cong (flip trans _) sym-refl) $
+                                                        trans-reflˡ _ ⟩
+      trans (c 0 x) (refl _)                         ≡⟨ trans-reflʳ _ ⟩∎
+      c 0 x                                          ∎
+
 -- "Functions from A to B that are coherently constant" can be
 -- expressed in a different way.
 
@@ -198,75 +254,31 @@ Coherently-constant≃Coherently-constant′ univ =
         c n x                                                       ∎))
   (λ (f , c) → cong (f ,_) $ _↔_.from ≡↔≡ $ from-to f c)
   where
-  to₁ :
-    (f : A → B) → Coherently-constant′ f →
-    ∀ n → ∥ A ∥¹-in-^ n → B
-  to₁ f c zero    = f
-  to₁ f c (suc n) = to₁ (proj₁ (c .property)) (c .coherent) n
+  open ∃Coherently-constant′≃
 
-  to₂ :
-    ∀ (f : A → B) (c : Coherently-constant′ f) n x →
-    to₁ f c (suc n) ∣ n , x ∣-in-^ ≡ to₁ f c n x
-  to₂ f c zero    = proj₂ (c .property)
-  to₂ f c (suc n) = to₂ (proj₁ (c .property)) (c .coherent) n
+private
 
-  from :
-    (f : ∀ n → ∥ A ∥¹-in-^ n → B) →
-    (∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x) →
-    Coherently-constant′ (f 0)
-  from f c .property = f 1 , c 0
-  from f c .coherent = from (f ∘ suc) (c ∘ suc)
+  -- A lemma that is used in the implementation of
+  -- Coherently-constant′≃.
 
-  from-to :
-    (f : A → B) (c : Coherently-constant′ f) →
-    from (to₁ f c) (to₂ f c) P.≡ c
-  from-to f c i .property = (c .property  P.∎) i
-  from-to f c i .coherent =
-    from-to (proj₁ (c .property)) (c .coherent) i
-
-  to₁-from :
-    (f : ∀ n → ∥ A ∥¹-in-^ n → B)
-    (c : ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x) →
-    ∀ n x → to₁ (f 0) (from f c) n x ≡ f n x
-  to₁-from f c zero    = refl ∘ f 0
-  to₁-from f c (suc n) = to₁-from (f ∘ suc) (c ∘ suc) n
-
-  to₂-from :
-    (f : ∀ n → ∥ A ∥¹-in-^ n → B)
-    (c : ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x) →
-    ∀ n x →
-    trans (sym (to₁-from f c (suc n) ∣ n , x ∣-in-^))
-      (trans (to₂ (f 0) (from f c) n x)
-         (to₁-from f c n x)) ≡
-    c n x
-  to₂-from f c (suc n) = to₂-from (f ∘ suc) (c ∘ suc) n
-  to₂-from f c zero    = λ x →
-    trans (sym (refl _)) (trans (c 0 x) (refl _))  ≡⟨ trans (cong (flip trans _) sym-refl) $
-                                                      trans-reflˡ _ ⟩
-    trans (c 0 x) (refl _)                         ≡⟨ trans-reflʳ _ ⟩∎
-    c 0 x                                          ∎
-
--- Coherently-constant′ can be expressed in a different way.
-
-Coherently-constant′≃ :
-  {f : A → B} →
-  Coherently-constant′ f
-    ≃
-  (∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
-     (∀ x → g 0 ∣ x ∣ ≡ f x) ×
-     (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x))
-Coherently-constant′≃ {A = A} {B = B} {f = f} =
-  Eq.⟨ _
-     , Eq.drop-Σ-map-id _ (_≃_.is-equivalence lemma) _
-     ⟩
-  where
-  lemma =
+  Coherently-constant′≃-lemma :
+    (∃ λ (f : A → B) → Coherently-constant′ f) ≃
+    (∃ λ (f : A → B) →
+     ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
+       (∀ x → g 0 ∣ x ∣ ≡ f x) ×
+       (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x))
+  Coherently-constant′≃-lemma {A = A} {B = B} =
     (∃ λ (f : A → B) → Coherently-constant′ f)          ↝⟨ ∃Coherently-constant′≃ ⟩
 
     (∃ λ (f : ∀ n → ∥ A ∥¹-in-^ n → B) →
-       ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x)        ↔⟨ inverse $
-                                                           (Σ-cong (inverse $ Πℕ≃ {k = equivalence} ext) λ _ → F.id) F.∘
-                                                           Σ-assoc ⟩
+       ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x)        ↝⟨ Eq.↔→≃
+                                                             (λ (f , eq) →
+                                                                f 0 , f ∘ suc , ℕ-case (eq 0) (eq ∘ suc))
+                                                             (λ (f , g , eq) → ℕ-case f g , eq)
+                                                             (λ (f , g , eq) →
+                                                                cong (λ eq → f , g , eq) $ ⟨ext⟩ $
+                                                                ℕ-case (refl _) (λ _ → refl _))
+                                                             lemma ⟩
     (∃ λ (f : A → B) →
      ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
        ∀ n x →
@@ -277,6 +289,202 @@ Coherently-constant′≃ {A = A} {B = B} {f = f} =
      ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
        (∀ x → g 0 ∣ x ∣ ≡ f x) ×
        (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x))      □
+    where
+
+    -- An alternative (unused) proof of the second step above. If this
+    -- proof is used instead of the other one, then the proof of
+    -- from-Coherently-constant′≃ below fails (at least at the time of
+    -- writing).
+
+    second-step :
+      (∃ λ (f : ∀ n → ∥ A ∥¹-in-^ n → B) →
+         ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x) ≃
+      (∃ λ (f : A → B) →
+       ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
+         ∀ n x →
+           g n ∣ n , x ∣-in-^ ≡
+           ℕ-case {P = λ n → ∥ A ∥¹-in-^ n → B} f g n x)
+    second-step = from-bijection $ inverse $
+      (Σ-cong (inverse $ Πℕ≃ {k = equivalence} ext) λ _ → F.id) F.∘
+      Σ-assoc
+
+    abstract
+
+      lemma :
+        (p@(f , eq) : ∃ λ (f : ∀ n → ∥ A ∥¹-in-^ n → B) →
+                        ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x) →
+        (ℕ-case (f 0) (f ∘ suc) , ℕ-case (eq 0) (eq ∘ suc)) ≡ p
+      lemma (f , eq) =
+        Σ-≡,≡→≡
+          (⟨ext⟩ $ ℕ-case (refl _) (λ _ → refl _))
+          (⟨ext⟩ λ n → ⟨ext⟩ λ x →
+           let eq′ = ℕ-case (eq 0) (eq ∘ suc)
+               r   = ℕ-case (refl _) (λ _ → refl _)
+           in
+           subst {y = f}
+             (λ f → ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x)
+             (⟨ext⟩ r) eq′ n x                                            ≡⟨ sym $
+                                                                             trans (push-subst-application _ _) $
+                                                                             cong (_$ x) $ push-subst-application _ _ ⟩
+           subst
+             (λ f → f (suc n) ∣ n , x ∣-in-^ ≡ f n x)
+             (⟨ext⟩ r) (eq′ n x)                                          ≡⟨ subst-in-terms-of-trans-and-cong ⟩
+
+           trans (sym (cong (λ f → f (suc n) ∣ n , x ∣-in-^) (⟨ext⟩ r)))
+             (trans (eq′ n x) (cong (λ f → f n x) (⟨ext⟩ r)))             ≡⟨ trans (cong (flip trans _) $
+                                                                                    trans (cong sym $
+                                                                                           trans (sym $ cong-∘ _ _ _) $
+                                                                                           trans (cong (cong (_$ ∣ n , x ∣-in-^)) $
+                                                                                                  cong-ext _)
+                                                                                           (cong-refl _))
+                                                                                    sym-refl) $
+                                                                             trans-reflˡ _ ⟩
+
+           trans (eq′ n x) (cong (λ f → f n x) (⟨ext⟩ r))                 ≡⟨ cong (trans _) $
+                                                                             trans (sym $ cong-∘ _ _ _) $
+                                                                             cong (cong (_$ x)) $
+                                                                             cong-ext _ ⟩
+
+           trans (eq′ n x) (cong (_$ x) $ r n)                            ≡⟨ ℕ-case
+                                                                               {P = λ n → ∀ x → trans (eq′ n x) (cong (_$ x) $ r n) ≡ eq n x}
+                                                                               (λ _ → trans (cong (trans _) $ cong-refl _) $
+                                                                                      trans-reflʳ _)
+                                                                               (λ _ _ → trans (cong (trans _) $ cong-refl _) $
+                                                                                        trans-reflʳ _)
+                                                                               n x ⟩∎
+           eq n x                                                         ∎)
+
+-- Coherently-constant′ can be expressed in a different way.
+
+Coherently-constant′≃ :
+  {f : A → B} →
+  Coherently-constant′ f
+    ≃
+  (∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
+     (∀ x → g 0 ∣ x ∣ ≡ f x) ×
+     (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x))
+Coherently-constant′≃ {f = f} =
+  Eq.⟨ _
+     , Eq.drop-Σ-map-id _
+         (_≃_.is-equivalence Coherently-constant′≃-lemma)
+         f
+     ⟩
+
+-- A "computation" rule for Coherently-constant′≃.
+
+from-Coherently-constant′≃-property :
+  (f : A → B)
+  {c@(g , g₀ , _) :
+   ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
+     (∀ x → g 0 ∣ x ∣ ≡ f x) ×
+     (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x)} →
+  _≃_.from Coherently-constant′≃ c .property ≡ (g 0 , g₀)
+from-Coherently-constant′≃-property
+  {A = A} {B = B} f {c = c@(g , g₀ , g₊)} =
+
+  _≃_.from Coherently-constant′≃ c .property                          ≡⟨⟩
+
+  HA.inverse
+    (Eq.drop-Σ-map-id _
+       (_≃_.is-equivalence Coherently-constant′≃-lemma)
+       f)
+    c .property                                                       ≡⟨ cong (λ c → c .property) Eq.inverse-drop-Σ-map-id ⟩
+
+  subst Coherently-constant′
+    (cong proj₁ $
+     _≃_.right-inverse-of Coherently-constant′≃-lemma (f , c))
+    (proj₂ (_≃_.from Coherently-constant′≃-lemma (f , c)))
+    .property                                                         ≡⟨ subst-Coherently-property ⟩
+
+  subst Constant′
+    (cong proj₁ $
+     _≃_.right-inverse-of Coherently-constant′≃-lemma (f , c))
+    (proj₂ (_≃_.from Coherently-constant′≃-lemma (f , c)) .property)  ≡⟨⟩
+
+  subst Constant′
+    (cong proj₁ $
+     trans
+       (cong {B = ∃ λ (f : A → B) →
+                  ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
+                    (∀ x → g 0 ∣ x ∣ ≡ f x) ×
+                    (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x)}
+             (λ (f , eq) → f 0 , f ∘ suc , eq 0 , eq ∘ suc) $
+        _≃_.right-inverse-of ∃Coherently-constant′≃
+          (ℕ-case f g , ℕ-case g₀ g₊)) $
+     trans
+       (cong (λ (f , g , eq) → f , g , eq 0 , eq ∘ suc) $
+        cong {B = ∃ λ (f : A → B) →
+                  ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
+                    ∀ n x →
+                      g n ∣ n , x ∣-in-^ ≡
+                      ℕ-case {P = λ n → ∥ A ∥¹-in-^ n → B} f g n x}
+             {x = ℕ-case g₀ g₊}
+             {y = ℕ-case g₀ g₊}
+             (λ eq → f , g , eq) $
+        ⟨ext⟩ (ℕ-case (refl _) (λ _ → refl _))) $
+     cong (f ,_) (cong (g ,_) (refl _)))
+    (g 0 , g₀)                                                        ≡⟨ cong (flip (subst Constant′) _) lemma ⟩
+
+  subst Constant′ (refl _) (g 0 , g₀)                                 ≡⟨ subst-refl _ _ ⟩∎
+
+  g 0 , g₀                                                            ∎
+  where
+  lemma =
+    (cong proj₁ $
+     trans
+       (cong {B = ∃ λ (f : A → B) →
+                  ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
+                    (∀ x → g 0 ∣ x ∣ ≡ f x) ×
+                    (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x)}
+             (λ (f , eq) → f 0 , f ∘ suc , eq 0 , eq ∘ suc) $
+        _≃_.right-inverse-of ∃Coherently-constant′≃
+          (ℕ-case f g , ℕ-case g₀ g₊)) $
+     trans
+       (cong (λ (f , g , eq) → f , g , eq 0 , eq ∘ suc) $
+        cong {B = ∃ λ (f : A → B) →
+                  ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
+                    ∀ n x →
+                      g n ∣ n , x ∣-in-^ ≡
+                      ℕ-case {P = λ n → ∥ A ∥¹-in-^ n → B} f g n x}
+             {x = ℕ-case g₀ g₊}
+             {y = ℕ-case g₀ g₊}
+             (λ eq → f , g , eq) $
+        ⟨ext⟩ (ℕ-case (refl _) (λ _ → refl _))) $
+     cong (f ,_) (cong (g ,_) (refl _)))                               ≡⟨ trans (cong-trans _ _ _) $
+                                                                          cong₂ trans
+                                                                            (trans (cong-∘ _ _ _) $
+                                                                             sym $ cong-∘ _ _ _)
+                                                                            (trans (cong-trans _ _ _) $
+                                                                             cong₂ trans
+                                                                               (trans (cong-∘ _ _ _) $
+                                                                                cong-∘ _ _ _)
+                                                                               (cong-∘ _ _ _)) ⟩
+    (trans
+       (cong (_$ 0) $ cong proj₁ $
+        _≃_.right-inverse-of ∃Coherently-constant′≃
+          (ℕ-case f g , ℕ-case g₀ g₊)) $
+     trans
+       (cong (const f) $
+        ⟨ext⟩ (ℕ-case (refl _) (λ _ → refl _))) $
+     cong (const f) (cong (g ,_) (refl _)))                            ≡⟨ trans (cong (trans _) $
+                                                                                 trans (cong₂ trans
+                                                                                          (cong-const _)
+                                                                                          (cong-const _)) $
+                                                                                 trans-refl-refl) $
+                                                                          trans-reflʳ _ ⟩
+    (cong (_$ 0) $ cong proj₁ $
+     _≃_.right-inverse-of ∃Coherently-constant′≃
+       (ℕ-case f g , ℕ-case g₀ g₊))                                    ≡⟨ cong (cong (_$ 0)) $
+                                                                          proj₁-Σ-≡,≡→≡ _ _ ⟩
+    (cong (_$ 0) $ ⟨ext⟩ λ n → ⟨ext⟩ λ x →
+     ∃Coherently-constant′≃.to₁-from (ℕ-case f g) (ℕ-case g₀ g₊) n x)  ≡⟨ cong-ext _ ⟩
+
+    (⟨ext⟩ λ x →
+     ∃Coherently-constant′≃.to₁-from (ℕ-case f g) (ℕ-case g₀ g₊) 0 x)  ≡⟨⟩
+
+    (⟨ext⟩ λ _ → refl _)                                               ≡⟨ ext-refl ⟩∎
+
+    refl _                                                             ∎
 
 -- Functions from ∥ A ∥ can be expressed as coherently constant
 -- functions from A (assuming univalence).
