@@ -114,6 +114,112 @@ Coherently-constant-⁻¹ᴱ≃Variant-coherently-constant-⁻¹ {f = f} =
   (∃ λ Q → ∀ x → f ⁻¹ x ≃  Q ∣ x ∣)   ↔⟨⟩
   V.Coherently-constant (f ⁻¹_)       □
 
+-- A variant of Coherently-constant.
+
+Coherently-constant′ :
+  {A : Type a} → (A → Type p) → Type (a ⊔ lsuc p)
+Coherently-constant′ {p = p} {A = A} P =
+  ∃ λ (P→P : ∀ x y → P x → P y) →
+  ∃ λ (Q : ∥ A ∥ᴱ → Type p) →
+  ∃ λ (P≃Q : ∀ x → P x ≃ᴱ Q ∣ x ∣) →
+  Erased (P→P ≡
+          λ x y →
+          _≃ᴱ_.from (P≃Q y) ∘
+          subst Q (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ∘
+          _≃ᴱ_.to (P≃Q x))
+
+-- Coherently-constant and Coherently-constant′ are pointwise
+-- equivalent (with erased proofs).
+
+Coherently-constant≃Coherently-constant′ :
+  Coherently-constant P ≃ᴱ Coherently-constant′ P
+Coherently-constant≃Coherently-constant′ {P = P} =
+  (∃ λ Q →
+   (∀ x → P x ≃ᴱ Q ∣ x ∣) ×
+   ∃ λ (Q→Q : ∀ x y → Q x → Q y) →
+   Erased (∀ x y → Q→Q x y ≡ subst Q (T.truncation-is-proposition x y)))  ↝⟨ lemma ⟩
+
+  (∃ λ Q →
+   ∃ λ (P≃Q : ∀ x → P x ≃ᴱ Q ∣ x ∣) →
+   ∃ λ (P→P : ∀ x y → P x → P y) →
+   Erased (P→P ≡
+           λ x y →
+           _≃ᴱ_.from (P≃Q y) ∘
+           subst Q (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ∘
+           _≃ᴱ_.to (P≃Q x)))                                              ↔⟨ ∃-comm F.∘
+                                                                             (∃-cong λ _ → ∃-comm) ⟩□
+  (∃ λ (P→P : ∀ x y → P x → P y) →
+   ∃ λ Q →
+   ∃ λ (P≃Q : ∀ x → P x ≃ᴱ Q ∣ x ∣) →
+   Erased (P→P ≡
+           λ x y →
+           _≃ᴱ_.from (P≃Q y) ∘
+           subst Q (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ∘
+           _≃ᴱ_.to (P≃Q x)))                                              □
+  where
+  lemma =
+    ∃-cong λ Q → ∃-cong λ P≃Q →
+
+    (∃ λ (Q→Q : ∀ x y → Q x → Q y) →
+     Erased (∀ x y →
+             Q→Q x y ≡ subst Q (T.truncation-is-proposition x y)))        ↔⟨ (∀-cong ext λ _ → ∃-cong λ _ → Erased-cong (from-equivalence $
+                                                                              Eq.extensionality-isomorphism bad-ext)) F.∘
+                                                                             inverse ΠΣ-comm F.∘
+                                                                             (∃-cong λ _ → Erased-Π↔Π) ⟩
+    (∀ x →
+     ∃ λ (Q→Q : ∀ y → Q x → Q y) →
+     Erased (Q→Q ≡ λ y → subst Q (T.truncation-is-proposition x y)))      ↔⟨ (∀-cong ext λ _ →
+                                                                              T.Σ-Π-∥∥ᴱ-Erased-≡-≃) ⟩
+    (∀ x →
+     ∃ λ (Q→Q : ∀ y → Q x → Q ∣ y ∣) →
+     Erased (Q→Q ≡ λ y → subst Q (T.truncation-is-proposition x ∣ y ∣)))  ↔⟨ (∃-cong λ _ →
+                                                                              (Erased-cong (from-equivalence $
+                                                                               Eq.extensionality-isomorphism bad-ext)) F.∘
+                                                                              inverse Erased-Π↔Π) F.∘
+                                                                             ΠΣ-comm ⟩
+    (∃ λ (Q→Q : ∀ x y → Q x → Q ∣ y ∣) →
+     Erased (Q→Q ≡
+             λ x y → subst Q (T.truncation-is-proposition x ∣ y ∣)))      ↔⟨ T.Σ-Π-∥∥ᴱ-Erased-≡-≃ ⟩
+
+    (∃ λ (Q→Q : ∀ x y → Q ∣ x ∣ → Q ∣ y ∣) →
+     Erased (Q→Q ≡
+             λ x y → subst Q (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)))  ↔⟨ (inverse $
+                                                                              ΠΣ-comm F.∘
+                                                                              (∀-cong ext λ _ → ΠΣ-comm)) F.∘
+                                                                             (∃-cong λ _ →
+                                                                              ((∀-cong ext λ _ → Erased-Π↔Π) F.∘
+                                                                               Erased-Π↔Π) F.∘
+                                                                              Erased-cong (from-equivalence $ inverse $
+                                                                              Eq.extensionality-isomorphism bad-ext F.∘
+                                                                              (∀-cong ext λ _ → Eq.extensionality-isomorphism bad-ext))) ⟩
+    (∀ x y →
+     ∃ λ (Q→Q : Q ∣ x ∣ → Q ∣ y ∣) →
+     Erased (Q→Q ≡ subst Q (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)))    ↝⟨ (∀-cong ext λ _ → ∀-cong ext λ _ →
+                                                                              let lemma = inverse $ →-cong ext (P≃Q _) (P≃Q _) in
+                                                                              EEq.Σ-cong-≃ᴱ-Erased lemma λ _ →
+                                                                              Erased-cong (from-equivalence $ inverse $
+                                                                              Eq.≃-≡ $ EEq.≃ᴱ→≃ lemma)) ⟩
+    (∀ x y →
+     ∃ λ (P→P : P x → P y) →
+     Erased (P→P ≡
+             _≃ᴱ_.from (P≃Q y) ∘
+             subst Q (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ∘
+             _≃ᴱ_.to (P≃Q x)))                                            ↔⟨ (∃-cong λ _ → Erased-cong (from-equivalence $
+                                                                              Eq.extensionality-isomorphism bad-ext F.∘
+                                                                              (∀-cong ext λ _ → Eq.extensionality-isomorphism bad-ext))) F.∘
+                                                                             (∃-cong λ _ →
+                                                                              inverse $
+                                                                              (∀-cong ext λ _ → Erased-Π↔Π) F.∘
+                                                                              Erased-Π↔Π) F.∘
+                                                                             ΠΣ-comm F.∘
+                                                                             (∀-cong ext λ _ → ΠΣ-comm) ⟩□
+    (∃ λ (P→P : ∀ x y → P x → P y) →
+     Erased (P→P ≡
+             λ x y →
+             _≃ᴱ_.from (P≃Q y) ∘
+             subst Q (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ∘
+             _≃ᴱ_.to (P≃Q x)))                                            □
+
 ------------------------------------------------------------------------
 -- The lens type family
 
