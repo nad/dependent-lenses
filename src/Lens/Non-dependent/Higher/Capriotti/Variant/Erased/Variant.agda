@@ -47,7 +47,7 @@ private
     f        : (x : A) → P x
 
 ------------------------------------------------------------------------
--- The lens type family
+-- Coherently-constant
 
 -- Coherently constant type-valued functions.
 
@@ -86,11 +86,6 @@ Contractible-last-part-of-Coherently-constant {Q = Q} =           $⟨ Contracti
      Erased (∀ x y → Q→Q x y ≡
                      subst Q (T.truncation-is-proposition x y)))  □
 
--- Higher lenses with erased "proofs".
-
-Lens : Type a → Type b → Type (lsuc (a ⊔ b))
-Lens A B = ∃ λ (get : A → B) → Coherently-constant (get ⁻¹ᴱ_)
-
 -- In erased contexts Coherently-constant P is equivalent to
 -- V.Coherently-constant P.
 
@@ -118,6 +113,14 @@ Coherently-constant-⁻¹ᴱ≃Variant-coherently-constant-⁻¹ {f = f} =
                                           Eq.≃-preserves ext (inverse ECP.⁻¹≃⁻¹ᴱ) F.id) ⟩
   (∃ λ Q → ∀ x → f ⁻¹ x ≃  Q ∣ x ∣)   ↔⟨⟩
   V.Coherently-constant (f ⁻¹_)       □
+
+------------------------------------------------------------------------
+-- The lens type family
+
+-- Higher lenses with erased "proofs".
+
+Lens : Type a → Type b → Type (lsuc (a ⊔ b))
+Lens A B = ∃ λ (get : A → B) → Coherently-constant (get ⁻¹ᴱ_)
 
 -- In erased contexts Lens A B is equivalent to V.Lens A B.
 
