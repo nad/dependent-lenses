@@ -31,9 +31,10 @@ private
   variable
     a b p : Level
     A B   : Type a
+    P Q   : A → Type p
 
 ------------------------------------------------------------------------
--- The lens type family
+-- Coherently-constant
 
 -- Coherently constant type-valued functions.
 --
@@ -44,6 +45,35 @@ Coherently-constant :
   {A : Type a} → (A → Type p) → Type (a ⊔ lsuc p)
 Coherently-constant {p = p} {A = A} P =
   ∃ λ (Q : ∥ A ∥ → Type p) → ∀ x → P x ≃ Q ∣ x ∣
+
+-- Coherently-constant is, in a certain sense, closed under Σ.
+--
+-- This lemma is due to Paolo Capriotti.
+
+Coherently-constant-Σ :
+  Coherently-constant P →
+  Coherently-constant Q →
+  Coherently-constant (λ x → ∃ λ (y : P x) → Q (x , y))
+Coherently-constant-Σ {P = P} {Q = Q} (P′ , p) (Q′ , q) =
+    (λ x → ∃ λ (y : P′ x) →
+               Q′ (T.elim
+                     (λ x → P′ x → ∥ ∃ P ∥)
+                     (λ _ → Π-closure ext 1 λ _ →
+                            T.truncation-is-proposition)
+                     (λ x y → ∣ x , _≃_.from (p x) y ∣)
+                     x y))
+  , (λ x →
+
+       (∃ λ (y : P x) → Q (x , y))                         ↝⟨ (Σ-cong (p x) λ y →
+
+          Q (x , y)                                              ↝⟨ q (x , y) ⟩
+          Q′ ∣ x , y ∣                                           ↝⟨ ≡⇒≃ $ cong Q′ $ T.truncation-is-proposition _ _ ⟩□
+          Q′ ∣ x , _≃_.from (p x) (_≃_.to (p x) y) ∣             □) ⟩□
+
+       (∃ λ (y : P′ ∣ x ∣) → Q′ ∣ x , _≃_.from (p x) y ∣)  □)
+
+------------------------------------------------------------------------
+-- The lens type family
 
 -- Paolo Capriotti's variant of higher lenses, but with a family of
 -- equivalences instead of an equality.
