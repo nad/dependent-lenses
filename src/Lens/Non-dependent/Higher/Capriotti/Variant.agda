@@ -12,7 +12,7 @@ module Lens.Non-dependent.Higher.Capriotti.Variant
 open P.Derived-definitions-and-properties eq
 
 open import Logical-equivalence using (_⇔_)
-open import Prelude
+open import Prelude as P hiding (id)
 
 open import Bijection equality-with-J as B using (_↔_)
 open import Equality.Path.Isomorphisms eq hiding (univ)
@@ -21,7 +21,7 @@ open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq as T using (∥_∥; ∣_∣)
-open import Preimage equality-with-J
+open import Preimage equality-with-J as Preimage
 open import Univalence-axiom equality-with-J
 
 open import Lens.Non-dependent eq
@@ -286,7 +286,7 @@ equality-characterisation₂ :
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
    ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
      ∀ b p →
-     subst id (h ∣ b ∣)
+     subst P.id (h ∣ b ∣)
        (_≃_.to (get⁻¹-≃ l₁ b) (subst (_⁻¹ b) (sym (⟨ext⟩ g)) p)) ≡
      _≃_.to (get⁻¹-≃ l₂ b) p)
 equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
@@ -311,7 +311,7 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
    ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
      ∀ b p →
-     subst id (h ∣ b ∣)
+     subst P.id (h ∣ b ∣)
        (_≃_.to (get⁻¹-≃ l₁ b) (subst (_⁻¹ b) (sym (⟨ext⟩ g)) p)) ≡
      _≃_.to (get⁻¹-≃ l₂ b) p)                                       □
   where
@@ -340,14 +340,14 @@ equality-characterisation₃ {l₁ = l₁} {l₂ = l₂} ⊠ univ =
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
    ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
      ∀ b p →
-     subst id (h ∣ b ∣)
+     subst P.id (h ∣ b ∣)
        (_≃_.to (get⁻¹-≃ l₁ b) (subst (_⁻¹ b) (sym (⟨ext⟩ g)) p)) ≡
      _≃_.to (get⁻¹-≃ l₂ b) p)                                       ↝⟨ (∃-cong λ _ →
                                                                         Σ-cong-contra (∀-cong ext λ _ → inverse $ ≡≃≃ univ) λ _ → F.id) ⟩
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
    ∃ λ (h : ∀ b → H l₁ b ≃ H l₂ b) →
      ∀ b p →
-     subst id (≃⇒≡ univ (h ∣ b ∣))
+     subst P.id (≃⇒≡ univ (h ∣ b ∣))
        (_≃_.to (get⁻¹-≃ l₁ b) (subst (_⁻¹ b) (sym (⟨ext⟩ g)) p)) ≡
      _≃_.to (get⁻¹-≃ l₂ b) p)                                       ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
                                                                         ≡⇒↝ _ $ cong (_≡ _) $
@@ -554,6 +554,20 @@ Lens≃Higher-lens-preserves-getters-and-setters ⊠ _ =
   Lens⇔Higher-lens-preserves-getters-and-setters
 
 ------------------------------------------------------------------------
+-- Identity
+
+-- An identity lens.
+
+id : {A : Type a} → Lens A A
+id =
+    P.id
+  , (λ _ → ↑ _ ⊤)
+  , (λ a →
+       P.id ⁻¹ a  ↔⟨ _⇔_.to contractible⇔↔⊤ $ Preimage.id⁻¹-contractible _ ⟩
+       ⊤          ↔⟨ inverse B.↑↔ ⟩□
+       ↑ _ ⊤      □)
+
+------------------------------------------------------------------------
 -- Some results related to fibres of Lens.set
 
 -- When proving that Lens.set ⁻¹ s is a proposition, for
@@ -588,7 +602,7 @@ Lens≃Higher-lens-preserves-getters-and-setters ⊠ _ =
      ∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
      ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
      ∃ λ (f : ∀ b p →
-              subst id (h ∣ b ∣)
+              subst P.id (h ∣ b ∣)
                 (_≃_.to (get⁻¹-≃ l₁ b)
                    (subst (_⁻¹ b) (sym (⟨ext⟩ g)) p)) ≡
               _≃_.to (get⁻¹-≃ l₂ b) p) →
@@ -601,20 +615,20 @@ Lens≃Higher-lens-preserves-getters-and-setters ⊠ _ =
      ∥ B ∥ →
      ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
      ∃ λ (f : ∀ b p →
-              subst id (h ∣ b ∣)
+              subst P.id (h ∣ b ∣)
                 (_≃_.to (get⁻¹-≃ l₁ b)
                    (subst (_⁻¹ b) (sym (⟨ext⟩ g)) p)) ≡
               _≃_.to (get⁻¹-≃ l₂ b) p) →
        ∀ a → ext⁻¹ (subst (λ l → Lens.set l ≡ s)
                       (_≃_.from (equality-characterisation₂ b)
                          (g , h , f)) eq₁) a ≡
-             ext⁻¹ eq₂ a)                                       ↝⟨ (∃-cong λ _ → T.push-∥∥ id) ⟩
+             ext⁻¹ eq₂ a)                                       ↝⟨ (∃-cong λ _ → T.push-∥∥ P.id) ⟩
 
     (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
      ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
      ∥ B ∥ →
      ∃ λ (f : ∀ b p →
-              subst id (h ∣ b ∣)
+              subst P.id (h ∣ b ∣)
                 (_≃_.to (get⁻¹-≃ l₁ b)
                    (subst (_⁻¹ b) (sym (⟨ext⟩ g)) p)) ≡
               _≃_.to (get⁻¹-≃ l₂ b) p) →
@@ -626,7 +640,7 @@ Lens≃Higher-lens-preserves-getters-and-setters ⊠ _ =
     (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
      ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
      ∃ λ (f : ∀ b p →
-              subst id (h ∣ b ∣)
+              subst P.id (h ∣ b ∣)
                 (_≃_.to (get⁻¹-≃ l₁ b)
                    (subst (_⁻¹ b) (sym (⟨ext⟩ g)) p)) ≡
               _≃_.to (get⁻¹-≃ l₂ b) p) →
@@ -639,7 +653,7 @@ Lens≃Higher-lens-preserves-getters-and-setters ⊠ _ =
     (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
      ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
      ∃ λ (f : ∀ b p →
-              subst id (h ∣ b ∣)
+              subst P.id (h ∣ b ∣)
                 (_≃_.to (get⁻¹-≃ l₁ b)
                    (subst (_⁻¹ b) (sym (⟨ext⟩ g)) p)) ≡
               _≃_.to (get⁻¹-≃ l₂ b) p) →
@@ -666,7 +680,7 @@ Lens≃Higher-lens-preserves-getters-and-setters ⊠ _ =
       (∃ λ (l : ∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
                 ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
                   ∀ b p →
-                  subst id (h ∣ b ∣)
+                  subst P.id (h ∣ b ∣)
                     (_≃_.to (get⁻¹-≃ l₁ b)
                        (subst (_⁻¹ b) (sym (⟨ext⟩ g)) p)) ≡
                   _≃_.to (get⁻¹-≃ l₂ b) p) →
@@ -678,7 +692,7 @@ Lens≃Higher-lens-preserves-getters-and-setters ⊠ _ =
       (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
        ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
        ∃ λ (f : ∀ b p →
-                subst id (h ∣ b ∣)
+                subst P.id (h ∣ b ∣)
                   (_≃_.to (get⁻¹-≃ l₁ b)
                      (subst (_⁻¹ b) (sym (⟨ext⟩ g)) p)) ≡
                 _≃_.to (get⁻¹-≃ l₂ b) p) →
