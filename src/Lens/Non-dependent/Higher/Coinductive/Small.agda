@@ -789,19 +789,6 @@ id univ .Lens.get⁻¹-coherently-constant =
 ------------------------------------------------------------------------
 -- Composition
 
--- A fibre of a composition can be expressed as a pair of fibres.
-
-∘⁻¹≃ :
-  (f : B → C) (g : A → B) →
-  f ∘ g ⁻¹ z ≃ ∃ λ ((y , _) : f ⁻¹ z) → g ⁻¹ y
-∘⁻¹≃ {z = z} f g =
-  f ∘ g ⁻¹ z                                  ↔⟨⟩
-  (∃ λ a → f (g a) ≡ z)                       ↔⟨ (∃-cong λ _ → ∃-intro _ _) ⟩
-  (∃ λ a → ∃ λ y → f y ≡ z × y ≡ g a)         ↔⟨ (∃-cong λ _ → Σ-assoc) ⟩
-  (∃ λ a → ∃ λ ((y , _) : f ⁻¹ z) → y ≡ g a)  ↔⟨ ∃-comm ⟩
-  (∃ λ ((y , _) : f ⁻¹ z) → ∃ λ a → y ≡ g a)  ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ≡-comm) ⟩□
-  (∃ λ ((y , _) : f ⁻¹ z) → g ⁻¹ y)           □
-
 -- Composition.
 --
 -- Paolo Capriotti came up with the idea to use Coherently-constant-Σ.
@@ -850,45 +837,4 @@ set-∘ :
   (l₁ : Lens univ₁ B C) (l₂ : Lens univ₂ A B) {a c} →
   Lens.set (⟨ univ₃ , univ₄ ⟩ l₁ ∘ l₂) a c ≡
   Lens.set l₂ a (Lens.set l₁ (Lens.get l₂ a) c)
-set-∘ univ₃ univ₄ l₁ l₂ {a = a} {c = c} =
-  proj₁
-    (_≃_.to
-       (get⁻¹-constant l₂ (get l₂ a)
-          (proj₁
-             (_≃_.to
-                (get⁻¹-constant l₁ (get l₁ (get l₂ a)) c)
-                ( get l₂ a
-                , _↔_.to
-                    (subst
-                       (λ b →
-                          get l₁ b ≡ get l₁ (get l₂ a)
-                            ↔
-                          get l₁ (get l₂ a) ≡ get l₁ (get l₂ a))
-                       (refl _)
-                       F.id)
-                    (refl _)
-                ))))
-       (a , sym (refl _)))                                        ≡⟨ cong₂ (λ p q → proj₁
-                                                                                      (_≃_.to
-                                                                                         (get⁻¹-constant l₂ (get l₂ a)
-                                                                                            (proj₁
-                                                                                               (_≃_.to
-                                                                                                  (get⁻¹-constant l₁ (get l₁ (get l₂ a)) c)
-                                                                                                  ( get l₂ a
-                                                                                                  , _↔_.to p (refl _)
-                                                                                                  ))))
-                                                                                         (a , q)))
-                                                                       (subst-refl _ _)
-                                                                       sym-refl ⟩∎
-  proj₁
-    (_≃_.to
-       (get⁻¹-constant l₂ (get l₂ a)
-          (proj₁
-             (_≃_.to
-                (get⁻¹-constant l₁ (get l₁ (get l₂ a)) c)
-                ( get l₂ a
-                , refl _
-                ))))
-       (a , refl _))                                              ∎
-  where
-  open Lens
+set-∘ _ _ _ _ = refl _

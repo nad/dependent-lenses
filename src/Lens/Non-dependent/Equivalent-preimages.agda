@@ -19,7 +19,8 @@ open import Bijection equality-with-J as B using (_↔_)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
-open import Function-universe equality-with-J as F hiding (id; _∘_)
+open import Function-universe equality-with-J as F
+  hiding (id; _∘_; ∘⁻¹≃)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq as PT using (∥_∥; ∣_∣)
@@ -949,13 +950,7 @@ coherent↠higher-preserves-getters-and-setters b _ ∥B∥→B =
   Block "∘⁻¹≃" →
   (f : B → C) (g : A → B) →
   f ⊚ g ⁻¹ z ≃ ∃ λ ((y , _) : f ⁻¹ z) → g ⁻¹ y
-∘⁻¹≃ {z = z} ⊠ f g =
-  f ⊚ g ⁻¹ z                                  ↔⟨⟩
-  (∃ λ a → f (g a) ≡ z)                       ↔⟨ (∃-cong λ _ → ∃-intro _ _) ⟩
-  (∃ λ a → ∃ λ y → f y ≡ z × y ≡ g a)         ↔⟨ (∃-cong λ _ → Σ-assoc) ⟩
-  (∃ λ a → ∃ λ ((y , _) : f ⁻¹ z) → y ≡ g a)  ↔⟨ ∃-comm ⟩
-  (∃ λ ((y , _) : f ⁻¹ z) → ∃ λ a → y ≡ g a)  ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ≡-comm) ⟩□
-  (∃ λ ((y , _) : f ⁻¹ z) → g ⁻¹ y)           □
+∘⁻¹≃ ⊠ = F.∘⁻¹≃
 
 -- Composition.
 
@@ -1034,28 +1029,7 @@ set-∘≡ :
   (l₁ : Lens B C) (l₂ : Lens A B) →
   Lens.set (l₁ ∘ l₂) a c ≡
   Lens.set l₂ a (Lens.set l₁ (Lens.get l₂ a) c)
-set-∘≡ {a = a} {c = c} l₁@(lens _ _ _ _) l₂@(lens _ _ _ _) =
-  proj₁ (get⁻¹-const l₂ (get l₂ a)
-           (proj₁ (get⁻¹-const l₁ c′ c
-                     ( get l₂ a
-                     , _↔_.to (subst (λ b → get l₁ b ≡ c′ ↔ c′ ≡ c′)
-                                 (refl _) F.id)
-                         (refl _))
-                     ))
-           (a , sym (refl _)))                                        ≡⟨ cong₂ (λ f eq → proj₁ (get⁻¹-const l₂ _
-                                                                                                  (proj₁ (get⁻¹-const l₁ _ _
-                                                                                                            (_ , _↔_.to f (refl _)))) (_ , eq)))
-                                                                           (subst-refl _ _)
-                                                                           sym-refl ⟩
-  proj₁ (get⁻¹-const l₂ (get l₂ a)
-           (proj₁ (get⁻¹-const l₁ c′ c (get l₂ a , refl _)))
-           (a , refl _))                                              ≡⟨⟩
-
-  set l₂ a (set l₁ (get l₂ a) c)                                      ∎
-  where
-  open Lens
-
-  c′ = get l₁ (get l₂ a)
+set-∘≡ (lens _ _ _ _) (lens _ _ _ _) = refl _
 
 -- Composition for higher lenses, defined under the assumption that
 -- the resulting codomain is inhabited if it is merely inhabited.
