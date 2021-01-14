@@ -15,13 +15,15 @@ open import Logical-equivalence using (_⇔_)
 open import Prelude
 
 open import Bijection equality-with-J as B using (_↔_)
+open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
-open import H-level equality-with-J
+open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq as T using (∥_∥; ∣_∣)
 open import Preimage equality-with-J
+open import Surjection equality-with-J using (_↠_)
 open import Univalence-axiom equality-with-J
 
 open import Lens.Non-dependent eq
@@ -78,6 +80,103 @@ Coherently-constant-Σ {P = P} {Q = Q} (P′ , p) (Q′ , q) =
   where
   p′ : ∀ _ → _
   p′ x = cong (_$ x) p
+
+-- If the domain of f is stable, then there is a split surjection from
+-- Constant f to Coherently-constant f.
+--
+-- In "Notions of Anonymous Existence in Martin-Löf Type Theory" Kraus
+-- Escardó, Coquand and Altenkirch prove that Constant f implies
+-- Coherently-constant f when the domain of f is stable, and the other
+-- direction holds without the assumption.
+
+Constant↠Coherently-constant :
+  {f : A → B} →
+  (∥ A ∥ → A) →
+  Constant f ↠ Coherently-constant f
+Constant↠Coherently-constant {f = f} s = record
+  { logical-equivalence = record
+    { to   = λ c → f ∘ s
+           , ⟨ext⟩ λ x → c x (s ∣ x ∣)
+    ; from = λ (g , eq) x y →
+        f x      ≡⟨ cong (_$ x) eq ⟩
+        g ∣ x ∣  ≡⟨ cong g $ T.truncation-is-proposition ∣ x ∣ ∣ y ∣ ⟩
+        g ∣ y ∣  ≡⟨ cong (_$ y) $ sym eq ⟩∎
+        f y      ∎
+    }
+  ; right-inverse-of = λ (g , eq) → Σ-≡,≡→≡
+      (f ∘ s        ≡⟨ cong (_∘ s) eq ⟩
+       g ∘ ∣_∣ ∘ s  ≡⟨ (⟨ext⟩ λ x → cong g $ T.truncation-is-proposition ∣ s x ∣ x) ⟩∎
+       g            ∎)
+      (subst (λ g → f ≡ g ∘ ∣_∣)
+         (trans (cong (_∘ s) eq)
+            (⟨ext⟩ λ x →
+             cong g (T.truncation-is-proposition ∣ s x ∣ x)))
+         (⟨ext⟩ λ x →
+          trans (cong (_$ x) eq)
+            (trans (cong g (T.truncation-is-proposition
+                              ∣ x ∣ (∣ s ∣ x ∣ ∣)))
+               (cong (_$ s ∣ x ∣) (sym eq))))                            ≡⟨ trans (subst-∘ _ _ _) $
+                                                                            sym trans-subst ⟩
+       trans
+         (⟨ext⟩ λ x →
+          trans (cong (_$ x) eq)
+            (trans (cong g (T.truncation-is-proposition
+                              ∣ x ∣ (∣ s ∣ x ∣ ∣)))
+               (cong (_$ s ∣ x ∣) (sym eq))))
+         (cong (_∘ ∣_∣) $
+          trans (cong (_∘ s) eq)
+            (⟨ext⟩ λ x →
+             cong g (T.truncation-is-proposition ∣ s x ∣ x)))            ≡⟨ cong₂ trans
+                                                                              (trans (ext-trans _ _) $
+                                                                               cong₂ trans
+                                                                                 (_≃_.right-inverse-of
+                                                                                    (Eq.extensionality-isomorphism bad-ext) _)
+                                                                                 (trans (ext-trans _ _) $
+                                                                                  cong (trans _) $
+                                                                                  cong ⟨ext⟩ $ ⟨ext⟩ λ _ →
+                                                                                  trans (sym $ cong-∘ _ _ _) $
+                                                                                  cong (cong _) $ cong-sym _ _))
+                                                                              (trans (cong-trans _ _ _) $
+                                                                               cong₂ trans
+                                                                                 (cong-∘ _ _ _)
+                                                                                 (cong-pre-∘-ext _)) ⟩
+       trans
+         (trans eq
+            (trans (⟨ext⟩ λ x →
+                    cong g (T.truncation-is-proposition
+                              ∣ x ∣ (∣ s ∣ x ∣ ∣)))
+               (⟨ext⟩ λ x → cong (_$ x) (sym (cong (_∘ s ∘ ∣_∣) eq)))))
+         (trans (cong (_∘ s ∘ ∣_∣) eq)
+            (⟨ext⟩ λ x →
+             cong g (T.truncation-is-proposition
+                       (∣ s ∣ x ∣ ∣) ∣ x ∣)))                            ≡⟨ trans (trans-assoc _ _ _) $
+                                                                            cong (trans _) $
+                                                                            trans (trans-assoc _ _ _) $
+                                                                            cong₂ trans
+                                                                              (trans (cong ⟨ext⟩ $ ⟨ext⟩ λ _ →
+                                                                                      trans (cong (cong _) $
+                                                                                             H-level.mono₁ 1 T.truncation-is-proposition _ _) $
+                                                                                      cong-sym _ _) $
+                                                                               ext-sym _)
+                                                                              (cong (flip trans _) $
+                                                                               _≃_.right-inverse-of
+                                                                                 (Eq.extensionality-isomorphism bad-ext) _) ⟩
+       trans eq
+         (trans (sym $
+                 ⟨ext⟩ λ x →
+                 cong g (T.truncation-is-proposition
+                           (∣ s ∣ x ∣ ∣) ∣ x ∣))
+            (trans (sym (cong (_∘ s ∘ ∣_∣) eq))
+               (trans (cong (_∘ s ∘ ∣_∣) eq)
+                  (⟨ext⟩ λ x →
+                   cong g (T.truncation-is-proposition
+                          (∣ s ∣ x ∣ ∣) ∣ x ∣)))))                       ≡⟨ trans (cong (trans _) $
+                                                                                   trans (cong (trans _) $
+                                                                                          trans-sym-[trans] _ _) $
+                                                                                   trans-symˡ _) $
+                                                                            trans-reflʳ _ ⟩∎
+       eq                                                                ∎)
+  }
 
 ------------------------------------------------------------------------
 -- The lens type family
