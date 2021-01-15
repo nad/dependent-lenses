@@ -20,6 +20,7 @@ open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
+open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq using (∥_∥)
 open import H-level.Truncation.Propositional.One-step eq as O
@@ -40,6 +41,7 @@ private
     A B C       : Type a
     P           : A → Type p
     z           : A
+    n           : ℕ
 
 ------------------------------------------------------------------------
 -- Constant-≃
@@ -1110,3 +1112,85 @@ module _
   Higher.Lens-combinators.composition≡∘ a b univ₇ stable
     ⟨ univ₁ , univ₂ , univ₃ , univ₄ , univ₅ , univ₆ , univ₇ , bl ⟩_⊚_
     (set-⊚ univ₁ univ₂ univ₃ univ₄ univ₅ univ₆ univ₇ bl)
+
+------------------------------------------------------------------------
+-- H-levels
+
+-- If P has h-level n (pointwise), then Coherently-constant univ P has
+-- h-level n (assuming univalence).
+--
+-- I think that Paolo Capriotti suggested that something like this
+-- could be proved by using the result (due to Ahrens, Capriotti and
+-- Spadotti, see "Non-wellfounded trees in Homotopy Type Theory") that
+-- M-types for indexed containers have h-level n if all shapes have
+-- h-level n.
+
+H-level-Coherently-constant :
+  {A : Type a} {P : A → Type p} →
+  Univalence (lsuc (a ⊔ p)) →
+  (univ : Univalence p) →
+  ((a : A) → H-level n (P a)) →
+  H-level n (Coherently-constant univ P)
+H-level-Coherently-constant {a = a} {p = p} {n = n} univ _ h =
+  H-level-Coherently-→Type univ univ h lemma P.id
+  where
+  lemma :
+    {A : Type a} {P : A → Type p} →
+    ((a : A) → H-level n (P a)) →
+    H-level n (Constant-≃ P)
+  lemma h =
+    Π-closure ext n λ _ →
+    Π-closure ext n λ _ →
+    Eq.h-level-closure ext n (h _) (h _)
+
+-- If A and B have h-level n given the assumption that the other type
+-- is inhabited, then Lens univ A B has h-level n (assuming
+-- univalence).
+--
+-- I do not remember who came up with the idea to prove this for the
+-- coinductive lenses (rather than the ones in
+-- Lens.Non-dependent.Higher). It may have been Paolo Capriotti or
+-- Andrea Vezzosi.
+
+lens-preserves-h-level :
+  {A : Type a} {B : Type b} →
+  Univalence (lsuc (a ⊔ b)) →
+  (univ : Univalence (a ⊔ b)) →
+  ∀ n → (B → H-level n A) → (A → H-level n B) →
+  H-level n (Lens univ A B)
+lens-preserves-h-level univ′ univ n hA hB =
+  H-level-cong _ n (inverse Lens-as-Σ) $
+  Σ-closure n
+    (Π-closure ext n λ a →
+     hB a) λ get →
+  H-level-Coherently-constant univ′ univ λ b →
+  Σ-closure n (hA b) λ a →
+  H-level.⇒≡ n (hB a)
+
+-- If the domain of a lens is inhabited and has h-level n, then the
+-- codomain also has h-level n (assuming univalence).
+--
+-- TODO: This could presumably be proved without the use of
+-- univalence.
+
+h-level-respects-lens-from-inhabited :
+  {A : Type a} {B : Type b} →
+  Univalence (lsuc (a ⊔ b)) →
+  (univ : Univalence (a ⊔ b)) →
+  ∀ n → Lens univ A B → A → H-level n A → H-level n B
+h-level-respects-lens-from-inhabited univ′ univ n =
+  Higher.h-level-respects-lens-from-inhabited n ∘
+  _≃_.from (Higher-lens≃Lens ⊠ univ′ univ)
+
+-- If A has positive h-level n, then Lens univ A B also has h-level n
+-- (assuming univalence).
+
+lens-preserves-h-level-of-domain :
+  {A : Type a} {B : Type b} →
+  Univalence (lsuc (a ⊔ b)) →
+  (univ : Univalence (a ⊔ b)) →
+  ∀ n → H-level (1 + n) A → H-level (1 + n) (Lens univ A B)
+lens-preserves-h-level-of-domain univ′ univ n hA =
+  H-level.[inhabited⇒+]⇒+ n λ l →
+  lens-preserves-h-level univ′ univ (1 + n) (λ _ → hA) λ a →
+  h-level-respects-lens-from-inhabited univ′ univ _ l a hA
