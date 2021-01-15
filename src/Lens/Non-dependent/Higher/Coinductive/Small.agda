@@ -21,6 +21,7 @@ open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level.Closure equality-with-J
+open import H-level.Truncation.Propositional eq using (∥_∥)
 open import H-level.Truncation.Propositional.One-step eq as O
   using (∥_∥¹; ∣_∣)
 open import Preimage equality-with-J as Preimage using (_⁻¹_)
@@ -28,7 +29,8 @@ open import Tactic.Sigma-cong equality-with-J
 open import Univalence-axiom equality-with-J
 
 open import Lens.Non-dependent eq
-import Lens.Non-dependent.Higher.Capriotti eq as Higher
+import Lens.Non-dependent.Higher eq as Higher
+import Lens.Non-dependent.Higher.Capriotti eq as Capriotti
 import Lens.Non-dependent.Higher.Coinductive eq as Coinductive
 open import Lens.Non-dependent.Higher.Coinductive.Coherently eq
 
@@ -186,13 +188,13 @@ Coinductive-coherently-constant≃Coherently-constant univ′ univ =
 -- Two variants of Coherently-constant are pointwise equivalent
 -- (when applicable, assuming univalence).
 
-Higher-coherently-constant≃Coherently-constant :
+Capriotti-coherently-constant≃Coherently-constant :
   {A : Type a} {P : A → Type p} →
   Univalence (a ⊔ lsuc p) →
   (univ : Univalence p) →
-  Higher.Coherently-constant P ≃ Coherently-constant univ P
-Higher-coherently-constant≃Coherently-constant {P = P} univ′ univ =
-  Higher.Coherently-constant P       ↝⟨ Coinductive.Coherently-constant≃Coherently-constant univ′ ⟩
+  Capriotti.Coherently-constant P ≃ Coherently-constant univ P
+Capriotti-coherently-constant≃Coherently-constant {P = P} univ′ univ =
+  Capriotti.Coherently-constant P    ↝⟨ Coinductive.Coherently-constant≃Coherently-constant univ′ ⟩
   Coinductive.Coherently-constant P  ↝⟨ Coinductive-coherently-constant≃Coherently-constant univ′ univ ⟩□
   Coherently-constant univ P         □
 
@@ -390,7 +392,7 @@ private
 -- Coherently-constant is, in a certain sense, closed under Σ.
 --
 -- This lemma is based on a lemma due to Paolo Capriotti (see
--- Higher.Coherently-constant-Σ).
+-- Capriotti.Coherently-constant-Σ).
 --
 -- TODO: Can the ".coherent" clause be simplified?
 
@@ -673,11 +675,12 @@ Coherently-constant-Σ′ :
 Coherently-constant-Σ′ {P = P} {Q = Q}
   univ₁ univ₂ univ₃ univ₄ univ₅ univ₆ =
   curry
-    (Coherently-constant univ₁ P × Coherently-constant univ₂ Q     ↔⟨ inverse (Higher-coherently-constant≃Coherently-constant univ₄ univ₁ ×-cong
-                                                                               Higher-coherently-constant≃Coherently-constant univ₅ univ₂) ⟩
-     Higher.Coherently-constant P × Higher.Coherently-constant Q   ↝⟨ uncurry Higher.Coherently-constant-Σ ⟩
-     Higher.Coherently-constant (λ x → ∃ λ (y : P x) → Q (x , y))  ↔⟨ Higher-coherently-constant≃Coherently-constant univ₆ univ₃ ⟩□
-     Coherently-constant univ₃ (λ x → ∃ λ (y : P x) → Q (x , y))   □)
+    (Coherently-constant univ₁ P × Coherently-constant univ₂ Q          ↔⟨ inverse
+                                                                             (Capriotti-coherently-constant≃Coherently-constant univ₄ univ₁ ×-cong
+                                                                              Capriotti-coherently-constant≃Coherently-constant univ₅ univ₂) ⟩
+     Capriotti.Coherently-constant P × Capriotti.Coherently-constant Q  ↝⟨ uncurry Capriotti.Coherently-constant-Σ ⟩
+     Capriotti.Coherently-constant (λ x → ∃ λ (y : P x) → Q (x , y))    ↔⟨ Capriotti-coherently-constant≃Coherently-constant univ₆ univ₃ ⟩□
+     Coherently-constant univ₃ (λ x → ∃ λ (y : P x) → Q (x , y))        □)
 
 ------------------------------------------------------------------------
 -- The lens type family
@@ -726,11 +729,12 @@ instance
 -- univalence).
 
 Coinductive-lens≃Lens :
+  Block "Coinductive-lens≃Lens" →
   {A : Type a} {B : Type b} →
   Univalence (lsuc (a ⊔ b)) →
   (univ : Univalence (a ⊔ b)) →
   Coinductive.Lens A B ≃ Lens univ A B
-Coinductive-lens≃Lens {A = A} {B = B} univ₁ univ₂ =
+Coinductive-lens≃Lens ⊠ {A = A} {B = B} univ₁ univ₂ =
   Coinductive.Lens A B                                             ↔⟨⟩
 
   (∃ λ (get : A → B) → Coinductive.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ →
@@ -746,15 +750,80 @@ Coinductive-lens≃Lens {A = A} {B = B} univ₁ univ₂ =
 -- The equivalence preserves getters and setters.
 
 Coinductive-lens≃Lens-preserves-getters-and-setters :
+  (bl : Block "Coinductive-lens≃Lens")
   {A : Type a} {B : Type b}
   (univ₁ : Univalence (lsuc (a ⊔ b)))
   (univ₂ : Univalence (a ⊔ b)) →
   Preserves-getters-and-setters-⇔ A B
-    (_≃_.logical-equivalence (Coinductive-lens≃Lens univ₁ univ₂))
-Coinductive-lens≃Lens-preserves-getters-and-setters univ₁ univ₂ =
+    (_≃_.logical-equivalence (Coinductive-lens≃Lens bl univ₁ univ₂))
+Coinductive-lens≃Lens-preserves-getters-and-setters ⊠ univ₁ univ₂ =
   Preserves-getters-and-setters-→-↠-⇔
-    (_≃_.surjection (Coinductive-lens≃Lens univ₁ univ₂))
+    (_≃_.surjection (Coinductive-lens≃Lens ⊠ univ₁ univ₂))
     (λ _ → refl _ , refl _)
+
+private
+
+  -- A lemma used to implement Higher-lens≃Lens and
+  -- Higher-lens≃Lens-preserves-getters-and-setters.
+
+  Higher-lens≃Lens′ :
+    Block "Higher-lens≃Lens" →
+    {A : Type a} {B : Type b} →
+    Univalence (lsuc (a ⊔ b)) →
+    (univ : Univalence (a ⊔ b)) →
+    ∃ λ (eq : Higher.Lens A B ≃ Lens univ A B) →
+    Preserves-getters-and-setters-⇔ A B (_≃_.logical-equivalence eq)
+  Higher-lens≃Lens′ ⊠ {A = A} {B = B} univ₁ univ₂ =
+    block λ b →
+
+      (Higher.Lens A B       ↝⟨ inverse $ Capriotti.Lens≃Higher-lens b univ₂ ⟩
+       Capriotti.Lens A B    ↝⟨ Coinductive.Higher-lens≃Lens b univ₁ ⟩
+       Coinductive.Lens A B  ↝⟨ Coinductive-lens≃Lens b univ₁ univ₂ ⟩□
+       Lens univ₂ A B        □)
+    , Preserves-getters-and-setters-⇔-∘
+        {f = _≃_.logical-equivalence
+               (Coinductive-lens≃Lens b univ₁ univ₂) F.∘
+             _≃_.logical-equivalence
+               (Coinductive.Higher-lens≃Lens b univ₁)}
+        {g = inverse $ _≃_.logical-equivalence $
+             Capriotti.Lens≃Higher-lens b univ₂}
+        (Preserves-getters-and-setters-⇔-∘
+           {f = _≃_.logical-equivalence
+                  (Coinductive-lens≃Lens b univ₁ univ₂)}
+           {g = _≃_.logical-equivalence
+                  (Coinductive.Higher-lens≃Lens b univ₁)}
+           (Coinductive-lens≃Lens-preserves-getters-and-setters
+              b univ₁ univ₂)
+           (Coinductive.Higher-lens≃Lens-preserves-getters-and-setters
+              b univ₁))
+        (Preserves-getters-and-setters-⇔-inverse
+           {f = _≃_.logical-equivalence
+                  (Capriotti.Lens≃Higher-lens b univ₂)} $
+         Capriotti.Lens≃Higher-lens-preserves-getters-and-setters
+           b univ₂)
+
+-- Lens is pointwise equivalent to Higher.Lens (assuming univalence).
+
+Higher-lens≃Lens :
+  Block "Higher-lens≃Lens" →
+  {A : Type a} {B : Type b} →
+  Univalence (lsuc (a ⊔ b)) →
+  (univ : Univalence (a ⊔ b)) →
+  Higher.Lens A B ≃ Lens univ A B
+Higher-lens≃Lens b univ₁ univ₂ =
+  proj₁ $ Higher-lens≃Lens′ b univ₁ univ₂
+
+-- The equivalence preserves getters and setters.
+
+Higher-lens≃Lens-preserves-getters-and-setters :
+  (bl : Block "Higher-lens≃Lens")
+  {A : Type a} {B : Type b}
+  (univ₁ : Univalence (lsuc (a ⊔ b)))
+  (univ₂ : Univalence (a ⊔ b)) →
+  Preserves-getters-and-setters-⇔ A B
+    (_≃_.logical-equivalence (Higher-lens≃Lens bl univ₁ univ₂))
+Higher-lens≃Lens-preserves-getters-and-setters b univ₁ univ₂ =
+  proj₂ $ Higher-lens≃Lens′ b univ₁ univ₂
 
 ------------------------------------------------------------------------
 -- Identity
@@ -838,3 +907,104 @@ set-∘ :
   Lens.set (⟨ univ₃ , univ₄ ⟩ l₁ ∘ l₂) a c ≡
   Lens.set l₂ a (Lens.set l₁ (Lens.get l₂ a) c)
 set-∘ _ _ _ _ = refl _
+
+-- The definitions in the following module use seven instances of
+-- univalence.
+
+module _
+  {A : Type a} {B : Type b} {C : Type c}
+  (univ₁ : Univalence (b ⊔ c))
+  (univ₂ : Univalence (lsuc (b ⊔ c)))
+  (univ₃ : Univalence (a ⊔ b))
+  (univ₄ : Univalence (lsuc (a ⊔ b)))
+  (univ₅ : Univalence (a ⊔ c))
+  (univ₆ : Univalence (lsuc (a ⊔ c)))
+  (univ₇ : Univalence (a ⊔ b ⊔ c))
+  where
+
+  -- An unrestricted composition operator for Higher.Lens (defined using
+  -- univalence).
+
+  infix 9 ⟨_,_,_,_,_,_,_,_⟩_⊚_
+
+  ⟨_,_,_,_,_,_,_,_⟩_⊚_ :
+    Block "Higher-lens≃Lens" →
+    Higher.Lens B C → Higher.Lens A B → Higher.Lens A C
+  ⟨_,_,_,_,_,_,_,_⟩_⊚_ b l₁ l₂ =
+    _≃_.from (Higher-lens≃Lens b univ₆ univ₅)
+      (⟨ univ₅ , univ₇ ⟩
+         _≃_.to (Higher-lens≃Lens b univ₂ univ₁) l₁ ∘
+         _≃_.to (Higher-lens≃Lens b univ₄ univ₃) l₂)
+
+  -- The setter of a lens formed using composition is defined in the
+  -- "right" way.
+
+  set-⊚ :
+    (b : Block "Higher-lens≃Lens") →
+    ∀ (l₁ : Higher.Lens B C) (l₂ : Higher.Lens A B) a c →
+    Higher.Lens.set (⟨_,_,_,_,_,_,_,_⟩_⊚_ b l₁ l₂) a c ≡
+    Higher.Lens.set l₂ a (Higher.Lens.set l₁ (Higher.Lens.get l₂ a) c)
+  set-⊚ b l₁ l₂ a c =
+    Higher.Lens.set
+      (_≃_.from (Higher-lens≃Lens b univ₆ univ₅)
+         (⟨ univ₅ , univ₇ ⟩
+            _≃_.to (Higher-lens≃Lens b univ₂ univ₁) l₁ ∘
+            _≃_.to (Higher-lens≃Lens b univ₄ univ₃) l₂))
+      a c                                                               ≡⟨ cong (λ f → f a c) $
+                                                                           proj₂ $
+                                                                           proj₂ (Higher-lens≃Lens-preserves-getters-and-setters b univ₆ univ₅)
+                                                                             (⟨ univ₅ , univ₇ ⟩
+                                                                                _≃_.to (Higher-lens≃Lens b univ₂ univ₁) l₁ ∘
+                                                                                _≃_.to (Higher-lens≃Lens b univ₄ univ₃) l₂) ⟩
+    Lens.set
+      (⟨ univ₅ , univ₇ ⟩
+         _≃_.to (Higher-lens≃Lens b univ₂ univ₁) l₁ ∘
+         _≃_.to (Higher-lens≃Lens b univ₄ univ₃) l₂)
+      a c                                                               ≡⟨⟩
+
+    Lens.set (_≃_.to (Higher-lens≃Lens b univ₄ univ₃) l₂)
+      a
+      (Lens.set (_≃_.to (Higher-lens≃Lens b univ₂ univ₁) l₁)
+         (Lens.get (_≃_.to (Higher-lens≃Lens b univ₄ univ₃) l₂) a) c)   ≡⟨ cong (λ f →
+                                                                                   f a (Lens.set (_≃_.to (Higher-lens≃Lens b univ₂ univ₁) l₁)
+                                                                                          (Lens.get (_≃_.to (Higher-lens≃Lens b univ₄ univ₃) l₂) a)
+                                                                                          c)) $
+                                                                           proj₂ $
+                                                                           proj₁ (Higher-lens≃Lens-preserves-getters-and-setters b univ₄ univ₃) l₂ ⟩
+    Higher.Lens.set l₂
+      a
+      (Lens.set (_≃_.to (Higher-lens≃Lens b univ₂ univ₁) l₁)
+         (Lens.get (_≃_.to (Higher-lens≃Lens b univ₄ univ₃) l₂) a) c)   ≡⟨ cong (Higher.Lens.set l₂ a) $
+                                                                           cong₂ (λ f g → f (g a) c)
+                                                                             (proj₂ $
+                                                                              proj₁ (Higher-lens≃Lens-preserves-getters-and-setters b univ₂ univ₁)
+                                                                                l₁)
+                                                                             (proj₁ $
+                                                                              proj₁ (Higher-lens≃Lens-preserves-getters-and-setters b univ₄ univ₃)
+                                                                                l₂) ⟩∎
+    Higher.Lens.set l₂ a (Higher.Lens.set l₁ (Higher.Lens.get l₂ a) c)  ∎
+
+-- If the view type of the resulting lens is stable, then the
+-- definition of composition above matches the one in higher (when
+-- applicable).
+
+⊚≡∘ :
+  (bl : Block "Higher-lens≃Lens") →
+  ∀ a b {A : Type (a ⊔ b ⊔ c)} {B : Type (b ⊔ c)} {C : Type c}
+  (univ₁ : Univalence (b ⊔ c))
+  (univ₂ : Univalence (lsuc (b ⊔ c)))
+  (univ₃ : Univalence (a ⊔ b ⊔ c))
+  (univ₄ : Univalence (lsuc (a ⊔ b ⊔ c)))
+  (univ₅ : Univalence (a ⊔ b ⊔ c))
+  (univ₆ : Univalence (lsuc (a ⊔ b ⊔ c)))
+  (univ₇ : Univalence (a ⊔ b ⊔ c))
+  (l₁ : Higher.Lens B C) (l₂ : Higher.Lens A B) →
+  (∥ C ∥ → C) →
+  ⟨ univ₁ , univ₂ , univ₃ , univ₄ , univ₅ , univ₆ , univ₇ , bl ⟩
+    l₁ ⊚ l₂ ≡
+  Higher.Lens-combinators.⟨ a , b ⟩ l₁ ∘ l₂
+⊚≡∘ bl a b univ₁ univ₂ univ₃ univ₄ univ₅ univ₆ univ₇ l₁ l₂ stable =
+  cong (λ f → f l₁ l₂) $
+  Higher.Lens-combinators.composition≡∘ a b univ₇ stable
+    ⟨ univ₁ , univ₂ , univ₃ , univ₄ , univ₅ , univ₆ , univ₇ , bl ⟩_⊚_
+    (set-⊚ univ₁ univ₂ univ₃ univ₄ univ₅ univ₆ univ₇ bl)
