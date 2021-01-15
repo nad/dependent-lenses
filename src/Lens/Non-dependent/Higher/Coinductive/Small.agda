@@ -36,10 +36,10 @@ open import Lens.Non-dependent.Higher.Coinductive.Coherently eq
 
 private
   variable
-    a b c p q : Level
-    A B C     : Type a
-    P         : A → Type p
-    z         : A
+    a b c d p q : Level
+    A B C       : Type a
+    P           : A → Type p
+    z           : A
 
 ------------------------------------------------------------------------
 -- Constant-≃
@@ -932,6 +932,77 @@ set-∘ :
   Lens.set (⟨ univ₃ , univ₄ ⟩ l₁ ∘ l₂) a c ≡
   Lens.set l₂ a (Lens.set l₁ (Lens.get l₂ a) c)
 set-∘ _ _ _ _ = refl _
+
+-- Composition is associative if the view type of the resulting lens
+-- is stable (assuming univalence).
+
+associativity :
+  {A : Type a} {B : Type b} {C : Type c} {D : Type d} →
+  (∥ D ∥ → D) →
+  (univ₁  : Univalence (c ⊔ d))
+  (univ₂  : Univalence (b ⊔ c))
+  (univ₃  : Univalence (a ⊔ b))
+  (univ₄  : Univalence (a ⊔ d))
+  (univ₅  : Univalence (a ⊔ c ⊔ d))
+  (univ₆  : Univalence (a ⊔ c))
+  (univ₇  : Univalence (a ⊔ b ⊔ c))
+  (univ₈  : Univalence (a ⊔ b ⊔ d))
+  (univ₉  : Univalence (b ⊔ d))
+  (univ₁₀ : Univalence (b ⊔ c ⊔ d)) →
+  Univalence (lsuc (a ⊔ d)) →
+  (l₁ : Lens univ₁ C D) (l₂ : Lens univ₂ B C) (l₃ : Lens univ₃ A B) →
+  ⟨ univ₄ , univ₅ ⟩ l₁ ∘ (⟨ univ₆ , univ₇ ⟩ l₂ ∘ l₃) ≡
+  ⟨ univ₄ , univ₈ ⟩ (⟨ univ₉ , univ₁₀ ⟩ l₁ ∘ l₂) ∘ l₃
+associativity stable _ _ _ univ₄ _ _ _ _ _ _ univ₁₁ l₁ l₂ l₃ =
+  lenses-equal-if-setters-equal
+    univ₁₁
+    univ₄
+    _
+    _
+    stable
+    (refl _)
+
+-- The identity lens is a left identity of composition if the view
+-- type of the resulting lens is stable (assuming univalence).
+
+left-identity :
+  {A : Type a} {B : Type b} →
+  (∥ B ∥ → B) →
+  (univ₁ : Univalence (a ⊔ b))
+  (univ₂ : Univalence (a ⊔ b))
+  (univ₃ : Univalence b) →
+  Univalence (lsuc (a ⊔ b)) →
+  (l : Lens univ₁ A B) →
+  ⟨ univ₁ , univ₂ ⟩ id univ₃ ∘ l ≡ l
+left-identity stable univ₁ univ₂ univ₃ univ₄ l =
+  lenses-equal-if-setters-equal
+    univ₄
+    univ₁
+    _
+    _
+    stable
+    (refl _)
+
+-- The identity lens is a right identity of composition if the view
+-- type of the resulting lens is stable (assuming univalence).
+
+right-identity :
+  {A : Type a} {B : Type b} →
+  (∥ B ∥ → B) →
+  (univ₁ : Univalence (a ⊔ b))
+  (univ₂ : Univalence (a ⊔ b))
+  (univ₃ : Univalence a) →
+  Univalence (lsuc (a ⊔ b)) →
+  (l : Lens univ₁ A B) →
+  ⟨ univ₁ , univ₂ ⟩ l ∘ id univ₃ ≡ l
+right-identity stable univ₁ univ₂ univ₃ univ₄ l =
+  lenses-equal-if-setters-equal
+    univ₄
+    univ₁
+    _
+    _
+    stable
+    (refl _)
 
 -- The definitions in the following module use seven instances of
 -- univalence.
