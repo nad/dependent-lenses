@@ -725,6 +725,18 @@ instance
     ; set = Lens.set
     }
 
+-- Lens can be expressed as a Σ-type.
+
+Lens-as-Σ :
+  {A : Type a} {B : Type b} {univ : Univalence (a ⊔ b)} →
+  Lens univ A B ≃
+  (∃ λ (get : A → B) → Coherently-constant univ (get ⁻¹_))
+Lens-as-Σ = Eq.↔→≃
+  (λ l → Lens.get l , Lens.get⁻¹-coherently-constant l)
+  (λ (g , c) → record { get = g; get⁻¹-coherently-constant = c })
+  refl
+  refl
+
 -- Lens is pointwise equivalent to Coinductive.Lens (assuming
 -- univalence).
 
@@ -736,15 +748,9 @@ Coinductive-lens≃Lens :
   Coinductive.Lens A B ≃ Lens univ A B
 Coinductive-lens≃Lens ⊠ {A = A} {B = B} univ₁ univ₂ =
   Coinductive.Lens A B                                             ↔⟨⟩
-
   (∃ λ (get : A → B) → Coinductive.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ →
                                                                        Coinductive-coherently-constant≃Coherently-constant univ₁ univ₂) ⟩
-
-  (∃ λ (get : A → B) → Coherently-constant univ₂ (get ⁻¹_))        ↝⟨ Eq.↔→≃
-                                                                        (λ (g , c) → record { get = g; get⁻¹-coherently-constant = c })
-                                                                        (λ l → Lens.get l , Lens.get⁻¹-coherently-constant l)
-                                                                        refl
-                                                                        refl ⟩□
+  (∃ λ (get : A → B) → Coherently-constant univ₂ (get ⁻¹_))        ↝⟨ inverse Lens-as-Σ ⟩□
   Lens univ₂ A B                                                   □
 
 -- The equivalence preserves getters and setters.
