@@ -37,8 +37,7 @@ private
   variable
     a b ℓ p p₁ p₂ : Level
     A A₁ A₂ B C   : Type a
-    q x y         : A
-    f             : A → B
+    f q x y       : A
     n             : ℕ
 
 ------------------------------------------------------------------------
@@ -677,32 +676,32 @@ H-level-Coherently {n = n} {P = P} {step = step} {f = f} univ h₁ h₂ =
 -- A variant of H-level-Coherently for type-valued functions.
 
 H-level-Coherently-→Type :
-  {Q : {A : Type a} → (A → Type p) → Type q}
-  {step : {A : Type a} (P : A → Type p) → Q P → ∥ A ∥¹ → Type p}
-  {P : A → Type p} →
-  Univalence (lsuc (a ⊔ p) ⊔ q) →
-  Univalence (lsuc (a ⊔ p)) →
-  ((a : A) → H-level n (P a)) →
-  ({A : Type a} {P : A → Type p} →
-   ((a : A) → H-level n (P a)) → H-level n (Q P)) →
-  ({A : Type a} {P : A → Type p} {q : Q P} →
-   ((a : A) → H-level n (P a)) →
-   (a : A) → H-level n (step P q ∣ a ∣)) →
-  H-level n (Coherently Q step P)
+  {P : {A : Type a} → (A → Type f) → Type p}
+  {step : {A : Type a} (F : A → Type f) → P F → ∥ A ∥¹ → Type f}
+  {F : A → Type f} →
+  Univalence (lsuc a ⊔ p ⊔ lsuc f) →
+  Univalence (lsuc (a ⊔ f)) →
+  ((a : A) → H-level n (F a)) →
+  ({A : Type a} {F : A → Type f} →
+   ((a : A) → H-level n (F a)) → H-level n (P F)) →
+  ({A : Type a} {F : A → Type f} {p : P F} →
+   ((a : A) → H-level n (F a)) →
+   (a : A) → H-level n (step F p ∣ a ∣)) →
+  H-level n (Coherently P step F)
 H-level-Coherently-→Type
-  {a = a} {p = p} {n = n} {Q = Q} {step = step} {P = P}
+  {a = a} {f = f} {n = n} {P = P} {step = step} {F = F}
   univ₁ univ₂ h₁ h₂ h₃ =
                                               $⟨ H-level-Coherently-with-restriction univ₁ univ₂ h₂ ⟩
   H-level n
-    (Coherently-with-restriction Q step P
-       (λ P → ∀ a → H-level n (P a)) h₃′ h₁)  ↝⟨ H-level-cong _ n (inverse Coherently≃Coherently-with-restriction) ⦂ (_ → _) ⟩□
+    (Coherently-with-restriction P step F
+       (λ F → ∀ a → H-level n (F a)) h₃′ h₁)  ↝⟨ H-level-cong _ n (inverse Coherently≃Coherently-with-restriction) ⦂ (_ → _) ⟩□
 
-  H-level n (Coherently Q step P)             □
+  H-level n (Coherently P step F)             □
   where
   h₃′ :
-    {A : Type a} {P : A → Type p} {q : Q P} →
-    ((a : A) → H-level n (P a)) →
-    (a : ∥ A ∥¹) → H-level n (step P q a)
+    {A : Type a} {F : A → Type f} {p : P F} →
+    ((a : A) → H-level n (F a)) →
+    (a : ∥ A ∥¹) → H-level n (step F p a)
   h₃′ h = O.elim λ where
     .O.∣∣ʳ              → h₃ h
     .O.∣∣-constantʳ _ _ → H-level-propositional ext n _ _
