@@ -825,6 +825,31 @@ Higher-lens≃Lens-preserves-getters-and-setters :
 Higher-lens≃Lens-preserves-getters-and-setters b univ₁ univ₂ =
   proj₂ $ Higher-lens≃Lens′ b univ₁ univ₂
 
+-- Lenses with stable view types are equal if their setters are equal
+-- (assuming univalence).
+
+lenses-equal-if-setters-equal :
+  {A : Type a} {B : Type b} →
+  Univalence (lsuc (a ⊔ b)) →
+  (univ : Univalence (a ⊔ b)) →
+  (l₁ l₂ : Lens univ A B) →
+  (∥ B ∥ → B) →
+  Lens.set l₁ ≡ Lens.set l₂ →
+  l₁ ≡ l₂
+lenses-equal-if-setters-equal univ′ univ l₁ l₂ stable =
+  block λ bl →
+  let equiv = Higher-lens≃Lens bl univ′ univ in
+
+  Lens.set l₁ ≡ Lens.set l₂              ↔⟨ ≡⇒≃ $ sym $ cong₂ _≡_
+                                              (proj₂ $ proj₂ (Higher-lens≃Lens-preserves-getters-and-setters bl univ′ univ) l₁)
+                                              (proj₂ $ proj₂ (Higher-lens≃Lens-preserves-getters-and-setters bl univ′ univ) l₂) ⟩
+  Higher.Lens.set (_≃_.from equiv l₁) ≡
+  Higher.Lens.set (_≃_.from equiv l₂)    ↝⟨ Higher.lenses-equal-if-setters-equal univ _ _ (λ _ → stable) ⟩
+
+  _≃_.from equiv l₁ ≡ _≃_.from equiv l₂  ↔⟨ Eq.≃-≡ (inverse equiv) ⟩□
+
+  l₁ ≡ l₂                                □
+
 ------------------------------------------------------------------------
 -- Identity
 
