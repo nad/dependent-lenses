@@ -24,7 +24,7 @@ open import Container.Indexed.M.Codata eq
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
 import Equivalence P.equality-with-J as PEq
-open import Function-universe equality-with-J hiding (_∘_)
+open import Function-universe equality-with-J hiding (id; _∘_)
 import Function-universe P.equality-with-J as PF
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
@@ -480,36 +480,29 @@ subst-Coherently-property
     eq
 
 ------------------------------------------------------------------------
--- A variant of Coherently, defined using an indexed container
-
--- A container that is used to define Coherently-with-restriction.
-
-Coherently-with-restriction-container :
-  {B : Type b}
-  (P : {A : Type a} → (A → B) → Type p)
-  (step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B) →
-  (Q : {A : Type a} → (A → B) → Type q) →
-  ({A : Type a} {f : A → B} {p : P f} → Q f → Q (step f p)) →
-  Container (∃ λ (A : Type a) → ∃ λ (f : A → B) → Q f) p lzero
-Coherently-with-restriction-container P step _ pres = λ where
-  .Shape (_ , f , _)               → P f
-  .Position _                      → ⊤
-  .index {o = A , f , q} {s = p} _ → ∥ A ∥¹ , step f p , pres q
+-- A variant of Coherently
 
 -- A variant of Coherently. An extra predicate Q is included, so that
 -- one can restrict the "f" functions (and their domains).
 
-Coherently-with-restriction :
-  {A : Type a} {B : Type b}
-  (P : {A : Type a} → (A → B) → Type p)
-  (step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B) →
-  (f : A → B) →
-  (Q : {A : Type a} → (A → B) → Type q) →
-  ({A : Type a} {f : A → B} {p : P f} → Q f → Q (step f p)) →
-  Q f →
-  Type (lsuc a ⊔ b ⊔ p ⊔ q)
-Coherently-with-restriction P step f Q pres q =
-  M (Coherently-with-restriction-container P step Q pres) (_ , f , q)
+record Coherently-with-restriction
+         {A : Type a} {B : Type b}
+         (P : {A : Type a} → (A → B) → Type p)
+         (step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B)
+         (f : A → B)
+         (Q : {A : Type a} → (A → B) → Type q)
+         (pres : {A : Type a} {f : A → B} {p : P f} →
+                 Q f → Q (step f p))
+         (q : Q f) : Type p where
+  coinductive
+  field
+    property : P f
+    coherent :
+      Coherently-with-restriction
+        P step (step f property)
+        Q pres (pres q)
+
+open Coherently-with-restriction public
 
 -- Coherently P step f is equivalent to
 -- Coherently-with-restriction P step f Q pres q.
@@ -531,25 +524,97 @@ Coherently≃Coherently-with-restriction
   to :
     Coherently P step f →
     Coherently-with-restriction P step f Q pres q
-  to c .out-M .proj₁   = c .property
-  to c .out-M .proj₂ _ = to (c .coherent)
+  to c .property = c .property
+  to c .coherent = to (c .coherent)
 
   from :
     ∀ q →
     Coherently-with-restriction P step f Q pres q →
     Coherently P step f
-  from _ c .property = c .out-M .proj₁
-  from _ c .coherent = from _ (c .out-M .proj₂ _)
+  from _ c .property = c .property
+  from _ c .coherent = from _ (c .coherent)
 
   to-from :
     (c : Coherently-with-restriction P step f Q pres q) →
     to (from q c) P.≡ c
-  to-from c i .out-M .proj₁   = c .out-M .proj₁
-  to-from c i .out-M .proj₂ _ = to-from (c .out-M .proj₂ _) i
+  to-from c i .property = c .property
+  to-from c i .coherent = to-from (c .coherent) i
 
   from-to : ∀ q (c : Coherently P step f) → from q (to c) P.≡ c
   from-to _ c i .property = c .property
   from-to q c i .coherent = from-to (pres q) (c .coherent) i
+
+-- A container that is used to define Coherently-with-restriction′.
+
+Coherently-with-restriction-container :
+  {B : Type b}
+  (P : {A : Type a} → (A → B) → Type p)
+  (step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B) →
+  (Q : {A : Type a} → (A → B) → Type q) →
+  ({A : Type a} {f : A → B} {p : P f} → Q f → Q (step f p)) →
+  Container (∃ λ (A : Type a) → ∃ λ (f : A → B) → Q f) p lzero
+Coherently-with-restriction-container P step _ pres = λ where
+  .Shape (_ , f , _)               → P f
+  .Position _                      → ⊤
+  .index {o = A , f , q} {s = p} _ → ∥ A ∥¹ , step f p , pres q
+
+-- A variant of Coherently-with-restriction, defined using an indexed
+-- container.
+
+Coherently-with-restriction′ :
+  {A : Type a} {B : Type b}
+  (P : {A : Type a} → (A → B) → Type p)
+  (step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B) →
+  (f : A → B) →
+  (Q : {A : Type a} → (A → B) → Type q) →
+  ({A : Type a} {f : A → B} {p : P f} → Q f → Q (step f p)) →
+  Q f →
+  Type (lsuc a ⊔ b ⊔ p ⊔ q)
+Coherently-with-restriction′ P step f Q pres q =
+  M (Coherently-with-restriction-container P step Q pres) (_ , f , q)
+
+-- Coherently-with-restriction P step f Q pres q is equivalent to
+-- Coherently-with-restriction′ P step f Q pres q.
+
+Coherently-with-restriction≃Coherently-with-restriction′ :
+  {P : {A : Type a} → (A → B) → Type p}
+  {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B}
+  {f : A → B}
+  {Q : {A : Type a} → (A → B) → Type q}
+  {pres : {A : Type a} {f : A → B} {p : P f} → Q f → Q (step f p)}
+  {q : Q f} →
+  Coherently-with-restriction P step f Q pres q ≃
+  Coherently-with-restriction′ P step f Q pres q
+Coherently-with-restriction≃Coherently-with-restriction′
+  {P = P} {step = step} {Q = Q} {pres = pres} =
+  Eq.↔→≃ to (from _)
+    (λ c → _↔_.from ≡↔≡ (to-from _ c))
+    (λ c → _↔_.from ≡↔≡ (from-to c))
+  where
+  to :
+    Coherently-with-restriction P step f Q pres q →
+    Coherently-with-restriction′ P step f Q pres q
+  to c .out-M .proj₁   = c .property
+  to c .out-M .proj₂ _ = to (c .coherent)
+
+  from :
+    ∀ q →
+    Coherently-with-restriction′ P step f Q pres q →
+    Coherently-with-restriction P step f Q pres q
+  from _ c .property = c .out-M .proj₁
+  from _ c .coherent = from _ (c .out-M .proj₂ _)
+
+  to-from :
+    ∀ q (c : Coherently-with-restriction′ P step f Q pres q) →
+    to (from q c) P.≡ c
+  to-from _ c i .out-M .proj₁   = c .out-M .proj₁
+  to-from q c i .out-M .proj₂ _ = to-from (pres q) (c .out-M .proj₂ _) i
+
+  from-to :
+    (c : Coherently-with-restriction P step f Q pres q) →
+    from q (to c) P.≡ c
+  from-to c i .property = c .property
+  from-to c i .coherent = from-to (c .coherent) i
 
 ------------------------------------------------------------------------
 -- H-levels
@@ -560,6 +625,32 @@ Coherently≃Coherently-with-restriction
 -- trees in Homotopy Type Theory") that M-types for indexed containers
 -- have h-level n if all shapes have h-level n. The use of containers
 -- with "restrictions" is my idea.
+
+-- If P f has h-level n for every function f for which Q holds, then
+-- Coherently-with-restriction P step f Q pres q has h-level n
+-- (assuming univalence).
+
+H-level-Coherently-with-restriction :
+  Univalence (lsuc a ⊔ b ⊔ p ⊔ q) →
+  Univalence (lsuc a ⊔ b ⊔ q) →
+  {B : Type b}
+  {P : {A : Type a} → (A → B) → Type p}
+  {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B}
+  {f : A → B}
+  {Q : {A : Type a} → (A → B) → Type q}
+  {pres : {A : Type a} {f : A → B} {p : P f} → Q f → Q (step f p)}
+  {q : Q f} →
+  ({A : Type a} {f : A → B} → Q f → H-level n (P f)) →
+  H-level n (Coherently-with-restriction P step f Q pres q)
+H-level-Coherently-with-restriction
+  {n = n} univ₁ univ₂ {B = B} {P = P} {step = step} {f = f} {Q = Q}
+  {pres = pres} {q = q} =
+
+  (∀ {A} {f : A → B} → Q f → H-level n (P f))                        ↝⟨ (λ h (_ , _ , q) → h q) ⟩
+  (((_ , f , _) : ∃ λ A → ∃ λ (f : A → B) → Q f) → H-level n (P f))  ↝⟨ (λ h → H-level-M univ₁ univ₂ h) ⟩
+  H-level n (Coherently-with-restriction′ P step f Q pres q)         ↝⟨ H-level-cong _ n
+                                                                          (inverse Coherently-with-restriction≃Coherently-with-restriction′) ⟩□
+  H-level n (Coherently-with-restriction P step f Q pres q)          □
 
 -- If P f has h-level n, and (for any f and p) P (step f p) has
 -- h-level n when P f has h-level n, then Coherently P step f has
@@ -576,12 +667,12 @@ H-level-Coherently :
    H-level n (P f) → H-level n (P (step f p))) →
   H-level n (Coherently P step f)
 H-level-Coherently {n = n} {P = P} {step = step} {f = f} univ h₁ h₂ =
-                                           $⟨ H-level-M univ univ (λ (_ , _ , h) → h) ⟩
+                                            $⟨ H-level-Coherently-with-restriction univ univ id ⟩
   H-level n
     (Coherently-with-restriction P step f
-       (λ f → H-level n (P f)) h₂ h₁)      ↝⟨ H-level-cong _ n (inverse Coherently≃Coherently-with-restriction) ⦂ (_ → _) ⟩□
+       (λ f → H-level n (P f)) h₂ h₁)       ↝⟨ H-level-cong _ n (inverse Coherently≃Coherently-with-restriction) ⦂ (_ → _) ⟩□
 
-  H-level n (Coherently P step f)          □
+  H-level n (Coherently P step f)           □
 
 -- A variant of H-level-Coherently for type-valued functions.
 
@@ -601,17 +692,17 @@ H-level-Coherently-→Type :
 H-level-Coherently-→Type
   {a = a} {p = p} {n = n} {Q = Q} {step = step} {P = P}
   univ₁ univ₂ h₁ h₂ h₃ =
-                                                $⟨ H-level-M univ₁ univ₂ (λ (_ , _ , h) → h₂ h) ⟩
+                                              $⟨ H-level-Coherently-with-restriction univ₁ univ₂ h₂ ⟩
   H-level n
     (Coherently-with-restriction Q step P
-       (λ P → ∀ a → H-level n (P a)) lemma h₁)  ↝⟨ H-level-cong _ n (inverse Coherently≃Coherently-with-restriction) ⦂ (_ → _) ⟩□
+       (λ P → ∀ a → H-level n (P a)) h₃′ h₁)  ↝⟨ H-level-cong _ n (inverse Coherently≃Coherently-with-restriction) ⦂ (_ → _) ⟩□
 
-  H-level n (Coherently Q step P)               □
+  H-level n (Coherently Q step P)             □
   where
-  lemma :
+  h₃′ :
     {A : Type a} {P : A → Type p} {q : Q P} →
     ((a : A) → H-level n (P a)) →
     (a : ∥ A ∥¹) → H-level n (step P q a)
-  lemma h = O.elim λ where
+  h₃′ h = O.elim λ where
     .O.∣∣ʳ              → h₃ h
     .O.∣∣-constantʳ _ _ → H-level-propositional ext n _ _

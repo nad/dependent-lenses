@@ -387,8 +387,9 @@ from-Coherently-constant′≃-property
     (Eq.drop-Σ-map-id _
        (_≃_.is-equivalence Coherently-constant′≃-lemma)
        f)
-    c .property                                                       ≡⟨ cong (λ c → c .property) Eq.inverse-drop-Σ-map-id ⟩
-
+    c .property                                                       ≡⟨ cong (λ c → c .property) $
+                                                                         Eq.inverse-drop-Σ-map-id
+                                                                           {x = f} {eq = _≃_.is-equivalence Coherently-constant′≃-lemma} ⟩
   subst Coherently-constant′
     (cong proj₁ $
      _≃_.right-inverse-of Coherently-constant′≃-lemma (f , c))
