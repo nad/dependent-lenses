@@ -741,11 +741,54 @@ from-equality-characterisation₁ :
 from-equality-characterisation₁ b univ _ _ =
   proj₂ (equality-characterisation₁′ b b univ) _ _
 
+private
+
+  -- An equality characterisation lemma with a "computation" rule.
+
+  equality-characterisation₂′ :
+    {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
+    let open Lens in
+    (bl : Block "equality-characterisation₁") →
+    Block "equality-characterisation₂" →
+    (univ : Univalence (a ⊔ b)) →
+    ∃ λ (eq : l₁ ≡ l₂
+                ↔
+              ∃ λ (r : R l₁ ≃ R l₂) →
+                (∀ x → _≃_.to r (remainder l₁ x) ≡ remainder l₂ x)
+                  ×
+                (∀ x → get l₁ x ≡ get l₂ x)) →
+      (r₁ : R l₁ ≃ R l₂)
+      (r₂ : ∀ x → _≃_.to r₁ (remainder l₁ x) ≡ remainder l₂ x)
+      (g : ∀ x → get l₁ x ≡ get l₂ x) →
+      _↔_.from eq (r₁ , r₂ , g) ≡
+      _↔_.from (equality-characterisation₁ bl univ)
+        (r₁ , λ a → cong₂ _,_ (r₂ a) (g a))
+  equality-characterisation₂′ {l₁ = l₁} {l₂ = l₂} bl ⊠ univ =
+      (l₁ ≡ l₂                                                 ↝⟨ equality-characterisation₁ bl univ ⟩
+
+       (∃ λ (eq : R l₁ ≃ R l₂) →
+          ∀ x → (_≃_.to eq (remainder l₁ x) , get l₁ x) ≡
+                _≃_.to (equiv l₂) x)                           ↝⟨ (∃-cong λ _ → ∀-cong ext λ _ → inverse ≡×≡↔≡) ⟩
+
+       (∃ λ (eq : R l₁ ≃ R l₂) →
+          ∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x
+                  ×
+                get l₁ x ≡ get l₂ x)                           ↝⟨ (∃-cong λ _ → ΠΣ-comm) ⟩□
+
+       (∃ λ (eq : R l₁ ≃ R l₂) →
+          (∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x)
+            ×
+          (∀ x → get l₁ x ≡ get l₂ x))                         □)
+    , λ _ _ _ → refl _
+    where
+    open Lens
+
 -- An equality characterisation lemma.
 
 equality-characterisation₂ :
   {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
   let open Lens in
+  Block "equality-characterisation" →
   Univalence (a ⊔ b) →
   l₁ ≡ l₂
     ↔
@@ -753,24 +796,25 @@ equality-characterisation₂ :
     (∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x)
       ×
     (∀ x → get l₁ x ≡ get l₂ x)
-equality-characterisation₂ {l₁ = l₁} {l₂} univ =
-  l₁ ≡ l₂                                                 ↝⟨ equality-characterisation₁ ⊠ univ ⟩
+equality-characterisation₂ bl univ =
+  proj₁ (equality-characterisation₂′ bl bl univ)
 
-  (∃ λ (eq : R l₁ ≃ R l₂) →
-     ∀ x → (_≃_.to eq (remainder l₁ x) , get l₁ x) ≡
-           _≃_.to (equiv l₂) x)                           ↝⟨ (∃-cong λ _ → ∀-cong ext λ _ → inverse ≡×≡↔≡) ⟩
+-- A "computation" rule.
 
-  (∃ λ (eq : R l₁ ≃ R l₂) →
-     ∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x
-             ×
-           get l₁ x ≡ get l₂ x)                           ↝⟨ (∃-cong λ _ → ΠΣ-comm) ⟩□
-
-  (∃ λ (eq : R l₁ ≃ R l₂) →
-     (∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x)
-       ×
-     (∀ x → get l₁ x ≡ get l₂ x))                         □
-  where
-  open Lens
+from-equality-characterisation₂ :
+  let open Lens in
+  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B}
+  (bl : Block "equality-characterisation") →
+  (univ : Univalence (a ⊔ b))
+  (r₁ : R l₁ ≃ R l₂)
+  (r₂ : ∀ x → _≃_.to r₁ (remainder l₁ x) ≡ remainder l₂ x)
+  (g : ∀ x → get l₁ x ≡ get l₂ x) →
+  _↔_.from (equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} bl univ)
+    (r₁ , r₂ , g) ≡
+  _↔_.from (equality-characterisation₁ bl univ)
+    (r₁ , λ a → cong₂ _,_ (r₂ a) (g a))
+from-equality-characterisation₂ bl univ =
+  proj₂ (equality-characterisation₂′ bl bl univ)
 
 -- An equality characterisation lemma.
 
@@ -859,7 +903,7 @@ lenses-equal-if-setters-equal′
   {A = A} {B = B} univ l₁ l₂
   f ∃≡f f-remainder≡remainder setters-equal =
 
-  _↔_.from (equality-characterisation₂ univ)
+  _↔_.from (equality-characterisation₂ ⊠ univ)
     ( R≃R
     , f-remainder≡remainder
     , ext⁻¹ (getters-equal-if-setters-equal l₁ l₂ setters-equal)
@@ -1052,7 +1096,7 @@ lenses-equal-if-setters-equal-and-remainder-set
   Univalence a →
   (A≃B : A ≃ B) → ≃→lens A≃B ≡ ≃→lens′ A≃B
 ≃→lens≡≃→lens′ {B = B} univ A≃B =
-  _↔_.from (equality-characterisation₂ univ)
+  _↔_.from (equality-characterisation₂ ⊠ univ)
     ( (∥ ↑ _ B ∥  ↔⟨ ∥∥-cong Bij.↑↔ ⟩□
        ∥ B ∥      □)
     , (λ _ → refl _)
@@ -2169,7 +2213,7 @@ lenses-with-inhabited-codomains-equal-if-setters-equal :
   l₁ ≡ l₂
 lenses-with-inhabited-codomains-equal-if-setters-equal
   {B = B} univ l₁ l₂ b setters-equal =
-  _↔_.from (equality-characterisation₂ univ)
+  _↔_.from (equality-characterisation₂ ⊠ univ)
     ( R≃R
     , (λ a →
          remainder l₂ (set l₁ a b)  ≡⟨ cong (λ f → remainder l₂ (f a b)) setters-equal ⟩
@@ -2615,7 +2659,7 @@ open B public
     Has-quasi-inverse b (id b)                                      ↔⟨ BM.Has-quasi-inverse≃id≡id-domain b univ
                                                                          (id b , left-identity b _ univ _ , right-identity b _ univ _) ⟩
 
-    id b ≡ id b                                                     ↔⟨ equality-characterisation₂ univ ⟩
+    id b ≡ id b                                                     ↔⟨ equality-characterisation₂ ⊠ univ ⟩
 
     (∃ λ (eq : R (id b) ≃ R (id b)) →
        (∀ z → _≃_.to eq (remainder (id b) z) ≡ remainder (id b) z)
@@ -2707,7 +2751,7 @@ has-right-inverse→remainder-propositional
   to∘from : ∀ b A≊B → to b (from b A≊B) ≡ A≊B
   to∘from b A≊B =
     _≃_.from (equality-characterisation-≊ b univ _ _) $
-    _↔_.from (equality-characterisation₂ univ)
+    _↔_.from (equality-characterisation₂ b univ)
       ( ∥B∥≃R  b A≊B
       , lemma₁ b A≊B
       , lemma₂ b A≊B

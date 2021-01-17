@@ -402,7 +402,7 @@ equality-characterisation₁ {l₁ = l₁} {l₂ = l₂} univ =
 equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} univ =
   l₁ ≡ l₂                                                 ↔⟨ inverse $ Eq.≃-≡ Lens≃Higher-lens ⟩
 
-  high l₁ ≡ high l₂                                       ↝⟨ H.equality-characterisation₂ univ ⟩□
+  high l₁ ≡ high l₂                                       ↝⟨ H.equality-characterisation₂ ⊠ univ ⟩□
 
   (∃ λ (eq : R l₁ ≃ R l₂) →
      (∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x)
