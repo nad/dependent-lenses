@@ -46,6 +46,22 @@ Coherently-constant :
 Coherently-constant {p = p} {A = A} P =
   ∃ λ (Q : ∥ A ∥ → Type p) → ∀ x → P x ≃ Q ∣ x ∣
 
+-- A preservation lemma for Coherently-constant.
+--
+-- Note that P and Q must target the same universe.
+
+Coherently-constant-map :
+  {P : A → Type p} {Q : B → Type p}
+  (f : B → A) →
+  (∀ x → P (f x) ≃ Q x) →
+  Coherently-constant P → Coherently-constant Q
+Coherently-constant-map {P = P} {Q = Q} f P≃Q (R , P≃R) =
+    R ∘ T.∥∥-map f
+  , λ x →
+      Q x        ↝⟨ inverse $ P≃Q x ⟩
+      P (f x)    ↝⟨ P≃R (f x) ⟩□
+      R ∣ f x ∣  □
+
 -- Coherently-constant is, in a certain sense, closed under Σ.
 --
 -- This lemma is due to Paolo Capriotti.
