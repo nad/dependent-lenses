@@ -1079,6 +1079,56 @@ equality-characterisation₃ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} univ =
   where
   open Lens
 
+-- An equality characterisation lemma for lenses for which the view
+-- type is inhabited.
+
+equality-characterisation₄ :
+  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
+  let open Lens in
+  Block "equality-characterisation" →
+  Univalence (a ⊔ b) →
+  (b : B) →
+  (l₁ ≡ l₂)
+    ≃
+  (∃ λ (eq : get l₁ ⁻¹ b ≃ get l₂ ⁻¹ b) →
+     (∀ a → _≃_.to eq (set l₁ a b , get-set l₁ a b) ≡
+            (set l₂ a b , get-set l₂ a b))
+       ×
+     (∀ a → get l₁ a ≡ get l₂ a))
+equality-characterisation₄ {l₁ = l₁} {l₂ = l₂} bl univ b =
+  l₁ ≡ l₂                                                          ↔⟨ equality-characterisation₂ bl univ ⟩
+
+  (∃ λ (eq : R l₁ ≃ R l₂) →
+     (∀ a → _≃_.to eq (remainder l₁ a) ≡ remainder l₂ a)
+       ×
+     (∀ a → get l₁ a ≡ get l₂ a))                                  ↝⟨ inverse $
+                                                                      Σ-cong
+                                                                        (inverse $
+                                                                         Eq.≃-preserves ext (remainder≃get⁻¹ l₁ b) (remainder≃get⁻¹ l₂ b))
+                                                                        (λ _ → F.id) ⟩
+  (∃ λ (eq : get l₁ ⁻¹ b ≃ get l₂ ⁻¹ b) →
+     (∀ a → remainder l₂
+              (proj₁ (_≃_.to eq (set l₁ a b , get-set l₁ a b))) ≡
+            remainder l₂ a)
+       ×
+     (∀ a → get l₁ a ≡ get l₂ a))                                  ↝⟨ (∃-cong λ _ → ×-cong₁ λ _ → ∀-cong ext λ a →
+                                                                       ≡⇒≃ $ cong (remainder l₂ _ ≡_) $ sym $
+                                                                       remainder-set l₂ _ _) ⟩
+  (∃ λ (eq : get l₁ ⁻¹ b ≃ get l₂ ⁻¹ b) →
+     (∀ a → remainder l₂
+              (proj₁ (_≃_.to eq (set l₁ a b , get-set l₁ a b))) ≡
+            remainder l₂ (set l₂ a b))
+       ×
+     (∀ a → get l₁ a ≡ get l₂ a))                                  ↝⟨ (∃-cong λ _ → ×-cong₁ λ _ → ∀-cong ext λ a →
+                                                                       Eq.≃-≡ (inverse $ remainder≃get⁻¹ l₂ b)) ⟩□
+  (∃ λ (eq : get l₁ ⁻¹ b ≃ get l₂ ⁻¹ b) →
+     (∀ a → _≃_.to eq (set l₁ a b , get-set l₁ a b) ≡
+            (set l₂ a b , get-set l₂ a b))
+       ×
+     (∀ a → get l₁ a ≡ get l₂ a))                                  □
+  where
+  open Lens
+
 ------------------------------------------------------------------------
 -- More lens equalities
 
