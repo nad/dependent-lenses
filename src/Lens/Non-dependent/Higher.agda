@@ -293,6 +293,236 @@ isomorphism-to-lens {A = A} {B = B} {R = R} iso = record
   }
 
 ------------------------------------------------------------------------
+-- Some results related to the remainder type
+
+-- The remainder type of a lens l : Lens A B is, for every b : B,
+-- equivalent to the preimage of the getter with respect to b.
+--
+-- This result was pointed out to me by Andrea Vezzosi.
+
+remainder≃get⁻¹ :
+  (l : Lens A B) (b : B) → Lens.R l ≃ Lens.get l ⁻¹ b
+remainder≃get⁻¹ l b = Eq.↔→≃
+  (λ r → _≃_.from equiv (r , b)
+       , (get (_≃_.from equiv (r , b))                   ≡⟨⟩
+          proj₂ (_≃_.to equiv (_≃_.from equiv (r , b)))  ≡⟨ cong proj₂ $ _≃_.right-inverse-of equiv _ ⟩∎
+          b                                              ∎))
+  (λ (a , _) → remainder a)
+  (λ (a , get-a≡b) →
+     let lemma =
+           cong get
+             (trans (cong (set a) (sym get-a≡b))
+                (_≃_.left-inverse-of equiv _))                           ≡⟨ cong-trans _ _ (_≃_.left-inverse-of equiv _) ⟩
+
+           trans (cong get (cong (set a) (sym get-a≡b)))
+             (cong get (_≃_.left-inverse-of equiv _))                    ≡⟨ cong₂ trans
+                                                                              (cong-∘ _ _ (sym get-a≡b))
+                                                                              (sym $ cong-∘ _ _ (_≃_.left-inverse-of equiv _)) ⟩
+           trans (cong (get ⊚ set a) (sym get-a≡b))
+             (cong proj₂ (cong (_≃_.to equiv)
+                            (_≃_.left-inverse-of equiv _)))              ≡⟨ cong₂ (λ p q → trans p (cong proj₂ q))
+                                                                              (cong-sym _ get-a≡b)
+                                                                              (_≃_.left-right-lemma equiv _) ⟩
+           trans (sym (cong (get ⊚ set a) get-a≡b))
+             (cong proj₂ (_≃_.right-inverse-of equiv _))                 ≡⟨ sym $ sym-sym _ ⟩
+
+           sym (sym (trans (sym (cong (get ⊚ set a) get-a≡b))
+                       (cong proj₂ (_≃_.right-inverse-of equiv _))))     ≡⟨ cong sym $
+                                                                            sym-trans _ (cong proj₂ (_≃_.right-inverse-of equiv _)) ⟩
+           sym (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
+                  (sym (sym (cong (get ⊚ set a) get-a≡b))))              ≡⟨ cong (λ eq → sym (trans (sym (cong proj₂
+                                                                                                            (_≃_.right-inverse-of equiv _)))
+                                                                                                eq)) $
+                                                                            sym-sym (cong (get ⊚ set a) get-a≡b) ⟩∎
+           sym (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
+                  (cong (get ⊚ set a) get-a≡b))                          ∎
+     in
+     Σ-≡,≡→≡
+       (_≃_.from equiv (remainder a , b)  ≡⟨⟩
+        set a b                           ≡⟨ cong (set a) (sym get-a≡b) ⟩
+        set a (get a)                     ≡⟨ set-get a ⟩∎
+        a                                 ∎)
+       (subst (λ a → get a ≡ b)
+          (trans (cong (set a) (sym get-a≡b)) (set-get a))
+          (cong proj₂ $ _≃_.right-inverse-of equiv (remainder a , b))    ≡⟨⟩
+
+        subst (λ a → get a ≡ b)
+          (trans (cong (set a) (sym get-a≡b))
+             (_≃_.left-inverse-of equiv _))
+          (cong proj₂ $ _≃_.right-inverse-of equiv _)                    ≡⟨ subst-∘ _ _ (trans _ (_≃_.left-inverse-of equiv _)) ⟩
+
+        subst (_≡ b)
+          (cong get
+             (trans (cong (set a) (sym get-a≡b))
+                (_≃_.left-inverse-of equiv _)))
+          (cong proj₂ $ _≃_.right-inverse-of equiv _)                    ≡⟨ cong (λ eq → subst (_≡ b) eq
+                                                                                           (cong proj₂ $ _≃_.right-inverse-of equiv _))
+                                                                            lemma ⟩
+        subst (_≡ b)
+          (sym (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
+                  (cong (get ⊚ set a) get-a≡b)))
+          (cong proj₂ $ _≃_.right-inverse-of equiv _)                    ≡⟨ subst-trans (trans _ (cong (get ⊚ set a) get-a≡b)) ⟩
+
+        trans
+          (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
+             (cong (get ⊚ set a) get-a≡b))
+          (cong proj₂ $ _≃_.right-inverse-of equiv _)                    ≡⟨ elim¹
+                                                                              (λ eq → trans
+                                                                                        (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
+                                                                                           (cong (get ⊚ set a) eq))
+                                                                                        (cong proj₂ $ _≃_.right-inverse-of equiv _) ≡
+                                                                                      eq)
+                                                                              (
+            trans
+              (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
+                 (cong (get ⊚ set a) (refl _)))
+              (cong proj₂ $ _≃_.right-inverse-of equiv _)                      ≡⟨ cong (λ eq → trans (trans (sym (cong proj₂
+                                                                                                                    (_≃_.right-inverse-of equiv _)))
+                                                                                                        eq)
+                                                                                                 (cong proj₂ $ _≃_.right-inverse-of equiv _)) $
+                                                                                  cong-refl _ ⟩
+            trans
+              (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
+                 (refl _))
+              (cong proj₂ $ _≃_.right-inverse-of equiv _)                      ≡⟨ cong (flip trans _) $ trans-reflʳ _ ⟩
+
+            trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
+              (cong proj₂ $ _≃_.right-inverse-of equiv _)                      ≡⟨ trans-symˡ (cong proj₂ (_≃_.right-inverse-of equiv _)) ⟩∎
+
+            refl _                                                             ∎)
+                                                                              get-a≡b ⟩∎
+        get-a≡b                                                          ∎))
+  (λ r →
+     remainder (_≃_.from equiv (r , b))             ≡⟨⟩
+     proj₁ (_≃_.to equiv (_≃_.from equiv (r , b)))  ≡⟨ cong proj₁ $ _≃_.right-inverse-of equiv _ ⟩∎
+     r                                              ∎)
+  where
+  open Lens l
+
+-- A corollary: Lens.get l ⁻¹_ is constant (up to equivalence).
+--
+-- Paolo Capriotti discusses this kind of property
+-- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
+
+get⁻¹-constant :
+  (l : Lens A B) (b₁ b₂ : B) → Lens.get l ⁻¹ b₁ ≃ Lens.get l ⁻¹ b₂
+get⁻¹-constant l b₁ b₂ =
+  Lens.get l ⁻¹ b₁  ↝⟨ inverse $ remainder≃get⁻¹ l b₁ ⟩
+  Lens.R l          ↝⟨ remainder≃get⁻¹ l b₂ ⟩□
+  Lens.get l ⁻¹ b₂  □
+
+-- The two directions of get⁻¹-constant.
+
+get⁻¹-const :
+  (l : Lens A B) (b₁ b₂ : B) →
+  Lens.get l ⁻¹ b₁ → Lens.get l ⁻¹ b₂
+get⁻¹-const l b₁ b₂ = _≃_.to (get⁻¹-constant l b₁ b₂)
+
+get⁻¹-const⁻¹ :
+  (l : Lens A B) (b₁ b₂ : B) →
+  Lens.get l ⁻¹ b₂ → Lens.get l ⁻¹ b₁
+get⁻¹-const⁻¹ l b₁ b₂ = _≃_.from (get⁻¹-constant l b₁ b₂)
+
+-- The set function can be expressed using get⁻¹-const and get.
+--
+-- Paolo Capriotti defines set in a similar way
+-- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
+
+set-in-terms-of-get⁻¹-const :
+  (l : Lens A B) →
+  Lens.set l ≡
+  λ a b → proj₁ (get⁻¹-const l (Lens.get l a) b (a , refl _))
+set-in-terms-of-get⁻¹-const l = refl _
+
+-- The remainder function can be expressed using remainder≃get⁻¹ and
+-- get.
+
+remainder-in-terms-of-remainder≃get⁻¹ :
+  (l : Lens A B) →
+  Lens.remainder l ≡
+  λ a → _≃_.from (remainder≃get⁻¹ l (Lens.get l a)) (a , refl _)
+remainder-in-terms-of-remainder≃get⁻¹ l = refl _
+
+-- The functions get⁻¹-const and get⁻¹-const⁻¹ satisfy some coherence
+-- properties.
+--
+-- The first and third properties are discussed by Paolo Capriotti
+-- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
+
+get⁻¹-const-∘ :
+  (l : Lens A B) (b₁ b₂ b₃ : B) (p : Lens.get l ⁻¹ b₁) →
+  get⁻¹-const l b₂ b₃ (get⁻¹-const l b₁ b₂ p) ≡
+  get⁻¹-const l b₁ b₃ p
+get⁻¹-const-∘ l _ b₂ b₃ p =
+  from (r₂ , b₃) , cong proj₂ (right-inverse-of (r₂ , b₃))  ≡⟨ cong (λ r → from (r , b₃) , cong proj₂ (right-inverse-of (r , b₃))) $
+                                                               cong proj₁ $ right-inverse-of _ ⟩∎
+  from (r₁ , b₃) , cong proj₂ (right-inverse-of (r₁ , b₃))  ∎
+  where
+  open Lens l
+  open _≃_ equiv
+
+  r₁ r₂ : R
+  r₁ = proj₁ (to (proj₁ p))
+  r₂ = proj₁ (to (from (r₁ , b₂)))
+
+get⁻¹-const-inverse :
+  (l : Lens A B) (b₁ b₂ : B) (p : Lens.get l ⁻¹ b₁) →
+  get⁻¹-const l b₁ b₂ p ≡ get⁻¹-const⁻¹ l b₂ b₁ p
+get⁻¹-const-inverse _ _ _ _ = refl _
+
+get⁻¹-const-id :
+  (l : Lens A B) (b : B) (p : Lens.get l ⁻¹ b) →
+  get⁻¹-const l b b p ≡ p
+get⁻¹-const-id l b p =
+  get⁻¹-const l b b p                        ≡⟨ sym $ get⁻¹-const-∘ l b _ _ p ⟩
+  get⁻¹-const l b b (get⁻¹-const l b b p)    ≡⟨⟩
+  get⁻¹-const⁻¹ l b b (get⁻¹-const l b b p)  ≡⟨ _≃_.left-inverse-of (get⁻¹-constant l b b) _ ⟩∎
+  p                                          ∎
+
+-- Another kind of coherence property does not hold for get⁻¹-const.
+--
+-- This kind of property came up in a discussion with Andrea Vezzosi.
+
+get⁻¹-const-not-coherent :
+  ¬ ({A B : Type} (l : Lens A B) (b₁ b₂ : B)
+     (f : ∀ b → Lens.get l ⁻¹ b) →
+     get⁻¹-const l b₁ b₂ (f b₁) ≡ f b₂)
+get⁻¹-const-not-coherent =
+  ({A B : Type} (l : Lens A B) (b₁ b₂ : B) (f : ∀ b → Lens.get l ⁻¹ b) →
+   get⁻¹-const l b₁ b₂ (f b₁) ≡ f b₂)                                     ↝⟨ (λ hyp → hyp l true false f) ⟩
+
+  get⁻¹-const l true false (f true) ≡ f false                             ↝⟨ cong (proj₁ ⊚ proj₁) ⟩
+
+  true ≡ false                                                            ↝⟨ Bool.true≢false ⟩□
+
+  ⊥                                                                       □
+  where
+  l : Lens (Bool × Bool) Bool
+  l = record
+    { R         = Bool
+    ; equiv     = F.id
+    ; inhabited = ∣_∣
+    }
+
+  f : ∀ b → Lens.get l ⁻¹ b
+  f b = (b , b) , refl _
+
+-- If B is inhabited whenever it is merely inhabited, then the
+-- remainder type of a lens of type Lens A B can be expressed in terms
+-- of preimages of the lens's getter.
+
+remainder≃∃get⁻¹ :
+  (l : Lens A B) (∥B∥→B : ∥ B ∥ → B) →
+  Lens.R l ≃ ∃ λ (b : ∥ B ∥) → Lens.get l ⁻¹ (∥B∥→B b)
+remainder≃∃get⁻¹ {B = B} l ∥B∥→B =
+  R                                     ↔⟨ (inverse $ drop-⊤-left-× λ r → _⇔_.to contractible⇔↔⊤ $
+                                            propositional⇒inhabited⇒contractible truncation-is-proposition (inhabited r)) ⟩
+  ∥ B ∥ × R                             ↝⟨ (∃-cong λ _ → remainder≃get⁻¹ l _) ⟩□
+  (∃ λ (b : ∥ B ∥) → get ⁻¹ (∥B∥→B b))  □
+  where
+  open Lens l
+
+------------------------------------------------------------------------
 -- Equality characterisations for lenses
 
 -- An equality characterisation lemma.
@@ -884,6 +1114,42 @@ getters-equal-if-setters-equal l₁ l₂ setters-equal = ⟨ext⟩ λ a →
   get l₂ a                      ∎
   where
   open Lens
+
+-- Two lenses of type Lens A B are equal if B is inhabited and the
+-- lenses' setters are equal (assuming univalence).
+--
+-- Some results below are more general than this one, but this proof,
+-- which uses remainder≃get⁻¹, is rather easy.
+
+lenses-with-inhabited-codomains-equal-if-setters-equal :
+  {A : Type a} {B : Type b} →
+  Univalence (a ⊔ b) →
+  (l₁ l₂ : Lens A B) →
+  B →
+  Lens.set l₁ ≡ Lens.set l₂ →
+  l₁ ≡ l₂
+lenses-with-inhabited-codomains-equal-if-setters-equal
+  {B = B} univ l₁ l₂ b setters-equal =
+  _↔_.from (equality-characterisation₂ ⊠ univ)
+    ( R≃R
+    , (λ a →
+         remainder l₂ (set l₁ a b)  ≡⟨ cong (λ f → remainder l₂ (f a b)) setters-equal ⟩
+         remainder l₂ (set l₂ a b)  ≡⟨ remainder-set l₂ _ _ ⟩∎
+         remainder l₂ a             ∎)
+    , getters-equal
+    )
+  where
+  open Lens
+
+  getters-equal =
+    ext⁻¹ $ getters-equal-if-setters-equal l₁ l₂ setters-equal
+
+  R≃R : R l₁ ≃ R l₂
+  R≃R =
+    R l₁         ↝⟨ remainder≃get⁻¹ l₁ b ⟩
+    get l₁ ⁻¹ b  ↔⟨ Preimage.respects-extensional-equality getters-equal ⟩
+    get l₂ ⁻¹ b  ↝⟨ inverse $ remainder≃get⁻¹ l₂ b ⟩□
+    R l₂         □
 
 -- A generalisation of lenses-equal-if-setters-equal (which is defined
 -- below).
@@ -1967,272 +2233,6 @@ no-first-projection-lens :
 no-first-projection-lens =
   Non-dependent.no-first-projection-lens
     Lens contractible-to-contractible
-
-------------------------------------------------------------------------
--- Some results related to the remainder type
-
--- The remainder type of a lens l : Lens A B is, for every b : B,
--- equivalent to the preimage of the getter with respect to b.
---
--- This result was pointed out to me by Andrea Vezzosi.
-
-remainder≃get⁻¹ :
-  (l : Lens A B) (b : B) → Lens.R l ≃ Lens.get l ⁻¹ b
-remainder≃get⁻¹ l b = Eq.↔→≃
-  (λ r → _≃_.from equiv (r , b)
-       , (get (_≃_.from equiv (r , b))                   ≡⟨⟩
-          proj₂ (_≃_.to equiv (_≃_.from equiv (r , b)))  ≡⟨ cong proj₂ $ _≃_.right-inverse-of equiv _ ⟩∎
-          b                                              ∎))
-  (λ (a , _) → remainder a)
-  (λ (a , get-a≡b) →
-     let lemma =
-           cong get
-             (trans (cong (set a) (sym get-a≡b))
-                (_≃_.left-inverse-of equiv _))                           ≡⟨ cong-trans _ _ (_≃_.left-inverse-of equiv _) ⟩
-
-           trans (cong get (cong (set a) (sym get-a≡b)))
-             (cong get (_≃_.left-inverse-of equiv _))                    ≡⟨ cong₂ trans
-                                                                              (cong-∘ _ _ (sym get-a≡b))
-                                                                              (sym $ cong-∘ _ _ (_≃_.left-inverse-of equiv _)) ⟩
-           trans (cong (get ⊚ set a) (sym get-a≡b))
-             (cong proj₂ (cong (_≃_.to equiv)
-                            (_≃_.left-inverse-of equiv _)))              ≡⟨ cong₂ (λ p q → trans p (cong proj₂ q))
-                                                                              (cong-sym _ get-a≡b)
-                                                                              (_≃_.left-right-lemma equiv _) ⟩
-           trans (sym (cong (get ⊚ set a) get-a≡b))
-             (cong proj₂ (_≃_.right-inverse-of equiv _))                 ≡⟨ sym $ sym-sym _ ⟩
-
-           sym (sym (trans (sym (cong (get ⊚ set a) get-a≡b))
-                       (cong proj₂ (_≃_.right-inverse-of equiv _))))     ≡⟨ cong sym $
-                                                                            sym-trans _ (cong proj₂ (_≃_.right-inverse-of equiv _)) ⟩
-           sym (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
-                  (sym (sym (cong (get ⊚ set a) get-a≡b))))              ≡⟨ cong (λ eq → sym (trans (sym (cong proj₂
-                                                                                                            (_≃_.right-inverse-of equiv _)))
-                                                                                                eq)) $
-                                                                            sym-sym (cong (get ⊚ set a) get-a≡b) ⟩∎
-           sym (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
-                  (cong (get ⊚ set a) get-a≡b))                          ∎
-     in
-     Σ-≡,≡→≡
-       (_≃_.from equiv (remainder a , b)  ≡⟨⟩
-        set a b                           ≡⟨ cong (set a) (sym get-a≡b) ⟩
-        set a (get a)                     ≡⟨ set-get a ⟩∎
-        a                                 ∎)
-       (subst (λ a → get a ≡ b)
-          (trans (cong (set a) (sym get-a≡b)) (set-get a))
-          (cong proj₂ $ _≃_.right-inverse-of equiv (remainder a , b))    ≡⟨⟩
-
-        subst (λ a → get a ≡ b)
-          (trans (cong (set a) (sym get-a≡b))
-             (_≃_.left-inverse-of equiv _))
-          (cong proj₂ $ _≃_.right-inverse-of equiv _)                    ≡⟨ subst-∘ _ _ (trans _ (_≃_.left-inverse-of equiv _)) ⟩
-
-        subst (_≡ b)
-          (cong get
-             (trans (cong (set a) (sym get-a≡b))
-                (_≃_.left-inverse-of equiv _)))
-          (cong proj₂ $ _≃_.right-inverse-of equiv _)                    ≡⟨ cong (λ eq → subst (_≡ b) eq
-                                                                                           (cong proj₂ $ _≃_.right-inverse-of equiv _))
-                                                                            lemma ⟩
-        subst (_≡ b)
-          (sym (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
-                  (cong (get ⊚ set a) get-a≡b)))
-          (cong proj₂ $ _≃_.right-inverse-of equiv _)                    ≡⟨ subst-trans (trans _ (cong (get ⊚ set a) get-a≡b)) ⟩
-
-        trans
-          (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
-             (cong (get ⊚ set a) get-a≡b))
-          (cong proj₂ $ _≃_.right-inverse-of equiv _)                    ≡⟨ elim¹
-                                                                              (λ eq → trans
-                                                                                        (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
-                                                                                           (cong (get ⊚ set a) eq))
-                                                                                        (cong proj₂ $ _≃_.right-inverse-of equiv _) ≡
-                                                                                      eq)
-                                                                              (
-            trans
-              (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
-                 (cong (get ⊚ set a) (refl _)))
-              (cong proj₂ $ _≃_.right-inverse-of equiv _)                      ≡⟨ cong (λ eq → trans (trans (sym (cong proj₂
-                                                                                                                    (_≃_.right-inverse-of equiv _)))
-                                                                                                        eq)
-                                                                                                 (cong proj₂ $ _≃_.right-inverse-of equiv _)) $
-                                                                                  cong-refl _ ⟩
-            trans
-              (trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
-                 (refl _))
-              (cong proj₂ $ _≃_.right-inverse-of equiv _)                      ≡⟨ cong (flip trans _) $ trans-reflʳ _ ⟩
-
-            trans (sym (cong proj₂ (_≃_.right-inverse-of equiv _)))
-              (cong proj₂ $ _≃_.right-inverse-of equiv _)                      ≡⟨ trans-symˡ (cong proj₂ (_≃_.right-inverse-of equiv _)) ⟩∎
-
-            refl _                                                             ∎)
-                                                                              get-a≡b ⟩∎
-        get-a≡b                                                          ∎))
-  (λ r →
-     remainder (_≃_.from equiv (r , b))             ≡⟨⟩
-     proj₁ (_≃_.to equiv (_≃_.from equiv (r , b)))  ≡⟨ cong proj₁ $ _≃_.right-inverse-of equiv _ ⟩∎
-     r                                              ∎)
-  where
-  open Lens l
-
--- A corollary: Lens.get l ⁻¹_ is constant (up to equivalence).
---
--- Paolo Capriotti discusses this kind of property
--- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
-
-get⁻¹-constant :
-  (l : Lens A B) (b₁ b₂ : B) → Lens.get l ⁻¹ b₁ ≃ Lens.get l ⁻¹ b₂
-get⁻¹-constant l b₁ b₂ =
-  Lens.get l ⁻¹ b₁  ↝⟨ inverse $ remainder≃get⁻¹ l b₁ ⟩
-  Lens.R l          ↝⟨ remainder≃get⁻¹ l b₂ ⟩□
-  Lens.get l ⁻¹ b₂  □
-
--- The two directions of get⁻¹-constant.
-
-get⁻¹-const :
-  (l : Lens A B) (b₁ b₂ : B) →
-  Lens.get l ⁻¹ b₁ → Lens.get l ⁻¹ b₂
-get⁻¹-const l b₁ b₂ = _≃_.to (get⁻¹-constant l b₁ b₂)
-
-get⁻¹-const⁻¹ :
-  (l : Lens A B) (b₁ b₂ : B) →
-  Lens.get l ⁻¹ b₂ → Lens.get l ⁻¹ b₁
-get⁻¹-const⁻¹ l b₁ b₂ = _≃_.from (get⁻¹-constant l b₁ b₂)
-
--- The set function can be expressed using get⁻¹-const and get.
---
--- Paolo Capriotti defines set in a similar way
--- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
-
-set-in-terms-of-get⁻¹-const :
-  (l : Lens A B) →
-  Lens.set l ≡
-  λ a b → proj₁ (get⁻¹-const l (Lens.get l a) b (a , refl _))
-set-in-terms-of-get⁻¹-const l = refl _
-
--- The remainder function can be expressed using remainder≃get⁻¹ and
--- get.
-
-remainder-in-terms-of-remainder≃get⁻¹ :
-  (l : Lens A B) →
-  Lens.remainder l ≡
-  λ a → _≃_.from (remainder≃get⁻¹ l (Lens.get l a)) (a , refl _)
-remainder-in-terms-of-remainder≃get⁻¹ l = refl _
-
--- The functions get⁻¹-const and get⁻¹-const⁻¹ satisfy some coherence
--- properties.
---
--- The first and third properties are discussed by Paolo Capriotti
--- (http://homotopytypetheory.org/2014/04/29/higher-lenses/).
-
-get⁻¹-const-∘ :
-  (l : Lens A B) (b₁ b₂ b₃ : B) (p : Lens.get l ⁻¹ b₁) →
-  get⁻¹-const l b₂ b₃ (get⁻¹-const l b₁ b₂ p) ≡
-  get⁻¹-const l b₁ b₃ p
-get⁻¹-const-∘ l _ b₂ b₃ p =
-  from (r₂ , b₃) , cong proj₂ (right-inverse-of (r₂ , b₃))  ≡⟨ cong (λ r → from (r , b₃) , cong proj₂ (right-inverse-of (r , b₃))) $
-                                                               cong proj₁ $ right-inverse-of _ ⟩∎
-  from (r₁ , b₃) , cong proj₂ (right-inverse-of (r₁ , b₃))  ∎
-  where
-  open Lens l
-  open _≃_ equiv
-
-  r₁ r₂ : R
-  r₁ = proj₁ (to (proj₁ p))
-  r₂ = proj₁ (to (from (r₁ , b₂)))
-
-get⁻¹-const-inverse :
-  (l : Lens A B) (b₁ b₂ : B) (p : Lens.get l ⁻¹ b₁) →
-  get⁻¹-const l b₁ b₂ p ≡ get⁻¹-const⁻¹ l b₂ b₁ p
-get⁻¹-const-inverse _ _ _ _ = refl _
-
-get⁻¹-const-id :
-  (l : Lens A B) (b : B) (p : Lens.get l ⁻¹ b) →
-  get⁻¹-const l b b p ≡ p
-get⁻¹-const-id l b p =
-  get⁻¹-const l b b p                        ≡⟨ sym $ get⁻¹-const-∘ l b _ _ p ⟩
-  get⁻¹-const l b b (get⁻¹-const l b b p)    ≡⟨⟩
-  get⁻¹-const⁻¹ l b b (get⁻¹-const l b b p)  ≡⟨ _≃_.left-inverse-of (get⁻¹-constant l b b) _ ⟩∎
-  p                                          ∎
-
--- Another kind of coherence property does not hold for get⁻¹-const.
---
--- This kind of property came up in a discussion with Andrea Vezzosi.
-
-get⁻¹-const-not-coherent :
-  ¬ ({A B : Type} (l : Lens A B) (b₁ b₂ : B)
-     (f : ∀ b → Lens.get l ⁻¹ b) →
-     get⁻¹-const l b₁ b₂ (f b₁) ≡ f b₂)
-get⁻¹-const-not-coherent =
-  ({A B : Type} (l : Lens A B) (b₁ b₂ : B) (f : ∀ b → Lens.get l ⁻¹ b) →
-   get⁻¹-const l b₁ b₂ (f b₁) ≡ f b₂)                                     ↝⟨ (λ hyp → hyp l true false f) ⟩
-
-  get⁻¹-const l true false (f true) ≡ f false                             ↝⟨ cong (proj₁ ⊚ proj₁) ⟩
-
-  true ≡ false                                                            ↝⟨ Bool.true≢false ⟩□
-
-  ⊥                                                                       □
-  where
-  l : Lens (Bool × Bool) Bool
-  l = record
-    { R         = Bool
-    ; equiv     = F.id
-    ; inhabited = ∣_∣
-    }
-
-  f : ∀ b → Lens.get l ⁻¹ b
-  f b = (b , b) , refl _
-
--- If B is inhabited whenever it is merely inhabited, then the
--- remainder type of a lens of type Lens A B can be expressed in terms
--- of preimages of the lens's getter.
-
-remainder≃∃get⁻¹ :
-  (l : Lens A B) (∥B∥→B : ∥ B ∥ → B) →
-  Lens.R l ≃ ∃ λ (b : ∥ B ∥) → Lens.get l ⁻¹ (∥B∥→B b)
-remainder≃∃get⁻¹ {B = B} l ∥B∥→B =
-  R                                     ↔⟨ (inverse $ drop-⊤-left-× λ r → _⇔_.to contractible⇔↔⊤ $
-                                            propositional⇒inhabited⇒contractible truncation-is-proposition (inhabited r)) ⟩
-  ∥ B ∥ × R                             ↝⟨ (∃-cong λ _ → remainder≃get⁻¹ l _) ⟩□
-  (∃ λ (b : ∥ B ∥) → get ⁻¹ (∥B∥→B b))  □
-  where
-  open Lens l
-
--- Two lenses of type Lens A B are equal if B is inhabited and the
--- lenses' setters are equal (assuming univalence).
---
--- Some results above are more general than this one, but this proof,
--- which uses remainder≃get⁻¹, is rather easy.
-
-lenses-with-inhabited-codomains-equal-if-setters-equal :
-  {A : Type a} {B : Type b} →
-  Univalence (a ⊔ b) →
-  (l₁ l₂ : Lens A B) →
-  B →
-  Lens.set l₁ ≡ Lens.set l₂ →
-  l₁ ≡ l₂
-lenses-with-inhabited-codomains-equal-if-setters-equal
-  {B = B} univ l₁ l₂ b setters-equal =
-  _↔_.from (equality-characterisation₂ ⊠ univ)
-    ( R≃R
-    , (λ a →
-         remainder l₂ (set l₁ a b)  ≡⟨ cong (λ f → remainder l₂ (f a b)) setters-equal ⟩
-         remainder l₂ (set l₂ a b)  ≡⟨ remainder-set l₂ _ _ ⟩∎
-         remainder l₂ a             ∎)
-    , getters-equal
-    )
-  where
-  open Lens
-
-  getters-equal =
-    ext⁻¹ $ getters-equal-if-setters-equal l₁ l₂ setters-equal
-
-  R≃R : R l₁ ≃ R l₂
-  R≃R =
-    R l₁         ↝⟨ remainder≃get⁻¹ l₁ b ⟩
-    get l₁ ⁻¹ b  ↔⟨ Preimage.respects-extensional-equality getters-equal ⟩
-    get l₂ ⁻¹ b  ↝⟨ inverse $ remainder≃get⁻¹ l₂ b ⟩□
-    R l₂         □
 
 ------------------------------------------------------------------------
 -- Equal lenses can be "observably different"
