@@ -1467,6 +1467,68 @@ lenses-equal-if-setters-equal-and-remainder-set
   f : R l₁ → R l₂
   f r = f₂ r (inhabited l₁ r)
 
+-- If lenses from A × C to C (where the universe of A is at least as
+-- large as the universe of C) with equal setters are equal, then
+-- weakly constant functions from C to equivalences between A and B
+-- (where B lives in the same universe as A) are coherently constant.
+--
+-- This result is due to Andrea Vezzosi.
+
+lenses-equal-if-setters-equal→constant→coherently-constant :
+  ∀ ℓ {A B : Type (c ⊔ ℓ)} {C : Type c} →
+  ((l₁ l₂ : Lens (A × C) C) → Lens.set l₁ ≡ Lens.set l₂ → l₁ ≡ l₂) →
+  (A≃B : C → A ≃ B) →
+  Constant A≃B →
+  ∃ λ (A≃B′ : ∥ C ∥ → A ≃ B) → A≃B ≡ A≃B′ ⊚ ∣_∣
+lenses-equal-if-setters-equal→constant→coherently-constant
+  _ {A = A} {B = B} {C = C} lenses-equal-if-setters-equal A≃B c =
+  A≃B′ , A≃B≡
+  where
+  open Lens
+
+  module _ (∥c∥ : ∥ C ∥) where
+
+    l₁ l₂ : Lens (A × C) C
+    l₁ = record
+      { R         = A
+      ; equiv     = F.id
+      ; inhabited = λ _ → ∥c∥
+      }
+
+    l₂ = record
+      { R         = B
+      ; equiv     = A × C  ↔⟨ ×-comm ⟩
+                    C × A  ↝⟨ ∃-cong A≃B ⟩
+                    C × B  ↔⟨ ×-comm ⟩□
+                    B × C  □
+      ; inhabited = λ _ → ∥c∥
+      }
+
+    setters-equal : ∀ p c → set l₁ p c ≡ set l₂ p c
+    setters-equal (a , c₁) c₂ =
+      cong (_, c₂) $ sym $
+        (_≃_.from (A≃B c₂) (_≃_.to (A≃B c₁) a)  ≡⟨ cong (λ eq → _≃_.from (A≃B c₂) (_≃_.to eq a)) $ c c₁ c₂ ⟩
+         _≃_.from (A≃B c₂) (_≃_.to (A≃B c₂) a)  ≡⟨ _≃_.left-inverse-of (A≃B c₂) a ⟩∎
+         a                                      ∎)
+
+    l₁≡l₂ : l₁ ≡ l₂
+    l₁≡l₂ =
+      lenses-equal-if-setters-equal l₁ l₂
+        (⟨ext⟩ λ p → ⟨ext⟩ λ c → setters-equal p c)
+
+    l₁≡l₂′ = _≃_.to (equality-characterisation₀₂ ⊠) l₁≡l₂
+
+    A≃B′ : A ≃ B
+    A≃B′ = ≡⇒≃ $ proj₁ l₁≡l₂′
+
+  A≃B≡ : A≃B ≡ A≃B′ ⊚ ∣_∣
+  A≃B≡ = ⟨ext⟩ λ c → Eq.lift-equality ext $ ⟨ext⟩ λ a →
+    _≃_.to (A≃B c) a                                                  ≡⟨⟩
+    remainder (l₂ ∣ c ∣) (a , c)                                      ≡⟨ sym $ proj₁ (proj₂ (l₁≡l₂′ ∣ c ∣)) _ ⟩
+    subst P.id (proj₁ (l₁≡l₂′ ∣ c ∣)) (remainder (l₁ ∣ c ∣) (a , c))  ≡⟨ subst-id-in-terms-of-≡⇒↝ equivalence ⟩
+    ≡⇒→ (proj₁ (l₁≡l₂′ ∣ c ∣)) (remainder (l₁ ∣ c ∣) (a , c))         ≡⟨⟩
+    _≃_.to (A≃B′ ∣ c ∣) a                                             ∎
+
 -- The functions ≃→lens and ≃→lens′ are pointwise equal (when
 -- applicable, assuming univalence).
 
