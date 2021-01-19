@@ -791,6 +791,37 @@ cong-set-from-equality-characterisation₀
   where
   open Lens
 
+-- An equality characterisation lemma.
+
+equality-characterisation₀₁ :
+  let open Lens in
+  {l₁ l₂ : Lens A B} →
+  Block "equality-characterisation" →
+  (l₁ ≡ l₂)
+    ≃
+  ∃ λ (p : R l₁ ≡ R l₂) →
+    ∀ a → (subst P.id p (remainder l₁ a) , get l₁ a) ≡
+          _≃_.to (equiv l₂) a
+equality-characterisation₀₁ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} ⊠ =
+  l₁ ≡ l₂                                                       ↔⟨ equality-characterisation₀ ⊠ ⟩
+
+  (∃ λ (p : R l₁ ≡ R l₂) →
+     subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂)         ↝⟨ (∃-cong λ _ → inverse $ ≃-to-≡≃≡ ext ext) ⟩
+
+  (∃ λ (p : R l₁ ≡ R l₂) →
+     ∀ a → _≃_.to (subst (λ R → A ≃ (R × B)) p (equiv l₁)) a ≡
+           _≃_.to (equiv l₂) a)                                 ↝⟨ (∃-cong λ _ → ∀-cong ext λ _ →
+                                                                    ≡⇒≃ $ cong (_≡ _) $
+                                                                    trans (cong (_$ _) $ Eq.to-subst) $
+                                                                    trans (sym $ push-subst-application _ _) $
+                                                                    trans (push-subst-, _ _) $
+                                                                    cong (subst P.id _ _ ,_) $ subst-const _) ⟩□
+  (∃ λ (p : R l₁ ≡ R l₂) →
+     ∀ a → (subst P.id p (remainder l₁ a) , get l₁ a) ≡
+           _≃_.to (equiv l₂) a)                                 □
+  where
+  open Lens
+
 private
 
   -- An equality characterisation lemma with a "computation" rule.
@@ -970,6 +1001,38 @@ from-equality-characterisation₁ :
     )
 from-equality-characterisation₁ b univ _ _ =
   proj₂ (equality-characterisation₁′ b b univ) _ _
+
+-- An equality characterisation lemma.
+
+equality-characterisation₀₂ :
+  let open Lens in
+  {l₁ l₂ : Lens A B} →
+  Block "equality-characterisation" →
+  (l₁ ≡ l₂)
+    ≃
+  ∃ λ (p : R l₁ ≡ R l₂) →
+    (∀ a → subst P.id p (remainder l₁ a) ≡ remainder l₂ a) ×
+    (∀ a → get l₁ a ≡ get l₂ a)
+equality-characterisation₀₂ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} ⊠ =
+  l₁ ≡ l₂                                                      ↝⟨ equality-characterisation₀₁ ⊠ ⟩
+
+  (∃ λ (p : R l₁ ≡ R l₂) →
+     ∀ a → (subst P.id p (remainder l₁ a) , get l₁ a) ≡
+           _≃_.to (equiv l₂) a)                                ↔⟨⟩
+
+  (∃ λ (p : R l₁ ≡ R l₂) →
+     ∀ a → (subst P.id p (remainder l₁ a) , get l₁ a) ≡
+           (remainder l₂ a , get l₂ a))                        ↔⟨ (∃-cong λ _ → ∀-cong ext λ _ → inverse ≡×≡↔≡) ⟩
+
+  (∃ λ (p : R l₁ ≡ R l₂) →
+     ∀ a → subst P.id p (remainder l₁ a) ≡ remainder l₂ a ×
+           get l₁ a ≡ get l₂ a)                                ↔⟨ (∃-cong λ _ → ΠΣ-comm) ⟩□
+
+  (∃ λ (p : R l₁ ≡ R l₂) →
+     (∀ a → subst P.id p (remainder l₁ a) ≡ remainder l₂ a) ×
+     (∀ a → get l₁ a ≡ get l₂ a))                              □
+  where
+  open Lens
 
 private
 
