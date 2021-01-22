@@ -1909,13 +1909,16 @@ private
       Univalence (a ⊔ b) →
       ∀ bc l → from bc (Lens.traditional-lens l) ≡ l
     from∘to univ ⊠ l′ =
-      _↔_.from (equality-characterisation₃ univ)
+      _↔_.from (equality-characterisation₁ ⊠ univ)
         ( ((∃ λ (f : B → A) → ∥ set ⁻¹ f ∥) × ∥ B ∥  ↝⟨ (×-cong₁ lemma₃) ⟩
            (∥ B ∥ → R) × ∥ B ∥                       ↝⟨ lemma₂ ⟩□
            R                                         □)
         , λ p →
-            _≃_.from l (subst (λ _ → R) (refl _) (proj₁ p) , proj₂ p)  ≡⟨ cong (λ r → _≃_.from l (r , proj₂ p)) $ subst-refl _ _ ⟩∎
-            _≃_.from l p                                               ∎
+            ( proj₁ (_≃_.to l (_≃_.from l (_≃_.to l p)))
+            , proj₂ (_≃_.to l p)
+            )                                             ≡⟨ cong (_, proj₂ (_≃_.to l p)) $ cong proj₁ $
+                                                             _≃_.right-inverse-of l _ ⟩∎
+            _≃_.to l p                                    ∎
         )
       where
       open Lens l′ renaming (equiv to l)
