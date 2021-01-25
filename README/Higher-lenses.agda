@@ -302,7 +302,7 @@ Bijection-lens = B.Lens
 
 -- Lemma 45.
 
-lemma-45 = B.Lens-⊥-⊥↔Set
+lemma-45 = B.Lens-⊥-⊥≃Type
 
 ------------------------------------------------------------------------
 -- 3.2: A well-behaved variant of the lenses based on bijections

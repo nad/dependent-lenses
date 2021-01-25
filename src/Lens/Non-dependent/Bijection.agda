@@ -52,11 +52,11 @@ instance
     ; set = λ (_ , bij) a b → _↔_.from bij (proj₁ (_↔_.to bij a) , b)
     }
 
--- Lens ⊥ ⊥ is isomorphic to Type something.
+-- Lens ⊥ ⊥ is equivalent to Type something.
 
-Lens-⊥-⊥↔Set :
-  Lens (⊥ {ℓ = a}) (⊥ {ℓ = b}) ↔ Type (a ⊔ b)
-Lens-⊥-⊥↔Set =
+Lens-⊥-⊥≃Type :
+  Lens (⊥ {ℓ = a}) (⊥ {ℓ = b}) ≃ Type (a ⊔ b)
+Lens-⊥-⊥≃Type =
   Lens ⊥ ⊥               ↔⟨ (∃-cong λ _ → Eq.↔↔≃ ext (mono₁ 1 ⊥-propositional)) ⟩
   (∃ λ R → ⊥ ≃ (R × ⊥))  ↔⟨ (∃-cong λ _ → Eq.≃-preserves-bijections ext F.id ×-right-zero) ⟩
   (∃ λ R → ⊥ ≃ ⊥₀)       ↔⟨ (∃-cong λ _ → ≃⊥≃¬ ext) ⟩
@@ -102,7 +102,7 @@ Lens↠Higher-lens {A = A} {B} univ = record
   ⊤↠Set =
     ⊤                ↔⟨ inverse $ Higher.lens-from-⊥↔⊤ univ ⟩
     Higher.Lens ⊥ ⊥  ↝⟨ surj ⊥-is-set ⊥-is-set ⟩
-    Lens ⊥ ⊥         ↔⟨ Lens-⊥-⊥↔Set ⟩□
+    Lens ⊥ ⊥         ↔⟨ Lens-⊥-⊥≃Type ⟩□
     Type _           □
 
   ⊤≡⊥ : ↑ _ ⊤ ≡ ⊥
