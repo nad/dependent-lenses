@@ -38,6 +38,13 @@ import Lens.Dependent
 
 import README.Record-getters-and-setters
 
+-- Some code suggesting that types used in "programs" might not
+-- necessarily be sets. (If lenses are only used in programs, and
+-- types used in programs are always sets, then higher lenses might be
+-- pointless.)
+
+import README.Not-a-set
+
 -- Pointers to code corresponding to many definitions and results from
 -- the paper "Higher lenses" by Paolo Capriotti, Nils Anders
 -- Danielsson and Andrea Vezzosi.
