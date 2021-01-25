@@ -5,60 +5,73 @@
 -- Nils Anders Danielsson
 ------------------------------------------------------------------------
 
--- Most or all of the code referenced below can be found in modules
--- that are parametrised by a notion of equality. One can use them
--- both with Cubical Agda paths and with the Cubical Agda identity
--- type family.
-
+-- Most of the code referenced below can be found in modules that are
+-- parametrised by a notion of equality. One can use them both with
+-- Cubical Agda paths and with the Cubical Agda identity type family.
+--
 -- Note that the code does not follow the paper exactly. For instance,
 -- some definitions use bijections (functions with quasi-inverses)
 -- instead of equivalences.
 --
 -- An attempt has also been made to track uses of univalence by
--- passing around explicit proofs of the univalence axiom. However,
--- univalence is provable in Cubical Agda, and some library code that
--- is used does not adhere to this convention, so perhaps some use of
--- univalence is not tracked in this way. On the other hand some
--- library code that is not defined in Cubical Agda passes around
--- explicit proofs of function extensionality.
+-- passing around explicit proofs of the univalence axiom (except in
+-- README.Not-a-set). However, univalence is provable in Cubical Agda,
+-- and some library code that is used does not adhere to this
+-- convention, so perhaps some use of univalence is not tracked in
+-- this way. On the other hand some library code that is not defined
+-- in Cubical Agda passes around explicit proofs of function
+-- extensionality.
 --
 -- Some other differences are mentioned below.
 
-{-# OPTIONS --cubical --safe #-}
+{-# OPTIONS --cubical --safe --guardedness #-}
 
 module README.Higher-lenses where
 
-import Category
 import Circle
 import Equality
+import Equality.Decidable-UIP
 import Equivalence
+import Equivalence.Half-adjoint
 import Function-universe
 import H-level
-import H-level.Closure
 import H-level.Truncation.Propositional
+import H-level.Truncation.Propositional.Non-recursive
+import H-level.Truncation.Propositional.One-step
 import Preimage
-import Prelude
 import Surjection
 
 import Lens.Non-dependent.Bijection as B
-import Lens.Non-dependent.Equivalent-preimages as P
-import Lens.Non-dependent.Higher as H
-import Lens.Non-dependent.Higher.Capriotti as HF
-import Lens.Non-dependent.Higher.Erased as HE
-import Lens.Non-dependent.Higher.Surjective-remainder as HR
+import Lens.Non-dependent.Higher as E
+import Lens.Non-dependent.Higher.Capriotti as F
+import Lens.Non-dependent.Higher.Coinductive as C
+import Lens.Non-dependent.Higher.Coinductive.Coherently as Coh
+import Lens.Non-dependent.Higher.Coinductive.Small as S
 import Lens.Non-dependent.Traditional as T
-import Lens.Non-dependent.Traditional.Erased as TE
+
+import README.Not-a-set
 
 ------------------------------------------------------------------------
--- 1: Introduction
+-- I: Introduction
 
 -- Traditional lenses.
 
-Traditional-lens = T.Lens
+Lensᵀ = T.Lens
 
 -- The function modify.
 
 modify = T.Lens.modify
+
+-- The two variants of Tm, and proofs showing that Tm A is not a set
+-- if A is inhabited.
+
+Tm₁       = README.Not-a-set.Tm
+¬-Tm₁-set = README.Not-a-set.¬-Tm-set
+Tm₂       = README.Not-a-set.Tmˢ
+¬-Tm₂-set = README.Not-a-set.¬-Tmˢ-set
+
+------------------------------------------------------------------------
+-- II: Homotopy type theory
 
 -- The cong function.
 --
@@ -72,59 +85,28 @@ cong-refl   = Equality.Equality-with-J.cong-refl
 cong-unique =
   Equality.Derived-definitions-and-properties.monomorphic-cong-canonical
 
--- The propositional truncation operator.
-
-∥_∥ = H-level.Truncation.Propositional.∥_∥
-
--- Σ-types.
+-- Is-equivalence and _≃_.
 --
--- The code does not use the notation for Σ-types used in the paper.
+-- Note that the syntax used for Σ-types in the paper is not valid
+-- Agda syntax. Furthermore the code defines _≃_ as a record type
+-- instead of using a Σ-type.
 
-Σ = Prelude.Σ
-∃ = Prelude.∃
-
--- Equivalences.
---
--- The definition of _≃_ uses a record type instead of Σ.
-
+Is-equivalence = Equivalence.Half-adjoint.Is-equivalence
 _≃_            = Equivalence._≃_
-Is-equivalence = Equivalence.Is-equivalence
 
-------------------------------------------------------------------------
--- 2.1: Composition
+-- Lemma 6.
 
--- Identity and composition.
+lemma-6 = Equivalence._≃_.left-right-lemma
 
-id-traditional = T.Lens-combinators.id
-∘-traditional  = T.Lens-combinators._∘_
+-- H-level, Contractible, Is-proposition and Is-set.
+--
+-- Some of the definitions are slightly different from the ones given
+-- in the paper.
 
--- Composition laws.
-
-associativity-traditional  = T.Lens-combinators.associativity
-left-identity-traditional  = T.Lens-combinators.left-identity
-right-identity-traditional = T.Lens-combinators.right-identity
-
--- Lenses with definitionally equal getters and setters are equal if
--- the lens laws are pointwise equal.
-
-equal-laws→≡ = T.equal-laws→≡
-
--- Alternative implementations of composition.
-
-_∘′_ = T.Lens-combinators._∘′_
-_∘″_ = T.Lens-combinators._∘″_
-
--- The alternative implementations are pointwise equal to _∘_.
-
-∘≡∘′ = T.Lens-combinators.∘≡∘′
-∘≡∘″ = T.Lens-combinators.∘≡∘″
-
-------------------------------------------------------------------------
--- 2.2: Lenses with equal setters can be distinct
-
--- Lenses with equal setters have equal getters.
-
-getters-equal-if-setters-equal = T.getters-equal-if-setters-equal
+H-level        = H-level.H-level
+Contractible   = Equality.Reflexive-relation′.Contractible
+Is-proposition = Equality.Reflexive-relation′.Is-proposition
+Is-set         = Equality.Reflexive-relation′.Is-set
 
 -- The circle.
 
@@ -135,473 +117,449 @@ getters-equal-if-setters-equal = T.getters-equal-if-setters-equal
 not-refl      = Circle.not-refl
 not-refl≢refl = Circle.not-refl≢refl
 
--- The lens used for the counterexamples.
-
-l = T.bad
-
--- Lemmas 6 and 7.
-
-lemmas-6-and-7 = T.getter-equivalence-but-not-coherent
-
--- Split surjections.
-
-_↠_ = Surjection._↠_
-
--- Lemma 8.
-
-lemma-8 = T.¬-≃-↠-Σ-Lens-Is-equivalence-get
-
-------------------------------------------------------------------------
--- 2.3: Homotopy levels
-
--- Homotopy levels.
---
--- The definitions are slightly different from the ones given in the
--- paper.
-
-H-level        = H-level.H-level
-Contractible   = Equality.Reflexive-relation′.Contractible
-Is-proposition = Equality.Reflexive-relation′.Is-proposition
-Is-set         = Equality.Reflexive-relation′.Is-set
-
--- Lemma 11.
-
-lemma-11 = Function-universe.contractible↔≃⊤
-
--- H-level is upwards closed in its first argument.
-
-H-level-upwards-closed = H-level.mono
-
 -- The circle is not a set.
 
 circle-not-set = Circle.¬-𝕊¹-set
 
--- Lemmas 14-16.
+-- The propositional truncation operator.
 
-lemma-14 = T.h-level-respects-lens-from-inhabited
-lemma-15 = T.contractible-to-contractible
-lemma-16 = T.no-first-projection-lens
-
--- Lemma 16 for higher lenses.
-
-lemma-16-for-higher = H.no-first-projection-lens
-
--- Lemmas 17-20.
-
-lemma-17 = T.lens-preserves-h-level
-lemma-18 = H-level.Closure.Σ-closure
-lemma-19 = H-level.Closure.Π-closure
-lemma-20 = T.lens-preserves-h-level-of-domain
+∥_∥ = H-level.Truncation.Propositional.∥_∥
 
 ------------------------------------------------------------------------
--- 2.4: Some equivalences
+-- III: Traditional lenses
 
--- Lemmas 21-24.
---
--- The code uses a universe-polymorphic empty type.
+-- Lenses with equal setters have equal getters.
 
-lemma-21 = T.lens-to-proposition↔
-lemma-22 = Equivalence.Σ-preserves
-lemma-23 = T.lens-to-⊤↔
-lemma-24 = T.lens-to-⊥↔
+getters-equal-if-setters-equal = T.getters-equal-if-setters-equal
 
--- Traditional-lens 𝕊¹ ⊤ is not propositional.
+-- The identity lens.
+
+id-traditional = T.Lens-combinators.id
+
+-- The lens used for the counterexamples.
+
+l = T.bad
+
+-- Lemmas 12 and 13.
+
+lemmas-12-and-13 = T.getter-equivalence-but-not-coherent
+
+-- There are lenses with equal setters that are not equal.
+
+equal-setters-but-not-equal =
+  T.equal-setters-and-equivalences-as-getters-but-not-equal
+
+-- Lemma 14.
+
+lemma-14 = T.lens-to-proposition↔
+
+-- Lensᵀ A ⊤ is not necessarily a proposition (and thus not
+-- necessarily equivalent to the unit type).
 
 Traditional-lens-𝕊¹-⊤-not-propositional = T.¬-lens-to-⊤-propositional
-
--- Lemmas 25-26.
-
-lemma-25 = T.lens-from-⊤≃codomain-contractible
-lemma-26 = T.lens-from-⊥≃⊤
 
 -- Fibres.
 
 _⁻¹_ = Preimage._⁻¹_
 
--- Lemma 28, and a variant of the lemma for lenses which satisfy
--- certain coherence laws.
+-- Lemmas 16 and 17, and a variant of Lemma 16 for lenses which
+-- satisfy certain coherence laws.
 
-lemma-28          = T.≃get⁻¹×
-lemma-28-coherent = T.≃get⁻¹×-coherent
-
--- Lemma 29.
-
-lemma-29 = T.≃Σ∥set⁻¹∥×
+lemma-16          = T.≃get⁻¹×
+lemma-16-coherent = T.≃get⁻¹×-coherent
+lemma-17          = T.≃Σ∥set⁻¹∥×
 
 ------------------------------------------------------------------------
--- 2.5: A category of lenses
-
--- Precategory and Category.
---
--- The definition of Precategory is a little different from the
--- definition in the paper.
-
-Precategory = Category.Precategory
-Category    = Category.Category
-
--- A precategory of lenses between sets in the same universe.
-
-precategory-traditional = T.precategory
-
--- Isomorphisms between objects.
-
-≅-precategory = Category.Precategory._≅_
-
--- Isomorphisms between types, expressed using lenses.
-
-≅-lens = T._≅_
-
--- Lemmas 33-36.
-
-lemma-33 = T.≅↠≃
-lemma-34 = T.equality-characterisation-for-sets
-lemma-35 = T.equality-characterisation-for-sets-≅
-lemma-36 = T.≃≃≅
-lemma-37 = T.≃≃≅-id≡id
-
--- A category of lenses between sets in the same universe.
-
-category-traditional = T.category
-
-------------------------------------------------------------------------
--- 2.6: Bi-invertibility
-
--- Is-bi-invertible and Has-quasi-inverse.
---
--- These functions are defined in a general way in a parametrised
--- module. The same applies to some other definitions below.
-
-Is-bi-invertible-traditional = T.Is-bi-invertible
-Has-quasi-inverse            = T.Has-quasi-inverse
-
--- Is-bi-invertible is propositional.
-
-Is-bi-invertible-propositional = T.Is-bi-invertible-propositional
-
--- Has-quasi-inverse l is not necessarily propositional.
-
-Has-quasi-inverse-not-propositional =
-  T.Has-quasi-inverse-id-not-proposition
-
--- The relation _≊_, defined using traditional lenses.
-
-≊-traditional = T._≊_
-
--- Lemmas 41-43.
-
-lemma-41 = T.≊↠≃
-lemma-42 = T.Is-bi-invertible≃Is-equivalence-get
-lemma-43 = T.¬≃↠≊
-
-------------------------------------------------------------------------
--- 3.1: Lenses based on bijections
+-- IV: Lenses based on bijections
 
 -- Lenses based on bijections.
 
-Bijection-lens = B.Lens
+Lensᴮ = B.Lens
 
--- Lemma 45.
+-- Lensᴮ ⊥ ⊥ is equivalent to Type.
+--
+-- Note that the definition of ⊥ that is used in the code can target
+-- different universes, not just Type.
 
-lemma-45 = B.Lens-⊥-⊥≃Type
+Lensᴮ-⊥-⊥≃Type = B.Lens-⊥-⊥≃Type
+
+-- Lensᵀ ⊥ ⊥ is equivalent to ⊤.
+
+Lensᵀ-⊥-⊥≃Type = T.lens-from-⊥≃⊤
 
 ------------------------------------------------------------------------
--- 3.2: A well-behaved variant of the lenses based on bijections
+-- V: Higher lenses
 
--- Higher lenses.
+-- Lensᴱ.
 --
 -- For performance reasons η-equality has been turned off for this
 -- definition.
 
-Higher-lens = H.Lens
+Lensᴱ = E.Lens
 
--- Lemmas 47-48.
+-- Lemma 20.
 
-lemma-47 = H.isomorphism-to-lens
-lemma-48 = H-level.Truncation.Propositional.∥∥×≃
+lemma-20 = E.isomorphism-to-lens
 
 -- The functions get, remainder and set.
 
-get       = H.Lens.get
-remainder = H.Lens.remainder
-set       = H.Lens.set
+get       = E.Lens.get
+remainder = E.Lens.remainder
+set       = E.Lens.set
 
--- Lemmas 52-55.
+-- Lemmas 24-27.
 
-lemma-52 = H.Lens.get-set
-lemma-53 = H.Lens.remainder-set
-lemma-54 = H.Lens.set-get
-lemma-55 = H.Lens.set-set
-
-------------------------------------------------------------------------
--- 3.3: Coherence laws
-
--- Lemmas 56-60.
-
-lemma-56 = H.Lens.get-set-get
-lemma-57 = Equivalence._≃_.left-right-lemma
-lemma-58 = Equivalence._≃_.right-left-lemma
-lemma-59 = H.Lens.get-set-set
-lemma-60 = Equality.Derived-definitions-and-properties.trans-symʳ
-
--- Lemma 61 is part of the axiomatisation of equality that is used.
-
-lemma-61 = Equality.Derived-definitions-and-properties.cong-refl
+lemma-24 = E.Lens.get-set
+lemma-25 = E.Lens.remainder-set
+lemma-26 = E.Lens.set-get
+lemma-27 = E.Lens.set-set
 
 ------------------------------------------------------------------------
--- 3.4: Some equivalences
+-- VI: Coherence laws
 
--- Lemmas 62-68.
+-- Lemmas 28-29.
+
+lemma-28 = E.Lens.get-set-get
+lemma-29 = E.Lens.get-set-set
+
+------------------------------------------------------------------------
+-- VII: Some equivalences
+
+-- Lemmas 30-37.
 --
--- Lemmas 63 and 65 are formulated slightly differently.
+-- Lemmas 31 and 33 are formulated slightly differently.
 
-lemma-62 = H.lens-to-proposition↔get
-lemma-63 = H.lens-to-contractible↔⊤
-lemma-64 = H.lens-to-⊥↔¬
-lemma-65 = H.lens-from-contractible↔codomain-contractible
-lemma-66 = H.lens-from-⊥↔⊤
-lemma-67 = H.get-equivalence≃inhabited-equivalence
-lemma-68 = H.≃-≃-Σ-Lens-Is-equivalence-get
+lemma-30 = E.lens-to-proposition↔get
+lemma-31 = E.lens-to-contractible↔⊤
+lemma-32 = E.lens-to-⊥↔¬
+lemma-33 = E.lens-from-contractible↔codomain-contractible
+lemma-34 = E.lens-from-⊥↔⊤
+lemma-35 = E.get-equivalence≃inhabited-equivalence
+lemma-36 = E.≃-≃-Σ-Lens-Is-equivalence-get
+lemma-37 = E.remainder≃get⁻¹
 
--- The right-to-left direction of Lemma 68 returns the lens's getter
+-- Lemmas 32-34 hold for traditional lenses.
+
+lemma-32-for-traditional = T.lens-to-⊥↔
+lemma-33-for-traditional = T.lens-from-⊤≃codomain-contractible
+lemma-34-for-traditional = T.lens-from-⊥≃⊤
+
+-- The right-to-left direction of Lemma 36 returns the lens's getter
 -- (and some proof).
 
-lemma-68-right-to-left = H.to-from-≃-≃-Σ-Lens-Is-equivalence-get≡get
+lemma-36-right-to-left = E.to-from-≃-≃-Σ-Lens-Is-equivalence-get≡get
 
--- Lemmas 69 and 70.
+-- There is in general no such equivalence for traditional lenses (in
+-- fact, not even a split surjection).
 
-lemma-69 = H.remainder≃get⁻¹
-lemma-70 = H.get⁻¹-constant
-
--- The functions get⁻¹-const and get⁻¹-const⁻¹.
-
-get⁻¹-const   = H.get⁻¹-const
-get⁻¹-const⁻¹ = H.get⁻¹-const⁻¹
-
--- Lemmas 73-75.
-
-lemma-73 = H.get⁻¹-const-∘
-lemma-74 = H.get⁻¹-const-inverse
-lemma-75 = H.get⁻¹-const-id
+no-such-equivalence-1 = T.¬-≃-↠-Σ-Lens-Is-equivalence-get
 
 ------------------------------------------------------------------------
--- 3.5: Lenses with equal setters are sometimes equal
+-- VIII: Equality of lenses with equal setters
 
--- Lemmas 76-82.
+-- Lemmas 38-43.
 
-lemma-76 = H.equality-characterisation₁
-lemma-77 = H.equality-characterisation₂
-lemma-78 = H.equality-characterisation₃
-lemma-79 = H.lenses-with-inhabited-codomains-equal-if-setters-equal
-lemma-80 = H.lenses-equal-if-setters-equal
-lemma-81 = H.lenses-equal-if-setters-equal-and-remainder-propositional
-lemma-82 = H.lenses-equal-if-setters-equal-and-remainder-set
+lemma-38 = E.equality-characterisation₁
+lemma-39 = E.equality-characterisation₄
+lemma-40 = E.lenses-with-inhabited-codomains-equal-if-setters-equal
+lemma-41 = E.lenses-equal-if-setters-equal
+lemma-42 = E.lenses-equal-if-setters-equal-and-remainder-set
+lemma-43 = E.lenses-equal-if-setters-equal→constant→coherently-constant
 
-------------------------------------------------------------------------
--- 3.6: Homotopy levels
+-- Constant and CC.
 
--- Lemmas 83-89.
-
-lemma-83 = H.h-level-respects-lens-from-inhabited
-lemma-84 = H.remainder-has-same-h-level-as-domain
-lemma-85 = H.get-equivalence→remainder-propositional
-lemma-86 = H.Contractible-closed-codomain
-lemma-87 = H.Is-proposition-closed-codomain
-lemma-88 = H.domain-0+⇒lens-1+
-lemma-89 = Equivalence.h-level-closure
+Constant = Equality.Decidable-UIP.Constant
+CC       = F.Coherently-constant
 
 ------------------------------------------------------------------------
--- 3.7: Higher lenses are equivalent to traditional lenses for sets
+-- IX: Homotopy levels
 
--- Lemmas 90 and 91.
+-- Lemmas 46-52.
+
+lemma-46 = E.h-level-respects-lens-from-inhabited
+lemma-47 = E.contractible-to-contractible
+lemma-48 = E.no-first-projection-lens
+lemma-49 = E.remainder-has-same-h-level-as-domain
+lemma-50 = E.get-equivalence→remainder-propositional
+lemma-51 = E.Contractible-closed-codomain
+lemma-52 = E.Is-proposition-closed-codomain
+
+-- Lemmas 46-48 for traditional lenses.
+
+lemma-46-for-traditional = T.h-level-respects-lens-from-inhabited
+lemma-47-for-traditional = T.contractible-to-contractible
+lemma-48-for-traditional = T.no-first-projection-lens
+
+------------------------------------------------------------------------
+-- X: Higher and traditional lenses are equivalent for sets
+
+-- Split surjections.
+
+_↠_ = Surjection._↠_
+
+-- Lemmas 53 and 54.
 --
--- Lemma 91 takes an extra argument of type Unit, written as
+-- Lemma 53 takes an extra argument of type Unit, written as
 -- Block "conversion". Some other definitions below also take such
 -- arguments.
 
-lemma-90 = H.¬Lens↠Traditional-lens
-lemma-91 = H.Lens↔Traditional-lens
+lemma-53 = E.¬Lens↠Traditional-lens
+lemma-54 = E.Lens↔Traditional-lens
 
--- Lemma 91 preserves getters and setters in both directions.
+-- Lemma 54 preserves getters and setters in both directions.
 
-lemma-91-preserves-get-and-set =
-  H.Lens↔Traditional-lens-preserves-getters-and-setters
+lemma-54-preserves-get-and-set =
+  E.Lens↔Traditional-lens-preserves-getters-and-setters
 
 ------------------------------------------------------------------------
--- 3.8: Identity and composition
+-- XI: Identity and composition
 
 -- The identity lens.
 
-id-higher = H.Lens-combinators.id
+id = E.Lens-combinators.id
 
--- Lemma 93.
+-- Lemma 56.
 
-lemma-93 = H.Lens-combinators.id-unique
+lemma-56 = E.Lens-combinators.id-unique
 
 -- A composition operator for types in the same universe.
 
-∘-higher = H.Lens-combinators._∘_
+∘-same-universe = E.Lens-combinators._∘_
 
 -- A more general composition operator.
 
-∘-more-general = H.Lens-combinators.⟨_,_⟩_∘_
+∘-more-general = E.Lens-combinators.⟨_,_⟩_∘_
 
 -- Composition laws.
 
-associativity-higher  = H.Lens-combinators.associativity
-left-identity-higher  = H.Lens-combinators.left-identity
-right-identity-higher = H.Lens-combinators.right-identity
+associativity  = E.Lens-combinators.associativity
+left-identity  = E.Lens-combinators.left-identity
+right-identity = E.Lens-combinators.right-identity
 
--- Lemma 95.
+-- Composition laws for traditional lenses.
+
+associativity-traditional  = T.Lens-combinators.associativity
+left-identity-traditional  = T.Lens-combinators.left-identity
+right-identity-traditional = T.Lens-combinators.right-identity
+
+-- Lemma 58.
 --
 -- The lemma is formulated slightly differently.
 
-lemma-95 = H.Lens-combinators.∘-unique
+lemma-58 = E.Lens-combinators.∘-unique
 
 -- The composition operator produces lenses for which the setter
 -- satisfies certain equations.
 
-setter-correct = H.Lens-combinators.∘-set
+setter-correct = E.Lens-combinators.∘-set
 
--- Is-bi-invertible and _≊_.
+-- Is-bi-invertible.
 
-Is-bi-invertible-higher = H.Is-bi-invertible
-≊-higher                = H.[_]_≊_
+Is-bi-invertible = E.Is-bi-invertible
 
--- Lemmas 98 and 99.
+-- Lemmas 60 and 61.
 
-lemma-98 = H.≃≃≊
-lemma-99 = H.Is-bi-invertible≃Is-equivalence-get
+lemma-60 = E.≃≃≊
+lemma-61 = E.Is-bi-invertible≃Is-equivalence-get
 
--- Lemma 98 maps bi-invertible lenses to their getter functions.
+-- Lemma 60 maps bi-invertible lenses to their getter functions.
 
-lemma-98-right-to-left = H.to-from-≃≃≊≡get
+lemma-60-right-to-left = E.to-from-≃≃≊≡get
 
--- A precategory and a category of higher lenses between sets in the
--- same universe.
+-- There is in general no such equivalence for traditional lenses (in
+-- fact, not even a split surjection).
 
-precategory-higher = H.precategory
-category-higher    = H.category
+no-such-equivalence-2 = T.¬≃↠≊
 
--- The precategory of higher lenses is equal to the one for
--- traditional lenses (lifted), and similarly for the categories.
+-- A variant of Lemma 60 for traditional lenses (a split surjection in
+-- the other direction).
 
-precategory≡precategory = H.precategory≡precategory
-category≡category       = H.category≡category
+lemma-60-for-traditional = T.≊↠≃
+
+-- Lemma 61 for traditional lenses.
+
+lemma-61-for-traditional = T.Is-bi-invertible≃Is-equivalence-get
+
+-- A category of higher lenses between sets with the same universe
+-- level.
+
+category-higher = E.category
+
+-- A category of traditional lenses between sets with the same
+-- universe level.
+
+category-traditional = T.category
+
+-- The category of higher lenses is equal to the one for traditional
+-- lenses (lifted, so that the two categories have the same type).
+
+category≡category = E.category≡category
 
 ------------------------------------------------------------------------
--- 3.9: Higher lenses with surjective remainder functions
+-- XII: Coherently constant families of fibres
 
--- Higher-lensᴿ.
+-- Lens^F.
 
-Higher-lensᴿ = HR.Lens
+Lens^F = F.Lens
 
--- Surjective.
+-- Lemma 63.
 
-Surjective = H-level.Truncation.Propositional.Surjective
-
--- Lemma 102.
-
-lemma-102 = HR.Higher-lens↔Lens
-
-------------------------------------------------------------------------
--- 3.10: Higher lenses where the family of fibres of the getter
--- factors through the propositional truncation
-
--- Higher-lens^F.
-
-Higher-lens^F = HF.Lens
-
--- Lemma 104.
-
-lemma-104 = HF.Lens.get⁻¹-≃
+lemma-63 = F.Lens.get⁻¹-constant
 
 -- A setter.
 
-set^F = HF.Lens.set
+set^F = F.Lens.set
 
--- Lemma 106.
-
-lemma-106 = HF.Lens≃Higher-lens
-
--- Lemma 106 preserves getters and setters in both directions.
-
-lemma-106-preserves-get-and-set =
-  HF.Lens≃Higher-lens-preserves-getters-and-setters
-
-------------------------------------------------------------------------
--- 3.11: Some results can be made a little stronger for stable types
-
--- Partial-lens.
+-- Lemma 65.
 --
--- For performance reasons η-equality has been turned off for this
--- definition.
+-- Unlike in the paper this lemma is defined in two steps, using a
+-- minor variant of Lens^F "in the middle".
 
-Partial-lens = P.Lens
+lemma-65 = F.Lens≃Higher-lens
 
--- A translation from higher to partial lenses.
+-- Lemma 65 preserves getters and setters in both directions.
 
-higher-to-partial = P.higher→
-
--- This translation preserves getters and setters.
-
-higher-to-partial-preserves-get-and-set =
-  P.higher→-preserves-getters-and-setters
-
--- Lemma 108.
-
-lemma-108 = P.↠higher
-
--- Lemma 108 preserves getters and setters in both directions.
-
-lemma-108-preserves-get-and-set =
-  P.↠higher-preserves-getters-and-setters
-
--- Lemmas 109-113.
-
-lemma-109 = P.lens-preserves-h-level
-lemma-110 = P.lens-preserves-h-level-of-domain
-lemma-111 = P.higher-lens-preserves-h-level-of-domain
-lemma-112 = P._∘_
-lemma-113 = P.⟨_⟩_⊚_
-
--- The composition operations of Lemmas 112 and 113 produce lenses for
--- which the setter satisfies certain equations.
-
-setter-correct-112 = P.set-∘≡
-setter-correct-113 = P.set-⊚≡
-
--- The composition operation of Lemma 113 matches ∘-higher when both
--- are defined.
-
-composition-operations-match = P.⊚≡∘
+lemma-65-preserves-get-and-set =
+  F.Lens≃Higher-lens-preserves-getters-and-setters
 
 ------------------------------------------------------------------------
--- 4: Lenses with erased proofs
+-- XIII: Coinductive lenses
 
--- Lenses with erased proofs.
+-- The one-step truncation operator, and its non-dependent eliminator.
 
-Traditional-lensᴱ = TE.Lens
-Higher-lensᴱ      = HE.Lens
+∥_∥¹ = H-level.Truncation.Propositional.One-step.∥_∥¹
+rec  = H-level.Truncation.Propositional.One-step.rec′
 
--- Lemma 116.
+-- Lemma 68.
 
-lemma-116 = HE.Lens≃ᴱTraditional-lens
+lemma-68 = H-level.Truncation.Propositional.Non-recursive.∥∥→≃
 
--- For more results about lenses with erased proofs, see the following
--- modules:
+-- ∥_∥¹-out, ∥_∥¹-in and ∣_,_∣-in.
 
-import Lens.Non-dependent.Higher.Erased
-import Lens.Non-dependent.Traditional.Erased
+∥_∥¹-out = H-level.Truncation.Propositional.One-step.∥_∥¹-out-^
+∥_∥¹-in  = H-level.Truncation.Propositional.One-step.∥_∥¹-in-^
+∣_,_∣-in = H-level.Truncation.Propositional.One-step.∣_,_∣-in-^
+
+-- Lemmas 72 and 73.
+
+lemma-72 = H-level.Truncation.Propositional.One-step.∥∥¹-out-^≃∥∥¹-in-^
+lemma-73 = H-level.Truncation.Propositional.One-step.∣∣≡∣,∣-in-^
+
+-- Coherently and CC^C.
+
+Coherently = Coh.Coherently
+CC^C       = C.Coherently-constant
+
+-- Constant¹ and CC^C1.
+
+Constant¹ = C.Constant′
+CC^C1     = C.Coherently-constant′
+
+-- Lemmas 78-84.
+--
+-- Lemma 82 is more general than in the paper.
+
+lemma-78 = C.Constant≃Constant′
+lemma-79 = C.Coherently-constant≃Coherently-constant′
+lemma-80 = C.∥∥→≃
+lemma-81 = Equivalence.Σ-preserves
+lemma-82 = Function-universe.Π-cong-contra
+lemma-83 = C.Coherently-constant′≃
+lemma-84 = C.Coherently-constant≃Coherently-constant
+
+-- Constant^S and CC^S.
+
+Constant^S = S.Constant-≃
+CC^S       = S.Coherently-constant
+
+-- Lemma 87.
+
+lemma-87 = S.Coinductive-coherently-constant≃Coherently-constant
+
+-- Lens^C.
+
+Lens^C = S.Lens
+
+-- Lemmas 89-90.
+
+lemma-89 = S.Higher-lens≃Lens
+lemma-90 = S.Lens.get⁻¹-constant
+
+-- Lemma 89 preserves getters and setters.
+
+lemma-89-preserves-get-and-set =
+  S.Higher-lens≃Lens-preserves-getters-and-setters
 
 ------------------------------------------------------------------------
--- 5: Related work
+-- XIV: Unrestricted composition
 
--- Lemmas 117-119.
+-- Lemmas 91 and 92.
 
-lemma-117 = H.grenrus-example
-lemma-118 = H.grenrus-example₁-true
-lemma-119 = H.grenrus-example₂-false
+lemma-91 = S.Coherently-constant-map
+lemma-92 = S.Coherently-constant-Σ
 
--- The lenses used in Lemmas 118 and 119 are equal.
+-- Composition.
 
-lenses-equal = H.grenrus-example₁≡grenrus-example₂
+∘-most-general = S.⟨_,_⟩_∘_
+
+-- Lemma 94
+
+lemma-94 = S.set-∘
+
+-- Composition laws.
+
+associativity-stable  = S.associativity
+left-identity-stable  = S.left-identity
+right-identity-stable = S.right-identity
+
+-- An unrestricted composition operator for Lensᴱ.
+
+∘-most-general′ = S.⟨_,_,_,_,_,_,_,_⟩_⊚_
+
+-- This operator matches "∘-more-general" when all types have the same
+-- universe level and the view type of the resulting lens is stable.
+
+∘-more-general-matches-∘-most-general′ = S.⊚≡∘
+
+------------------------------------------------------------------------
+-- XV: Homotopy levels, continued
+
+-- Coherently′.
+
+Coherently′ = Coh.Coherently-with-restriction
+
+-- Lemma 96.
+
+lemma-96 = Coh.Coherently≃Coherently-with-restriction
+
+-- Coherently′ can be expressed as an indexed M-type for a certain
+-- indexed container.
+
+Coherently′-as-M-type =
+  Coh.Coherently-with-restriction≃Coherently-with-restriction′
+
+-- Lemmas 97-101.
+
+lemma-97  = Coh.H-level-Coherently-with-restriction
+lemma-98  = Coh.H-level-Coherently-→Type
+lemma-99  = S.H-level-Coherently-constant
+lemma-100 = S.lens-preserves-h-level
+lemma-101 = S.h-level-respects-lens-from-inhabited
+
+-- Lemma 101 and a variant of Lemma 100 hold for traditional lenses.
+
+lemma-100-for-traditional = T.lens-preserves-h-level
+lemma-101-for-traditional = T.lens-from-⊤≃codomain-contractible
+
+------------------------------------------------------------------------
+-- XVI: Related work
+
+-- Lemmas 102-104.
+
+lemma-102 = E.grenrus-example
+lemma-103 = E.grenrus-example₁-true
+lemma-104 = E.grenrus-example₂-false
+
+-- The lenses used in Lemmas 103 and 104 are equal.
+
+lenses-equal = E.grenrus-example₁≡grenrus-example₂
