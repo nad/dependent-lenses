@@ -496,9 +496,7 @@ from-Coherently-constant′≃-property
     ≃
   (∃ λ (f : A → B) → Coherently-constant f)
 ∥∥→≃ {A = A} {B = B} univ =
-  (∥ A ∥ → B)                                   ↝⟨ →-cong ext (inverse N.∥∥≃∥∥) F.id ⟩
-
-  (N.∥ A ∥ → B)                                 ↝⟨ C.universal-property ⟩
+  (∥ A ∥ → B)                                   ↝⟨ N.∥∥→≃ ⟩
 
   (∃ λ (f : ∀ n → ∥ A ∥¹-out-^ n → B) →
      ∀ n x → f (suc n) ∣ x ∣ ≡ f n x)           ↝⟨ (Σ-cong {k₁ = equivalence} (∀-cong ext λ n → →-cong₁ ext (O.∥∥¹-out-^≃∥∥¹-in-^ n)) λ f →
