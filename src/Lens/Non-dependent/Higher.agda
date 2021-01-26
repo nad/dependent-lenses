@@ -38,6 +38,7 @@ open import Univalence-axiom equality-with-J
 open import Lens.Non-dependent eq as Non-dependent
   hiding (no-first-projection-lens)
 import Lens.Non-dependent.Traditional eq as Traditional
+import Lens.Non-dependent.Traditional.Combinators eq as TC
 
 private
   variable
@@ -3147,7 +3148,7 @@ precategory≡precategory :
   Univalence (lsuc a) →
   (univ : Univalence a) →
   precategory b univ ≡
-  C.lift-precategory-Hom _ Traditional.precategory
+  C.lift-precategory-Hom _ TC.precategory
 precategory≡precategory ⊠ univ⁺ univ =
   block λ b →
   _↔_.to (C.equality-characterisation-Precategory ext univ⁺ univ⁺)
@@ -3169,7 +3170,7 @@ precategory≡precategory ⊠ univ⁺ univ =
     Lens.traditional-lens
       (Lens↔Traditional-lens.from B-set b l₁ ∘
        Lens↔Traditional-lens.from A-set b l₂) ≡
-    l₁ Traditional.Lens-combinators.∘ l₂
+    l₁ TC.∘ l₂
   ∘-lemma ⊠ A-set _ _ _ =
     _↔_.from (Traditional.equality-characterisation-for-sets A-set)
       (refl _)
@@ -3182,15 +3183,15 @@ category≡category :
   Univalence (lsuc a) →
   (univ : Univalence a) →
   category b univ ≡
-  C.lift-category-Hom _ (Traditional.category univ)
+  C.lift-category-Hom _ (TC.category univ)
 category≡category b univ⁺ univ =
   _↔_.from (C.≡↔precategory≡precategory ext)
-    (Category.precategory (category b univ)                  ≡⟨ lemma b ⟩
+    (Category.precategory (category b univ)        ≡⟨ lemma b ⟩
 
-     precategory b univ                                      ≡⟨ precategory≡precategory b univ⁺ univ ⟩∎
+     precategory b univ                            ≡⟨ precategory≡precategory b univ⁺ univ ⟩∎
 
      Category.precategory
-       (C.lift-category-Hom _ (Traditional.category univ))  ∎)
+       (C.lift-category-Hom _ (TC.category univ))  ∎)
   where
   lemma :
     ∀ b →

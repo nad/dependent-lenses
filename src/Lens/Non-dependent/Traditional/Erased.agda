@@ -40,6 +40,7 @@ open import Univalence-axiom equality-with-J
 open import Lens.Non-dependent eq as Non-dependent
   hiding (no-first-projection-lens)
 import Lens.Non-dependent.Traditional eq as T
+import Lens.Non-dependent.Traditional.Combinators eq as TC
 
 private
   variable
@@ -1600,9 +1601,6 @@ lens-from-⊥≃⊤ =
 ------------------------------------------------------------------------
 -- Lens combinators
 
-private
-  module TLC = T.Lens-combinators
-
 module Lens-combinators where
 
   -- If two types are isomorphic, then there is a lens between them.
@@ -1635,13 +1633,13 @@ module Lens-combinators where
   -- Identity lens.
 
   id : Lens A A
-  id = Traditional-lens→Lens TLC.id
+  id = Traditional-lens→Lens TC.id
 
   -- The identity lens is equal to the one obtained from the
   -- traditional identity lens without erased proofs.
 
   Traditional-lens-id≡id :
-    Traditional-lens→Lens TLC.id ≡ id {A = A}
+    Traditional-lens→Lens TC.id ≡ id {A = A}
   Traditional-lens-id≡id = refl _
 
   -- Composition of lenses.
@@ -1662,13 +1660,13 @@ module Lens-combinators where
     open Lens
 
     @0 l₁∘l₂ : _
-    l₁∘l₂ = trad l₁ TLC.∘ trad l₂
+    l₁∘l₂ = trad l₁ TC.∘ trad l₂
 
   -- Traditional-lens→Lens commutes with composition.
 
   Traditional-lens-∘≡∘ :
     {l₁ : T.Lens B C} {l₂ : T.Lens A B} →
-    Traditional-lens→Lens (l₁ TLC.∘ l₂) ≡
+    Traditional-lens→Lens (l₁ TC.∘ l₂) ≡
     Traditional-lens→Lens l₁ ∘ Traditional-lens→Lens l₂
   Traditional-lens-∘≡∘ = refl _
 
@@ -1683,7 +1681,7 @@ module Lens-combinators where
     }
     where
     @0 l₁∘′l₂ : _
-    l₁∘′l₂ = trad l₁ TLC.∘′ trad l₂
+    l₁∘′l₂ = trad l₁ TC.∘′ trad l₂
 
   _∘″_ : Lens B C → Lens A B → Lens A C
   l₁ ∘″ l₂ = record (l₁ ∘ l₂)
@@ -1691,7 +1689,7 @@ module Lens-combinators where
     }
     where
     @0 l₁∘″l₂ : _
-    l₁∘″l₂ = trad l₁ TLC.∘″ trad l₂
+    l₁∘″l₂ = trad l₁ TC.∘″ trad l₂
 
   -- These two implementations are pointwise equal to the other one.
   -- However, I don't know if there is some other definition that is
@@ -2262,12 +2260,9 @@ module Lens-combinators where
   @0 getter-equivalence→lens≡ :
     ∀ (l : Lens A B) is-equiv →
     getter-equivalence→lens l is-equiv ≡ l
-  getter-equivalence→lens≡ l is-equiv =                              $⟨ TLC.getter-equivalence→lens≡
-                                                                          (trad l) is-equiv′ ⟩
-    TLC.getter-equivalence→lens (trad l) is-equiv′ ≡
-    trad l                                                           ↝⟨ cong Traditional-lens→Lens ⟩□
-
-    getter-equivalence→lens l is-equiv ≡ l                           □
+  getter-equivalence→lens≡ l is-equiv =                     $⟨ TC.getter-equivalence→lens≡ (trad l) is-equiv′ ⟩
+    TC.getter-equivalence→lens (trad l) is-equiv′ ≡ trad l  ↝⟨ cong Traditional-lens→Lens ⟩□
+    getter-equivalence→lens l is-equiv ≡ l                  □
     where
     is-equiv′ = EEq.Is-equivalenceᴱ→Is-equivalence is-equiv
 
@@ -2344,15 +2339,15 @@ equal-setters-and-equivalences-as-getters-but-not-equal :
   l₁ ≢ l₂
 equal-setters-and-equivalences-as-getters-but-not-equal univ =
   let is-equiv₁ , is-equiv₂ , set≡set , bad≢id =
-        T.equal-setters-and-equivalences-as-getters-but-not-equal univ
+        TC.equal-setters-and-equivalences-as-getters-but-not-equal univ
   in
     is-equiv₁
   , is-equiv₂
   , set≡set
   , Stable-¬ _
-      [ bad ≡ Lens-combinators.id      ↔⟨ inverse $ Eq.≃-≡ Lens≃Traditional-lens ⟩
-        T.bad ≡ T.Lens-combinators.id  ↝⟨ bad≢id ⟩□
-        ⊥                              □
+      [ bad ≡ Lens-combinators.id  ↔⟨ inverse $ Eq.≃-≡ Lens≃Traditional-lens ⟩
+        T.bad ≡ TC.id              ↝⟨ bad≢id ⟩□
+        ⊥                          □
       ]
 
 -- There is in general no split surjection from equivalences with
@@ -2440,54 +2435,54 @@ open B public
   using ()
   renaming (_≅ᴱ_ to _≅ᴱ_; Has-quasi-inverseᴱ to Has-quasi-inverseᴱ)
 
--- T.Has-quasi-inverse l implies
+-- TC.Has-quasi-inverse l implies
 -- Has-quasi-inverseᴱ (Traditional-lens→Lens l).
 
 Has-quasi-inverse→Has-quasi-inverseᴱ :
   (l : T.Lens A B) →
-  T.Has-quasi-inverse l → Has-quasi-inverseᴱ (Traditional-lens→Lens l)
+  TC.Has-quasi-inverse l → Has-quasi-inverseᴱ (Traditional-lens→Lens l)
 Has-quasi-inverse→Has-quasi-inverseᴱ l =
-  (∃ λ l⁻¹ →         l  TLC.∘ l⁻¹ ≡ TLC.id × l⁻¹ TLC.∘ l  ≡ TLC.id )  ↝⟨ Σ-map Traditional-lens→Lens
-                                                                               (Σ-map (cong Traditional-lens→Lens)
-                                                                                      (cong Traditional-lens→Lens)) ⟩
-  (∃ λ l⁻¹ →         l′  LC.∘ l⁻¹ ≡  LC.id × l⁻¹  LC.∘ l′ ≡  LC.id )  ↝⟨ Σ-map P.id [_]→ ⟩□
-  (∃ λ l⁻¹ → Erased (l′  LC.∘ l⁻¹ ≡  LC.id × l⁻¹  LC.∘ l′ ≡  LC.id))  □
+  (∃ λ l⁻¹ →         l  TC.∘ l⁻¹ ≡ TC.id × l⁻¹ TC.∘ l  ≡ TC.id )  ↝⟨ Σ-map Traditional-lens→Lens
+                                                                           (Σ-map (cong Traditional-lens→Lens)
+                                                                                  (cong Traditional-lens→Lens)) ⟩
+  (∃ λ l⁻¹ →         l′ LC.∘ l⁻¹ ≡ LC.id × l⁻¹ LC.∘ l′ ≡ LC.id )  ↝⟨ Σ-map P.id [_]→ ⟩□
+  (∃ λ l⁻¹ → Erased (l′ LC.∘ l⁻¹ ≡ LC.id × l⁻¹ LC.∘ l′ ≡ LC.id))  □
   where
   module LC = Lens-combinators
 
   l′ = Traditional-lens→Lens l
 
 -- In erased contexts Has-quasi-inverseᴱ (Traditional-lens→Lens l) is
--- equivalent to T.Has-quasi-inverse l.
+-- equivalent to TC.Has-quasi-inverse l.
 
 @0 Has-quasi-inverseᴱ≃Has-quasi-inverse :
   (l : T.Lens A B) →
-  Has-quasi-inverseᴱ (Traditional-lens→Lens l) ≃ T.Has-quasi-inverse l
+  Has-quasi-inverseᴱ (Traditional-lens→Lens l) ≃ TC.Has-quasi-inverse l
 Has-quasi-inverseᴱ≃Has-quasi-inverse l =
-  (∃ λ l⁻¹ → Erased (l′ LC.∘ l⁻¹ ≡  LC.id × l⁻¹  LC.∘ l′ ≡  LC.id))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
-  (∃ λ l⁻¹ →         l′ LC.∘ l⁻¹ ≡  LC.id × l⁻¹  LC.∘ l′ ≡  LC.id )  ↝⟨ (Σ-cong Lens≃Traditional-lens λ _ →
-                                                                         inverse (Eq.≃-≡ Lens≃Traditional-lens)
-                                                                           ×-cong
-                                                                         inverse (Eq.≃-≡ Lens≃Traditional-lens)) ⟩□
-  (∃ λ l⁻¹ →         l TLC.∘ l⁻¹ ≡ TLC.id × l⁻¹ TLC.∘ l  ≡ TLC.id )  □
+  (∃ λ l⁻¹ → Erased (l′ LC.∘ l⁻¹ ≡ LC.id × l⁻¹ LC.∘ l′ ≡ LC.id))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
+  (∃ λ l⁻¹ →         l′ LC.∘ l⁻¹ ≡ LC.id × l⁻¹ LC.∘ l′ ≡ LC.id )  ↝⟨ (Σ-cong Lens≃Traditional-lens λ _ →
+                                                                      inverse (Eq.≃-≡ Lens≃Traditional-lens)
+                                                                        ×-cong
+                                                                      inverse (Eq.≃-≡ Lens≃Traditional-lens)) ⟩□
+  (∃ λ l⁻¹ →         l  TC.∘ l⁻¹ ≡ TC.id × l⁻¹ TC.∘ l  ≡ TC.id )  □
   where
   module LC = Lens-combinators
 
   l′ = Traditional-lens→Lens l
 
--- A T.≅ B implies A ≅ᴱ B.
+-- A TC.≅ B implies A ≅ᴱ B.
 
-≅→≅ᴱ : A T.≅ B → A ≅ᴱ B
+≅→≅ᴱ : A TC.≅ B → A ≅ᴱ B
 ≅→≅ᴱ {A = A} {B = B} =
-  (∃ λ (l : T.Lens A B) → T.Has-quasi-inverse l)  ↝⟨ Σ-map Traditional-lens→Lens (λ {l} → Has-quasi-inverse→Has-quasi-inverseᴱ l) ⟩□
-  (∃ λ (l : Lens A B) → Has-quasi-inverseᴱ l)     □
+  (∃ λ (l : T.Lens A B) → TC.Has-quasi-inverse l)  ↝⟨ Σ-map Traditional-lens→Lens (λ {l} → Has-quasi-inverse→Has-quasi-inverseᴱ l) ⟩□
+  (∃ λ (l : Lens A B) → Has-quasi-inverseᴱ l)      □
 
--- In erased contexts A ≅ᴱ B is equivalent to A T.≅ B.
+-- In erased contexts A ≅ᴱ B is equivalent to A TC.≅ B.
 
-@0 ≅ᴱ≃≅ : (A ≅ᴱ B) ≃ (A T.≅ B)
+@0 ≅ᴱ≃≅ : (A ≅ᴱ B) ≃ (A TC.≅ B)
 ≅ᴱ≃≅ {A = A} {B = B} =
-  (∃ λ (l : Lens A B) → Has-quasi-inverseᴱ l)     ↝⟨ Σ-cong-contra (inverse Lens≃Traditional-lens) Has-quasi-inverseᴱ≃Has-quasi-inverse ⟩□
-  (∃ λ (l : T.Lens A B) → T.Has-quasi-inverse l)  □
+  (∃ λ (l : Lens A B) → Has-quasi-inverseᴱ l)      ↝⟨ Σ-cong-contra (inverse Lens≃Traditional-lens) Has-quasi-inverseᴱ≃Has-quasi-inverse ⟩□
+  (∃ λ (l : T.Lens A B) → TC.Has-quasi-inverse l)  □
 
 -- An equality characterisation lemma for A ≅ B that applies when A is
 -- a set.
@@ -2500,7 +2495,7 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse l =
 equality-characterisation-for-sets-≅ᴱ
   {f₁ = f₁@(l₁₁ , _)} {f₂ = f₂@(l₁₂ , _)} A-set =
   f₁ ≡ f₂                          ↔⟨ inverse $ Eq.≃-≡ ≅ᴱ≃≅ ⟩
-  _≃_.to ≅ᴱ≃≅ f₁ ≡ _≃_.to ≅ᴱ≃≅ f₂  ↝⟨ T.equality-characterisation-for-sets-≅ A-set ⟩□
+  _≃_.to ≅ᴱ≃≅ f₁ ≡ _≃_.to ≅ᴱ≃≅ f₂  ↝⟨ TC.equality-characterisation-for-sets-≅ A-set ⟩□
   set l₁₁ ≡ set l₁₂                □
   where
   open Lens
@@ -2732,9 +2727,9 @@ Has-quasi-inverseᴱ-id-not-proposition :
 Has-quasi-inverseᴱ-id-not-proposition univ =
     _
   , Stable-¬ _
-      [ Is-proposition (Has-quasi-inverseᴱ Lens-combinators.id)     ↝⟨ H-level-cong _ 1 $ Has-quasi-inverseᴱ≃Has-quasi-inverse T.Lens-combinators.id ⟩
-        Is-proposition (T.Has-quasi-inverse T.Lens-combinators.id)  ↝⟨ proj₂ $ T.Has-quasi-inverse-id-not-proposition univ ⟩□
-        ⊥                                                           □
+      [ Is-proposition (Has-quasi-inverseᴱ Lens-combinators.id)  ↝⟨ H-level-cong _ 1 $ Has-quasi-inverseᴱ≃Has-quasi-inverse TC.id ⟩
+        Is-proposition (TC.Has-quasi-inverse TC.id)              ↝⟨ proj₂ $ TC.Has-quasi-inverse-id-not-proposition univ ⟩□
+        ⊥                                                        □
       ]
 
 -- There is not necessarily a split surjection from
@@ -2750,15 +2745,15 @@ Has-quasi-inverseᴱ-id-not-proposition univ =
   Stable-¬ _
     [ ({A B : Type a}
        (l : Lens A B) →
-       Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ l)    ↝⟨ (λ hyp l →
-                                                                     from-equivalence (Has-quasi-inverseᴱ≃Has-quasi-inverse l) F.∘
-                                                                     hyp (Traditional-lens→Lens l) F.∘
-                                                                     from-equivalence EEq.Is-equivalence≃Is-equivalenceᴱ) ⟩
+       Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ l)     ↝⟨ (λ hyp l →
+                                                                      from-equivalence (Has-quasi-inverseᴱ≃Has-quasi-inverse l) F.∘
+                                                                      hyp (Traditional-lens→Lens l) F.∘
+                                                                      from-equivalence EEq.Is-equivalence≃Is-equivalenceᴱ) ⟩
       ({A B : Type a}
        (l : T.Lens A B) →
-       Is-equivalence (T.Lens.get l) ↠ T.Has-quasi-inverse l)  ↝⟨ T.¬Is-equivalence↠Has-quasi-inverse univ ⟩□
+       Is-equivalence (T.Lens.get l) ↠ TC.Has-quasi-inverse l)  ↝⟨ TC.¬Is-equivalence↠Has-quasi-inverse univ ⟩□
 
-      ⊥                                                        □
+      ⊥                                                         □
     ]
 
 -- There is not necessarily an equivalence with erased proofs from
@@ -2800,111 +2795,111 @@ open BM public
   renaming (Is-bi-invertibleᴱ-propositional to
             Is-bi-invertibleᴱ-propositional)
 
--- T.Has-left-inverse l implies
+-- TC.Has-left-inverse l implies
 -- Has-left-inverseᴱ (Traditional-lens→Lens l).
 
 Has-left-inverse→Has-left-inverseᴱ :
   (l : T.Lens A B) →
-  T.Has-left-inverse l → Has-left-inverseᴱ (Traditional-lens→Lens l)
+  TC.Has-left-inverse l → Has-left-inverseᴱ (Traditional-lens→Lens l)
 Has-left-inverse→Has-left-inverseᴱ l =
-  (∃ λ l⁻¹ →         l⁻¹ TLC.∘ l  ≡ TLC.id )  ↝⟨ Σ-map Traditional-lens→Lens (cong Traditional-lens→Lens) ⟩
-  (∃ λ l⁻¹ →         l⁻¹  LC.∘ l′ ≡  LC.id )  ↝⟨ Σ-map P.id [_]→ ⟩□
-  (∃ λ l⁻¹ → Erased (l⁻¹  LC.∘ l′ ≡  LC.id))  □
+  (∃ λ l⁻¹ →         l⁻¹ TC.∘ l  ≡ TC.id )  ↝⟨ Σ-map Traditional-lens→Lens (cong Traditional-lens→Lens) ⟩
+  (∃ λ l⁻¹ →         l⁻¹ LC.∘ l′ ≡ LC.id )  ↝⟨ Σ-map P.id [_]→ ⟩□
+  (∃ λ l⁻¹ → Erased (l⁻¹ LC.∘ l′ ≡ LC.id))  □
   where
   module LC = Lens-combinators
 
   l′ = Traditional-lens→Lens l
 
 -- In erased contexts Has-left-inverseᴱ (Traditional-lens→Lens l) is
--- equivalent to T.Has-left-inverse l.
+-- equivalent to TC.Has-left-inverse l.
 
 @0 Has-left-inverseᴱ≃Has-left-inverse :
   (l : T.Lens A B) →
-  Has-left-inverseᴱ (Traditional-lens→Lens l) ≃ T.Has-left-inverse l
+  Has-left-inverseᴱ (Traditional-lens→Lens l) ≃ TC.Has-left-inverse l
 Has-left-inverseᴱ≃Has-left-inverse l =
-  (∃ λ l⁻¹ → Erased (l⁻¹  LC.∘ l′ ≡  LC.id))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
-  (∃ λ l⁻¹ →         l⁻¹  LC.∘ l′ ≡  LC.id )  ↝⟨ (Σ-cong Lens≃Traditional-lens λ _ → inverse $ Eq.≃-≡ Lens≃Traditional-lens) ⟩□
-  (∃ λ l⁻¹ →         l⁻¹ TLC.∘ l  ≡ TLC.id )  □
+  (∃ λ l⁻¹ → Erased (l⁻¹ LC.∘ l′ ≡ LC.id))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
+  (∃ λ l⁻¹ →         l⁻¹ LC.∘ l′ ≡ LC.id )  ↝⟨ (Σ-cong Lens≃Traditional-lens λ _ → inverse $ Eq.≃-≡ Lens≃Traditional-lens) ⟩□
+  (∃ λ l⁻¹ →         l⁻¹ TC.∘ l  ≡ TC.id )  □
   where
   module LC = Lens-combinators
 
   l′ = Traditional-lens→Lens l
 
--- T.Has-right-inverse l implies
+-- TC.Has-right-inverse l implies
 -- Has-right-inverseᴱ (Traditional-lens→Lens l).
 
 Has-right-inverse→Has-right-inverseᴱ :
   (l : T.Lens A B) →
-  T.Has-right-inverse l → Has-right-inverseᴱ (Traditional-lens→Lens l)
+  TC.Has-right-inverse l → Has-right-inverseᴱ (Traditional-lens→Lens l)
 Has-right-inverse→Has-right-inverseᴱ l =
-  (∃ λ l⁻¹ →         l  TLC.∘ l⁻¹ ≡ TLC.id )  ↝⟨ Σ-map Traditional-lens→Lens (cong Traditional-lens→Lens) ⟩
-  (∃ λ l⁻¹ →         l′  LC.∘ l⁻¹ ≡  LC.id )  ↝⟨ Σ-map P.id [_]→ ⟩□
-  (∃ λ l⁻¹ → Erased (l′  LC.∘ l⁻¹ ≡  LC.id))  □
+  (∃ λ l⁻¹ →         l  TC.∘ l⁻¹ ≡ TC.id )  ↝⟨ Σ-map Traditional-lens→Lens (cong Traditional-lens→Lens) ⟩
+  (∃ λ l⁻¹ →         l′ LC.∘ l⁻¹ ≡ LC.id )  ↝⟨ Σ-map P.id [_]→ ⟩□
+  (∃ λ l⁻¹ → Erased (l′ LC.∘ l⁻¹ ≡ LC.id))  □
   where
   module LC = Lens-combinators
 
   l′ = Traditional-lens→Lens l
 
 -- In erased contexts Has-right-inverseᴱ (Traditional-lens→Lens l) is
--- equivalent to T.Has-right-inverse l.
+-- equivalent to TC.Has-right-inverse l.
 
 @0 Has-right-inverseᴱ≃Has-right-inverse :
   (l : T.Lens A B) →
-  Has-right-inverseᴱ (Traditional-lens→Lens l) ≃ T.Has-right-inverse l
+  Has-right-inverseᴱ (Traditional-lens→Lens l) ≃ TC.Has-right-inverse l
 Has-right-inverseᴱ≃Has-right-inverse l =
-  (∃ λ l⁻¹ → Erased (l′ LC.∘ l⁻¹ ≡  LC.id))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
-  (∃ λ l⁻¹ →         l′ LC.∘ l⁻¹ ≡  LC.id )  ↝⟨ (Σ-cong Lens≃Traditional-lens λ _ → inverse $ Eq.≃-≡ Lens≃Traditional-lens) ⟩□
-  (∃ λ l⁻¹ →         l TLC.∘ l⁻¹ ≡ TLC.id )  □
+  (∃ λ l⁻¹ → Erased (l′ LC.∘ l⁻¹ ≡ LC.id))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
+  (∃ λ l⁻¹ →         l′ LC.∘ l⁻¹ ≡ LC.id )  ↝⟨ (Σ-cong Lens≃Traditional-lens λ _ → inverse $ Eq.≃-≡ Lens≃Traditional-lens) ⟩□
+  (∃ λ l⁻¹ →         l  TC.∘ l⁻¹ ≡ TC.id )  □
   where
   module LC = Lens-combinators
 
   l′ = Traditional-lens→Lens l
 
--- T.Is-bi-invertible l implies
+-- TC.Is-bi-invertible l implies
 -- Is-bi-invertibleᴱ (Traditional-lens→Lens l).
 
 Is-bi-invertible→Is-bi-invertibleᴱ :
   (l : T.Lens A B) →
-  T.Is-bi-invertible l → Is-bi-invertibleᴱ (Traditional-lens→Lens l)
+  TC.Is-bi-invertible l → Is-bi-invertibleᴱ (Traditional-lens→Lens l)
 Is-bi-invertible→Is-bi-invertibleᴱ l =
-  T.Is-bi-invertible l                          ↔⟨⟩
-  T.Has-left-inverse l × T.Has-right-inverse l  ↝⟨ Σ-map (Has-left-inverse→Has-left-inverseᴱ l)
-                                                         (Has-right-inverse→Has-right-inverseᴱ l) ⟩
-  Has-left-inverseᴱ l′ × Has-right-inverseᴱ l′  ↔⟨⟩
-  Is-bi-invertibleᴱ l′                          □
+  TC.Is-bi-invertible l                           ↔⟨⟩
+  TC.Has-left-inverse l × TC.Has-right-inverse l  ↝⟨ Σ-map (Has-left-inverse→Has-left-inverseᴱ l)
+                                                           (Has-right-inverse→Has-right-inverseᴱ l) ⟩
+  Has-left-inverseᴱ l′ × Has-right-inverseᴱ l′    ↔⟨⟩
+  Is-bi-invertibleᴱ l′                            □
   where
   l′ = Traditional-lens→Lens l
 
 -- In erased contexts Is-bi-invertibleᴱ (Traditional-lens→Lens l) is
--- equivalent to T.Is-bi-invertible l.
+-- equivalent to TC.Is-bi-invertible l.
 
 @0 Is-bi-invertibleᴱ≃Is-bi-invertible :
   (l : T.Lens A B) →
-  Is-bi-invertibleᴱ (Traditional-lens→Lens l) ≃ T.Is-bi-invertible l
+  Is-bi-invertibleᴱ (Traditional-lens→Lens l) ≃ TC.Is-bi-invertible l
 Is-bi-invertibleᴱ≃Is-bi-invertible l =
-  Is-bi-invertibleᴱ l′                          ↔⟨⟩
-  Has-left-inverseᴱ l′ × Has-right-inverseᴱ l′  ↝⟨ Has-left-inverseᴱ≃Has-left-inverse l ×-cong
-                                                   Has-right-inverseᴱ≃Has-right-inverse l ⟩
-  T.Has-left-inverse l × T.Has-right-inverse l  ↔⟨⟩
-  T.Is-bi-invertible l                          □
+  Is-bi-invertibleᴱ l′                            ↔⟨⟩
+  Has-left-inverseᴱ l′ × Has-right-inverseᴱ l′    ↝⟨ Has-left-inverseᴱ≃Has-left-inverse l ×-cong
+                                                     Has-right-inverseᴱ≃Has-right-inverse l ⟩
+  TC.Has-left-inverse l × TC.Has-right-inverse l  ↔⟨⟩
+  TC.Is-bi-invertible l                           □
   where
   l′ = Traditional-lens→Lens l
 
--- A T.≊ B implies A ≊ᴱ B.
+-- A TC.≊ B implies A ≊ᴱ B.
 
-≊→≊ᴱ : A T.≊ B → A ≊ᴱ B
+≊→≊ᴱ : A TC.≊ B → A ≊ᴱ B
 ≊→≊ᴱ {A = A} {B = B} =
-  (∃ λ (l : T.Lens A B) → T.Is-bi-invertible l)  ↝⟨ Σ-map Traditional-lens→Lens (λ {l} → Is-bi-invertible→Is-bi-invertibleᴱ l) ⟩□
-  (∃ λ (l : Lens A B) → Is-bi-invertibleᴱ l)     □
+  (∃ λ (l : T.Lens A B) → TC.Is-bi-invertible l)  ↝⟨ Σ-map Traditional-lens→Lens (λ {l} → Is-bi-invertible→Is-bi-invertibleᴱ l) ⟩□
+  (∃ λ (l : Lens A B) → Is-bi-invertibleᴱ l)      □
 
--- In erased contexts A ≊ᴱ B is equivalent to A T.≊ B.
+-- In erased contexts A ≊ᴱ B is equivalent to A TC.≊ B.
 
-@0 ≊ᴱ≃≊ : (A ≊ᴱ B) ≃ (A T.≊ B)
+@0 ≊ᴱ≃≊ : (A ≊ᴱ B) ≃ (A TC.≊ B)
 ≊ᴱ≃≊ {A = A} {B = B} =
-  (∃ λ (l : Lens A B) → Is-bi-invertibleᴱ l)     ↝⟨ (inverse $
-                                                     Σ-cong (inverse Lens≃Traditional-lens) λ l →
-                                                     inverse $ Is-bi-invertibleᴱ≃Is-bi-invertible l) ⟩□
-  (∃ λ (l : T.Lens A B) → T.Is-bi-invertible l)  □
+  (∃ λ (l : Lens A B) → Is-bi-invertibleᴱ l)      ↝⟨ (inverse $
+                                                      Σ-cong (inverse Lens≃Traditional-lens) λ l →
+                                                      inverse $ Is-bi-invertibleᴱ≃Is-bi-invertible l) ⟩□
+  (∃ λ (l : T.Lens A B) → TC.Is-bi-invertible l)  □
 
 -- An equality characterisation lemma for A ≊ᴱ B that applies when A
 -- is a set.
@@ -2917,7 +2912,7 @@ Is-bi-invertibleᴱ≃Is-bi-invertible l =
 equality-characterisation-for-sets-≊ᴱ
   {f₁ = f₁@(l₁₁ , _)} {f₂ = f₂@(l₁₂ , _)} A-set =
   f₁ ≡ f₂                          ↔⟨ inverse $ Eq.≃-≡ ≊ᴱ≃≊ ⟩
-  _≃_.to ≊ᴱ≃≊ f₁ ≡ _≃_.to ≊ᴱ≃≊ f₂  ↝⟨ T.equality-characterisation-for-sets-≊ A-set ⟩□
+  _≃_.to ≊ᴱ≃≊ f₁ ≡ _≃_.to ≊ᴱ≃≊ f₂  ↝⟨ TC.equality-characterisation-for-sets-≊ A-set ⟩□
   set l₁₁ ≡ set l₁₂                □
   where
   open Lens

@@ -48,6 +48,7 @@ import Lens.Non-dependent.Higher.Coinductive as C
 import Lens.Non-dependent.Higher.Coinductive.Coherently as Coh
 import Lens.Non-dependent.Higher.Coinductive.Small as S
 import Lens.Non-dependent.Traditional as T
+import Lens.Non-dependent.Traditional.Combinators as TC
 
 import README.Not-a-set
 
@@ -134,7 +135,7 @@ getters-equal-if-setters-equal = T.getters-equal-if-setters-equal
 
 -- The identity lens.
 
-id-traditional = T.Lens-combinators.id
+id-traditional = TC.id
 
 -- The lens used for the counterexamples.
 
@@ -147,7 +148,7 @@ lemmas-12-and-13 = T.getter-equivalence-but-not-coherent
 -- There are lenses with equal setters that are not equal.
 
 equal-setters-but-not-equal =
-  T.equal-setters-and-equivalences-as-getters-but-not-equal
+  TC.equal-setters-and-equivalences-as-getters-but-not-equal
 
 -- Lemma 14.
 
@@ -252,7 +253,7 @@ lemma-36-right-to-left = E.to-from-≃-≃-Σ-Lens-Is-equivalence-get≡get
 -- There is in general no such equivalence for traditional lenses (in
 -- fact, not even a split surjection).
 
-no-such-equivalence-1 = T.¬-≃-↠-Σ-Lens-Is-equivalence-get
+no-such-equivalence-1 = TC.¬-≃-↠-Σ-Lens-Is-equivalence-get
 
 ------------------------------------------------------------------------
 -- VIII: Equality of lenses with equal setters
@@ -338,9 +339,9 @@ right-identity = E.Lens-combinators.right-identity
 
 -- Composition laws for traditional lenses.
 
-associativity-traditional  = T.Lens-combinators.associativity
-left-identity-traditional  = T.Lens-combinators.left-identity
-right-identity-traditional = T.Lens-combinators.right-identity
+associativity-traditional  = TC.associativity
+left-identity-traditional  = TC.left-identity
+right-identity-traditional = TC.right-identity
 
 -- Lemma 58.
 --
@@ -369,16 +370,16 @@ lemma-60-right-to-left = E.to-from-≃≃≊≡get
 -- There is in general no such equivalence for traditional lenses (in
 -- fact, not even a split surjection).
 
-no-such-equivalence-2 = T.¬≃↠≊
+no-such-equivalence-2 = TC.¬≃↠≊
 
 -- A variant of Lemma 60 for traditional lenses (a split surjection in
 -- the other direction).
 
-lemma-60-for-traditional = T.≊↠≃
+lemma-60-for-traditional = TC.≊↠≃
 
 -- Lemma 61 for traditional lenses.
 
-lemma-61-for-traditional = T.Is-bi-invertible≃Is-equivalence-get
+lemma-61-for-traditional = TC.Is-bi-invertible≃Is-equivalence-get
 
 -- A category of higher lenses between sets with the same universe
 -- level.
@@ -388,7 +389,7 @@ category-higher = E.category
 -- A category of traditional lenses between sets with the same
 -- universe level.
 
-category-traditional = T.category
+category-traditional = TC.category
 
 -- The category of higher lenses is equal to the one for traditional
 -- lenses (lifted, so that the two categories have the same type).
