@@ -22,6 +22,7 @@ open import Function-universe equality-with-J as F hiding (_∘_)
 
 import Lens.Dependent
 import Lens.Non-dependent.Higher equality-with-paths as Higher
+import Lens.Non-dependent.Higher.Combinators equality-with-paths as HC
 
 ------------------------------------------------------------------------
 -- Dependent lenses with "remainder types" visible in the type
@@ -183,7 +184,7 @@ module Dependent where
 module Non-dependent where
 
   open Higher
-  open Lens-combinators
+  open HC
 
   -- Labels.
 

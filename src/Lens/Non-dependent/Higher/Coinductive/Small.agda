@@ -31,6 +31,7 @@ open import Univalence-axiom equality-with-J
 
 open import Lens.Non-dependent eq
 import Lens.Non-dependent.Higher eq as Higher
+import Lens.Non-dependent.Higher.Combinators eq as HC
 import Lens.Non-dependent.Higher.Capriotti eq as Capriotti
 import Lens.Non-dependent.Higher.Coinductive eq as Coinductive
 open import Lens.Non-dependent.Higher.Coinductive.Coherently eq
@@ -1106,10 +1107,10 @@ module _
   (∥ C ∥ → C) →
   ⟨ univ₁ , univ₂ , univ₃ , univ₄ , univ₅ , univ₆ , univ₇ , bl ⟩
     l₁ ⊚ l₂ ≡
-  Higher.Lens-combinators.⟨ a , b ⟩ l₁ ∘ l₂
+  HC.⟨ a , b ⟩ l₁ ∘ l₂
 ⊚≡∘ bl a b univ₁ univ₂ univ₃ univ₄ univ₅ univ₆ univ₇ l₁ l₂ stable =
   cong (λ f → f l₁ l₂) $
-  Higher.Lens-combinators.composition≡∘ a b univ₇ stable
+  HC.composition≡∘ a b univ₇ stable
     ⟨ univ₁ , univ₂ , univ₃ , univ₄ , univ₅ , univ₆ , univ₇ , bl ⟩_⊚_
     (set-⊚ univ₁ univ₂ univ₃ univ₄ univ₅ univ₆ univ₇ bl)
 

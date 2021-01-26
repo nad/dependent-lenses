@@ -40,6 +40,7 @@ open import Surjection equality-with-J using (module _↠_)
 open import Univalence-axiom equality-with-J
 
 import Lens.Non-dependent.Higher equality-with-paths as ND
+import Lens.Non-dependent.Higher.Combinators equality-with-paths as NDC
 
 private
   variable
@@ -1262,7 +1263,7 @@ module No-fully-general-composition-operator
     open _≃_
 
     idL : ND.Lens Bool Bool
-    idL = ND.Lens-combinators.id ⊠
+    idL = NDC.id ⊠
 
     swapL : ND.Lens Bool Bool
     swapL = ND.isomorphism-to-lens

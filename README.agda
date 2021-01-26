@@ -13,6 +13,7 @@ import Lens.Non-dependent
 import Lens.Non-dependent.Traditional
 import Lens.Non-dependent.Traditional.Combinators
 import Lens.Non-dependent.Higher
+import Lens.Non-dependent.Higher.Combinators
 import Lens.Non-dependent.Higher.Capriotti.Variant
 import Lens.Non-dependent.Higher.Capriotti
 import Lens.Non-dependent.Higher.Coinductive.Coherently

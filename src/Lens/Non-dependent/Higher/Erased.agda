@@ -47,6 +47,7 @@ open import Lens.Non-dependent eq as Non-dependent
   hiding (no-first-projection-lens)
 import Lens.Non-dependent.Equivalent-preimages eq as EP
 import Lens.Non-dependent.Higher eq as H
+import Lens.Non-dependent.Higher.Combinators eq as HC
 import Lens.Non-dependent.Traditional eq as T
 import Lens.Non-dependent.Traditional.Erased eq as Traditionalᴱ
 
@@ -1593,9 +1594,6 @@ grenrus-example₂-false = refl _
 ------------------------------------------------------------------------
 -- Lens combinators
 
-private
-  module HLC = H.Lens-combinators
-
 module Lens-combinators where
 
   -- The definition of the identity lens is unique (in erased
@@ -1610,7 +1608,7 @@ module Lens-combinators where
     Lens.get l₂ ≡ P.id →
     l₁ ≡ l₂
   id-unique {A = A} univ l₁ l₂ g₁ g₂ =
-                       $⟨ HLC.id-unique univ (high l₁) (high l₂) g₁ g₂ ⟩
+                       $⟨ HC.id-unique univ (high l₁) (high l₂) g₁ g₂ ⟩
     high l₁ ≡ high l₂  ↝⟨ Eq.≃-≡ Lens≃Higher-lens {x = l₁} {y = l₂} ⟩□
     l₁ ≡ l₂            □
 
@@ -1659,7 +1657,7 @@ module Lens-combinators where
     {A : Type a}
     (b : Block "id")
     (univ : Univalence a) →
-    Higher-lens→Lens (HLC.id b) ≡ id {A = A} b
+    Higher-lens→Lens (HC.id b) ≡ id {A = A} b
   Higher-lens-id≡id {A = A} ⊠ univ =
     _↔_.from (equality-characterisation₁ univ)
       ( (∥ A ∥         ↔⟨ inverse $ erased Erased↔ ⟩□
@@ -1708,7 +1706,7 @@ module Lens-combinators where
     ∀ a b {A : Type (a ⊔ b ⊔ c)} {B : Type (b ⊔ c)} {C : Type c} →
     Univalence (a ⊔ b ⊔ c) →
     (l₁ : H.Lens B C) (l₂ : H.Lens A B) →
-    Higher-lens→Lens (HLC.⟨ a , b ⟩ l₁ ∘ l₂) ≡
+    Higher-lens→Lens (HC.⟨ a , b ⟩ l₁ ∘ l₂) ≡
     ⟨ a , b ⟩ Higher-lens→Lens l₁ ∘ Higher-lens→Lens l₂
   Higher-lens-∘≡∘ _ _ univ (H.⟨ _ , _ , _ ⟩) (H.⟨ _ , _ , _ ⟩) =
     _↔_.from (equality-characterisation₁ univ)
@@ -1846,21 +1844,21 @@ private
     (b : Block "id") →
     Univalence a →
     (l₁ : H.Lens B A) (l₂ : H.Lens A B) →
-    l₁ HLC.∘ l₂ ≡ HLC.id b →
+    l₁ HC.∘ l₂ ≡ HC.id b →
     Higher-lens→Lens l₁ ∘ Higher-lens→Lens l₂ ≡ id b
   ∘≡id→∘≡id b univ l₁ l₂ hyp =
     Higher-lens→Lens l₁ ∘ Higher-lens→Lens l₂  ≡⟨ sym $ Higher-lens-∘≡∘ lzero lzero univ l₁ l₂ ⟩
-    Higher-lens→Lens (l₁ HLC.∘ l₂)             ≡⟨ cong Higher-lens→Lens hyp ⟩
-    Higher-lens→Lens (HLC.id b)                ≡⟨ Higher-lens-id≡id b univ ⟩∎
+    Higher-lens→Lens (l₁ HC.∘ l₂)              ≡⟨ cong Higher-lens→Lens hyp ⟩
+    Higher-lens→Lens (HC.id b)                 ≡⟨ Higher-lens-id≡id b univ ⟩∎
     id b                                       ∎
 
   @0 l∘l⁻¹≡l∘l⁻¹ :
     {A B : Type a} →
     Univalence a →
     (l : H.Lens B A) (l⁻¹ : Lens A B) →
-    Higher-lens→Lens (l HLC.∘ high l⁻¹) ≡ Higher-lens→Lens l ∘ l⁻¹
+    Higher-lens→Lens (l HC.∘ high l⁻¹) ≡ Higher-lens→Lens l ∘ l⁻¹
   l∘l⁻¹≡l∘l⁻¹ univ l l⁻¹ =
-    Higher-lens→Lens (l HLC.∘ high l⁻¹)               ≡⟨ Higher-lens-∘≡∘ lzero lzero univ l (high l⁻¹) ⟩
+    Higher-lens→Lens (l HC.∘ high l⁻¹)                ≡⟨ Higher-lens-∘≡∘ lzero lzero univ l (high l⁻¹) ⟩
     Higher-lens→Lens l ∘ Higher-lens→Lens (high l⁻¹)  ≡⟨ cong (Higher-lens→Lens l ∘_) $
                                                          _≃_.left-inverse-of Lens≃Higher-lens l⁻¹ ⟩∎
     Higher-lens→Lens l ∘ l⁻¹                          ∎
@@ -1869,14 +1867,14 @@ private
     {A B : Type a} →
     Univalence a →
     (l⁻¹ : Lens B A) (l : H.Lens A B) →
-    Higher-lens→Lens (high l⁻¹ HLC.∘ l) ≡ l⁻¹ ∘ Higher-lens→Lens l
+    Higher-lens→Lens (high l⁻¹ HC.∘ l) ≡ l⁻¹ ∘ Higher-lens→Lens l
   l⁻¹∘l≡l⁻¹∘l univ l⁻¹ l =
-    Higher-lens→Lens (high l⁻¹ HLC.∘ l)               ≡⟨ Higher-lens-∘≡∘ lzero lzero univ (high l⁻¹) l ⟩
+    Higher-lens→Lens (high l⁻¹ HC.∘ l)                ≡⟨ Higher-lens-∘≡∘ lzero lzero univ (high l⁻¹) l ⟩
     Higher-lens→Lens (high l⁻¹) ∘ Higher-lens→Lens l  ≡⟨ cong (_∘ Higher-lens→Lens l) $
                                                          _≃_.left-inverse-of Lens≃Higher-lens l⁻¹ ⟩∎
     l⁻¹ ∘ Higher-lens→Lens l                          ∎
 
--- H.Has-quasi-inverse b l implies
+-- HC.Has-quasi-inverse b l implies
 -- Has-quasi-inverseᴱ b (Higher-lens→Lens l) (assuming univalence).
 
 Has-quasi-inverse→Has-quasi-inverseᴱ :
@@ -1884,64 +1882,64 @@ Has-quasi-inverse→Has-quasi-inverseᴱ :
   (b : Block "id") →
   @0 Univalence a →
   (l : H.Lens A B) →
-  H.Has-quasi-inverse b l → Has-quasi-inverseᴱ b (Higher-lens→Lens l)
+  HC.Has-quasi-inverse b l → Has-quasi-inverseᴱ b (Higher-lens→Lens l)
 Has-quasi-inverse→Has-quasi-inverseᴱ {a = a} b univ l =
-  (∃ λ l⁻¹ →         l  HLC.∘ l⁻¹ ≡ HLC.id b × l⁻¹ HLC.∘ l  ≡ HLC.id b )  ↝⟨ (Σ-map Higher-lens→Lens λ {l⁻¹} (p , q) →
-                                                                              [ ∘≡id→∘≡id b univ l l⁻¹ p
-                                                                              , ∘≡id→∘≡id b univ l⁻¹ l q
-                                                                              ]) ⟩
-  (∃ λ l⁻¹ → Erased (l′     ∘ l⁻¹ ≡     id b × l⁻¹     ∘ l′ ≡     id b))  □
+  (∃ λ l⁻¹ →         l  HC.∘ l⁻¹ ≡ HC.id b × l⁻¹ HC.∘ l  ≡ HC.id b )  ↝⟨ (Σ-map Higher-lens→Lens λ {l⁻¹} (p , q) →
+                                                                          [ ∘≡id→∘≡id b univ l l⁻¹ p
+                                                                          , ∘≡id→∘≡id b univ l⁻¹ l q
+                                                                          ]) ⟩
+  (∃ λ l⁻¹ → Erased (l′    ∘ l⁻¹ ≡    id b × l⁻¹    ∘ l′ ≡    id b))  □
   where
   l′ = Higher-lens→Lens l
 
 -- In erased contexts Has-quasi-inverseᴱ b (Higher-lens→Lens l) is
--- equivalent to H.Has-quasi-inverse b l (assuming univalence).
+-- equivalent to HC.Has-quasi-inverse b l (assuming univalence).
 
 @0 Has-quasi-inverseᴱ≃Has-quasi-inverse :
   {A B : Type a}
   (b : Block "id") →
   Univalence a →
   (l : H.Lens A B) →
-  Has-quasi-inverseᴱ b (Higher-lens→Lens l) ≃ H.Has-quasi-inverse b l
+  Has-quasi-inverseᴱ b (Higher-lens→Lens l) ≃ HC.Has-quasi-inverse b l
 Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
-  (∃ λ l⁻¹ → Erased (l′    ∘ l⁻¹ ≡     id b × l⁻¹     ∘ l′ ≡     id b))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
-  (∃ λ l⁻¹ →         l′    ∘ l⁻¹ ≡     id b × l⁻¹     ∘ l′ ≡     id b )  ↝⟨ (inverse $
-                                                                             Σ-cong-contra Lens≃Higher-lens λ l⁻¹ →
-                                                                             (≡⇒↝ _ (cong₂ _≡_ (l∘l⁻¹≡l∘l⁻¹ univ l l⁻¹)
-                                                                                               (Higher-lens-id≡id b univ)) F.∘
-                                                                              inverse (Eq.≃-≡ $ inverse Lens≃Higher-lens))
-                                                                               ×-cong
-                                                                             (≡⇒↝ _ (cong₂ _≡_ (l⁻¹∘l≡l⁻¹∘l univ l⁻¹ l)
-                                                                                               (Higher-lens-id≡id b univ)) F.∘
-                                                                              inverse (Eq.≃-≡ $ inverse Lens≃Higher-lens))) ⟩□
-  (∃ λ l⁻¹ →         l HLC.∘ l⁻¹ ≡ HLC.id b × l⁻¹ HLC.∘ l  ≡ HLC.id b )  □
+  (∃ λ l⁻¹ → Erased (l′    ∘ l⁻¹ ≡    id b × l⁻¹    ∘ l′ ≡    id b))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
+  (∃ λ l⁻¹ →         l′    ∘ l⁻¹ ≡    id b × l⁻¹    ∘ l′ ≡    id b )  ↝⟨ (inverse $
+                                                                          Σ-cong-contra Lens≃Higher-lens λ l⁻¹ →
+                                                                          (≡⇒↝ _ (cong₂ _≡_ (l∘l⁻¹≡l∘l⁻¹ univ l l⁻¹)
+                                                                                            (Higher-lens-id≡id b univ)) F.∘
+                                                                           inverse (Eq.≃-≡ $ inverse Lens≃Higher-lens))
+                                                                            ×-cong
+                                                                          (≡⇒↝ _ (cong₂ _≡_ (l⁻¹∘l≡l⁻¹∘l univ l⁻¹ l)
+                                                                                            (Higher-lens-id≡id b univ)) F.∘
+                                                                           inverse (Eq.≃-≡ $ inverse Lens≃Higher-lens))) ⟩□
+  (∃ λ l⁻¹ →         l  HC.∘ l⁻¹ ≡ HC.id b × l⁻¹ HC.∘ l  ≡ HC.id b )  □
   where
   l′ = Higher-lens→Lens l
 
--- H.[ b ] A ≅ B implies [ b ] A ≅ᴱ B (assuming univalence).
+-- HC.[ b ] A ≅ B implies [ b ] A ≅ᴱ B (assuming univalence).
 
 ≅→≅ᴱ :
   {A B : Type a}
   (b : Block "id") →
   @0 Univalence a →
-  H.[ b ] A ≅ B → [ b ] A ≅ᴱ B
+  HC.[ b ] A ≅ B → [ b ] A ≅ᴱ B
 ≅→≅ᴱ {A = A} {B = B} b univ =
-  (∃ λ (l : H.Lens A B) → H.Has-quasi-inverse b l)  ↝⟨ (Σ-map Higher-lens→Lens λ {l} →
-                                                        Has-quasi-inverse→Has-quasi-inverseᴱ b univ l) ⟩□
-  (∃ λ (l : Lens A B) → Has-quasi-inverseᴱ b l)     □
+  (∃ λ (l : H.Lens A B) → HC.Has-quasi-inverse b l)  ↝⟨ (Σ-map Higher-lens→Lens λ {l} →
+                                                         Has-quasi-inverse→Has-quasi-inverseᴱ b univ l) ⟩□
+  (∃ λ (l : Lens A B) → Has-quasi-inverseᴱ b l)      □
 
--- In erased contexts [ b ] A ≅ᴱ B is equivalent to H.[ b ] A ≅ B
+-- In erased contexts [ b ] A ≅ᴱ B is equivalent to HC.[ b ] A ≅ B
 -- (assuming univalence).
 
 @0 ≅ᴱ≃≅ :
   {A B : Type a}
   (b : Block "id") →
   Univalence a →
-  ([ b ] A ≅ᴱ B) ≃ (H.[ b ] A ≅ B)
+  ([ b ] A ≅ᴱ B) ≃ (HC.[ b ] A ≅ B)
 ≅ᴱ≃≅ {A = A} {B = B} b univ =
-  (∃ λ (l : Lens A B) → Has-quasi-inverseᴱ b l)     ↝⟨ Σ-cong-contra (inverse Lens≃Higher-lens) $
-                                                       Has-quasi-inverseᴱ≃Has-quasi-inverse b univ ⟩□
-  (∃ λ (l : H.Lens A B) → H.Has-quasi-inverse b l)  □
+  (∃ λ (l : Lens A B) → Has-quasi-inverseᴱ b l)      ↝⟨ Σ-cong-contra (inverse Lens≃Higher-lens) $
+                                                        Has-quasi-inverseᴱ≃Has-quasi-inverse b univ ⟩□
+  (∃ λ (l : H.Lens A B) → HC.Has-quasi-inverse b l)  □
 
 -- Lenses with quasi-inverses can be converted to equivalences with
 -- erased proofs.
@@ -2026,13 +2024,13 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
   Stable-¬ _
     [ ({A B : Type a}
        (l : Lens A B) →
-       Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ b l)    ↝⟨ (λ hyp → lemma hyp) ⟩
+       Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ b l)     ↝⟨ (λ hyp → lemma hyp) ⟩
 
       ({A B : Type a}
        (l : H.Lens A B) →
-       Is-equivalence (H.Lens.get l) ↠ H.Has-quasi-inverse b l)  ↝⟨ H.¬Is-equivalence-get↠Has-quasi-inverse b univ ⟩□
+       Is-equivalence (H.Lens.get l) ↠ HC.Has-quasi-inverse b l)  ↝⟨ HC.¬Is-equivalence-get↠Has-quasi-inverse b univ ⟩□
 
-      ⊥                                                          □
+      ⊥                                                           □
     ]
   where
   @0 lemma : ∀ {A B : Type a} _ (l : H.Lens A B) → _
@@ -2040,7 +2038,7 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
     Is-equivalence (Lens.get (Higher-lens→Lens l))   ↔⟨ EEq.Is-equivalence≃Is-equivalenceᴱ ⟩
     Is-equivalenceᴱ (Lens.get (Higher-lens→Lens l))  ↝⟨ hyp (Higher-lens→Lens l) ⟩
     Has-quasi-inverseᴱ b (Higher-lens→Lens l)        ↔⟨ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l ⟩□
-    H.Has-quasi-inverse b l                          □
+    HC.Has-quasi-inverse b l                         □
 
 -- There is not necessarily an equivalence with erased proofs from
 -- Is-equivalenceᴱ (Lens.get l) to Has-quasi-inverseᴱ l, if l is a
@@ -2083,7 +2081,7 @@ open BM public
   renaming (equality-characterisation-≊ᴱ to
             equality-characterisation-≊ᴱ)
 
--- H.Has-left-inverse b l implies
+-- HC.Has-left-inverse b l implies
 -- Has-left-inverseᴱ b (Higher-lens→Lens l) (assuming univalence).
 
 Has-left-inverse→Has-left-inverseᴱ :
@@ -2091,35 +2089,35 @@ Has-left-inverse→Has-left-inverseᴱ :
   (b : Block "id") →
   @0 Univalence a →
   (l : H.Lens A B) →
-  H.Has-left-inverse b l → Has-left-inverseᴱ b (Higher-lens→Lens l)
+  HC.Has-left-inverse b l → Has-left-inverseᴱ b (Higher-lens→Lens l)
 Has-left-inverse→Has-left-inverseᴱ b univ l =
-  (∃ λ l⁻¹ →         l⁻¹ HLC.∘ l  ≡ HLC.id b )  ↝⟨ (Σ-map Higher-lens→Lens λ {l⁻¹} eq →
-                                                    [ ∘≡id→∘≡id b univ l⁻¹ l eq ]) ⟩□
-  (∃ λ l⁻¹ → Erased (l⁻¹     ∘ l′ ≡     id b))  □
+  (∃ λ l⁻¹ →         l⁻¹ HC.∘ l  ≡ HC.id b )  ↝⟨ (Σ-map Higher-lens→Lens λ {l⁻¹} eq →
+                                                  [ ∘≡id→∘≡id b univ l⁻¹ l eq ]) ⟩□
+  (∃ λ l⁻¹ → Erased (l⁻¹    ∘ l′ ≡    id b))  □
   where
   l′ = Higher-lens→Lens l
 
 -- In erased contexts Has-left-inverseᴱ b (Higher-lens→Lens l) is
--- equivalent to H.Has-left-inverse b l (assuming univalence).
+-- equivalent to HC.Has-left-inverse b l (assuming univalence).
 
 @0 Has-left-inverseᴱ≃Has-left-inverse :
   {A B : Type a}
   (b : Block "id") →
   Univalence a →
   (l : H.Lens A B) →
-  Has-left-inverseᴱ b (Higher-lens→Lens l) ≃ H.Has-left-inverse b l
+  Has-left-inverseᴱ b (Higher-lens→Lens l) ≃ HC.Has-left-inverse b l
 Has-left-inverseᴱ≃Has-left-inverse b univ l =
-  (∃ λ l⁻¹ → Erased (l⁻¹     ∘ l′ ≡     id b))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
-  (∃ λ l⁻¹ →         l⁻¹     ∘ l′ ≡     id b )  ↝⟨ (inverse $
-                                                    Σ-cong-contra Lens≃Higher-lens λ l⁻¹ →
-                                                    ≡⇒↝ _ (cong₂ _≡_ (l⁻¹∘l≡l⁻¹∘l univ l⁻¹ l)
-                                                                     (Higher-lens-id≡id b univ)) F.∘
-                                                    inverse (Eq.≃-≡ $ inverse Lens≃Higher-lens)) ⟩□
-  (∃ λ l⁻¹ →         l⁻¹ HLC.∘ l  ≡ HLC.id b )  □
+  (∃ λ l⁻¹ → Erased (l⁻¹    ∘ l′ ≡    id b))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
+  (∃ λ l⁻¹ →         l⁻¹    ∘ l′ ≡    id b )  ↝⟨ (inverse $
+                                                  Σ-cong-contra Lens≃Higher-lens λ l⁻¹ →
+                                                  ≡⇒↝ _ (cong₂ _≡_ (l⁻¹∘l≡l⁻¹∘l univ l⁻¹ l)
+                                                                   (Higher-lens-id≡id b univ)) F.∘
+                                                  inverse (Eq.≃-≡ $ inverse Lens≃Higher-lens)) ⟩□
+  (∃ λ l⁻¹ →         l⁻¹ HC.∘ l  ≡ HC.id b )  □
   where
   l′ = Higher-lens→Lens l
 
--- H.Has-right-inverse b l implies
+-- HC.Has-right-inverse b l implies
 -- Has-right-inverseᴱ b (Higher-lens→Lens l) (assuming univalence).
 
 Has-right-inverse→Has-right-inverseᴱ :
@@ -2127,35 +2125,35 @@ Has-right-inverse→Has-right-inverseᴱ :
   (b : Block "id") →
   @0 Univalence a →
   (l : H.Lens A B) →
-  H.Has-right-inverse b l → Has-right-inverseᴱ b (Higher-lens→Lens l)
+  HC.Has-right-inverse b l → Has-right-inverseᴱ b (Higher-lens→Lens l)
 Has-right-inverse→Has-right-inverseᴱ b univ l =
-  (∃ λ l⁻¹ →         l  HLC.∘ l⁻¹ ≡ HLC.id b )  ↝⟨ (Σ-map Higher-lens→Lens λ {l⁻¹} eq →
-                                                    [ ∘≡id→∘≡id b univ l l⁻¹ eq ]) ⟩□
-  (∃ λ l⁻¹ → Erased (l′     ∘ l⁻¹ ≡     id b))  □
+  (∃ λ l⁻¹ →         l  HC.∘ l⁻¹ ≡ HC.id b )  ↝⟨ (Σ-map Higher-lens→Lens λ {l⁻¹} eq →
+                                                  [ ∘≡id→∘≡id b univ l l⁻¹ eq ]) ⟩□
+  (∃ λ l⁻¹ → Erased (l′    ∘ l⁻¹ ≡    id b))  □
   where
   l′ = Higher-lens→Lens l
 
 -- In erased contexts Has-right-inverseᴱ b (Higher-lens→Lens l) is
--- equivalent to H.Has-right-inverse b l (assuming univalence).
+-- equivalent to HC.Has-right-inverse b l (assuming univalence).
 
 @0 Has-right-inverseᴱ≃Has-right-inverse :
   {A B : Type a}
   (b : Block "id") →
   Univalence a →
   (l : H.Lens A B) →
-  Has-right-inverseᴱ b (Higher-lens→Lens l) ≃ H.Has-right-inverse b l
+  Has-right-inverseᴱ b (Higher-lens→Lens l) ≃ HC.Has-right-inverse b l
 Has-right-inverseᴱ≃Has-right-inverse b univ l =
-  (∃ λ l⁻¹ → Erased (l′     ∘ l⁻¹ ≡     id b))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
-  (∃ λ l⁻¹ →         l′     ∘ l⁻¹ ≡     id b )  ↝⟨ (inverse $
-                                                    Σ-cong-contra Lens≃Higher-lens λ l⁻¹ →
-                                                    ≡⇒↝ _ (cong₂ _≡_ (l∘l⁻¹≡l∘l⁻¹ univ l l⁻¹)
-                                                                     (Higher-lens-id≡id b univ)) F.∘
-                                                    inverse (Eq.≃-≡ $ inverse Lens≃Higher-lens)) ⟩□
-  (∃ λ l⁻¹ →         l  HLC.∘ l⁻¹ ≡ HLC.id b )  □
+  (∃ λ l⁻¹ → Erased (l′    ∘ l⁻¹ ≡    id b))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
+  (∃ λ l⁻¹ →         l′    ∘ l⁻¹ ≡    id b )  ↝⟨ (inverse $
+                                                  Σ-cong-contra Lens≃Higher-lens λ l⁻¹ →
+                                                  ≡⇒↝ _ (cong₂ _≡_ (l∘l⁻¹≡l∘l⁻¹ univ l l⁻¹)
+                                                                   (Higher-lens-id≡id b univ)) F.∘
+                                                  inverse (Eq.≃-≡ $ inverse Lens≃Higher-lens)) ⟩□
+  (∃ λ l⁻¹ →         l  HC.∘ l⁻¹ ≡ HC.id b )  □
   where
   l′ = Higher-lens→Lens l
 
--- H.Is-bi-invertible b l implies
+-- HC.Is-bi-invertible b l implies
 -- Is-bi-invertibleᴱ b (Higher-lens→Lens l) (assuming univalence).
 
 Is-bi-invertible→Is-bi-invertibleᴱ :
@@ -2163,59 +2161,59 @@ Is-bi-invertible→Is-bi-invertibleᴱ :
   (b : Block "id") →
   @0 Univalence a →
   (l : H.Lens A B) →
-  H.Is-bi-invertible b l → Is-bi-invertibleᴱ b (Higher-lens→Lens l)
+  HC.Is-bi-invertible b l → Is-bi-invertibleᴱ b (Higher-lens→Lens l)
 Is-bi-invertible→Is-bi-invertibleᴱ b univ l =
-  H.Is-bi-invertible b l                            ↔⟨⟩
-  H.Has-left-inverse b l × H.Has-right-inverse b l  ↝⟨ Σ-map (Has-left-inverse→Has-left-inverseᴱ b univ l)
-                                                             (Has-right-inverse→Has-right-inverseᴱ b univ l) ⟩
-  Has-left-inverseᴱ b l′ × Has-right-inverseᴱ b l′  ↔⟨⟩
-  Is-bi-invertibleᴱ b l′                            □
+  HC.Is-bi-invertible b l                             ↔⟨⟩
+  HC.Has-left-inverse b l × HC.Has-right-inverse b l  ↝⟨ Σ-map (Has-left-inverse→Has-left-inverseᴱ b univ l)
+                                                               (Has-right-inverse→Has-right-inverseᴱ b univ l) ⟩
+  Has-left-inverseᴱ b l′ × Has-right-inverseᴱ b l′    ↔⟨⟩
+  Is-bi-invertibleᴱ b l′                              □
   where
   l′ = Higher-lens→Lens l
 
 -- In erased contexts Is-bi-invertibleᴱ b (Higher-lens→Lens l) is
--- equivalent to H.Is-bi-invertible b l (assuming univalence).
+-- equivalent to HC.Is-bi-invertible b l (assuming univalence).
 
 @0 Is-bi-invertibleᴱ≃Is-bi-invertible :
   {A B : Type a}
   (b : Block "id") →
   Univalence a →
   (l : H.Lens A B) →
-  Is-bi-invertibleᴱ b (Higher-lens→Lens l) ≃ H.Is-bi-invertible b l
+  Is-bi-invertibleᴱ b (Higher-lens→Lens l) ≃ HC.Is-bi-invertible b l
 Is-bi-invertibleᴱ≃Is-bi-invertible b univ l =
-  Is-bi-invertibleᴱ b l′                            ↔⟨⟩
-  Has-left-inverseᴱ b l′ × Has-right-inverseᴱ b l′  ↝⟨ Has-left-inverseᴱ≃Has-left-inverse b univ l
-                                                         ×-cong
-                                                       Has-right-inverseᴱ≃Has-right-inverse b univ l ⟩
-  H.Has-left-inverse b l × H.Has-right-inverse b l  ↔⟨⟩
-  H.Is-bi-invertible b l                            □
+  Is-bi-invertibleᴱ b l′                              ↔⟨⟩
+  Has-left-inverseᴱ b l′ × Has-right-inverseᴱ b l′    ↝⟨ Has-left-inverseᴱ≃Has-left-inverse b univ l
+                                                           ×-cong
+                                                         Has-right-inverseᴱ≃Has-right-inverse b univ l ⟩
+  HC.Has-left-inverse b l × HC.Has-right-inverse b l  ↔⟨⟩
+  HC.Is-bi-invertible b l                             □
   where
   l′ = Higher-lens→Lens l
 
--- H.[ b ] A ≊ B implies [ b ] A ≊ᴱ B (assuming univalence).
+-- HC.[ b ] A ≊ B implies [ b ] A ≊ᴱ B (assuming univalence).
 
 ≊→≊ᴱ :
   {A B : Type a}
   (b : Block "id") →
   @0 Univalence a →
-  H.[ b ] A ≊ B → [ b ] A ≊ᴱ B
+  HC.[ b ] A ≊ B → [ b ] A ≊ᴱ B
 ≊→≊ᴱ {A = A} {B = B} b univ =
-  (∃ λ (l : H.Lens A B) → H.Is-bi-invertible b l)  ↝⟨ (Σ-map Higher-lens→Lens λ {l} →
-                                                       Is-bi-invertible→Is-bi-invertibleᴱ b univ l) ⟩□
-  (∃ λ (l : Lens A B) → Is-bi-invertibleᴱ b l)     □
+  (∃ λ (l : H.Lens A B) → HC.Is-bi-invertible b l)  ↝⟨ (Σ-map Higher-lens→Lens λ {l} →
+                                                        Is-bi-invertible→Is-bi-invertibleᴱ b univ l) ⟩□
+  (∃ λ (l : Lens A B) → Is-bi-invertibleᴱ b l)      □
 
--- In erased contexts [ b ] A ≊ᴱ B is equivalent to H.[ b ] A ≊ B
+-- In erased contexts [ b ] A ≊ᴱ B is equivalent to HC.[ b ] A ≊ B
 -- (assuming univalence).
 
 @0 ≊ᴱ≃≊ :
   {A B : Type a}
   (b : Block "id") →
   Univalence a →
-  ([ b ] A ≊ᴱ B) ≃ (H.[ b ] A ≊ B)
+  ([ b ] A ≊ᴱ B) ≃ (HC.[ b ] A ≊ B)
 ≊ᴱ≃≊ {A = A} {B = B} b univ =
-  (∃ λ (l : Lens A B) → Is-bi-invertibleᴱ b l)     ↝⟨ Σ-cong-contra (inverse Lens≃Higher-lens) $
-                                                      Is-bi-invertibleᴱ≃Is-bi-invertible b univ ⟩□
-  (∃ λ (l : H.Lens A B) → H.Is-bi-invertible b l)  □
+  (∃ λ (l : Lens A B) → Is-bi-invertibleᴱ b l)      ↝⟨ Σ-cong-contra (inverse Lens≃Higher-lens) $
+                                                       Is-bi-invertibleᴱ≃Is-bi-invertible b univ ⟩□
+  (∃ λ (l : H.Lens A B) → HC.Is-bi-invertible b l)  □
 
 -- Lenses with left inverses have propositional remainder types (in
 -- erased contexts).

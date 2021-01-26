@@ -47,6 +47,7 @@ import Lens.Non-dependent.Higher.Capriotti as F
 import Lens.Non-dependent.Higher.Coinductive as C
 import Lens.Non-dependent.Higher.Coinductive.Coherently as Coh
 import Lens.Non-dependent.Higher.Coinductive.Small as S
+import Lens.Non-dependent.Higher.Combinators as EC
 import Lens.Non-dependent.Traditional as T
 import Lens.Non-dependent.Traditional.Combinators as TC
 
@@ -317,25 +318,25 @@ lemma-54-preserves-get-and-set =
 
 -- The identity lens.
 
-id = E.Lens-combinators.id
+id = EC.id
 
 -- Lemma 56.
 
-lemma-56 = E.Lens-combinators.id-unique
+lemma-56 = EC.id-unique
 
 -- A composition operator for types in the same universe.
 
-∘-same-universe = E.Lens-combinators._∘_
+∘-same-universe = EC._∘_
 
 -- A more general composition operator.
 
-∘-more-general = E.Lens-combinators.⟨_,_⟩_∘_
+∘-more-general = EC.⟨_,_⟩_∘_
 
 -- Composition laws.
 
-associativity  = E.Lens-combinators.associativity
-left-identity  = E.Lens-combinators.left-identity
-right-identity = E.Lens-combinators.right-identity
+associativity  = EC.associativity
+left-identity  = EC.left-identity
+right-identity = EC.right-identity
 
 -- Composition laws for traditional lenses.
 
@@ -347,25 +348,25 @@ right-identity-traditional = TC.right-identity
 --
 -- The lemma is formulated slightly differently.
 
-lemma-58 = E.Lens-combinators.∘-unique
+lemma-58 = EC.∘-unique
 
 -- The composition operator produces lenses for which the setter
 -- satisfies certain equations.
 
-setter-correct = E.Lens-combinators.∘-set
+setter-correct = EC.∘-set
 
 -- Is-bi-invertible.
 
-Is-bi-invertible = E.Is-bi-invertible
+Is-bi-invertible = EC.Is-bi-invertible
 
 -- Lemmas 60 and 61.
 
-lemma-60 = E.≃≃≊
-lemma-61 = E.Is-bi-invertible≃Is-equivalence-get
+lemma-60 = EC.≃≃≊
+lemma-61 = EC.Is-bi-invertible≃Is-equivalence-get
 
 -- Lemma 60 maps bi-invertible lenses to their getter functions.
 
-lemma-60-right-to-left = E.to-from-≃≃≊≡get
+lemma-60-right-to-left = EC.to-from-≃≃≊≡get
 
 -- There is in general no such equivalence for traditional lenses (in
 -- fact, not even a split surjection).
@@ -384,7 +385,7 @@ lemma-61-for-traditional = TC.Is-bi-invertible≃Is-equivalence-get
 -- A category of higher lenses between sets with the same universe
 -- level.
 
-category-higher = E.category
+category-higher = EC.category
 
 -- A category of traditional lenses between sets with the same
 -- universe level.
@@ -394,7 +395,7 @@ category-traditional = TC.category
 -- The category of higher lenses is equal to the one for traditional
 -- lenses (lifted, so that the two categories have the same type).
 
-category≡category = E.category≡category
+category≡category = EC.category≡category
 
 ------------------------------------------------------------------------
 -- XII: Coherently constant families of fibres

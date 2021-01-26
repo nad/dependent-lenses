@@ -29,8 +29,9 @@ open import Surjection equality-with-J using (_↠_)
 open import Univalence-axiom equality-with-J
 
 open import Lens.Non-dependent eq
-import Lens.Non-dependent.Higher      eq as Higher
-import Lens.Non-dependent.Traditional eq as Traditional
+import Lens.Non-dependent.Higher             eq as Higher
+import Lens.Non-dependent.Higher.Combinators eq as HC
+import Lens.Non-dependent.Traditional        eq as Traditional
 
 private
   variable
@@ -1071,16 +1072,14 @@ set-⊚≡ {a = a} {c = c} ∥C∥→C l₁ l₂ =
   open Higher.Lens
 
 -- The implementation of composition for higher lenses given above
--- matches the one in Higher when both are defined (assuming
--- univalence).
+-- matches the one in HC when both are defined (assuming univalence).
 
 ⊚≡∘ :
   ∀ a b {A : Type (a ⊔ b ⊔ c)} {B : Type (b ⊔ c)} {C : Type c} →
   Univalence (a ⊔ b ⊔ c) →
   (∥C∥→C : ∥ C ∥ → C) →
-  ⟨_⟩_⊚_ {B = B} {A = A} ∥C∥→C ≡
-  Higher.Lens-combinators.⟨ a , b ⟩_∘_
+  ⟨_⟩_⊚_ {B = B} {A = A} ∥C∥→C ≡ HC.⟨ a , b ⟩_∘_
 ⊚≡∘ a b {A = A} {B = B} {C = C} univ ∥C∥→C =
-  Higher.Lens-combinators.composition≡∘
+  HC.composition≡∘
     a b univ ∥C∥→C ⟨ ∥C∥→C ⟩_⊚_
     (λ l₁ l₂ _ _ → set-⊚≡ ∥C∥→C l₁ l₂)
