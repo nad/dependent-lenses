@@ -711,7 +711,14 @@ abstract
     where
     open Lens
 
-    lemma₁ : ∀ _ _ _ _ → _
+    lemma₁ :
+      (g : get l₁ ≡ get l₂) (s : set l₁ ≡ set l₂) →
+      ∀ a b →
+      subst (λ get → get (set l₂ a b) ≡ b) g
+        (subst (λ set → get l₁ (set a b) ≡ b) s
+           (get-set l₁ a b)) ≡
+      trans (sym (cong₂ (λ set get → get (set a b)) s g))
+        (get-set l₁ a b)
     lemma₁ g s a b =
       subst (λ get → get (set l₂ a b) ≡ b) g
         (subst (λ set → get l₁ (set a b) ≡ b) s
@@ -759,7 +766,14 @@ abstract
       trans (sym (cong₂ (λ set get → get (set a b)) s g))
         (get-set l₁ a b)                                         ∎
 
-    lemma₂ : ∀ _ _ _ → _
+    lemma₂ :
+      (g : get l₁ ≡ get l₂) (s : set l₁ ≡ set l₂) →
+      ∀ a →
+      subst (λ get → set l₂ a (get a) ≡ a) g
+        (subst (λ set → set a (get l₁ a) ≡ a) s
+           (set-get l₁ a)) ≡
+      trans (sym (cong₂ (λ set get → set a (get a)) s g))
+        (set-get l₁ a)
     lemma₂ g s a =
       subst (λ get → set l₂ a (get a) ≡ a) g
         (subst (λ set → set a (get l₁ a) ≡ a) s
@@ -865,7 +879,15 @@ abstract
     where
     open Lens
 
-    lemma : ∀ _ _ _ _ _ → _
+    lemma :
+      (g : get l₁ ≡ get l₂) (s : set l₁ ≡ set l₂) →
+      ∀ a b₁ b₂ →
+      (subst (λ set → set (set a b₁) b₂ ≡ set a b₂) s
+         (set-set l₁ a b₁ b₂) ≡
+       set-set l₂ a b₁ b₂) ≡
+      (trans (set-set l₁ a b₁ b₂) (cong (λ set → set a b₂) s) ≡
+       trans (cong (λ set → set (set a b₁) b₂) s)
+         (set-set l₂ a b₁ b₂))
     lemma g s a b₁ b₂ =
       subst (λ set → set (set a b₁) b₂ ≡ set a b₂) s
         (set-set l₁ a b₁ b₂) ≡
