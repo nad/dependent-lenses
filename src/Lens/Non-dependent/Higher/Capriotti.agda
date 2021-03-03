@@ -545,6 +545,11 @@ Lens≃Higher-lens′ {a = a} {b = b} {A = A} {B = B} univ =
         ≃
       (proj₁ (_↔_.to lemma₂ g) ≡ H ∘ ∣_∣)
     lemma₃ g H =
+      let lemma =
+            F.id                 ≡⟨ sym ≡⇒↝-refl ⟩
+            ≡⇒↝ _ (refl _)       ≡⟨ cong (≡⇒↝ _) $ sym sym-refl ⟩∎
+            ≡⇒↝ _ (sym (refl _)) ∎
+      in
       (g ⁻¹_) ≡ H ∘ ∣_∣                                            ↝⟨ inverse $ Eq.extensionality-isomorphism ext ⟩
       (∀ b → g ⁻¹ b ≡ H ∣ b ∣)                                     ↝⟨ ∀-cong ext (λ _ →
                                                                         ≡-preserves-≃ ext univ univ
@@ -553,11 +558,6 @@ Lens≃Higher-lens′ {a = a} {b = b} {A = A} {B = B} univ =
       ((g ∘ lower) ⁻¹_) ≡ H ∘ ∣_∣                                  ↝⟨ ≡⇒↝ _ $ cong (λ eq → (g ∘ lower ∘ _≃_.from eq ⁻¹_) ≡ H ∘ ∣_∣) lemma ⟩
       (g ∘ lower ∘ _≃_.from (≡⇒↝ _ (sym (refl _))) ⁻¹_) ≡ H ∘ ∣_∣  ↔⟨⟩
       proj₁ (_↔_.to lemma₂ g) ≡ H ∘ ∣_∣                            □
-      where
-      lemma =
-        F.id                 ≡⟨ sym ≡⇒↝-refl ⟩
-        ≡⇒↝ _ (refl _)       ≡⟨ cong (≡⇒↝ _) $ sym sym-refl ⟩∎
-        ≡⇒↝ _ (sym (refl _)) ∎
 
 -- If the domain A is a set, then Traditional.Lens A B and Lens A B
 -- are isomorphic (assuming univalence).

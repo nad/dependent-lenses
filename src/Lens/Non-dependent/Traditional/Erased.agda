@@ -580,6 +580,10 @@ abstract
                       set-set l₂ a b₁ b₂))
 
   equality-characterisation₁ {l₁ = l₁} {l₂ = l₂} =
+    let l₁′ = _↔_.to Lens-as-Σ l₁
+        l₂′ = _↔_.to Lens-as-Σ l₂
+    in
+
     l₁ ≡ l₂                                                            ↔⟨ Eq.≃-≡ (Eq.↔⇒≃ (inverse Lens-as-Σ)) ⟩
 
     l₁′ ≡ l₂′                                                          ↔⟨ Eq.≃-≡ (Eq.↔⇒≃ (inverse Σ-assoc)) ⟩
@@ -814,9 +818,6 @@ abstract
                      set-set l₂ a b₁ b₂)))                             □
     where
     open Lens
-
-    l₁′ = _↔_.to Lens-as-Σ l₁
-    l₂′ = _↔_.to Lens-as-Σ l₂
 
     abstract
 
@@ -1251,6 +1252,9 @@ abstract
     @0 (∀ a b₁ b₂ → set-set l₁ a b₁ b₂ ≡ set-set l₂ a b₁ b₂) →
     l₁ ≡ l₂
   equal-laws→≡ {l₁′ = l₁′} {l₂′ = l₂′} hyp₁ hyp₂ hyp₃ =
+    let l₁″ = _↔_.from Lens-as-Σ (_ , _ , l₁′)
+        l₂″ = _↔_.from Lens-as-Σ (_ , _ , l₂′)
+    in
     _↔_.from equality-characterisation₂
       ( refl _
       , refl _
@@ -1289,9 +1293,6 @@ abstract
       )
     where
     open Lens
-
-    l₁″ = _↔_.from Lens-as-Σ (_ , _ , l₁′)
-    l₂″ = _↔_.from Lens-as-Σ (_ , _ , l₂′)
 
 -- An equality characterisation lemma for lenses from sets.
 
