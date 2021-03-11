@@ -479,7 +479,7 @@ subst-Coherently-property
     eq
 
 ------------------------------------------------------------------------
--- A variant of Coherently
+-- Coherently-with-restriction
 
 -- A variant of Coherently. An extra predicate Q is included, so that
 -- one can restrict the "f" functions (and their domains).
