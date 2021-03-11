@@ -627,8 +627,8 @@ abstract
                  (∀ a → set a (get a) ≡ a) ×
                  (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂)))
            (_↔_.to ≡×≡↔≡ (g , s)) (proj₂ (proj₂ l₁′)) ≡
-     proj₂ (proj₂ l₂′))                                                ↝⟨ (∃-cong λ g → ∃-cong λ s → ≡⇒↝ _ $ cong (_≡ _) $
-                                                                           push-subst-[] {x≡y = _↔_.to ≡×≡↔≡ (g , s)}) ⟩
+     proj₂ (proj₂ l₂′))                                                ↝⟨ (∃-cong λ g → ∃-cong λ s → ≡⇒↝ _ $ cong (_≡ proj₂ (proj₂ l₂′))
+                                                                           push-subst-[]) ⟩
     (∃ λ (g : get l₁ ≡ get l₂) →
      ∃ λ (s : set l₁ ≡ set l₂) →
      [ subst (λ (get , set) →
