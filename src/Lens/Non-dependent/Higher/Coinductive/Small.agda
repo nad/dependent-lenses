@@ -35,6 +35,7 @@ import Lens.Non-dependent.Higher.Combinators eq as HC
 import Lens.Non-dependent.Higher.Capriotti eq as Capriotti
 import Lens.Non-dependent.Higher.Coinductive eq as Coinductive
 open import Lens.Non-dependent.Higher.Coherently.Coinductive eq
+import Lens.Non-dependent.Higher.Coherently.Not-coinductive eq as NC
 
 private
   variable
@@ -1113,6 +1114,35 @@ module _
   HC.composition≡∘ a b univ₇ stable
     ⟨ univ₁ , univ₂ , univ₃ , univ₄ , univ₅ , univ₆ , univ₇ , bl ⟩_⊚_
     (set-⊚ univ₁ univ₂ univ₃ univ₄ univ₅ univ₆ univ₇ bl)
+
+------------------------------------------------------------------------
+-- An alternative definition that does not make use of coinduction
+
+-- A variant of Lens.
+--
+-- This definition does not make use of coinduction, but it is not
+-- small.
+
+Not-coinductive-lens :
+  Univalence (a ⊔ b) → Type a → Type b → Type (lsuc (a ⊔ b))
+Not-coinductive-lens univ A B =
+  ∃ λ (get : A → B) →
+    NC.Coherently
+      Constant-≃
+      (λ P c → O.rec′ P (λ x y → ≃⇒≡ univ (c x y)))
+      (get ⁻¹_)
+
+-- Not-coinductive-lens is pointwise equivalent to Lens (assuming
+-- univalence).
+
+Not-coinductive-lens≃Lens :
+  {univ : Univalence (a ⊔ b)} {A : Type a} {B : Type b} →
+  Univalence (lsuc (a ⊔ b)) →
+  Not-coinductive-lens univ A B ≃ Lens univ A B
+Not-coinductive-lens≃Lens {univ = univ} {A = A} {B = B} univ′ =
+  Not-coinductive-lens univ A B                             ↝⟨ (∃-cong λ _ → inverse $ Coherently≃Not-coinductive-coherently univ′ univ′) ⟩
+  (∃ λ (get : A → B) → Coherently-constant univ (get ⁻¹_))  ↝⟨ inverse Lens-as-Σ ⟩□
+  Lens univ A B                                             □
 
 ------------------------------------------------------------------------
 -- H-levels

@@ -21,6 +21,7 @@ open import Bijection equality-with-J as B using (_↔_)
 import Bijection P.equality-with-J as PB
 open import Container.Indexed equality-with-J
 open import Container.Indexed.M.Codata eq
+import Container.Indexed.M.Function equality-with-J as F
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
 import Equivalence P.equality-with-J as PEq
@@ -32,6 +33,8 @@ open import H-level.Truncation.Propositional.One-step eq as O
   using (∥_∥¹; ∣_∣)
 open import Univalence-axiom equality-with-J
 import Univalence-axiom P.equality-with-J as PU
+
+import Lens.Non-dependent.Higher.Coherently.Not-coinductive eq as NC
 
 private
   variable
@@ -65,6 +68,62 @@ record Coherently
     coherent : Coherently P step (step f property)
 
 open Coherently public
+
+------------------------------------------------------------------------
+-- An equivalence
+
+-- Coherently is pointwise equivalent to NC.Coherently (assuming
+-- univalence).
+
+Coherently≃Not-coinductive-coherently :
+  {B : Type b}
+  {P : {A : Type a} → (A → B) → Type p}
+  {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B}
+  {f : A → B} →
+  Univalence (lsuc a ⊔ b ⊔ p) →
+  Univalence (lsuc a ⊔ b) →
+  Coherently P step f ≃ NC.Coherently P step f
+Coherently≃Not-coinductive-coherently
+  {a = a} {B = B} {P = P} {step = step} {f = f} univ₁ univ₂ =
+  block λ b →
+
+  Coherently P step f     ↝⟨ Eq.↔→≃ to from
+                               (_↔_.from ≡↔≡ ∘ to-from)
+                               (_↔_.from ≡↔≡ ∘ from-to) ⟩
+  M (CC step) (_ , f)     ↝⟨ carriers-of-final-coalgebras-equivalent
+                               (M-coalgebra (CC step) , M-final univ₁ univ₂)
+                               (F.M-coalgebra b ext (CC step) , F.M-final b ext ext)
+                               _ ⟩
+  F.M (CC step) (_ , f)   ↔⟨⟩
+  NC.Coherently P step f  □
+  where
+  CC = NC.Coherently-container P
+
+  to :
+    {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B} {f : A → B} →
+    Coherently P step f → M (CC step) (_ , f)
+  to c .out-M .proj₁   = c .property
+  to c .out-M .proj₂ _ = to (c .coherent)
+
+  from :
+    {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B} {f : A → B} →
+    M (CC step) (_ , f) → Coherently P step f
+  from c .property = c .out-M .proj₁
+  from c .coherent = from (c .out-M .proj₂ _)
+
+  to-from :
+    {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B} {f : A → B} →
+    (c : M (CC step) (_ , f)) →
+    to (from c) P.≡ c
+  to-from c i .out-M .proj₁   = c .out-M .proj₁
+  to-from c i .out-M .proj₂ _ = to-from (c .out-M .proj₂ _) i
+
+  from-to :
+    {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B} {f : A → B} →
+    (c : Coherently P step f) →
+    from (to c) P.≡ c
+  from-to c i .property = c .property
+  from-to c i .coherent = from-to (c .coherent) i
 
 ------------------------------------------------------------------------
 -- Preservation lemmas
