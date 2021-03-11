@@ -6,7 +6,7 @@
 -- proof showing that this lens type is pointwise equivalent to his
 -- higher lenses. I turned this proof into the proof presented below,
 -- with help from Andrea Vezzosi (see
--- Lens.Non-dependent.Higher.Coinductive.Coherently).
+-- Lens.Non-dependent.Higher.Coherently.Coinductive).
 
 {-# OPTIONS --cubical --safe --guardedness #-}
 
@@ -39,7 +39,7 @@ open import Univalence-axiom equality-with-J
 open import Lens.Non-dependent eq
 import Lens.Non-dependent.Higher eq as H
 import Lens.Non-dependent.Higher.Capriotti eq as Higher
-open import Lens.Non-dependent.Higher.Coinductive.Coherently eq
+open import Lens.Non-dependent.Higher.Coherently.Coinductive eq
 
 private
   variable

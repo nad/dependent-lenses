@@ -45,7 +45,7 @@ import Lens.Non-dependent.Bijection as B
 import Lens.Non-dependent.Higher as E
 import Lens.Non-dependent.Higher.Capriotti as F
 import Lens.Non-dependent.Higher.Coinductive as C
-import Lens.Non-dependent.Higher.Coinductive.Coherently as Coh
+import Lens.Non-dependent.Higher.Coherently.Coinductive as Coh
 import Lens.Non-dependent.Higher.Coinductive.Small as S
 import Lens.Non-dependent.Higher.Combinators as EC
 import Lens.Non-dependent.Traditional as T

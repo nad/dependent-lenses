@@ -34,7 +34,7 @@ import Lens.Non-dependent.Higher eq as Higher
 import Lens.Non-dependent.Higher.Combinators eq as HC
 import Lens.Non-dependent.Higher.Capriotti eq as Capriotti
 import Lens.Non-dependent.Higher.Coinductive eq as Coinductive
-open import Lens.Non-dependent.Higher.Coinductive.Coherently eq
+open import Lens.Non-dependent.Higher.Coherently.Coinductive eq
 
 private
   variable

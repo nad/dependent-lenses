@@ -16,7 +16,7 @@ import Lens.Non-dependent.Higher
 import Lens.Non-dependent.Higher.Combinators
 import Lens.Non-dependent.Higher.Capriotti.Variant
 import Lens.Non-dependent.Higher.Capriotti
-import Lens.Non-dependent.Higher.Coinductive.Coherently
+import Lens.Non-dependent.Higher.Coherently.Coinductive
 import Lens.Non-dependent.Higher.Coinductive
 import Lens.Non-dependent.Higher.Coinductive.Small
 import Lens.Non-dependent.Higher.Surjective-remainder
@@ -29,7 +29,7 @@ import Lens.Non-dependent.Traditional.Erased
 import Lens.Non-dependent.Higher.Erased
 import Lens.Non-dependent.Higher.Capriotti.Variant.Erased
 import Lens.Non-dependent.Higher.Capriotti.Variant.Erased.Variant
-import Lens.Non-dependent.Higher.Coinductive.Coherently.Erased
+import Lens.Non-dependent.Higher.Coherently.Coinductive.Erased
 
 -- Dependent lenses.
 

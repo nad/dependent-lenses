@@ -10,7 +10,7 @@
 
 import Equality.Path as P
 
-module Lens.Non-dependent.Higher.Coinductive.Coherently
+module Lens.Non-dependent.Higher.Coherently.Coinductive
   {e⁺} (eq : ∀ {a p} → P.Equality-with-paths a p e⁺) where
 
 open P.Derived-definitions-and-properties eq

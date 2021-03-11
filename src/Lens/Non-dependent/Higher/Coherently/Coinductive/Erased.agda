@@ -6,7 +6,7 @@
 
 import Equality.Path as P
 
-module Lens.Non-dependent.Higher.Coinductive.Coherently.Erased
+module Lens.Non-dependent.Higher.Coherently.Coinductive.Erased
   {e⁺} (eq : ∀ {a p} → P.Equality-with-paths a p e⁺) where
 
 open P.Derived-definitions-and-properties eq
@@ -28,7 +28,7 @@ open import H-level.Truncation.Propositional.One-step.Erased eq as OE
 open import Univalence-axiom equality-with-J
 import Univalence-axiom P.equality-with-J as PU
 
-open import Lens.Non-dependent.Higher.Coinductive.Coherently eq as C
+open import Lens.Non-dependent.Higher.Coherently.Coinductive eq as C
   using (Coherently)
 
 private
@@ -39,7 +39,7 @@ private
     f             : A → B
 
 -- A variant of
--- Lens.Non-dependent.Higher.Coinductive.Coherently.Coherently with an
+-- Lens.Non-dependent.Higher.Coherently.Coinductive.Coherently with an
 -- erased "coherent" field.
 
 record Coherentlyᴱ
