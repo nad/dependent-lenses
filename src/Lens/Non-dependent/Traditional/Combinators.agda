@@ -31,7 +31,7 @@ open import Lens.Non-dependent.Traditional eq
 
 private
   variable
-    a b     : Level
+    a b h o : Level
     A B C D : Type a
     l₁ l₂   : Lens A B
 
@@ -1804,3 +1804,89 @@ category {a = a} univ =
     (λ (_ , A-set) → ≃≃≅-id≡id A-set)
   where
   module Pre = C.Precategory precategory
+
+-- The following four results (up to and including ¬-univalent) are
+-- based on a suggestion by Paolo Capriotti, in response to a question
+-- from an anonymous reviewer.
+
+-- A "naive" notion of category.
+--
+-- Note that the hom-sets are not required to be sets.
+
+Naive-category : (o h : Level) → Type (lsuc (o ⊔ h))
+Naive-category o h =
+  ∃ λ (Obj : Type o) →
+  ∃ λ (Hom : Obj → Obj → Type h) →
+  ∃ λ (id : {A : Obj} → Hom A A) →
+  ∃ λ (_∘_ : {A B C : Obj} → Hom B C → Hom A B → Hom A C) →
+    ({A B : Obj} (h : Hom A B) → id ∘ h ≡ h) ×
+    ({A B : Obj} (h : Hom A B) → h ∘ id ≡ h) ×
+    ({A B C D : Obj} (h₁ : Hom C D) (h₂ : Hom B C) (h₃ : Hom A B) →
+     (h₁ ∘ (h₂ ∘ h₃)) ≡ ((h₁ ∘ h₂) ∘ h₃))
+
+-- A notion of univalence for naive categories.
+
+Univalent : Naive-category o h → Type (o ⊔ h)
+Univalent (Obj , Hom , id , _∘_ , id-∘ , ∘-id , assoc) =
+  Bi-invertibility.More.Univalence-≊
+    equality-with-J Obj Hom id _∘_ id-∘ ∘-id assoc
+
+-- Types in a fixed universe and traditional lenses between them form
+-- a naive category.
+
+naive-category : ∀ a → Naive-category (lsuc a) a
+naive-category a =
+    Type a
+  , Lens
+  , id
+  , _∘_
+  , left-identity
+  , right-identity
+  , associativity
+
+-- However, this category (at level zero) is not univalent (assuming
+-- univalence).
+
+¬-univalent :
+  Univalence lzero →
+  ¬ Univalent (naive-category lzero)
+¬-univalent univ u = ¬≃≃≊ univ (equiv , lemma₂)
+  where
+  equiv : {A B : Type} → (A ≃ B) ≃ (A ≊ B)
+  equiv {A = A} {B = B} =
+    (A ≃ B)  ↝⟨ inverse $ ≡≃≃ univ ⟩
+    (A ≡ B)  ↝⟨ Eq.⟨ _ , u ⟩ ⟩□
+    (A ≊ B)  □
+
+  lemma₁ :
+    (eq : 𝕊¹ ≃ 𝕊¹) →
+    _≃_.to eq ≡ Lens.get (proj₁ (_≃_.to equiv eq))
+  lemma₁ =
+    ≃-elim₁
+      univ
+      (λ eq → _≃_.to eq ≡ Lens.get (proj₁ (_≃_.to equiv eq)))
+      (P.id                                        ≡⟨ cong (Lens.get ⊚ proj₁) $ sym $ elim-refl _ _ ⟩
+       Lens.get (proj₁ (BM.≡→≊ (refl _)))          ≡⟨ cong (Lens.get ⊚ proj₁ ⊚ BM.≡→≊) $ sym $ ≃⇒≡-id univ ⟩
+       Lens.get (proj₁ (BM.≡→≊ (≃⇒≡ univ Eq.id)))  ≡⟨⟩
+       Lens.get (proj₁ (_≃_.to equiv Eq.id))       ∎)
+
+  lemma₂ :
+    (x@(l , _) : 𝕊¹ ≊ 𝕊¹) →
+    _≃_.to (_≃_.from equiv x) ≡ Lens.get l
+  lemma₂ x@(l , _) =
+    _≃_.to (_≃_.from equiv x)                           ≡⟨ lemma₁ (_≃_.from equiv x) ⟩
+    Lens.get (proj₁ (_≃_.to equiv (_≃_.from equiv x)))  ≡⟨ cong (Lens.get ⊚ proj₁) $ _≃_.right-inverse-of equiv _ ⟩
+    Lens.get (proj₁ x)                                  ≡⟨⟩
+    Lens.get l                                          ∎
+
+-- There is in general no pointwise equivalence between equivalences
+-- and bi-invertible lenses (assuming univalence).
+
+¬Π≃≃≊ :
+  Univalence lzero →
+  ¬ ({A B : Type} → (A ≃ B) ≃ (A ≊ B))
+¬Π≃≃≊ univ =
+  ({A B : Type} → (A ≃ B) ≃ (A ≊ B))  ↝⟨ F._∘ ≡≃≃ univ ⟩
+  ({A B : Type} → (A ≡ B) ≃ (A ≊ B))  ↝⟨ BM.≡≃≊→Univalence-≊ ⟩
+  Univalent (naive-category lzero)    ↝⟨ ¬-univalent univ ⟩□
+  ⊥                                   □

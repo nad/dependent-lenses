@@ -30,7 +30,8 @@ open import Univalence-axiom equality-with-J
 
 open import Lens.Non-dependent.Higher eq
 import Lens.Non-dependent.Traditional eq as Traditional
-import Lens.Non-dependent.Traditional.Combinators eq as TC
+open import Lens.Non-dependent.Traditional.Combinators eq as TC
+  using (Naive-category; Univalent)
 
 private
   variable
@@ -758,3 +759,34 @@ category≡category b univ⁺ univ =
     Category.precategory (category b univ) ≡
     precategory b univ
   lemma ⊠ = refl _
+
+-- Types in a fixed universe and higher lenses between them form a
+-- naive category (assuming univalence).
+
+naive-category :
+  Block "id" →
+  Univalence a →
+  Naive-category (lsuc a) (lsuc a)
+naive-category {a = a} b univ =
+    Type a
+  , Lens
+  , id b
+  , _∘_
+  , left-identity b lzero univ
+  , right-identity b lzero univ
+  , associativity lzero lzero lzero univ
+
+-- This category is univalent.
+--
+-- An anonymous reviewer asked if something like this could be proved,
+-- given ≃≃≊. The proof of this result is due to Andrea Vezzosi.
+
+univalent :
+  (b : Block "id")
+  (univ : Univalence a) →
+  Univalent (naive-category b univ)
+univalent b univ =
+  BM.≡≃≊→Univalence-≊ b univ λ {A B} →
+    A ≡ B        ↝⟨ ≡≃≃ univ ⟩
+    A ≃ B        ↝⟨ ≃≃≊ b univ ⟩□
+    [ b ] A ≊ B  □
