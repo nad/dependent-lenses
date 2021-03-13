@@ -139,6 +139,10 @@ getters-equal-if-setters-equal = T.getters-equal-if-setters-equal
 id-traditional = TC.id
 
 -- The lens used for the counterexamples.
+--
+-- This lens is a little different from the one in the text: the
+-- source and view types are liftings of the circle instead of the
+-- circle. This change also affects the proof of Lemma 12.
 
 l = T.bad
 

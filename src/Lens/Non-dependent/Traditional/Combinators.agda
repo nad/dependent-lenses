@@ -821,32 +821,33 @@ getter-equivalence→lens≡ l is-equiv =
 ------------------------------------------------------------------------
 -- Some existence results
 
--- The lenses bad and id {A = 𝕊¹} have equal setters, and their
+-- The lenses bad a and id {A = ↑ a 𝕊¹} have equal setters, and their
 -- getters are equivalences, but they are not equal (assuming
 -- univalence).
 
 equal-setters-and-equivalences-as-getters-but-not-equal :
   Univalence lzero →
-  let l₁ = bad
-      l₂ = id {A = 𝕊¹}
+  let l₁ = bad a
+      l₂ = id {A = ↑ a 𝕊¹}
   in
   Is-equivalence (Lens.get l₁) ×
   Is-equivalence (Lens.get l₂) ×
   Lens.set l₁ ≡ Lens.set l₂ ×
   l₁ ≢ l₂
-equal-setters-and-equivalences-as-getters-but-not-equal univ =
+equal-setters-and-equivalences-as-getters-but-not-equal {a = ℓa} univ =
   let is-equiv , not-coherent , _ =
         getter-equivalence-but-not-coherent univ
   in
     is-equiv
   , _≃_.is-equivalence F.id
   , refl _
-  , (bad ≡ id                                                            ↝⟨ (λ eq → subst (λ l → ∀ a → cong (get l) (set-get l a) ≡
-                                                                                                       get-set l a (get l a))
-                                                                                          (sym eq)
-                                                                                          (λ _ → cong-refl _)) ⟩
-     (∀ a → cong (get bad) (set-get bad a) ≡ get-set bad a (get bad a))  ↝⟨ not-coherent ⟩□
-     ⊥                                                                   □)
+  , (bad ℓa ≡ id                                         ↝⟨ (λ eq → subst (λ l → ∀ a → cong (get l) (set-get l a) ≡
+                                                                                      get-set l a (get l a))
+                                                                         (sym eq)
+                                                                         (λ _ → cong-refl _)) ⟩
+     (∀ a → cong (get (bad ℓa)) (set-get (bad ℓa) a) ≡
+            get-set (bad ℓa) a (get (bad ℓa) a))        ↝⟨ not-coherent ⟩□
+     ⊥                                                  □)
   where
   open Lens
 
@@ -857,28 +858,29 @@ equal-setters-and-equivalences-as-getters-but-not-equal univ =
 
 ¬-≃-↠-Σ-Lens-Is-equivalence-get :
   Univalence lzero →
-  ¬ ∃ λ (f : (𝕊¹ ≃ 𝕊¹) ↠
-             (∃ λ (l : Lens 𝕊¹ 𝕊¹) → Is-equivalence (Lens.get l))) →
+  ¬ ∃ λ (f : (↑ a 𝕊¹ ≃ ↑ a 𝕊¹) ↠
+             (∃ λ (l : Lens (↑ a 𝕊¹) (↑ a 𝕊¹)) →
+                Is-equivalence (Lens.get l))) →
       ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p)
-¬-≃-↠-Σ-Lens-Is-equivalence-get univ =
+¬-≃-↠-Σ-Lens-Is-equivalence-get {a = a} univ =
   let is-equiv₁ , is-equiv₂ , _ , bad≢id =
         equal-setters-and-equivalences-as-getters-but-not-equal univ
   in
-  λ (f , hyp) →                              $⟨ refl _ ⟩
+  λ (f , hyp) →                                $⟨ refl _ ⟩
 
-    Lens.get bad ≡ Lens.get id               ↝⟨ (λ eq → trans (hyp _) (trans eq (sym (hyp _)))) ⟩
+    Lens.get (bad a) ≡ Lens.get id             ↝⟨ (λ eq → trans (hyp _) (trans eq (sym (hyp _)))) ⟩
 
-    _≃_.to (_↠_.from f (bad , is-equiv₁)) ≡
-    _≃_.to (_↠_.from f (id , is-equiv₂))     ↝⟨ Eq.lift-equality ext ⟩
+    _≃_.to (_↠_.from f (bad a , is-equiv₁)) ≡
+    _≃_.to (_↠_.from f (id , is-equiv₂))       ↝⟨ Eq.lift-equality ext ⟩
 
-    _↠_.from f (bad , is-equiv₁) ≡
-    _↠_.from f (id , is-equiv₂)              ↝⟨ _↠_.to (Surjection.↠-≡ f) ⟩
+    _↠_.from f (bad a , is-equiv₁) ≡
+    _↠_.from f (id , is-equiv₂)                ↝⟨ _↠_.to (Surjection.↠-≡ f) ⟩
 
-    (bad , is-equiv₁) ≡ (id , is-equiv₂)     ↝⟨ cong proj₁ ⟩
+    (bad a , is-equiv₁) ≡ (id , is-equiv₂)     ↝⟨ cong proj₁ ⟩
 
-    bad ≡ id                                 ↝⟨ bad≢id ⟩□
+    bad a ≡ id                                 ↝⟨ bad≢id ⟩□
 
-    ⊥                                        □
+    ⊥                                          □
 
 -- There is in general no equivalence from equivalences to lenses with
 -- getters that are equivalences, if the right-to-left direction of
@@ -887,19 +889,21 @@ equal-setters-and-equivalences-as-getters-but-not-equal univ =
 
 ¬-≃-≃-Σ-Lens-Is-equivalence-get :
   Univalence lzero →
-  ¬ ∃ λ (f : (𝕊¹ ≃ 𝕊¹) ≃
-             (∃ λ (l : Lens 𝕊¹ 𝕊¹) → Is-equivalence (Lens.get l))) →
+  ¬ ∃ λ (f : (↑ a 𝕊¹ ≃ ↑ a 𝕊¹) ≃
+             (∃ λ (l : Lens (↑ a 𝕊¹) (↑ a 𝕊¹)) → Is-equivalence (Lens.get l))) →
       ∀ p → _≃_.to (_≃_.from f p) ≡ Lens.get (proj₁ p)
-¬-≃-≃-Σ-Lens-Is-equivalence-get univ =
-  (∃ λ (f : (𝕊¹ ≃ 𝕊¹) ≃
-            (∃ λ (l : Lens 𝕊¹ 𝕊¹) → Is-equivalence (Lens.get l))) →
-     ∀ p → _≃_.to (_≃_.from f p) ≡ Lens.get (proj₁ p))               ↝⟨ Σ-map _≃_.surjection P.id ⟩
+¬-≃-≃-Σ-Lens-Is-equivalence-get {a = a} univ =
+  (∃ λ (f : (↑ a 𝕊¹ ≃ ↑ a 𝕊¹) ≃
+            (∃ λ (l : Lens (↑ a 𝕊¹) (↑ a 𝕊¹)) →
+               Is-equivalence (Lens.get l))) →
+     ∀ p → _≃_.to (_≃_.from f p) ≡ Lens.get (proj₁ p))  ↝⟨ Σ-map _≃_.surjection P.id ⟩
 
-  (∃ λ (f : (𝕊¹ ≃ 𝕊¹) ↠
-            (∃ λ (l : Lens 𝕊¹ 𝕊¹) → Is-equivalence (Lens.get l))) →
-     ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))               ↝⟨ ¬-≃-↠-Σ-Lens-Is-equivalence-get univ ⟩□
+  (∃ λ (f : (↑ a 𝕊¹ ≃ ↑ a 𝕊¹) ↠
+            (∃ λ (l : Lens (↑ a 𝕊¹) (↑ a 𝕊¹)) →
+               Is-equivalence (Lens.get l))) →
+     ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))  ↝⟨ ¬-≃-↠-Σ-Lens-Is-equivalence-get univ ⟩□
 
-  ⊥                                                                  □
+  ⊥                                                     □
 
 ------------------------------------------------------------------------
 -- Isomorphisms expressed using lens quasi-inverses
@@ -1734,19 +1738,20 @@ Is-bi-invertible≃Is-equivalence-get l = Eq.⇔→≃
 
 ¬≃↠≊ :
   Univalence lzero →
-  ¬ ∃ λ (≃↠≊ : (𝕊¹ ≃ 𝕊¹) ↠ (𝕊¹ ≊ 𝕊¹)) →
-      (x@(l , _) : 𝕊¹ ≊ 𝕊¹) →
+  ¬ ∃ λ (≃↠≊ : (↑ a 𝕊¹ ≃ ↑ a 𝕊¹) ↠ (↑ a 𝕊¹ ≊ ↑ a 𝕊¹)) →
+      (x@(l , _) : ↑ a 𝕊¹ ≊ ↑ a 𝕊¹) →
       _≃_.to (_↠_.from ≃↠≊ x) ≡ Lens.get l
-¬≃↠≊ univ =
-  (∃ λ (f : (𝕊¹ ≃ 𝕊¹) ↠ (𝕊¹ ≊ 𝕊¹)) →
-     ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))               ↝⟨ Σ-map
-                                                                          ((∃-cong λ l → _≃_.surjection $ Is-bi-invertible≃Is-equivalence-get l) F.∘_)
-                                                                          (λ hyp _ → hyp _) ⟩
-  (∃ λ (f : (𝕊¹ ≃ 𝕊¹) ↠
-            (∃ λ (l : Lens 𝕊¹ 𝕊¹) → Is-equivalence (Lens.get l))) →
-     ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))               ↝⟨ ¬-≃-↠-Σ-Lens-Is-equivalence-get univ ⟩□
+¬≃↠≊ {a = a} univ =
+  (∃ λ (f : (↑ a 𝕊¹ ≃ ↑ a 𝕊¹) ↠ (↑ a 𝕊¹ ≊ ↑ a 𝕊¹)) →
+     ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))  ↝⟨ Σ-map
+                                                             ((∃-cong λ l → _≃_.surjection $ Is-bi-invertible≃Is-equivalence-get l) F.∘_)
+                                                             (λ hyp _ → hyp _) ⟩
+  (∃ λ (f : (↑ a 𝕊¹ ≃ ↑ a 𝕊¹) ↠
+            (∃ λ (l : Lens (↑ a 𝕊¹) (↑ a 𝕊¹)) →
+               Is-equivalence (Lens.get l))) →
+     ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))  ↝⟨ ¬-≃-↠-Σ-Lens-Is-equivalence-get univ ⟩□
 
-  ⊥                                                                  □
+  ⊥                                                     □
 
 -- There is in general no equivalence between equivalences and
 -- bi-invertible lenses, if the right-to-left direction of the
@@ -1755,19 +1760,19 @@ Is-bi-invertible≃Is-equivalence-get l = Eq.⇔→≃
 
 ¬≃≃≊ :
   Univalence lzero →
-  ¬ ∃ λ (≃≃≊ : (𝕊¹ ≃ 𝕊¹) ≃ (𝕊¹ ≊ 𝕊¹)) →
-      (x@(l , _) : 𝕊¹ ≊ 𝕊¹) →
+  ¬ ∃ λ (≃≃≊ : (↑ a 𝕊¹ ≃ ↑ a 𝕊¹) ≃ (↑ a 𝕊¹ ≊ ↑ a 𝕊¹)) →
+      (x@(l , _) : ↑ a 𝕊¹ ≊ ↑ a 𝕊¹) →
       _≃_.to (_≃_.from ≃≃≊ x) ≡ Lens.get l
-¬≃≃≊ univ =
-  (∃ λ (≃≃≊ : (𝕊¹ ≃ 𝕊¹) ≃ (𝕊¹ ≊ 𝕊¹)) →
-     (x@(l , _) : 𝕊¹ ≊ 𝕊¹) →
-     _≃_.to (_≃_.from ≃≃≊ x) ≡ Lens.get l)  ↝⟨ Σ-map _≃_.surjection P.id ⟩
+¬≃≃≊ {a = a} univ =
+  (∃ λ (≃≃≊ : (↑ a 𝕊¹ ≃ ↑ a 𝕊¹) ≃ (↑ a 𝕊¹ ≊ ↑ a 𝕊¹)) →
+     (x@(l , _) : ↑ a 𝕊¹ ≊ ↑ a 𝕊¹) →
+     _≃_.to (_≃_.from ≃≃≊ x) ≡ Lens.get l)              ↝⟨ Σ-map _≃_.surjection P.id ⟩
 
-  (∃ λ (≃↠≊ : (𝕊¹ ≃ 𝕊¹) ↠ (𝕊¹ ≊ 𝕊¹)) →
-     (x@(l , _) : 𝕊¹ ≊ 𝕊¹) →
-     _≃_.to (_↠_.from ≃↠≊ x) ≡ Lens.get l)  ↝⟨ ¬≃↠≊ univ ⟩□
+  (∃ λ (≃↠≊ : (↑ a 𝕊¹ ≃ ↑ a 𝕊¹) ↠ (↑ a 𝕊¹ ≊ ↑ a 𝕊¹)) →
+     (x@(l , _) : ↑ a 𝕊¹ ≊ ↑ a 𝕊¹) →
+     _≃_.to (_↠_.from ≃↠≊ x) ≡ Lens.get l)              ↝⟨ ¬≃↠≊ univ ⟩□
 
-  ⊥                                         □
+  ⊥                                                     □
 
 ------------------------------------------------------------------------
 -- A category
@@ -1844,22 +1849,22 @@ naive-category a =
   , right-identity
   , associativity
 
--- However, this category (at level zero) is not univalent (assuming
--- univalence).
+-- However, this category is not univalent (assuming univalence).
 
 ¬-univalent :
   Univalence lzero →
-  ¬ Univalent (naive-category lzero)
-¬-univalent univ u = ¬≃≃≊ univ (equiv , lemma₂)
+  Univalence a →
+  ¬ Univalent (naive-category a)
+¬-univalent {a = a} univ₀ univ u = ¬≃≃≊ univ₀ (equiv , lemma₂)
   where
-  equiv : {A B : Type} → (A ≃ B) ≃ (A ≊ B)
+  equiv : {A B : Type a} → (A ≃ B) ≃ (A ≊ B)
   equiv {A = A} {B = B} =
     (A ≃ B)  ↝⟨ inverse $ ≡≃≃ univ ⟩
     (A ≡ B)  ↝⟨ Eq.⟨ _ , u ⟩ ⟩□
     (A ≊ B)  □
 
   lemma₁ :
-    (eq : 𝕊¹ ≃ 𝕊¹) →
+    (eq : ↑ a 𝕊¹ ≃ ↑ a 𝕊¹) →
     _≃_.to eq ≡ Lens.get (proj₁ (_≃_.to equiv eq))
   lemma₁ =
     ≃-elim₁
@@ -1871,7 +1876,7 @@ naive-category a =
        Lens.get (proj₁ (_≃_.to equiv Eq.id))       ∎)
 
   lemma₂ :
-    (x@(l , _) : 𝕊¹ ≊ 𝕊¹) →
+    (x@(l , _) : ↑ a 𝕊¹ ≊ ↑ a 𝕊¹) →
     _≃_.to (_≃_.from equiv x) ≡ Lens.get l
   lemma₂ x@(l , _) =
     _≃_.to (_≃_.from equiv x)                           ≡⟨ lemma₁ (_≃_.from equiv x) ⟩
@@ -1884,9 +1889,10 @@ naive-category a =
 
 ¬Π≃≃≊ :
   Univalence lzero →
-  ¬ ({A B : Type} → (A ≃ B) ≃ (A ≊ B))
-¬Π≃≃≊ univ =
-  ({A B : Type} → (A ≃ B) ≃ (A ≊ B))  ↝⟨ F._∘ ≡≃≃ univ ⟩
-  ({A B : Type} → (A ≡ B) ≃ (A ≊ B))  ↝⟨ BM.≡≃≊→Univalence-≊ ⟩
-  Univalent (naive-category lzero)    ↝⟨ ¬-univalent univ ⟩□
-  ⊥                                   □
+  Univalence a →
+  ¬ ({A B : Type a} → (A ≃ B) ≃ (A ≊ B))
+¬Π≃≃≊ {a = a} univ₀ univ =
+  ({A B : Type a} → (A ≃ B) ≃ (A ≊ B))  ↝⟨ F._∘ ≡≃≃ univ ⟩
+  ({A B : Type a} → (A ≡ B) ≃ (A ≊ B))  ↝⟨ BM.≡≃≊→Univalence-≊ ⟩
+  Univalent (naive-category a)          ↝⟨ ¬-univalent univ₀ univ ⟩□
+  ⊥                                     □

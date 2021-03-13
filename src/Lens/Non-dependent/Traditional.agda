@@ -1481,55 +1481,78 @@ equal-setters-but-not-equal _ =
 
 -- A lens which is used in some counterexamples below.
 
-bad : Lens 𝕊¹ 𝕊¹
-bad = record
+bad : (a : Level) → Lens (↑ a 𝕊¹) (↑ a 𝕊¹)
+bad a = record
   { get     = id
   ; set     = const id
-  ; get-set = λ _ → Circle.not-refl
+  ; get-set = λ _ → cong lift ∘ Circle.not-refl ∘ lower
   ; set-get = refl
-  ; set-set = λ _ _ → Circle.not-refl
+  ; set-set = λ _ _ → cong lift ∘ Circle.not-refl ∘ lower
   }
 
--- The lens bad has a getter which is an equivalence, but it does not
--- satisfy either of the coherence laws that Coherent-lens lenses must
--- satisfy (assuming univalence).
+-- The lens bad a has a getter which is an equivalence, but it does
+-- not satisfy either of the coherence laws that Coherent-lens lenses
+-- must satisfy (assuming univalence).
 --
 -- (The lemma does not actually use the univalence argument, but
 -- univalence is used by Circle.not-refl≢refl.)
 
 getter-equivalence-but-not-coherent :
   Univalence lzero →
-  let open Lens bad in
+  let open Lens (bad a) in
   Is-equivalence get ×
   ¬ (∀ a → cong get (set-get a) ≡ get-set a (get a)) ×
   ¬ (∀ a₁ a₂ a₃ →
      cong get (set-set a₁ a₂ a₃) ≡
      trans (get-set (set a₁ a₂) a₃) (sym (get-set a₁ a₃)))
-getter-equivalence-but-not-coherent _ =
+getter-equivalence-but-not-coherent {a = a} _ =
     _≃_.is-equivalence F.id
-  , (((x : 𝕊¹) → cong get (set-get x) ≡ get-set x (get x))  ↔⟨⟩
-     ((x : 𝕊¹) → cong id (refl _) ≡ Circle.not-refl x)      ↝⟨ trans (cong-id _) ∘_ ⟩
-     ((x : 𝕊¹) → refl x ≡ Circle.not-refl x)                ↔⟨ Eq.extensionality-isomorphism ext ⟩
-     refl ≡ Circle.not-refl                                 ↝⟨ Circle.not-refl≢refl ∘ sym ⟩□
-     ⊥                                                      □)
-  , (((x y z : 𝕊¹) →
-      cong get (set-set x y z) ≡
-      trans (get-set (set x y) z) (sym (get-set x z)))      ↔⟨⟩
+  , (((x : ↑ a 𝕊¹) → cong get (set-get x) ≡ get-set x (get x))        ↔⟨⟩
 
+     ((x : ↑ a 𝕊¹) →
+      cong id (refl _) ≡ cong lift (Circle.not-refl (lower x)))       ↔⟨ (Π-cong ext Bij.↑↔ λ _ → Eq.id) ⟩
+
+     ((x : 𝕊¹) → cong id (refl _) ≡ cong lift (Circle.not-refl x))    ↝⟨ trans (trans (cong-refl _) (cong-id _)) ∘_ ⟩
+
+     ((x : 𝕊¹) → cong lift (refl x) ≡ cong lift (Circle.not-refl x))  ↔⟨ (∀-cong ext λ _ →
+                                                                          Eq.≃-≡ $ inverse $ Eq.≃-≡ $ Eq.↔⇒≃ $ inverse Bij.↑↔) ⟩
+
+     ((x : 𝕊¹) → refl x ≡ Circle.not-refl x)                          ↔⟨ Eq.extensionality-isomorphism ext ⟩
+
+     refl ≡ Circle.not-refl                                           ↝⟨ Circle.not-refl≢refl ∘ sym ⟩□
+
+     ⊥                                                                □)
+  , (((x y z : ↑ a 𝕊¹) →
+      cong get (set-set x y z) ≡
+      trans (get-set (set x y) z) (sym (get-set x z)))     ↔⟨⟩
+
+     ((x y z : ↑ a 𝕊¹) →
+      cong id (cong lift (Circle.not-refl (lower z))) ≡
+      trans (cong lift (Circle.not-refl (lower z)))
+        (sym (cong lift (Circle.not-refl (lower z)))))     ↔⟨ (Π-cong ext Bij.↑↔ λ _ →
+                                                               Π-cong ext Bij.↑↔ λ _ →
+                                                               Π-cong ext Bij.↑↔ λ _ →
+                                                               Eq.id) ⟩
      ((x y z : 𝕊¹) →
-      cong id (Circle.not-refl z) ≡
-      trans (Circle.not-refl z) (sym (Circle.not-refl z)))  ↝⟨ (λ hyp → hyp Circle.base Circle.base) ⟩
+      cong id (cong lift (Circle.not-refl z)) ≡
+      trans (cong lift (Circle.not-refl z))
+        (sym (cong lift (Circle.not-refl z))))             ↝⟨ (λ hyp → hyp Circle.base Circle.base) ⟩
 
      ((x : 𝕊¹) →
-      cong id (Circle.not-refl x) ≡
-      trans (Circle.not-refl x) (sym (Circle.not-refl x)))  ↝⟨ (∀-cong _ λ _ → ≡⇒↝ _ $ cong₂ _≡_
-                                                                  (sym $ cong-id _)
-                                                                  (trans-symʳ _)) ⟩
+      cong id (cong lift (Circle.not-refl x)) ≡
+      trans (cong lift (Circle.not-refl x))
+        (sym (cong lift (Circle.not-refl x))))             ↔⟨ (∀-cong ext λ _ → ≡⇒≃ $ cong₂ _≡_
+                                                                 (sym $ cong-id _)
+                                                                 (trans (trans-symʳ _) $
+                                                                  sym $ cong-refl _)) ⟩
+     ((x : 𝕊¹) →
+      cong lift (Circle.not-refl x) ≡ cong lift (refl x))  ↔⟨ (∀-cong ext λ _ →
+                                                               Eq.≃-≡ $ inverse $ Eq.≃-≡ $ Eq.↔⇒≃ $ inverse Bij.↑↔) ⟩
 
-     ((x : 𝕊¹) → Circle.not-refl x ≡ refl x)                ↔⟨ Eq.extensionality-isomorphism ext ⟩
+     ((x : 𝕊¹) → Circle.not-refl x ≡ refl x)               ↔⟨ Eq.extensionality-isomorphism ext ⟩
 
-     Circle.not-refl ≡ refl                                 ↝⟨ Circle.not-refl≢refl ⟩□
+     Circle.not-refl ≡ refl                                ↝⟨ Circle.not-refl≢refl ⟩□
 
-     ⊥                                                      □)
+     ⊥                                                     □)
   where
-  open Lens bad
+  open Lens (bad a)
