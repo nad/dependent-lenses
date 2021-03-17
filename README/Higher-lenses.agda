@@ -175,6 +175,11 @@ lemma-16          = T.≃get⁻¹×
 lemma-16-coherent = T.≃get⁻¹×-coherent
 lemma-17          = T.≃Σ∥set⁻¹∥×
 
+-- A variant of Lemma 17 without the requirement that the source type
+-- is a set does not hold in general.
+
+not-lemma-17-without-Is-set = TC.≄Σ∥set⁻¹∥×
+
 ------------------------------------------------------------------------
 -- IV: Lenses based on bijections
 

@@ -1182,6 +1182,8 @@ lens-from-⊥≃⊤ = Eq.⇔→≃
 --
 -- This result is based on Theorem 2.3.9 from "Lenses and View Update
 -- Translation" by Pierce and Schmitt.
+--
+-- See also Lens.Non-dependent.Traditional.Combinators.≄Σ∥set⁻¹∥×.
 
 ≃Σ∥set⁻¹∥× :
   Is-set A →

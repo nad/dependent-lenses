@@ -15,7 +15,7 @@ open import Logical-equivalence using (module _⇔_)
 open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 
 import Bi-invertibility
-open import Bijection equality-with-J using (_↔_)
+open import Bijection equality-with-J as Bijection using (_↔_)
 open import Category equality-with-J as C using (Category; Precategory)
 open import Circle eq as Circle using (𝕊¹)
 open import Equality.Path.Isomorphisms eq hiding (univ)
@@ -24,6 +24,9 @@ open import Equivalence equality-with-J as Eq
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
+open import H-level.Truncation.Propositional eq as T using (∥_∥)
+import Integer equality-with-J as Int
+open import Preimage equality-with-J using (_⁻¹_)
 open import Surjection equality-with-J as Surjection using (_↠_)
 open import Univalence-axiom equality-with-J
 
@@ -904,6 +907,71 @@ equal-setters-and-equivalences-as-getters-but-not-equal {a = ℓa} univ =
      ∀ p → _≃_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))  ↝⟨ ¬-≃-↠-Σ-Lens-Is-equivalence-get univ ⟩□
 
   ⊥                                                     □
+
+-- The lemma ≃Σ∥set⁻¹∥× does not hold in general if the requirement
+-- that A is a set is dropped.
+--
+-- I proved this together with Paolo Capriotti.
+
+≄Σ∥set⁻¹∥× :
+  ¬ ({A B : Type a} (l : Lens A B) →
+     A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ f ∥) × B))
+≄Σ∥set⁻¹∥× {a = a} =
+  ({A B : Type a} (l : Lens A B) →
+   A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ f ∥) × B))                      ↝⟨ (λ hyp → hyp) ⟩
+
+  ((l : Lens (↑ a 𝕊¹) (↑ a 𝕊¹)) →
+   ↑ a 𝕊¹ ≃ ((∃ λ (f : ↑ a 𝕊¹ → ↑ a 𝕊¹) → ∥ Lens.set l ⁻¹ f ∥) × ↑ a 𝕊¹))  ↝⟨ _$ id ⟩
+
+  ↑ a 𝕊¹ ≃ ((∃ λ (f : ↑ a 𝕊¹ → ↑ a 𝕊¹) → ∥ const P.id ⁻¹ f ∥) × ↑ a 𝕊¹)    ↝⟨ lemma ⟩
+
+  𝕊¹ ≃ (𝕊¹ × 𝕊¹)                                                           ↝⟨ 𝕊¹≄𝕊¹×𝕊¹ ⟩□
+
+  ⊥                                                                        □
+  where
+  open Circle
+  open Int
+
+  lemma = λ hyp →
+    𝕊¹                                                            ↔⟨ inverse Bijection.↑↔ ⟩
+
+    ↑ a 𝕊¹                                                        ↝⟨ hyp ⟩
+
+    (∃ λ (f : ↑ a 𝕊¹ → ↑ a 𝕊¹) → ∥ const P.id ⁻¹ f ∥) × ↑ a 𝕊¹    ↔⟨⟩
+
+    (∃ λ (f : ↑ a 𝕊¹ → ↑ a 𝕊¹) → ∥ ↑ a 𝕊¹ × P.id ≡ f ∥) × ↑ a 𝕊¹  ↝⟨ (×-cong₁ λ _ → ∃-cong λ _ → T.∥∥-cong-⇔ $
+                                                                      record { to = proj₂; from = λ eq → lift base , eq }) ⟩
+
+    (∃ λ (f : ↑ a 𝕊¹ → ↑ a 𝕊¹) → ∥ P.id ≡ f ∥) × ↑ a 𝕊¹           ↝⟨ (Σ-cong (→-cong ext Bijection.↑↔ Bijection.↑↔) λ _ → T.∥∥-cong $
+                                                                      inverse $ Eq.≃-≡ (Eq.↔⇒≃ $ →-cong ext Bijection.↑↔ Bijection.↑↔))
+                                                                       ×-cong
+                                                                     Eq.↔⇒≃ Bijection.↑↔ ⟩
+
+    (∃ λ (f : 𝕊¹ → 𝕊¹) → ∥ P.id ≡ f ∥) × 𝕊¹                       ↝⟨ (×-cong₁ λ _ →
+                                                                      Σ-cong 𝕊¹→𝕊¹≃𝕊¹×ℤ λ f →
+                                                                      T.∥∥-cong (
+      P.id ≡ f                                                          ↝⟨ inverse $ Eq.≃-≡ 𝕊¹→𝕊¹≃𝕊¹×ℤ ⟩
+      _≃_.to 𝕊¹→𝕊¹≃𝕊¹×ℤ P.id ≡ _≃_.to 𝕊¹→𝕊¹≃𝕊¹×ℤ f                      ↝⟨ ≡⇒≃ $ cong (_≡ _≃_.to 𝕊¹→𝕊¹≃𝕊¹×ℤ f) 𝕊¹→𝕊¹≃𝕊¹×ℤ-id ⟩
+      (base , + 1) ≡ _≃_.to 𝕊¹→𝕊¹≃𝕊¹×ℤ f                                ↔⟨ ≡-comm ⟩□
+      _≃_.to 𝕊¹→𝕊¹≃𝕊¹×ℤ f ≡ (base , + 1)                                □)) ⟩
+
+    (∃ λ (p : 𝕊¹ × ℤ) → ∥ p ≡ (base , + 1) ∥) × 𝕊¹                ↔⟨ (×-cong₁ λ _ → ∃-cong λ _ → inverse $
+                                                                      T.∥∥-cong ≡×≡↔≡ F.∘ T.∥∥×∥∥↔∥×∥) ⟩
+
+    (∃ λ ((x , i) : 𝕊¹ × ℤ) → ∥ x ≡ base ∥ × ∥ i ≡ + 1 ∥) × 𝕊¹    ↔⟨ (×-cong₁ λ _ →
+                                                                      Σ-assoc F.∘
+                                                                      (∃-cong λ _ → ∃-comm) F.∘
+                                                                      inverse Σ-assoc) ⟩
+
+    ((∃ λ x → ∥ x ≡ base ∥) × (∃ λ i → ∥ i ≡ + 1 ∥)) × 𝕊¹         ↔⟨ (×-cong₁ λ _ →
+                                                                      (drop-⊤-right λ _ →
+                                                                       T.inhabited⇒∥∥↔⊤ $ all-points-on-the-circle-are-merely-equal _)
+                                                                        ×-cong
+                                                                      ∃-cong λ _ → T.∥∥↔ ℤ-set) ⟩
+
+    (𝕊¹ × (∃ λ i → i ≡ + 1)) × 𝕊¹                                 ↔⟨ (×-cong₁ λ _ → drop-⊤-right λ _ → _⇔_.to contractible⇔↔⊤ $
+                                                                      singleton-contractible _) ⟩□
+    𝕊¹ × 𝕊¹                                                       □
 
 ------------------------------------------------------------------------
 -- Isomorphisms expressed using lens quasi-inverses

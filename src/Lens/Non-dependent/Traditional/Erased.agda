@@ -34,6 +34,7 @@ open import Function-universe equality-with-J as F
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq as PT using (∥_∥; ∣_∣)
+open import Preimage equality-with-J using (_⁻¹_)
 open import Surjection equality-with-J as Surjection using (_↠_)
 open import Univalence-axiom equality-with-J
 
@@ -3472,4 +3473,27 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
          _≃ᴱ_.to (_↠_.from ≃ᴱ↠≊ᴱ x) ≡ Lens.get l)                 ↝⟨ ¬≃ᴱ↠≊ᴱ univ ⟩□
 
       ⊥                                                           □
+    ]
+
+-- The lemma ≃ᴱΣ∥set⁻¹ᴱ∥× does not hold in general if the requirement
+-- that A is a set is dropped.
+
+≄ᴱΣ∥set⁻¹ᴱ∥× :
+  ¬ ({A B : Type a} (l : Lens A B) →
+     A ≃ᴱ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥) × B))
+≄ᴱΣ∥set⁻¹ᴱ∥× {a = a} =
+  Stable-¬ _
+    [ ({A B : Type a} (l : Lens A B) →
+       A ≃ᴱ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥) × B))  ↝⟨ EEq.≃ᴱ→≃ ⊚_ ⟩
+
+      ({A B : Type a} (l : Lens A B) →
+       A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥) × B))   ↝⟨ ((×-cong₁ λ _ → ∃-cong λ _ → PT.∥∥-cong $ inverse ECP.⁻¹≃⁻¹ᴱ) F.∘_) ⊚_ ⟩
+
+      ({A B : Type a} (l : Lens A B) →
+       A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ f ∥) × B))    ↝⟨ _⊚ Traditional-lens→Lens ⟩
+
+      ({A B : Type a} (l : T.Lens A B) →
+       A ≃ ((∃ λ (f : B → A) → ∥ T.Lens.set l ⁻¹ f ∥) × B))  ↝⟨ TC.≄Σ∥set⁻¹∥× ⟩□
+
+      ⊥                                                      □
     ]
