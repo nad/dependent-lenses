@@ -142,10 +142,11 @@ Coherently-constant′ = Coherently Constant′ (λ _ → proj₁)
 -- equivalent (assuming univalence).
 
 Coherently-constant≃Coherently-constant′ :
+  Block "Coherently-constant≃Coherently-constant′" →
   {A : Type a} {B : Type b} {f : A → B} →
   Univalence (a ⊔ b) →
   Coherently-constant f ≃ Coherently-constant′ f
-Coherently-constant≃Coherently-constant′ univ =
+Coherently-constant≃Coherently-constant′ ⊠ univ =
   Coherently-cong univ
     Constant≃Constant′
     (λ f c →
@@ -356,13 +357,14 @@ private
 -- Coherently-constant′ can be expressed in a different way.
 
 Coherently-constant′≃ :
+  Block "Coherently-constant′≃" →
   {f : A → B} →
   Coherently-constant′ f
     ≃
   (∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
      (∀ x → g 0 ∣ x ∣ ≡ f x) ×
      (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x))
-Coherently-constant′≃ {f = f} =
+Coherently-constant′≃ ⊠ {f = f} =
   Eq.⟨ _
      , Eq.drop-Σ-map-id _
          (_≃_.is-equivalence Coherently-constant′≃-lemma)
@@ -372,16 +374,17 @@ Coherently-constant′≃ {f = f} =
 -- A "computation" rule for Coherently-constant′≃.
 
 from-Coherently-constant′≃-property :
+  (bl : Block "Coherently-constant′≃") →
   (f : A → B)
   {c@(g , g₀ , _) :
    ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
      (∀ x → g 0 ∣ x ∣ ≡ f x) ×
      (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x)} →
-  _≃_.from Coherently-constant′≃ c .property ≡ (g 0 , g₀)
+  _≃_.from (Coherently-constant′≃ bl) c .property ≡ (g 0 , g₀)
 from-Coherently-constant′≃-property
-  {A = A} {B = B} f {c = c@(g , g₀ , g₊)} =
+  {A = A} {B = B} ⊠ f {c = c@(g , g₀ , g₊)} =
 
-  _≃_.from Coherently-constant′≃ c .property                          ≡⟨⟩
+  _≃_.from (Coherently-constant′≃ ⊠) c .property                      ≡⟨⟩
 
   HA.inverse
     (Eq.drop-Σ-map-id _
@@ -511,7 +514,7 @@ from-Coherently-constant′≃-property
   (∃ λ (f : ∀ n → ∥ A ∥¹-in-^ n → B) →
      ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x)  ↝⟨ inverse ∃Coherently-constant′≃ ⟩
 
-  (∃ λ (f : A → B) → Coherently-constant′ f)    ↝⟨ (∃-cong λ _ → inverse $ Coherently-constant≃Coherently-constant′ univ) ⟩□
+  (∃ λ (f : A → B) → Coherently-constant′ f)    ↝⟨ (∃-cong λ _ → inverse $ Coherently-constant≃Coherently-constant′ ⊠ univ) ⟩□
 
   (∃ λ (f : A → B) → Coherently-constant f)     □
 
@@ -540,7 +543,7 @@ proj₂-to-∥∥→≃-property≡ univ {f = f} = ⟨ext⟩ λ x → ⟨ext⟩ 
 
   proj₂ (_≃_.to (∥∥→≃ univ) f) .property x y                             ≡⟨⟩
 
-  _≃_.from (Coherently-constant≃Coherently-constant′ univ)
+  _≃_.from (Coherently-constant≃Coherently-constant′ ⊠ univ)
     (proj₂
        (_≃_.from ∃Coherently-constant′≃
           (Σ-map (λ g n → g n ∘ _≃_.from (oi n))
