@@ -1174,6 +1174,22 @@ H-level-Coherently-constant {a = a} {p = p} {n = n} univ _ h =
     Π-closure ext n λ _ →
     Eq.h-level-closure ext n (h _) (h _)
 
+-- If P has h-level n (pointwise), then
+-- Coinductive.Coherently-constant P has h-level n (assuming
+-- univalence).
+
+H-level-Coinductive-Coherently-constant :
+  {A : Type a} {P : A → Type p} →
+  Univalence (lsuc (a ⊔ p)) →
+  Univalence (a ⊔ lsuc p) →
+  Univalence p →
+  ((a : A) → H-level n (P a)) →
+  H-level n (Coinductive.Coherently-constant P)
+H-level-Coinductive-Coherently-constant {n = n} {P = P} univ₁ univ₂ univ₃ =
+  (∀ a → H-level n (P a))                        ↝⟨ H-level-Coherently-constant univ₁ univ₃ ⟩
+  H-level n (Coherently-constant univ₃ P)        ↝⟨ H-level-cong _ n (inverse $ Coinductive-coherently-constant≃Coherently-constant univ₂ univ₃) ⟩□
+  H-level n (Coinductive.Coherently-constant P)  □
+
 -- If A and B have h-level n given the assumption that the other type
 -- is inhabited, then Lens univ A B has h-level n (assuming
 -- univalence).
