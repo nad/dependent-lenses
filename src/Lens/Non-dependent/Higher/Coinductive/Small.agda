@@ -1209,7 +1209,7 @@ lens-preserves-h-level univ′ univ n hA hB =
   H-level-cong _ n (inverse Lens-as-Σ) $
   Σ-closure n
     (Π-closure ext n λ a →
-     hB a) λ get →
+     hB a) λ _ →
   H-level-Coherently-constant univ′ univ λ b →
   Σ-closure n (hA b) λ a →
   H-level.⇒≡ n (hB a)
