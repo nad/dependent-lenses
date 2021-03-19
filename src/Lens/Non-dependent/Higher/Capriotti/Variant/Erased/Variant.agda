@@ -131,9 +131,9 @@ Coherently-constant′ {p = p} {A = A} P =
 -- Coherently-constant and Coherently-constant′ are pointwise
 -- equivalent (with erased proofs).
 
-Coherently-constant≃Coherently-constant′ :
+Coherently-constant≃ᴱCoherently-constant′ :
   Coherently-constant P ≃ᴱ Coherently-constant′ P
-Coherently-constant≃Coherently-constant′ {P = P} =
+Coherently-constant≃ᴱCoherently-constant′ {P = P} =
   (∃ λ Q →
    (∀ x → P x ≃ᴱ Q ∣ x ∣) ×
    ∃ λ (Q→Q : ∀ x y → Q x → Q y) →
