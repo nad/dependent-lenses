@@ -27,6 +27,7 @@ open import Erased.Cubical eq
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
+open import H-level.Truncation.Propositional eq using (∥_∥)
 open import H-level.Truncation.Propositional.Erased eq as T
   using (∥_∥ᴱ; ∣_∣)
 import H-level.Truncation.Propositional.Non-recursive.Erased eq as N
@@ -50,6 +51,7 @@ private
     A B   : Type a
     P     : A → Type p
     f     : (x : A) → P x
+    univ  : Univalence a
 
 ------------------------------------------------------------------------
 -- Weakly constant functions
@@ -562,6 +564,55 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
     (∃ λ (c′ : C.Coherently-constant (get ⁻¹ᴱ_)) →
      ∀ b₁ b₂ → proj₁ (c b₁ b₂) ≡ subst id (c′ .property b₁ b₂))      □
 
+-- In erased contexts Coherently-constant-fibres univ get is
+-- equivalent to S.Coherently-constant univ (get ⁻¹_).
+
+@0 Coherently-constant-fibres≃Coherently-constant-⁻¹ :
+  (bl : Block "Constant-≃-get-⁻¹-≃")
+  {A : Type a} {B : Type b} {get : A → B} →
+  (univ : Univalence (a ⊔ b)) →
+  Coherently-constant-fibres univ get ≃
+  S.Coherently-constant univ (get ⁻¹_)
+Coherently-constant-fibres≃Coherently-constant-⁻¹
+  bl {A = A} {B = B} {get = get} univ =
+  Coherently-constant-fibres univ get                               ↔⟨⟩
+
+  (∃ λ (set : A → B → A) →
+   Erased (
+   ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
+   ∃ λ (eq : ∀ b₁ b₂ →
+             let f : get ⁻¹ b₁ → get ⁻¹ b₂
+                 f = λ (a , _) → set a b₂ , get-set a b₂
+             in Is-equivalence f) →
+   ∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+   c .property ≡ S.Constant-≃-get-⁻¹-≃⁻¹ (set , get-set , eq)))     ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
+
+  (∃ λ (set : A → B → A) →
+   ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
+   ∃ λ (eq : ∀ b₁ b₂ →
+             let f : get ⁻¹ b₁ → get ⁻¹ b₂
+                 f = λ (a , _) → set a b₂ , get-set a b₂
+             in Is-equivalence f) →
+   ∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+   c .property ≡ S.Constant-≃-get-⁻¹-≃⁻¹ (set , get-set , eq))      ↔⟨ ∃-comm F.∘
+                                                                       Σ-assoc F.∘
+                                                                       (∃-cong λ _ → Σ-assoc) ⟩
+  (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+   ∃ λ (c′ : ∃ λ (set : A → B → A) →
+             ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
+               ∀ b₁ b₂ →
+               let f : get ⁻¹ b₁ → get ⁻¹ b₂
+                   f = λ (a , _) → set a b₂ , get-set a b₂
+               in Is-equivalence f) →
+   c .property ≡ S.Constant-≃-get-⁻¹-≃⁻¹ c′)                        ↝⟨ (∃-cong λ _ →
+                                                                        Σ-cong (inverse $ S.Constant-≃-get-⁻¹-≃ bl) λ _ → F.id) ⟩
+  (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+   ∃ λ (c′ : S.Constant-≃ (get ⁻¹_)) →
+   c .property ≡ c′)                                                ↔⟨ (drop-⊤-right λ _ →
+                                                                        _⇔_.to contractible⇔↔⊤ $
+                                                                        other-singleton-contractible _) ⟩□
+  S.Coherently-constant univ (get ⁻¹_)                              □
+
 ------------------------------------------------------------------------
 -- The lens type family
 
@@ -693,3 +744,59 @@ Lens≃ᴱLens-preserves-getters-and-setters ⊠ univ′ univ =
               (get⁻¹ᴱ-const (get a) b (a , [ refl (get a) ])))  ≡⟨ cong proj₁ $ subst-refl _ _ ⟩∎
 
          proj₁ (get⁻¹ᴱ-const (get a) b (a , [ refl (get a) ]))  ∎)
+
+-- In erased contexts Lens univ A B is equivalent to S.Lens univ A B.
+
+@0 Lens≃Lens :
+  (bl : Block "Constant-≃-get-⁻¹-≃") →
+  Lens univ A B ≃ S.Lens univ A B
+Lens≃Lens {univ = univ} {A = A} {B = B} bl =
+  Lens univ A B                                               ↝⟨ Lens-as-Σ ⟩
+  (∃ λ (get : A → B) → Coherently-constant-fibres univ get)   ↝⟨ (∃-cong λ _ → Coherently-constant-fibres≃Coherently-constant-⁻¹ bl univ) ⟩
+  (∃ λ (get : A → B) → S.Coherently-constant univ (get ⁻¹_))  ↝⟨ inverse S.Lens-as-Σ ⟩□
+  S.Lens univ A B                                             □
+
+-- Lens≃Lens preserves getters and setters.
+
+@0 Lens≃Lens-preserves-getters-and-setters :
+  (bl : Block "Lens≃Lens")
+  {A : Type a} {B : Type b}
+  {univ : Univalence (a ⊔ b)} →
+  Preserves-getters-and-setters-⇔ A B
+    (_≃_.logical-equivalence (Lens≃Lens {univ = univ} bl))
+Lens≃Lens-preserves-getters-and-setters ⊠ =
+    (λ l →
+       let open Lens l in
+         refl _
+       , ⟨ext⟩ λ a → ⟨ext⟩ λ b →
+         proj₁ (_≃_.to (get⁻¹-coherently-constant .property (get a) b)
+           (a , refl (get a)))                                          ≡⟨ cong (λ f → proj₁ (_≃_.to (f (get a) b) (a , refl (get a))))
+                                                                           get⁻¹-coherently-constant-property≡get⁻¹-constant ⟩
+         proj₁ (_≃_.to (get⁻¹-constant (get a) b) (a , refl (get a)))   ≡⟨⟩
+
+         set a b                                                        ∎)
+  , (λ _ → refl _ , refl _)
+
+-- Lenses with stable view types are equal if their setters are equal
+-- (in erased contexts, assuming univalence).
+
+@0 lenses-equal-if-setters-equal :
+  {A : Type a} {B : Type b} →
+  Univalence (lsuc (a ⊔ b)) →
+  (univ : Univalence (a ⊔ b)) →
+  (l₁ l₂ : Lens univ A B) →
+  (∥ B ∥ → B) →
+  Lens.set l₁ ≡ Lens.set l₂ →
+  l₁ ≡ l₂
+lenses-equal-if-setters-equal univ′ univ l₁ l₂ stable =
+  block λ bl →
+
+  Lens.set l₁ ≡ Lens.set l₂                            ↔⟨ ≡⇒≃ $ sym $ cong₂ _≡_
+                                                            (proj₂ $ proj₁ (Lens≃Lens-preserves-getters-and-setters bl) l₁)
+                                                            (proj₂ $ proj₁ (Lens≃Lens-preserves-getters-and-setters bl) l₂) ⟩
+  S.Lens.set (_≃_.to (Lens≃Lens bl) l₁) ≡
+  S.Lens.set (_≃_.to (Lens≃Lens bl) l₂)                ↝⟨ S.lenses-equal-if-setters-equal univ′ _ _ _ stable ⟩
+
+  _≃_.to (Lens≃Lens bl) l₁ ≡ _≃_.to (Lens≃Lens bl) l₂  ↔⟨ Eq.≃-≡ $ Lens≃Lens bl ⟩□
+
+  l₁ ≡ l₂                                              □
