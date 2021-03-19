@@ -12,7 +12,7 @@ module Lens.Non-dependent.Higher.Coinductive.Small.Erased
 open P.Derived-definitions-and-properties eq
 
 open import Logical-equivalence using (_⇔_)
-open import Prelude
+open import Prelude as P hiding (id)
 
 open import Bijection equality-with-J using (_↔_)
 import Colimit.Sequential.Very-erased eq as CS
@@ -47,11 +47,11 @@ import Lens.Non-dependent.Higher.Coinductive.Small eq as S
 
 private
   variable
-    a b p : Level
-    A B   : Type a
-    P     : A → Type p
-    f     : (x : A) → P x
-    univ  : Univalence a
+    a b c d p : Level
+    A B       : Type a
+    P         : A → Type p
+    f         : (x : A) → P x
+    univ      : Univalence a
 
 ------------------------------------------------------------------------
 -- Weakly constant functions
@@ -125,13 +125,13 @@ Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ ⊠ {f = f} univ =
   ∀ {A : Type a} {B : Type b} {f : A → B} {univ : Univalence (a ⊔ b)}
     {c : Constant (f ⁻¹_)} {b₁ b₂} →
   proj₁ (_≃_.from (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl univ) c b₁ b₂) ≡
-  ECP.⁻¹→⁻¹ᴱ ∘ subst id (c b₁ b₂) ∘ ECP.⁻¹ᴱ→⁻¹
+  ECP.⁻¹→⁻¹ᴱ ∘ subst P.id (c b₁ b₂) ∘ ECP.⁻¹ᴱ→⁻¹
 proj₁-from-Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ ⊠ {c = c} {b₁ = b₁} {b₂ = b₂} =
   ⟨ext⟩ λ (a , [ eq ]) →
 
-  ECP.⁻¹→⁻¹ᴱ (≡⇒→ (c b₁ b₂) (a , eq))       ≡⟨ cong ECP.⁻¹→⁻¹ᴱ $ sym $
-                                               subst-id-in-terms-of-≡⇒↝ equivalence ⟩∎
-  ECP.⁻¹→⁻¹ᴱ (subst id (c b₁ b₂) (a , eq))  ∎
+  ECP.⁻¹→⁻¹ᴱ (≡⇒→ (c b₁ b₂) (a , eq))         ≡⟨ cong ECP.⁻¹→⁻¹ᴱ $ sym $
+                                                 subst-id-in-terms-of-≡⇒↝ equivalence ⟩∎
+  ECP.⁻¹→⁻¹ᴱ (subst P.id (c b₁ b₂) (a , eq))  ∎
 
 -- Constantᴱ (get ⁻¹ᴱ_) can be expressed (up to _≃ᴱ_) in terms of a
 -- "setter" and an erased "get-set" law that, in a certain way, form
@@ -152,95 +152,95 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ :
            in
            Is-equivalence f))
 Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
-  Constantᴱ (get ⁻¹ᴱ_)                                                   ↔⟨⟩
+  Constantᴱ (get ⁻¹ᴱ_)                                                    ↔⟨⟩
 
   (∀ b₁ b₂ →
    ∃ λ (f : get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
-   Erased (Is-equivalence f))                                            ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ → ∃-cong λ f → Erased-cong (
-                                                                             Is-equivalence≃Is-equivalence-∘ˡ {k = equivalence} ext $
-                                                                             _≃_.is-equivalence $ from-bijection $
-                                                                             ∃-cong λ _ → erased Erased↔)) ⟩
+   Erased (Is-equivalence f))                                             ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ → ∃-cong λ f → Erased-cong (
+                                                                              Is-equivalence≃Is-equivalence-∘ˡ {k = equivalence} ext $
+                                                                              _≃_.is-equivalence $ from-bijection $
+                                                                              ∃-cong λ _ → erased Erased↔)) ⟩
   (∀ b₁ b₂ →
    ∃ λ (f : get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
-   Erased (Is-equivalence (Σ-map id erased ∘ f)))                        ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ → ∃-cong λ f → Erased-cong (
-                                                                             Is-equivalence≃Is-equivalence-∘ʳ {k = equivalence} ext $
-                                                                             _≃_.is-equivalence $ from-bijection $
-                                                                             ∃-cong λ _ → inverse $ erased Erased↔)) ⟩
+   Erased (Is-equivalence (Σ-map P.id erased ∘ f)))                       ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ → ∃-cong λ f → Erased-cong (
+                                                                              Is-equivalence≃Is-equivalence-∘ʳ {k = equivalence} ext $
+                                                                              _≃_.is-equivalence $ from-bijection $
+                                                                              ∃-cong λ _ → inverse $ erased Erased↔)) ⟩
   (∀ b₁ b₂ →
    ∃ λ (f : get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
-   Erased (Is-equivalence (Σ-map id erased ∘ f ∘ Σ-map id [_]→)))        ↔⟨ Π-comm ⟩
+   Erased (Is-equivalence (Σ-map P.id erased ∘ f ∘ Σ-map P.id [_]→)))     ↔⟨ Π-comm ⟩
 
   (∀ b₂ b₁ →
    ∃ λ (f : get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
-   Erased (Is-equivalence (Σ-map id erased ∘ f ∘ Σ-map id [_]→)))        ↔⟨ (∀-cong ext λ _ → ΠΣ-comm) ⟩
+   Erased (Is-equivalence (Σ-map P.id erased ∘ f ∘ Σ-map P.id [_]→)))     ↔⟨ (∀-cong ext λ _ → ΠΣ-comm) ⟩
 
   (∀ b₂ →
    ∃ λ (f : ∀ b₁ → get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
    ∀ b₁ →
-   Erased (Is-equivalence (Σ-map id erased ∘ f b₁ ∘ Σ-map id [_]→)))     ↔⟨ (∀-cong ext λ _ → ∃-cong λ _ → inverse Erased-Π↔Π) ⟩
+   Erased (Is-equivalence (Σ-map P.id erased ∘ f b₁ ∘ Σ-map P.id [_]→)))  ↔⟨ (∀-cong ext λ _ → ∃-cong λ _ → inverse Erased-Π↔Π) ⟩
 
   (∀ b₂ →
    ∃ λ (f : ∀ b₁ → get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
    Erased (∀ b₁ →
-           Is-equivalence (Σ-map id erased ∘ f b₁ ∘ Σ-map id [_]→)))     ↔⟨ (∀-cong ext λ _ →
-                                                                             Σ-cong {k₂ = equivalence}
-                                                                               (inverse (∀-cong ext λ _ → currying) F.∘
-                                                                                Π-comm F.∘
-                                                                                (∀-cong ext λ _ → currying))
-                                                                               (λ _ → Eq.id)) ⟩
+           Is-equivalence (Σ-map P.id erased ∘ f b₁ ∘ Σ-map P.id [_]→)))  ↔⟨ (∀-cong ext λ _ →
+                                                                              Σ-cong {k₂ = equivalence}
+                                                                                (inverse (∀-cong ext λ _ → currying) F.∘
+                                                                                 Π-comm F.∘
+                                                                                 (∀-cong ext λ _ → currying))
+                                                                                (λ _ → Eq.id)) ⟩
   (∀ b₂ →
    ∃ λ (f : ∀ a → (∃ λ b₁ → Erased (get a ≡ b₁)) → get ⁻¹ᴱ b₂) →
    Erased (∀ b₁ →
            let g : get ⁻¹ b₁ → get ⁻¹ b₂
-               g = λ (a , eq) → Σ-map id erased (f a (b₁ , [ eq ]))
+               g = λ (a , eq) → Σ-map P.id erased (f a (b₁ , [ eq ]))
            in
-           Is-equivalence g))                                            ↝⟨ (∀-cong ext λ _ →
-                                                                             EEq.Σ-cong-≃ᴱ-Erased
-                                                                               (∀-cong ext λ _ →
-                                                                                EEq.drop-⊤-left-Π-≃ᴱ ext
-                                                                                  (_⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤
-                                                                                   Contractibleᴱ-Erased-other-singleton)
-                                                                                  (λ _ _ → F.id)) λ f →
-                                                                             Erased-cong (
-                                                                             ∀-cong ext λ b₁ →
-                                                                             Is-equivalence-cong ext λ (a , eq) →
-      Σ-map id erased (f a (b₁ , [ eq ]))                                      ≡⟨ cong (Σ-map id erased ∘ f a) $ sym $
-                                                                                  erased (proj₂ Contractibleᴱ-Erased-other-singleton) _ ⟩
+           Is-equivalence g))                                             ↝⟨ (∀-cong ext λ _ →
+                                                                              EEq.Σ-cong-≃ᴱ-Erased
+                                                                                (∀-cong ext λ _ →
+                                                                                 EEq.drop-⊤-left-Π-≃ᴱ ext
+                                                                                   (_⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤
+                                                                                    Contractibleᴱ-Erased-other-singleton)
+                                                                                   (λ _ _ → F.id)) λ f →
+                                                                              Erased-cong (
+                                                                              ∀-cong ext λ b₁ →
+                                                                              Is-equivalence-cong ext λ (a , eq) →
+      Σ-map P.id erased (f a (b₁ , [ eq ]))                                       ≡⟨ cong (Σ-map P.id erased ∘ f a) $ sym $
+                                                                                   erased (proj₂ Contractibleᴱ-Erased-other-singleton) _ ⟩
 
-      Σ-map id erased (f a (get a , [ refl _ ]))                               ≡⟨ cong (Σ-map id erased) $ sym $ subst-refl _ _ ⟩∎
+      Σ-map P.id erased (f a (get a , [ refl _ ]))                                ≡⟨ cong (Σ-map P.id erased) $ sym $ subst-refl _ _ ⟩∎
 
-      Σ-map id erased
-        (subst (const _) (refl _) (f a (get a , [ refl _ ])))                  ∎)) ⟩
+      Σ-map P.id erased
+        (subst (const _) (refl _) (f a (get a , [ refl _ ])))                   ∎)) ⟩
 
   (∀ b₂ →
    ∃ λ (f : A → get ⁻¹ᴱ b₂) →
    Erased (∀ b₁ →
            let g : get ⁻¹ b₁ → get ⁻¹ b₂
-               g = λ (a , _) → Σ-map id erased (f a)
+               g = λ (a , _) → Σ-map P.id erased (f a)
            in
-           Is-equivalence g))                                            ↔⟨ ΠΣ-comm ⟩
+           Is-equivalence g))                                             ↔⟨ ΠΣ-comm ⟩
 
   (∃ λ (f : (b : B) → A → get ⁻¹ᴱ b) →
    ∀ b₂ →
    Erased (∀ b₁ →
            let g : get ⁻¹ b₁ → get ⁻¹ b₂
-               g = λ (a , _) → Σ-map id erased (f b₂ a)
+               g = λ (a , _) → Σ-map P.id erased (f b₂ a)
            in
-           Is-equivalence g))                                            ↔⟨ (∃-cong λ _ → inverse Erased-Π↔Π) ⟩
+           Is-equivalence g))                                             ↔⟨ (∃-cong λ _ → inverse Erased-Π↔Π) ⟩
 
   (∃ λ (f : (b : B) → A → get ⁻¹ᴱ b) →
    Erased (∀ b₂ b₁ →
            let g : get ⁻¹ b₁ → get ⁻¹ b₂
-               g = λ (a , _) → Σ-map id erased (f b₂ a)
+               g = λ (a , _) → Σ-map P.id erased (f b₂ a)
            in
-           Is-equivalence g))                                            ↔⟨ Σ-cong Π-comm (λ _ → Erased-cong Π-comm) ⟩
+           Is-equivalence g))                                             ↔⟨ Σ-cong Π-comm (λ _ → Erased-cong Π-comm) ⟩
 
   (∃ λ (f : A → (b : B) → get ⁻¹ᴱ b) →
    Erased (∀ b₁ b₂ →
            let g : get ⁻¹ b₁ → get ⁻¹ b₂
-               g = λ (a , _) → Σ-map id erased (f a b₂)
+               g = λ (a , _) → Σ-map P.id erased (f a b₂)
            in
-           Is-equivalence g))                                            ↔⟨ Σ-cong (∀-cong ext λ _ → ΠΣ-comm) (λ _ → Eq.id) ⟩
+           Is-equivalence g))                                             ↔⟨ Σ-cong (∀-cong ext λ _ → ΠΣ-comm) (λ _ → Eq.id) ⟩
 
   (∃ λ (f : A → ∃ λ (set : B → A) →
                 (b : B) → Erased (get (set b) ≡ b)) →
@@ -248,16 +248,16 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
            let g : get ⁻¹ b₁ → get ⁻¹ b₂
                g = λ (a , _) → proj₁ (f a) b₂ , erased (proj₂ (f a) b₂)
            in
-           Is-equivalence g))                                            ↔⟨ Σ-cong
-                                                                              (∀-cong ext λ _ → ∃-cong λ _ → inverse Erased-Π↔Π)
-                                                                              (λ _ → Eq.id) ⟩
+           Is-equivalence g))                                             ↔⟨ Σ-cong
+                                                                               (∀-cong ext λ _ → ∃-cong λ _ → inverse Erased-Π↔Π)
+                                                                               (λ _ → Eq.id) ⟩
   (∃ λ (f : A → ∃ λ (set : B → A) →
                 Erased ((b : B) → get (set b) ≡ b)) →
    Erased (∀ b₁ b₂ →
            let g : get ⁻¹ b₁ → get ⁻¹ b₂
                g = λ (a , _) → proj₁ (f a) b₂ , erased (proj₂ (f a)) b₂
            in
-           Is-equivalence g))                                            ↔⟨ Σ-cong-id {k₂ = equivalence} ΠΣ-comm ⟩
+           Is-equivalence g))                                             ↔⟨ Σ-cong-id {k₂ = equivalence} ΠΣ-comm ⟩
 
   (∃ λ ((set , get-set) :
         ∃ λ (set : A → B → A) →
@@ -266,7 +266,7 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
            let f : get ⁻¹ b₁ → get ⁻¹ b₂
                f = λ (a , _) → set a b₂ , erased (get-set a) b₂
            in
-           Is-equivalence f))                                            ↔⟨ Σ-cong (∃-cong λ _ → inverse Erased-Π↔Π) (λ _ → Eq.id) ⟩
+           Is-equivalence f))                                             ↔⟨ Σ-cong (∃-cong λ _ → inverse Erased-Π↔Π) (λ _ → Eq.id) ⟩
 
   (∃ λ ((set , [ get-set ]) :
         ∃ λ (set : A → B → A) →
@@ -275,17 +275,17 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
            let f : get ⁻¹ b₁ → get ⁻¹ b₂
                f = λ (a , _) → set a b₂ , get-set a b₂
            in
-           Is-equivalence f))                                            ↔⟨ inverse Σ-assoc ⟩
+           Is-equivalence f))                                             ↔⟨ inverse Σ-assoc ⟩
 
   (∃ λ (set : A → B → A) →
    ∃ λ (([ get-set ]) : Erased ((a : A) (b : B) → get (set a b) ≡ b)) →
    Erased (∀ b₁ b₂ →
-           Is-equivalence λ (a , _) → set a b₂ , get-set a b₂))          ↔⟨ (∃-cong λ _ → inverse
-                                                                             Erased-Σ↔Σ) ⟩□
+           Is-equivalence λ (a , _) → set a b₂ , get-set a b₂))           ↔⟨ (∃-cong λ _ → inverse
+                                                                              Erased-Σ↔Σ) ⟩□
   (∃ λ (set : A → B → A) →
    Erased (∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
            ∀ b₁ b₂ →
-           Is-equivalence λ (a , _) → set a b₂ , get-set a b₂))          □
+           Is-equivalence λ (a , _) → set a b₂ , get-set a b₂))           □
 
 -- A lemma relating S.Constant-≃-get-⁻¹-≃,
 -- Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ and Constantᴱ-⁻¹ᴱ-≃ᴱ.
@@ -296,7 +296,7 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
   (c : Constantᴱ (get ⁻¹ᴱ_)) →
   _≃_.to (S.Constant-≃-get-⁻¹-≃ bl)
     (_≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c) ≡
-  Σ-map id erased
+  Σ-map P.id erased
     (_≃ᴱ_.to (Constantᴱ-⁻¹ᴱ-≃ᴱ bl) c)
 to-Constant-≃-get-⁻¹-≃-to-Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹-≡
   bl {get = get} c =
@@ -314,7 +314,7 @@ to-Constant-≃-get-⁻¹-≃-to-Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹-≡
      _≃_.to (S.Constant-≃-get-⁻¹-≃ bl)
        (_≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c)) ≡
     (proj₁ $ _↔_.to Σ-assoc $
-     Σ-map id erased (_≃ᴱ_.to (Constantᴱ-⁻¹ᴱ-≃ᴱ bl) c))
+     Σ-map P.id erased (_≃ᴱ_.to (Constantᴱ-⁻¹ᴱ-≃ᴱ bl) c))
   lemma ⊠ =
     Σ-≡,≡→≡
       (⟨ext⟩ λ a → ⟨ext⟩ λ b →
@@ -421,7 +421,7 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
                                                                                 to-Constant-≃-get-⁻¹-≃-to-Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹-≡
                                                                                   bl c ⟩∎
        S.Constant-≃-get-⁻¹-≃⁻¹
-         (Σ-map id erased $ _≃ᴱ_.to (Constantᴱ-⁻¹ᴱ-≃ᴱ bl) c)                 ∎)))) ⟩
+         (Σ-map P.id erased $ _≃ᴱ_.to (Constantᴱ-⁻¹ᴱ-≃ᴱ bl) c)               ∎)))) ⟩
 
   (∃ λ (c : Constantᴱ (get ⁻¹ᴱ_)) →
    Erased
@@ -438,13 +438,13 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
   (∃ λ (c : Constantᴱ (get ⁻¹ᴱ_)) →
    Erased (
    ∃ λ (c′ : C.Coherently-constant (get ⁻¹ᴱ_)) →
-   ∀ b₁ b₂ → proj₁ (c b₁ b₂) ≡ subst id (c′ .property b₁ b₂)))         ↔⟨ inverse Σ-assoc F.∘
+   ∀ b₁ b₂ → proj₁ (c b₁ b₂) ≡ subst P.id (c′ .property b₁ b₂)))       ↔⟨ inverse Σ-assoc F.∘
                                                                           (Σ-cong (ΠΣ-comm F.∘ ∀-cong ext λ _ → ΠΣ-comm) λ _ → F.id) ⟩
   (∃ λ (get⁻¹ᴱ-const : ∀ b₁ b₂ → get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
    (∀ b₁ b₂ → Erased (Is-equivalence (get⁻¹ᴱ-const b₁ b₂))) ×
    Erased (
    ∃ λ (c′ : C.Coherently-constant (get ⁻¹ᴱ_)) →
-   ∀ b₁ b₂ → get⁻¹ᴱ-const b₁ b₂ ≡ subst id (c′ .property b₁ b₂)))      ↔⟨ (∃-cong {k = bijection} λ _ →
+   ∀ b₁ b₂ → get⁻¹ᴱ-const b₁ b₂ ≡ subst P.id (c′ .property b₁ b₂)))    ↔⟨ (∃-cong {k = bijection} λ _ →
                                                                            drop-⊤-left-× λ ([ _ , eq ]) →
                                                                            _⇔_.to contractible⇔↔⊤ $
                                                                            propositional⇒inhabited⇒contractible
@@ -459,7 +459,7 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
   (∃ λ (get⁻¹ᴱ-const : ∀ b₁ b₂ → get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
    Erased (
    ∃ λ (c′ : C.Coherently-constant (get ⁻¹ᴱ_)) →
-   ∀ b₁ b₂ → get⁻¹ᴱ-const b₁ b₂ ≡ subst id (c′ .property b₁ b₂)))      ↔⟨⟩
+   ∀ b₁ b₂ → get⁻¹ᴱ-const b₁ b₂ ≡ subst P.id (c′ .property b₁ b₂)))    ↔⟨⟩
 
   CE.Coherently-constant (get ⁻¹ᴱ_)                                    □
   where
@@ -489,32 +489,32 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
     proj₁ (_≃_.from (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl univ)
              (c′ .property) b₁ b₂)                                      ≡⟨ proj₁-from-Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl ⟩
 
-    ECP.⁻¹→⁻¹ᴱ ∘ subst id (c′ .property b₁ b₂) ∘ ECP.⁻¹ᴱ→⁻¹             ≡⟨ sym $
-                                                                           cong₂ (λ f g → f ∘ subst id (c′ .property b₁ b₂) ∘ g)
+    ECP.⁻¹→⁻¹ᴱ ∘ subst P.id (c′ .property b₁ b₂) ∘ ECP.⁻¹ᴱ→⁻¹           ≡⟨ sym $
+                                                                           cong₂ (λ f g → f ∘ subst P.id (c′ .property b₁ b₂) ∘ g)
                                                                              (trans (⟨ext⟩ λ _ →
                                                                                      subst-id-in-terms-of-≡⇒↝ equivalence) $
                                                                               cong _≃_.to $ _≃_.right-inverse-of (≡≃≃ univ) _)
                                                                              (trans (⟨ext⟩ λ _ →
                                                                                      subst-id-in-terms-of-inverse∘≡⇒↝ equivalence) $
                                                                               cong _≃_.from $ _≃_.right-inverse-of (≡≃≃ univ) _) ⟩
-    subst id (≃⇒≡ univ ECP.⁻¹≃⁻¹ᴱ) ∘
-    subst id (c′ .property b₁ b₂) ∘
-    subst id (sym (≃⇒≡ univ ECP.⁻¹≃⁻¹ᴱ))                                ≡⟨ (⟨ext⟩ λ _ →
+    subst P.id (≃⇒≡ univ ECP.⁻¹≃⁻¹ᴱ) ∘
+    subst P.id (c′ .property b₁ b₂) ∘
+    subst P.id (sym (≃⇒≡ univ ECP.⁻¹≃⁻¹ᴱ))                              ≡⟨ (⟨ext⟩ λ _ →
                                                                             trans (subst-subst _ _ _ _) $
                                                                             subst-subst _ _ _ _) ⟩
-    subst id
+    subst P.id
       (trans (sym (≃⇒≡ univ (ECP.⁻¹≃⁻¹ᴱ {y = b₁})))
          (trans (c′ .property b₁ b₂)
            (≃⇒≡ univ (ECP.⁻¹≃⁻¹ᴱ {y = b₂}))))                           ≡⟨ sym $
-                                                                           cong (λ f → subst id
+                                                                           cong (λ f → subst P.id
                                                                                          (trans (sym (f b₁))
                                                                                             (trans (c′ .property b₁ b₂) (f b₂)))) $
                                                                            _≃_.left-inverse-of (Eq.extensionality-isomorphism bad-ext) _ ⟩
-    subst id
+    subst P.id
       (trans (sym (cong (_$ b₁) $ ⟨ext⟩ λ _ → ≃⇒≡ univ ECP.⁻¹≃⁻¹ᴱ))
          (trans (c′ .property b₁ b₂)
            (cong (_$ b₂) $ ⟨ext⟩ λ b₂ →
-            ≃⇒≡ univ (ECP.⁻¹≃⁻¹ᴱ {y = b₂}))))                           ≡⟨ cong (subst id) $
+            ≃⇒≡ univ (ECP.⁻¹≃⁻¹ᴱ {y = b₂}))))                           ≡⟨ cong (subst P.id) $
                                                                            elim¹
                                                                              (λ eq →
                                                                                 trans (sym (cong (_$ b₁) eq))
@@ -534,8 +534,8 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
                                                                                  ≡⇒↝-refl ⟩∎
         ≡⇒→ (cong C.Coherently-constant (refl _)) c′ .property b₁ b₂          ∎)
                                                                              _ ⟩∎
-    subst id (≡⇒→ (cong C.Coherently-constant $
-                   ⟨ext⟩ λ _ → ≃⇒≡ univ ECP.⁻¹≃⁻¹ᴱ)
+    subst P.id (≡⇒→ (cong C.Coherently-constant $
+                     ⟨ext⟩ λ _ → ≃⇒≡ univ ECP.⁻¹≃⁻¹ᴱ)
                 c′ .property b₁ b₂)                                     ∎
 
   @0 lemma₃ : ∀ _ _ → _ ≃ _
@@ -562,7 +562,7 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
                                                                          ∀-cong ext λ b₁ → ∀-cong ext λ b₂ →
                                                                          ≡⇒≃ $ cong (proj₁ (c b₁ b₂) ≡_) (lemma₂ bl c′ b₁ b₂)) ⟩□
     (∃ λ (c′ : C.Coherently-constant (get ⁻¹ᴱ_)) →
-     ∀ b₁ b₂ → proj₁ (c b₁ b₂) ≡ subst id (c′ .property b₁ b₂))      □
+     ∀ b₁ b₂ → proj₁ (c b₁ b₂) ≡ subst P.id (c′ .property b₁ b₂))    □
 
 -- In erased contexts Coherently-constant-fibres univ get is
 -- equivalent to S.Coherently-constant univ (get ⁻¹_).
@@ -871,3 +871,129 @@ Erased-proofs→Lens {get = get} {set = set} ep = λ where
     Erased-proofs.get⁻¹-coherently-constant ep
   .Lens.get⁻¹-coherently-constant-property≡get⁻¹-constant →
     Erased-proofs.get⁻¹-coherently-constant-property≡get⁻¹-constant ep
+
+------------------------------------------------------------------------
+-- Identity and composition
+
+-- An identity lens.
+
+id :
+  {A : Type a}
+  (@0 univ : Univalence a) →
+  Lens univ A A
+id univ = Erased-proofs→Lens (Lens→Erased-proofs (S.id univ))
+
+-- Composition.
+
+infix 9 ⟨_,_⟩_∘_
+
+⟨_,_⟩_∘_ :
+  {A : Type a} {B : Type b} {C : Type c}
+  {@0 univ₁ : Univalence (b ⊔ c)}
+  {@0 univ₂ : Univalence (a ⊔ b)}
+  (@0 univ₃ : Univalence (a ⊔ c)) →
+  @0 Univalence (a ⊔ b ⊔ c) →
+  Lens univ₁ B C → Lens univ₂ A B → Lens univ₃ A C
+⟨ univ₃ , univ ⟩ l₁ ∘ l₂ =
+  Erased-proofs→Lens
+    (subst (Erased-proofs _ _)
+       (⟨ext⟩ λ a → ⟨ext⟩ λ c →
+        S.Lens.set l₂′ a (S.Lens.set l₁′ (get l₂ a) c)  ≡⟨ cong (λ s → s a (S.Lens.set l₁′ (get l₂ a) c)) $
+                                                           proj₂ $ proj₁ (Lens≃Lens-preserves-getters-and-setters ⊠) l₂ ⟩
+        set l₂ a (S.Lens.set l₁′ (get l₂ a) c)          ≡⟨ cong (λ s → set l₂ a (s (get l₂ a) c)) $
+                                                           proj₂ $ proj₁ (Lens≃Lens-preserves-getters-and-setters ⊠) l₁ ⟩∎
+        set l₂ a (set l₁ (get l₂ a) c)                  ∎) $
+     Lens→Erased-proofs (S.⟨ univ₃ , univ ⟩ l₁′ ∘ l₂′))
+  where
+  open Lens
+
+  @0 l₁′ : _
+  l₁′ = _≃_.to (Lens≃Lens ⊠) l₁
+
+  @0 l₂′ : _
+  l₂′ = _≃_.to (Lens≃Lens ⊠) l₂
+
+-- The setter of a lens formed using composition is defined in the
+-- "right" way.
+
+set-∘ :
+  ∀ {A : Type a} {B : Type b} {C : Type c}
+    {univ₁ : Univalence (b ⊔ c)}
+    {univ₂ : Univalence (a ⊔ b)}
+  (univ₃ : Univalence (a ⊔ c))
+  (univ₄ : Univalence (a ⊔ b ⊔ c))
+  (l₁ : Lens univ₁ B C) (l₂ : Lens univ₂ A B) {a c} →
+  Lens.set (⟨ univ₃ , univ₄ ⟩ l₁ ∘ l₂) a c ≡
+  Lens.set l₂ a (Lens.set l₁ (Lens.get l₂ a) c)
+set-∘ _ _ _ _ = refl _
+
+-- Composition is associative if the view type of the resulting lens
+-- is stable (in erased contexts, assuming univalence).
+
+@0 associativity :
+  {A : Type a} {B : Type b} {C : Type c} {D : Type d} →
+  (∥ D ∥ → D) →
+  (univ₁  : Univalence (c ⊔ d))
+  (univ₂  : Univalence (b ⊔ c))
+  (univ₃  : Univalence (a ⊔ b))
+  (univ₄  : Univalence (a ⊔ d))
+  (univ₅  : Univalence (a ⊔ c ⊔ d))
+  (univ₆  : Univalence (a ⊔ c))
+  (univ₇  : Univalence (a ⊔ b ⊔ c))
+  (univ₈  : Univalence (a ⊔ b ⊔ d))
+  (univ₉  : Univalence (b ⊔ d))
+  (univ₁₀ : Univalence (b ⊔ c ⊔ d)) →
+  Univalence (lsuc (a ⊔ d)) →
+  (l₁ : Lens univ₁ C D) (l₂ : Lens univ₂ B C) (l₃ : Lens univ₃ A B) →
+  ⟨ univ₄ , univ₅ ⟩ l₁ ∘ (⟨ univ₆ , univ₇ ⟩ l₂ ∘ l₃) ≡
+  ⟨ univ₄ , univ₈ ⟩ (⟨ univ₉ , univ₁₀ ⟩ l₁ ∘ l₂) ∘ l₃
+associativity stable _ _ _ univ₄ _ _ _ _ _ _ univ₁₁ l₁ l₂ l₃ =
+  lenses-equal-if-setters-equal
+    univ₁₁
+    univ₄
+    _
+    _
+    stable
+    (refl _)
+
+-- The identity lens is a left identity of composition if the view
+-- type of the resulting lens is stable (assuming univalence).
+
+@0 left-identity :
+  {A : Type a} {B : Type b} →
+  (∥ B ∥ → B) →
+  (univ₁ : Univalence (a ⊔ b))
+  (univ₂ : Univalence (a ⊔ b))
+  (univ₃ : Univalence b) →
+  Univalence (lsuc (a ⊔ b)) →
+  (l : Lens univ₁ A B) →
+  ⟨ univ₁ , univ₂ ⟩ id univ₃ ∘ l ≡ l
+left-identity stable univ₁ univ₂ univ₃ univ₄ l =
+  lenses-equal-if-setters-equal
+    univ₄
+    univ₁
+    _
+    _
+    stable
+    (refl _)
+
+-- The identity lens is a right identity of composition if the view
+-- type of the resulting lens is stable (assuming univalence).
+
+@0 right-identity :
+  {A : Type a} {B : Type b} →
+  (∥ B ∥ → B) →
+  (univ₁ : Univalence (a ⊔ b))
+  (univ₂ : Univalence (a ⊔ b))
+  (univ₃ : Univalence a) →
+  Univalence (lsuc (a ⊔ b)) →
+  (l : Lens univ₁ A B) →
+  ⟨ univ₁ , univ₂ ⟩ l ∘ id univ₃ ≡ l
+right-identity stable univ₁ univ₂ univ₃ univ₄ l =
+  lenses-equal-if-setters-equal
+    univ₄
+    univ₁
+    _
+    _
+    stable
+    (refl _)
