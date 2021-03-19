@@ -66,11 +66,29 @@ Constant≃Constant-≃ univ =
   ∀-cong ext λ _ →
   ≡≃≃ univ
 
+-- The right-to-left direction of Constant-≃-get-⁻¹-≃ (which is
+-- defined below).
+
+Constant-≃-get-⁻¹-≃⁻¹ :
+  {get : A → B} →
+  (∃ λ (set : A → B → A) →
+   ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
+   ∀ b₁ b₂ →
+   let f : get ⁻¹ b₁ → get ⁻¹ b₂
+       f = λ (a , _) → set a b₂ , get-set a b₂
+   in
+   Is-equivalence f) →
+  Constant-≃ (get ⁻¹_)
+Constant-≃-get-⁻¹-≃⁻¹ (_ , _ , eq) b₁ b₂ = Eq.⟨ _ , eq b₁ b₂ ⟩
+
 -- Constant-≃ (get ⁻¹_) can be expressed in terms of a "setter" and a
 -- "get-set" law that form a family of equivalences in a certain way.
 --
 -- This lemma was suggested by Andrea Vezzosi when we discussed
 -- coinductive lenses with erased "proofs".
+--
+-- The left-to-right direction of the lemma is not blocked, but the
+-- rest is.
 
 Constant-≃-get-⁻¹-≃ :
   Block "Constant-≃-get-⁻¹-≃" →
@@ -83,65 +101,80 @@ Constant-≃-get-⁻¹-≃ :
        f = λ (a , _) → set a b₂ , get-set a b₂
    in
    Is-equivalence f)
-Constant-≃-get-⁻¹-≃ ⊠ {A = A} {B = B} {get = get} =
-  Constant-≃ (get ⁻¹_)                                            ↔⟨⟩
+Constant-≃-get-⁻¹-≃ bl {A = A} {B = B} {get = get} =
+  inverse (equiv₃ bl)
+  where
+  equiv₁ =
+    Constant-≃ (get ⁻¹_)                                            ↔⟨⟩
 
-  (∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)                               ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ →
-                                                                      Eq.≃-as-Σ) ⟩
-  (∀ b₁ b₂ →
-   ∃ λ (f : get ⁻¹ b₁ → get ⁻¹ b₂) →
-   Is-equivalence f)                                              ↔⟨ Π-comm ⟩
+    (∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)                               ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ →
+                                                                        Eq.≃-as-Σ) ⟩
+    (∀ b₁ b₂ →
+     ∃ λ (f : get ⁻¹ b₁ → get ⁻¹ b₂) →
+     Is-equivalence f)                                              ↔⟨ Π-comm ⟩
 
-  (∀ b₂ b₁ →
-   ∃ λ (f : get ⁻¹ b₁ → get ⁻¹ b₂) →
-   Is-equivalence f)                                              ↝⟨ (∀-cong ext λ _ → ∀-cong ext λ _ →
-                                                                      Σ-cong-id currying) ⟩
-  (∀ b₂ b₁ →
-   ∃ λ (f : ∀ a → get a ≡ b₁ → get ⁻¹ b₂) →
-   Is-equivalence (uncurry f))                                    ↔⟨ (∀-cong ext λ _ →
-                                                                      ΠΣ-comm) ⟩
-  (∀ b₂ →
-   ∃ λ (f : ∀ b₁ a → get a ≡ b₁ → get ⁻¹ b₂) →
-   ∀ b₁ → Is-equivalence (uncurry (f b₁)))                        ↝⟨ (∀-cong ext λ _ →
-                                                                      Σ-cong-id Π-comm) ⟩
-  (∀ b₂ →
-   ∃ λ (f : ∀ a b₁ → get a ≡ b₁ → get ⁻¹ b₂) →
-   ∀ b₁ → Is-equivalence (uncurry (flip f b₁)))                   ↝⟨ (∀-cong ext λ _ →
-                                                                      Σ-cong (∀-cong ext λ _ → inverse $ ∀-intro {k = equivalence} ext _) λ f →
-                                                                      ∀-cong ext λ b₁ →
-                                                                      Is-equivalence-cong {k = equivalence} ext λ (a , eq) →
-      uncurry (f a) (b₁ , eq)                                           ≡⟨ cong (uncurry (f a)) $ sym $
-                                                                           proj₂ (other-singleton-contractible _) _ ⟩∎
-      uncurry (f a) (get a , refl _)                                    ∎) ⟩
+    (∀ b₂ b₁ →
+     ∃ λ (f : get ⁻¹ b₁ → get ⁻¹ b₂) →
+     Is-equivalence f)                                              ↝⟨ (∀-cong ext λ _ → ∀-cong ext λ _ →
+                                                                        Σ-cong-id currying) ⟩
+    (∀ b₂ b₁ →
+     ∃ λ (f : ∀ a → get a ≡ b₁ → get ⁻¹ b₂) →
+     Is-equivalence (uncurry f))                                    ↔⟨ (∀-cong ext λ _ →
+                                                                        ΠΣ-comm) ⟩
+    (∀ b₂ →
+     ∃ λ (f : ∀ b₁ a → get a ≡ b₁ → get ⁻¹ b₂) →
+     ∀ b₁ → Is-equivalence (uncurry (f b₁)))                        ↝⟨ (∀-cong ext λ _ →
+                                                                        Σ-cong-id Π-comm) ⟩
+    (∀ b₂ →
+     ∃ λ (f : ∀ a b₁ → get a ≡ b₁ → get ⁻¹ b₂) →
+     ∀ b₁ → Is-equivalence (uncurry (flip f b₁)))                   ↝⟨ (∀-cong ext λ _ →
+                                                                        Σ-cong (∀-cong ext λ _ → inverse $ ∀-intro {k = equivalence} ext _) λ f →
+                                                                        ∀-cong ext λ b₁ →
+                                                                        Is-equivalence-cong {k = equivalence} ext λ (a , eq) →
+        uncurry (f a) (b₁ , eq)                                           ≡⟨ cong (uncurry (f a)) $ sym $
+                                                                             proj₂ (other-singleton-contractible _) _ ⟩∎
+        uncurry (f a) (get a , refl _)                                    ∎) ⟩
 
-  (∀ b₂ →
-   ∃ λ (f : A → get ⁻¹ b₂) →
-   ∀ b₁ → Is-equivalence (f ∘ proj₁))                             ↔⟨ ΠΣ-comm ⟩
+    (∀ b₂ →
+     ∃ λ (f : A → get ⁻¹ b₂) →
+     ∀ b₁ → Is-equivalence (f ∘ proj₁))                             ↔⟨ ΠΣ-comm ⟩
 
-  (∃ λ (f : (b : B) → A → get ⁻¹ b) →
-   ∀ b₂ b₁ → Is-equivalence (f b₂ ∘ proj₁))                       ↝⟨ Σ-cong-refl Π-comm (λ _ → Π-comm) ⟩
+    (∃ λ (f : (b : B) → A → get ⁻¹ b) →
+     ∀ b₂ b₁ → Is-equivalence (f b₂ ∘ proj₁))                       ↝⟨ Σ-cong-refl Π-comm (λ _ → Π-comm) ⟩
 
-  (∃ λ (f : A → (b : B) → get ⁻¹ b) →
-   ∀ b₁ b₂ → Is-equivalence ((_$ b₂) ∘ f ∘ proj₁))                ↝⟨ Σ-cong-refl (∀-cong ext λ _ → ΠΣ-comm) (λ _ → Eq.id) ⟩
+    (∃ λ (f : A → (b : B) → get ⁻¹ b) →
+     ∀ b₁ b₂ → Is-equivalence ((_$ b₂) ∘ f ∘ proj₁))                ↝⟨ Σ-cong-refl (∀-cong ext λ _ → ΠΣ-comm) (λ _ → Eq.id) ⟩
 
-  (∃ λ (f : A → ∃ λ (set : B → A) → (b : B) → get (set b) ≡ b) →
-   ∀ b₁ b₂ → Is-equivalence (Σ-map (_$ b₂) (_$ b₂) ∘ f ∘ proj₁))  ↝⟨ Σ-cong-id ΠΣ-comm ⟩
+    (∃ λ (f : A → ∃ λ (set : B → A) → (b : B) → get (set b) ≡ b) →
+     ∀ b₁ b₂ → Is-equivalence (Σ-map (_$ b₂) (_$ b₂) ∘ f ∘ proj₁))  ↝⟨ Σ-cong-id ΠΣ-comm ⟩
 
-  (∃ λ ((set , get-set) :
-        ∃ λ (set : A → B → A) →
-          (a : A) (b : B) → get (set a b) ≡ b) →
-   ∀ b₁ b₂ → Is-equivalence λ (a , _) → set a b₂ , get-set a b₂)  ↔⟨ inverse Σ-assoc ⟩□
+    (∃ λ ((set , get-set) :
+          ∃ λ (set : A → B → A) →
+            (a : A) (b : B) → get (set a b) ≡ b) →
+     ∀ b₁ b₂ → Is-equivalence λ (a , _) → set a b₂ , get-set a b₂)  ↔⟨ inverse Σ-assoc ⟩□
 
-  (∃ λ (set : A → B → A) →
-   ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
-   ∀ b₁ b₂ → Is-equivalence λ (a , _) → set a b₂ , get-set a b₂)  □
+    (∃ λ (set : A → B → A) →
+     ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
+     ∀ b₁ b₂ → Is-equivalence λ (a , _) → set a b₂ , get-set a b₂)  □
 
--- A "computation" rule.
+  equiv₂ =
+    Eq.with-other-function
+      (inverse equiv₁)
+      Constant-≃-get-⁻¹-≃⁻¹
+      (λ (set , get-set , _) → ⟨ext⟩ λ b₁ → ⟨ext⟩ λ b₂ →
+         Eq.lift-equality ext $ ⟨ext⟩ λ (a , _) →
+           subst (λ _ → get ⁻¹ b₂) _ (set a b₂ , get-set a b₂)  ≡⟨ subst-const _ ⟩∎
+           (set a b₂ , get-set a b₂)                            ∎)
 
-to-from-Constant-≃-get-⁻¹-≃-≡ :
-  {A : Type a} {B : Type b}
-  (b : Block "Constant-≃-get-⁻¹-≃") →
-  ∀ {get : A → B} {set : A → B → A}
+  equiv₃ : Unit → _ ≃ _
+  equiv₃ _ ._≃_.to             = _≃_.to equiv₂
+  equiv₃ ⊠ ._≃_.is-equivalence = _≃_.is-equivalence equiv₂
+
+-- Constant-≃-get-⁻¹-≃ computes in a certain way.
+
+_ :
+  ∀ {bl : Block "Constant-≃-get-⁻¹-≃"}
+    {get : A → B} {set : A → B → A}
     {get-set : (a : A) (b : B) → get (set a b) ≡ b}
     {eq :
      ∀ b₁ b₂ →
@@ -150,17 +183,9 @@ to-from-Constant-≃-get-⁻¹-≃-≡ :
      in
      Is-equivalence f}
     {b₁ b₂} →
-  _≃_.to (_≃_.from (Constant-≃-get-⁻¹-≃ b) (set , get-set , eq) b₁ b₂) ≡
+  _≃_.to (_≃_.from (Constant-≃-get-⁻¹-≃ bl) (set , get-set , eq) b₁ b₂) ≡
   (λ (a , _) → set a b₂ , get-set a b₂)
-to-from-Constant-≃-get-⁻¹-≃-≡ ⊠
-  {get = get} {set = set} {get-set = get-set} {b₁ = b₁} {b₂ = b₂} =
-  ⟨ext⟩ λ (a , eq) →
-
-  subst (const (get ⁻¹ b₂))
-    (proj₂ (other-singleton-contractible (get a)) (b₁ , eq))
-    (set a b₂ , get-set a b₂)                                 ≡⟨ subst-const _ ⟩∎
-
-  set a b₂ , get-set a b₂                                     ∎
+_ = refl _
 
 ------------------------------------------------------------------------
 -- Coherently-constant

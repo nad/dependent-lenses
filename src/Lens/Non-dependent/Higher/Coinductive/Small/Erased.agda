@@ -371,9 +371,7 @@ Coherently-constant-fibres {A = A} {B = B} univ get =
                  in
                  Is-equivalence f) →
        ∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
-       ∃ λ b →
-       c .property ≡
-       _≃_.from (S.Constant-≃-get-⁻¹-≃ b) (set , get-set , eq))
+       c .property ≡ S.Constant-≃-get-⁻¹-≃⁻¹ (set , get-set , eq))
 
 -- Coherently-constant-fibres univ get is equivalent (with erased
 -- proofs) to CE.Coherently-constant (get ⁻¹ᴱ_) (assuming univalence).
@@ -398,9 +396,7 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
                     f = λ (a , _) → set a b₂ , get-set a b₂
                 in Is-equivalence f) →
       ∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
-      ∃ λ b →
-      c .property ≡
-      _≃_.from (S.Constant-≃-get-⁻¹-≃ b) (set , get-set , eq)))        ↔⟨ (Σ-assoc F.∘
+      c .property ≡ S.Constant-≃-get-⁻¹-≃⁻¹ (set , get-set , eq)))     ↔⟨ (Σ-assoc F.∘
                                                                            (∃-cong λ _ →
                                                                             Erased-Σ↔Σ F.∘
                                                                             Erased-cong Σ-assoc)) ⟩
@@ -415,18 +411,14 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
            Is-equivalence f)) →
    Erased
      (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
-      ∃ λ b →
-      c .property ≡
-      _≃_.from (S.Constant-≃-get-⁻¹-≃ b) (set , get-set , eq)))        ↝⟨ (inverse $
+      c .property ≡ S.Constant-≃-get-⁻¹-≃⁻¹ (set , get-set , eq)))     ↝⟨ (inverse $
                                                                            EEq.Σ-cong-≃ᴱ-Erased (Constantᴱ-⁻¹ᴱ-≃ᴱ bl) λ c →
                                                                            Erased-cong (∃-cong λ c′ →
-                                                                           (from-bijection $ inverse $ drop-⊤-left-Σ $ _≃_.bijection $
-                                                                            Eq.↔→≃ _ (λ _ → bl) refl λ { ⊠ → unblock bl (_≡ ⊠) (refl _) }) F.∘
-                                                                           ≡⇒↝ _ (cong (_ ≡_) (
+                                                                           ≡⇒↝ _ (cong (c′ .property ≡_) (
        _≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c                                ≡⟨ sym $ _≃_.to-from (S.Constant-≃-get-⁻¹-≃ bl) $
                                                                                 to-Constant-≃-get-⁻¹-≃-to-Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹-≡
                                                                                   bl c ⟩∎
-       _≃_.from (S.Constant-≃-get-⁻¹-≃ bl)
+       S.Constant-≃-get-⁻¹-≃⁻¹
          (Σ-map id erased $ _≃ᴱ_.to (Constantᴱ-⁻¹ᴱ-≃ᴱ bl) c)                 ∎)))) ⟩
 
   (∃ λ (c : Constantᴱ (get ⁻¹ᴱ_)) →
@@ -616,7 +608,7 @@ record Lens (@0 univ : Univalence (a ⊔ b))
 
   @0 get⁻¹-constant : S.Constant-≃ (get ⁻¹_)
   get⁻¹-constant =
-    _≃_.from (S.Constant-≃-get-⁻¹-≃ ⊠)
+    S.Constant-≃-get-⁻¹-≃⁻¹
       (set , get-set , get⁻¹-const-equivalence)
 
   field
@@ -639,7 +631,6 @@ record Lens (@0 univ : Univalence (a ⊔ b))
     , [ ( get-set
         , get⁻¹-const-equivalence
         , get⁻¹-coherently-constant
-        , ⊠
         , get⁻¹-coherently-constant-property≡get⁻¹-constant
         )
       ]
@@ -665,9 +656,7 @@ Lens-as-Σ :
 Lens-as-Σ =
   Eq.↔→≃
     (λ l → Lens.get l , Lens.coherently-constant-fibres-get l)
-    (λ { (_ , _ , [ (_ , _ , _ , ⊠ , _)]) → _ })
-    (λ { (_ , _ , [ (_ , _ , _ , ⊠ , _)]) → refl _ })
-    refl
+    _ refl refl
 
 -- Lens univ A B is equivalent to CE.Lens A B (with erased proofs,
 -- assuming univalence).
