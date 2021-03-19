@@ -800,3 +800,74 @@ lenses-equal-if-setters-equal univ′ univ l₁ l₂ stable =
   _≃_.to (Lens≃Lens bl) l₁ ≡ _≃_.to (Lens≃Lens bl) l₂  ↔⟨ Eq.≃-≡ $ Lens≃Lens bl ⟩□
 
   l₁ ≡ l₂                                              □
+
+------------------------------------------------------------------------
+-- Code for converting from S.Lens to Lens
+
+-- Data corresponding to the erased proofs of a lens.
+
+record Erased-proofs
+         {A : Type a} {B : Type b}
+         (univ : Univalence (a ⊔ b))
+         (get : A → B) (set : A → B → A) : Type (a ⊔ b) where
+  field
+    get-set : (a : A) (b : B) → get (set a b) ≡ b
+
+  get⁻¹-const : (b₁ b₂ : B) → get ⁻¹ b₁ → get ⁻¹ b₂
+  get⁻¹-const = λ b₁ b₂ (a , _) → set a b₂ , get-set a b₂
+
+  field
+    get⁻¹-const-equivalence :
+      (b₁ b₂ : B) → Is-equivalence (get⁻¹-const b₁ b₂)
+
+  get⁻¹-constant : S.Constant-≃ (get ⁻¹_)
+  get⁻¹-constant =
+    S.Constant-≃-get-⁻¹-≃⁻¹
+      (set , get-set , get⁻¹-const-equivalence)
+
+  field
+    get⁻¹-coherently-constant : S.Coherently-constant univ (get ⁻¹_)
+
+    get⁻¹-coherently-constant-property≡get⁻¹-constant :
+       get⁻¹-coherently-constant .property ≡ get⁻¹-constant
+
+-- Extracts "erased proofs" from a lens (in erased contexts).
+
+@0 Lens→Erased-proofs :
+  (l : S.Lens univ A B) →
+  Erased-proofs univ (S.Lens.get l) (S.Lens.set l)
+Lens→Erased-proofs {univ = univ} l = proofs ⊠
+  where
+  module _ (bl : Unit) where
+
+    open Erased-proofs
+
+    module L = Lens (_≃_.from (Lens≃Lens bl) l)
+
+    @0 proofs : Erased-proofs univ L.get L.set
+    proofs .get-set                   = L.get-set
+    proofs .get⁻¹-const-equivalence   = L.get⁻¹-const-equivalence
+    proofs .get⁻¹-coherently-constant = L.get⁻¹-coherently-constant
+    proofs .get⁻¹-coherently-constant-property≡get⁻¹-constant =
+      L.get⁻¹-coherently-constant-property≡get⁻¹-constant
+
+-- Converts two functions and some erased proofs to a lens.
+--
+-- Note that Agda can in many cases infer "get" and "set" from the
+-- first explicit argument, see (for instance) id below.
+
+Erased-proofs→Lens :
+  {A : Type a} {B : Type b} {get : A → B} {set : A → B → A}
+  {@0 univ : Univalence (a ⊔ b)} →
+  @0 Erased-proofs univ get set →
+  Lens univ A B
+Erased-proofs→Lens {get = get} {set = set} ep = λ where
+  .Lens.get                     → get
+  .Lens.set                     → set
+  .Lens.get-set                 → Erased-proofs.get-set ep
+  .Lens.get⁻¹-const-equivalence →
+    Erased-proofs.get⁻¹-const-equivalence ep
+  .Lens.get⁻¹-coherently-constant →
+    Erased-proofs.get⁻¹-coherently-constant ep
+  .Lens.get⁻¹-coherently-constant-property≡get⁻¹-constant →
+    Erased-proofs.get⁻¹-coherently-constant-property≡get⁻¹-constant ep
