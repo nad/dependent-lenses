@@ -1200,9 +1200,6 @@ lens-preserves-h-level univ′ univ n hA hB =
 
 -- If the domain of a lens is inhabited and has h-level n, then the
 -- codomain also has h-level n (assuming univalence).
---
--- TODO: This could presumably be proved without the use of
--- univalence.
 
 h-level-respects-lens-from-inhabited :
   {A : Type a} {B : Type b} →
