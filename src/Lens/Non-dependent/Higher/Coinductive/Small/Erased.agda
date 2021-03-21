@@ -918,10 +918,10 @@ infix 9 ⟨_,_⟩_∘_
 
 set-∘ :
   ∀ {A : Type a} {B : Type b} {C : Type c}
-    {univ₁ : Univalence (b ⊔ c)}
-    {univ₂ : Univalence (a ⊔ b)}
-  (univ₃ : Univalence (a ⊔ c))
-  (univ₄ : Univalence (a ⊔ b ⊔ c))
+    {@0 univ₁ : Univalence (b ⊔ c)}
+    {@0 univ₂ : Univalence (a ⊔ b)}
+  (@0 univ₃ : Univalence (a ⊔ c))
+  (@0 univ₄ : Univalence (a ⊔ b ⊔ c))
   (l₁ : Lens univ₁ B C) (l₂ : Lens univ₂ A B) {a c} →
   Lens.set (⟨ univ₃ , univ₄ ⟩ l₁ ∘ l₂) a c ≡
   Lens.set l₂ a (Lens.set l₁ (Lens.get l₂ a) c)
