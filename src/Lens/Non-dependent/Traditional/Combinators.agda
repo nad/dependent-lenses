@@ -909,14 +909,18 @@ equal-setters-and-equivalences-as-getters-but-not-equal {a = ℓa} univ =
   ⊥                                                     □
 
 -- The lemma ≃Σ∥set⁻¹∥× does not hold in general if the requirement
--- that A is a set is dropped.
+-- that A is a set is dropped (assuming univalence).
 --
 -- I proved this together with Paolo Capriotti.
+--
+-- (The lemma does not actually use the univalence argument, but
+-- univalence is used by Circle.𝕊¹≄𝕊¹×𝕊¹.)
 
 ≄Σ∥set⁻¹∥× :
+  Univalence lzero →
   ¬ ({A B : Type a} (l : Lens A B) →
      A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ f ∥) × B))
-≄Σ∥set⁻¹∥× {a = a} =
+≄Σ∥set⁻¹∥× {a = a} _ =
   ({A B : Type a} (l : Lens A B) →
    A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ f ∥) × B))                      ↝⟨ (λ hyp → hyp) ⟩
 

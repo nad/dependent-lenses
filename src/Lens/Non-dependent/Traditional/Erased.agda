@@ -3476,12 +3476,13 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
     ]
 
 -- The lemma ≃ᴱΣ∥set⁻¹ᴱ∥× does not hold in general if the requirement
--- that A is a set is dropped.
+-- that A is a set is dropped (assuming univalence).
 
 ≄ᴱΣ∥set⁻¹ᴱ∥× :
+  Univalence lzero →
   ¬ ({A B : Type a} (l : Lens A B) →
      A ≃ᴱ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥) × B))
-≄ᴱΣ∥set⁻¹ᴱ∥× {a = a} =
+≄ᴱΣ∥set⁻¹ᴱ∥× {a = a} univ =
   Stable-¬ _
     [ ({A B : Type a} (l : Lens A B) →
        A ≃ᴱ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥) × B))  ↝⟨ EEq.≃ᴱ→≃ ⊚_ ⟩
@@ -3493,7 +3494,7 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
        A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ f ∥) × B))    ↝⟨ _⊚ Traditional-lens→Lens ⟩
 
       ({A B : Type a} (l : T.Lens A B) →
-       A ≃ ((∃ λ (f : B → A) → ∥ T.Lens.set l ⁻¹ f ∥) × B))  ↝⟨ TC.≄Σ∥set⁻¹∥× ⟩□
+       A ≃ ((∃ λ (f : B → A) → ∥ T.Lens.set l ⁻¹ f ∥) × B))  ↝⟨ TC.≄Σ∥set⁻¹∥× univ ⟩□
 
       ⊥                                                      □
     ]
