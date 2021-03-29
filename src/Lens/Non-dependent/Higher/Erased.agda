@@ -648,13 +648,13 @@ Lens-cong {A₁ = A₁} {A₂ = A₂} {B₁ = B₁} {B₂ = B₂} A₁≃A₂ B�
   (∃ λ R → A₂ ≃ᴱ (R × B₂) × Erased (R → ∥ B₂ ∥))  ↔⟨ inverse Lens-as-Σ ⟩□
   Lens A₂ B₂                                      □
 
--- If B is a proposition, then Lens A B is equivalent (with erased
--- proofs) to A → B (assuming univalence).
+-- If B is a proposition (when A is inhabited), then Lens A B is
+-- equivalent (with erased proofs) to A → B (assuming univalence).
 
 lens-to-proposition≃ᴱget :
   {A : Type a} {B : Type b} →
   @0 Univalence (a ⊔ b) →
-  @0 Is-proposition B →
+  @0 (A → Is-proposition B) →
   Lens A B ≃ᴱ (A → B)
 lens-to-proposition≃ᴱget {b = b} {A = A} {B = B} univ prop = EEq.↔→≃ᴱ
   get
@@ -667,7 +667,9 @@ lens-to-proposition≃ᴱget {b = b} {A = A} {B = B} univ prop = EEq.↔→≃�
            R l × B  ↝⟨ (EEq.≃ᴱ→≃ $ drop-⊤-right λ r → _⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ $
                         PT.rec
                           (ECP.Contractibleᴱ-propositional ext)
-                          (λ b → ECP.inhabited→Is-proposition→Contractibleᴱ b prop)
+                          (λ b → ECP.inhabited→Is-proposition→Contractibleᴱ
+                                   b
+                                   (prop (_≃ᴱ_.from (equiv l) (r , b))))
                           (inhabited l r)) ⟩□
            R l      □
      in
@@ -680,7 +682,7 @@ lens-to-proposition≃ᴱget {b = b} {A = A} {B = B} univ prop = EEq.↔→≃�
     { R         = ↑ b A
     ; equiv     = A          ↔⟨ inverse Bijection.↑↔ ⟩
                   ↑ b A      ↝⟨ (inverse $ drop-⊤-right λ (lift a) →
-                                 EEq.inhabited→Is-proposition→≃ᴱ⊤ (get a) prop) ⟩□
+                                 EEq.inhabited→Is-proposition→≃ᴱ⊤ (get a) (prop a)) ⟩□
                   ↑ b A × B  □
     ; inhabited = ∣_∣ ⊚ get ⊚ lower
     }
@@ -688,22 +690,23 @@ lens-to-proposition≃ᴱget {b = b} {A = A} {B = B} univ prop = EEq.↔→≃�
 _ :
   {A : Type a} {B : Type b}
   (@0 univ : Univalence (a ⊔ b))
-  (@0 prop : Is-proposition B)
+  (@0 prop : A → Is-proposition B)
   (l : Lens A B) →
   _≃ᴱ_.to (lens-to-proposition≃ᴱget univ prop) l ≡ Lens.get l
 _ = λ _ _ _ → refl _
 
--- If B is contractible (with an erased proof), then Lens A B is
--- equivalent (with erased proofs) to ⊤ (assuming univalence).
+-- If B is contractible (with an erased proof, assuming that A is
+-- inhabited), then Lens A B is equivalent (with erased proofs) to ⊤
+-- (assuming univalence).
 
 lens-to-contractible≃ᴱ⊤ :
   {A : Type a} {B : Type b} →
   @0 Univalence (a ⊔ b) →
-  Contractibleᴱ B →
+  (A → Contractibleᴱ B) →
   Lens A B ≃ᴱ ⊤
 lens-to-contractible≃ᴱ⊤ {A = A} {B} univ cB =
-  Lens A B  ↝⟨ lens-to-proposition≃ᴱget univ (mono₁ 0 (ECP.Contractibleᴱ→Contractible cB)) ⟩
-  (A → B)   ↝⟨ →-cong ext F.id $ _⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ cB ⟩
+  Lens A B  ↝⟨ lens-to-proposition≃ᴱget univ (λ a → mono₁ 0 (ECP.Contractibleᴱ→Contractible (cB a))) ⟩
+  (A → B)   ↝⟨ ∀-cong ext (_⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ ⊚ cB) ⟩
   (A → ⊤)   ↔⟨ →-right-zero ⟩□
   ⊤         □
 
@@ -715,7 +718,7 @@ lens-to-⊥≃ᴱ¬ :
   @0 Univalence (a ⊔ b) →
   Lens A (⊥ {ℓ = b}) ≃ᴱ (¬ A)
 lens-to-⊥≃ᴱ¬ {A = A} univ =
-  Lens A ⊥  ↝⟨ lens-to-proposition≃ᴱget univ ⊥-propositional ⟩
+  Lens A ⊥  ↝⟨ lens-to-proposition≃ᴱget univ (λ _ → ⊥-propositional) ⟩
   (A → ⊥)   ↝⟨ inverse $ ¬↔→⊥ ext ⟩□
   ¬ A       □
 
@@ -1195,7 +1198,7 @@ Contractibleᴱ-closed-codomain :
   @0 Univalence (a ⊔ b) →
   Contractibleᴱ B → Contractibleᴱ (Lens A B)
 Contractibleᴱ-closed-codomain {A = A} {B} univ cB =
-                            $⟨ lens-to-contractible≃ᴱ⊤ univ cB ⟩
+                            $⟨ lens-to-contractible≃ᴱ⊤ univ (λ _ → cB) ⟩
   Lens A B ≃ᴱ ⊤             ↝⟨ _⇔_.from EEq.Contractibleᴱ⇔≃ᴱ⊤ ⟩□
   Contractibleᴱ (Lens A B)  □
 
