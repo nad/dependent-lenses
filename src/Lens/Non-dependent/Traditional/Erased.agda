@@ -522,7 +522,7 @@ lens-preserves-h-level-of-domain {A = A} {B = B} n =
 -- Lens 𝕊¹ ⊤ is not propositional (assuming univalence).
 
 ¬-lens-to-⊤-propositional :
-  Univalence (# 0) →
+  @0 Univalence (# 0) →
   ¬ Is-proposition (Lens 𝕊¹ ⊤)
 ¬-lens-to-⊤-propositional univ =
   Stable-¬ _
