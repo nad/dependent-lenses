@@ -24,7 +24,7 @@ open import Circle eq using (𝕊¹)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
-open import Equivalence.Erased equality-with-J as EEq
+open import Equivalence.Erased.Cubical eq as EEq
   using (_≃ᴱ_; Is-equivalenceᴱ)
 open import Equivalence.Erased.Contractible-preimages equality-with-J
   as ECP using (Contractibleᴱ; _⁻¹ᴱ_)
@@ -319,175 +319,138 @@ Very-stable-Lensⁿ {A = A} {B = B} n A-s B-s =
 ------------------------------------------------------------------------
 -- Some lens isomorphisms
 
--- If B is a proposition, then Lens A B is isomorphic to
--- (A → B) × something.
+-- If B is a proposition (when A is inhabited), then Lens A B is
+-- equivalent (with erased proofs) to
+-- (A → B) × Erased ((a : A) → a ≡ a).
 
-lens-to-proposition↔ :
-  Is-proposition B →
-  Lens A B ↔
-  (A → B) ×
-  (∃ λ (f : A → A) → Erased (f ≡ P.id)) ×
-  Erased (∀ a → a ≡ a)
-lens-to-proposition↔ {B = B} {A = A} B-prop =
-  Lens A B                                                          ↝⟨ Lens-as-Σ ⟩
+lens-to-proposition≃ᴱ :
+  @0 (A → Is-proposition B) →
+  Lens A B ≃ᴱ ((A → B) × Erased ((a : A) → a ≡ a))
+lens-to-proposition≃ᴱ {A = A} {B = B} B-prop =
+  Lens A B                                                          ↔⟨ Lens-as-Σ ⟩
 
   (∃ λ (get : A → B) →
    ∃ λ (set : A → B → A) →
      Erased
        ((∀ a b → get (set a b) ≡ b) ×
         (∀ a → set a (get a) ≡ a) ×
-        (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂)))                ↝⟨ (∃-cong λ get → ∃-cong λ set → Erased-cong (∃-cong λ _ → ∃-cong λ _ →
+        (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂)))                ↔⟨ (∃-cong λ _ → ∃-cong λ _ → Erased-cong (
+                                                                        drop-⊤-left-× λ _ →
+                                                                        _⇔_.to contractible⇔↔⊤ $
+                                                                        Π-closure ext 0 λ a →
+                                                                        Π-closure ext 0 λ _ →
+                                                                        +⇒≡ (B-prop a))) ⟩
+  (∃ λ (get : A → B) →
+   ∃ λ (set : A → B → A) →
+     Erased
+       ((∀ a → set a (get a) ≡ a) ×
+        (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂)))                ↔⟨ (∃-cong λ get → ∃-cong λ set → Erased-cong (∃-cong λ _ →
                                                                         ∀-cong ext λ a → ∀-cong ext λ b₁ → ∀-cong ext λ b₂ →
-                                                                          ≡⇒↝ _ (
-       (set (set a b₁)                         b₂ ≡ set a b₂)               ≡⟨ cong (λ b → set (set a b) b₂ ≡ _) (B-prop _ _) ⟩
-       (set (set a (get a))                    b₂ ≡ set a b₂)               ≡⟨ cong (λ b → set (set a (get a)) b ≡ _) (B-prop _ _) ⟩
-       (set (set a (get a)) (get (set a (get a))) ≡ set a b₂)               ≡⟨ cong (λ b → _ ≡ set a b) (B-prop _ _) ⟩∎
-       (set (set a (get a)) (get (set a (get a))) ≡ set a (get a))          ∎))) ⟩
+                                                                        ≡⇒≃ (
+       (set (set a b₁)                         b₂ ≡ set a b₂)             ≡⟨ cong (λ b → set (set a b) b₂ ≡ _) (B-prop a _ _) ⟩
+       (set (set a (get a))                    b₂ ≡ set a b₂)             ≡⟨ cong (λ b → set (set a (get a)) b ≡ _) (B-prop a _ _) ⟩
+       (set (set a (get a)) (get (set a (get a))) ≡ set a b₂)             ≡⟨ cong (λ b → _ ≡ set a b) (B-prop a _ _) ⟩∎
+       (set (set a (get a)) (get (set a (get a))) ≡ set a (get a))        ∎))) ⟩
 
   (∃ λ (get : A → B) →
    ∃ λ (set : A → B → A) →
      Erased
-       ((∀ a b → get (set a b) ≡ b) ×
-        (∀ a → set a (get a) ≡ a) ×
+       ((∀ a → set a (get a) ≡ a) ×
         (∀ a → B → B →
            set (set a (get a)) (get (set a (get a))) ≡
            set a (get a))))                                         ↝⟨ (∃-cong λ get →
-                                                                        Σ-cong (A→B→A↔A→A get) λ set →
-                                                                        Erased-cong (
-                                                                          drop-⊤-left-× λ _ →
-                                                                            _⇔_.to contractible⇔↔⊤ $
-                                                                              Π-closure ext 0 λ _ →
-                                                                              Π-closure ext 0 λ _ →
-                                                                              +⇒≡ B-prop)) ⟩
+                                                                        EEq.Σ-cong-≃ᴱ-Erased (A→B→A≃ᴱA→A get) λ _ → F.id) ⟩
   ((A → B) ×
    ∃ λ (f : A → A) →
      Erased
        ((∀ a → f a ≡ a) ×
         (∀ a → B → B → f (f a) ≡ f a)))                             ↝⟨ (∃-cong λ get → ∃-cong λ _ → Erased-cong (∃-cong λ _ →
                                                                         ∀-cong ext λ a →
-                                                                          drop-⊤-left-Π ext (B↔⊤ (get a)))) ⟩
+                                                                        EEq.drop-⊤-left-Π-≃ᴱ-Erased ext (B≃ᴱ⊤ get a) F.∘
+                                                                        EEq.drop-⊤-left-Π-≃ᴱ-Erased ext (B≃ᴱ⊤ get a))) ⟩
   ((A → B) ×
    ∃ λ (f : A → A) →
      Erased
        ((∀ a → f a ≡ a) ×
-        (∀ a → B → f (f a) ≡ f a)))                                 ↝⟨ (∃-cong λ get → ∃-cong λ _ → Erased-cong (∃-cong λ _ →
-                                                                        ∀-cong ext λ a →
-                                                                          drop-⊤-left-Π ext (B↔⊤ (get a)))) ⟩
-  ((A → B) ×
-   ∃ λ (f : A → A) →
-     Erased
-       ((∀ a → f a ≡ a) ×
-        (∀ a → f (f a) ≡ f a)))                                     ↝⟨ (∃-cong λ _ → ∃-cong λ f → Erased-cong (
+        (∀ a → f (f a) ≡ f a)))                                     ↔⟨ (∃-cong λ _ → ∃-cong λ f → Erased-cong (
                                                                         Σ-cong (Eq.extensionality-isomorphism ext) λ f≡id →
                                                                         ∀-cong ext λ a →
-                                                                        ≡⇒↝ _ (cong₂ _≡_ (trans (f≡id (f a)) (f≡id a)) (f≡id a )))) ⟩
+                                                                        ≡⇒≃ (cong₂ _≡_ (trans (f≡id (f a)) (f≡id a)) (f≡id a)))) ⟩
   ((A → B) ×
    ∃ λ (f : A → A) →
      Erased
        (f ≡ P.id ×
-        (∀ a → a ≡ a)))                                             ↝⟨ (∃-cong λ _ → ∃-cong λ _ → Erased-Σ↔Σ) ⟩
+        ((a : A) → a ≡ a)))                                         ↔⟨ (∃-cong λ _ → ∃-cong λ _ → Erased-Σ↔Σ) ⟩
 
   ((A → B) ×
    ∃ λ (f : A → A) →
      Erased (f ≡ P.id) ×
-     Erased (∀ a → a ≡ a))                                          ↝⟨ (∃-cong λ _ → Σ-assoc) ⟩□
+     Erased ((a : A) → a ≡ a))                                      ↔⟨ (∃-cong λ _ → Σ-assoc) ⟩
 
   (A → B) ×
   (∃ λ (f : A → A) → Erased (f ≡ P.id)) ×
-  Erased (∀ a → a ≡ a)                                              □
-
+  Erased ((a : A) → a ≡ a)                                          ↝⟨ (∃-cong λ _ → EEq.drop-⊤-left-Σ-≃ᴱ-Erased $
+                                                                        _⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ Contractibleᴱ-Erased-singleton) ⟩□
+  (A → B) × Erased ((a : A) → a ≡ a)                                □
   where
-  B↔⊤ : B → B ↔ ⊤
-  B↔⊤ b =
-    _⇔_.to contractible⇔↔⊤ $
-      propositional⇒inhabited⇒contractible B-prop b
+  B≃ᴱ⊤ : (A → B) → A → B ≃ᴱ ⊤
+  B≃ᴱ⊤ get a = EEq.inhabited→Is-proposition→≃ᴱ⊤ (get a) (B-prop a)
 
-  A→B→A↔A→A : (A → B) → (A → B → A) ↔ (A → A)
-  A→B→A↔A→A get =
-    (A → B → A)  ↝⟨ ∀-cong ext (λ a → drop-⊤-left-Π ext $ B↔⊤ (get a)) ⟩□
+  A→B→A≃ᴱA→A : (A → B) → (A → B → A) ≃ᴱ (A → A)
+  A→B→A≃ᴱA→A get =
+    (A → B → A)  ↝⟨ ∀-cong ext (λ a → EEq.drop-⊤-left-Π-≃ᴱ-Erased ext $ B≃ᴱ⊤ get a) ⟩□
     (A → A)      □
 
--- If equality is very stable for A and B is a proposition, then
--- Lens A B is isomorphic to (A → B) × Erased ((a : A) → a ≡ a).
+-- If equality is very stable for A (when B is inhabited) and B is a
+-- proposition (when A is inhabited), then Lens A B is equivalent to
+-- (A → B) × Erased ((a : A) → a ≡ a).
 
-Very-stable-≡→lens-to-proposition↔ :
-  Very-stable-≡ A →
-  Is-proposition B →
-  Lens A B ↔ (A → B) × Erased ((a : A) → a ≡ a)
-Very-stable-≡→lens-to-proposition↔ {A = A} {B = B} A-s B-prop =
-  Lens A B                                 ↝⟨ lens-to-proposition↔ B-prop ⟩
+Very-stable-≡→lens-to-proposition≃ :
+  (B → Very-stable-≡ A) →
+  (A → Is-proposition B) →
+  Lens A B ≃ ((A → B) × Erased ((a : A) → a ≡ a))
+Very-stable-≡→lens-to-proposition≃ {B = B} {A = A} A-s B-prop =
+  Stable-≡→≃ᴱ→≃ stable₁ stable₂ (lens-to-proposition≃ᴱ B-prop)
+  where
+  stable₁ : Stable-≡ (Lens A B)
+  stable₁ =
+    Very-stable→Stable 1 $
+    Very-stable-Lensⁿ 1
+      (λ _ → A-s)
+      (H-level→Very-stable 1 ⊚ B-prop)
 
-  (A → B) ×
-  (∃ λ (f : A → A) → Erased (f ≡ P.id)) ×
-  Erased (∀ a → a ≡ a)                     ↝⟨ (∃-cong λ _ → drop-⊤-left-× λ _ →
-                                                 _⇔_.to contractible⇔↔⊤ $
-                                                   erased-singleton-contractible (Very-stable-Πⁿ ext 1 λ _ → A-s)) ⟩□
-  (A → B) × Erased (∀ a → a ≡ a)           □
+  stable₂ : Stable-≡ ((A → B) × Erased ((a : A) → a ≡ a))
+  stable₂ =
+    Very-stable→Stable 1 $
+    Very-stable-×ⁿ 1
+      (Very-stable-Πⁿ ext 1 λ a →
+       H-level→Very-stable 1 (B-prop a))
+      (Very-stable→Very-stable-≡ 0
+       Very-stable-Erased)
 
--- Lens A ⊤ is isomorphic to something × Erased ((a : A) → a ≡ a).
-
-lens-to-⊤↔ :
-  Lens A ⊤ ↔
-  (∃ λ (f : A → A) → Erased (f ≡ P.id)) × Erased ((a : A) → a ≡ a)
-lens-to-⊤↔ {A = A} =
-  Lens A ⊤                                 ↝⟨ lens-to-proposition↔ (mono₁ 0 ⊤-contractible) ⟩
-
-  (A → ⊤) ×
-  (∃ λ (f : A → A) → Erased (f ≡ P.id)) ×
-  Erased ((a : A) → a ≡ a)                 ↝⟨ drop-⊤-left-× (λ _ → →-right-zero) ⟩□
-
-  (∃ λ (f : A → A) → Erased (f ≡ P.id)) ×
-  Erased ((a : A) → a ≡ a)                 □
-
--- If equality is very stable for A, then Lens A ⊤ is isomorphic to
+-- Lens A ⊤ is equivalent (with erased proofs) to
 -- Erased ((a : A) → a ≡ a).
 
-Very-stable-≡→lens-to-⊤↔ :
-  Very-stable-≡ A →
-  Lens A ⊤ ↔ Erased ((a : A) → a ≡ a)
-Very-stable-≡→lens-to-⊤↔ {A = A} A-s =
-  Lens A ⊤                            ↝⟨ Very-stable-≡→lens-to-proposition↔ A-s (mono₁ 0 ⊤-contractible) ⟩
-  (A → ⊤) × Erased ((a : A) → a ≡ a)  ↝⟨ drop-⊤-left-× (λ _ → →-right-zero) ⟩□
+lens-to-⊤≃ᴱ : Lens A ⊤ ≃ᴱ Erased ((a : A) → a ≡ a)
+lens-to-⊤≃ᴱ {A = A} =
+  Lens A ⊤                            ↝⟨ lens-to-proposition≃ᴱ (λ _ → mono₁ 0 ⊤-contractible) ⟩
+  (A → ⊤) × Erased ((a : A) → a ≡ a)  ↔⟨ drop-⊤-left-× (λ _ → →-right-zero) ⟩□
   Erased ((a : A) → a ≡ a)            □
 
--- Lens A ⊥ is isomorphic to ¬ A.
+-- Lens A ⊥ is equivalent to ¬ A.
 
-lens-to-⊥↔ : Lens A (⊥ {ℓ = b}) ↔ ¬ A
-lens-to-⊥↔ {A = A} =
-  Lens A ⊥                                 ↝⟨ lens-to-proposition↔ ⊥-propositional ⟩
-
-  (A → ⊥) ×
-  (∃ λ (f : A → A) → Erased (f ≡ P.id)) ×
-  Erased ((a : A) → a ≡ a)                 ↝⟨ (×-cong₁ λ _ → →-cong ext F.id (Bij.⊥↔uninhabited ⊥-elim)) ⟩
-
-  ¬ A ×
-  (∃ λ (f : A → A) → Erased (f ≡ P.id)) ×
-  Erased ((a : A) → a ≡ a)                 ↝⟨ (∃-cong λ ¬a → drop-⊤-right λ _ → lemma₁ ¬a) ⟩
-
-  ¬ A ×
-  (∃ λ (f : A → A) → Erased (f ≡ P.id))    ↝⟨ drop-⊤-right lemma₂ ⟩□
-
-  ¬ A                                      □
-  where
-  lemma₁ : ¬ A → Erased ((a : A) → a ≡ a) ↔ ⊤
-  lemma₁ ¬a =
-    _⇔_.to contractible⇔↔⊤ $
-    propositional⇒inhabited⇒contractible
-      (H-level-Erased 1
-         (Π-closure ext 1 λ a →
-          ⊥-elim (¬a a)))
-      [ refl ]
-
-  lemma₂ : ¬ A → (∃ λ (f : A → A) → Erased (f ≡ P.id)) ↔ ⊤
-  lemma₂ ¬a =
-    _⇔_.to contractible⇔↔⊤ $
-    propositional⇒inhabited⇒contractible
-      (Σ-closure 1 →-prop λ _ →
-       H-level-Erased 1
-         (mono₁ 1 →-prop))
-      (P.id , [ refl _ ])
-    where
-    →-prop = Π-closure ext 1 λ a → ⊥-elim (¬a a)
+lens-to-⊥≃ : Lens A (⊥ {ℓ = b}) ≃ (¬ A)
+lens-to-⊥≃ {A = A} =
+  Lens A ⊥                            ↝⟨ Very-stable-≡→lens-to-proposition≃ (λ ()) (λ _ → ⊥-propositional) ⟩
+  (A → ⊥) × Erased ((a : A) → a ≡ a)  ↔⟨ (×-cong₁ λ _ → →-cong ext F.id (Bij.⊥↔uninhabited ⊥-elim)) ⟩
+  ¬ A × Erased ((a : A) → a ≡ a)      ↔⟨ (drop-⊤-right λ ¬a →
+                                          _⇔_.to contractible⇔↔⊤ $
+                                          propositional⇒inhabited⇒contractible
+                                            (H-level-Erased 1 (
+                                             Π-closure ext 1 λ a →
+                                             ⊥-elim (¬a a)))
+                                            [ refl ]) ⟩□
+  ¬ A                                 □
 
 -- See also lens-from-⊥≃⊤ and lens-from-⊤≃codomain-contractible below.
 
