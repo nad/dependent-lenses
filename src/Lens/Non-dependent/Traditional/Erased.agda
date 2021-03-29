@@ -298,6 +298,24 @@ getters-equal-if-setters-equal l₁ l₂ =
 from≡set l is-equiv =
   T.from≡set (trad l) (EEq.Is-equivalenceᴱ→Is-equivalence is-equiv)
 
+-- If A and B are "very stable n levels up" (given certain
+-- assumptions), then Lens A B is "very stable n levels up".
+
+Very-stable-Lensⁿ :
+  ∀ n →
+  (A → B → For-iterated-equality n Very-stable A) →
+  (A → For-iterated-equality n Very-stable B) →
+  For-iterated-equality n Very-stable (Lens A B)
+Very-stable-Lensⁿ {A = A} {B = B} n A-s B-s =
+  Very-stable-congⁿ _ n (inverse Lens-as-Σ) $
+  Very-stable-Σⁿ n (Very-stable-Πⁿ ext n λ a →
+                    B-s a) λ _ →
+  Very-stable-Σⁿ n (Very-stable-Πⁿ ext n λ a →
+                    Very-stable-Πⁿ ext n λ b →
+                    A-s a b) λ _ →
+  Very-stable→Very-stableⁿ n
+  Very-stable-Erased
+
 ------------------------------------------------------------------------
 -- Some lens isomorphisms
 
