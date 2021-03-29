@@ -471,8 +471,7 @@ lens-to-⊥↔ {A = A} =
     where
     →-prop = Π-closure ext 1 λ a → ⊥-elim (¬a a)
 
--- See also lens-from-⊥↔⊤ and
--- lens-from-contractible↔codomain-contractible below.
+-- See also lens-from-⊥≃⊤ and lens-from-⊤≃codomain-contractible below.
 
 ------------------------------------------------------------------------
 -- Some lens results related to h-levels
