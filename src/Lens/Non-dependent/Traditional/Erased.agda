@@ -20,7 +20,7 @@ open import Prelude as P hiding (id; [_,_]) renaming (_∘_ to _⊚_)
 
 import Bi-invertibility.Erased
 open import Bijection equality-with-J as Bij using (_↔_)
-open import Circle eq using (𝕊¹)
+open import Circle eq as Circle using (𝕊¹)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
@@ -2284,28 +2284,45 @@ no-first-projection-lens =
 
 -- There are two lenses with equal setters that are not equal
 -- (assuming univalence).
+--
+-- (The lemma does not actually use the univalence argument, but
+-- univalence is used by Circle.not-refl≢refl, which is only used in
+-- an erased context.)
 
 equal-setters-but-not-equal :
-  Univalence lzero →
+  @0 Univalence lzero →
   ∃ λ (A : Type) →
   ∃ λ (B : Type) →
   ∃ λ (l₁ : Lens A B) →
   ∃ λ (l₂ : Lens A B) →
     Lens.set l₁ ≡ Lens.set l₂ ×
     l₁ ≢ l₂
-equal-setters-but-not-equal univ =
-  let A , B , l₁ , l₂ , set≡set , l₁≢l₂ =
-        T.equal-setters-but-not-equal univ
-  in
-    A
-  , B
-  , Traditional-lens→Lens l₁
-  , Traditional-lens→Lens l₂
-  , set≡set
-  , Stable-¬ _
-      [ Traditional-lens→Lens l₁ ≡ Traditional-lens→Lens l₂  ↔⟨ inverse $ Eq.≃-≡ Lens≃Traditional-lens ⟩
-        l₁ ≡ l₂                                              ↝⟨ l₁≢l₂ ⟩□
-        ⊥                                                    □
+equal-setters-but-not-equal _ =
+  block λ b →
+  𝕊¹ , ⊤ , l₁′ b , l₂′ , refl _ , l₁′≢l₂′ b
+  where
+  open Lens
+
+  not-refl : Block "not-refl" → (x : 𝕊¹) → x ≡ x
+  not-refl ⊠ = Circle.not-refl
+
+  @0 not-refl≢refl : ∀ b → not-refl b ≢ refl
+  not-refl≢refl ⊠ = Circle.not-refl≢refl
+
+  l₁′ : Block "not-refl" → Lens 𝕊¹ ⊤
+  l₁′ b = _≃ᴱ_.from lens-to-⊤≃ᴱ [ not-refl b ]
+
+  l₂′ : Lens 𝕊¹ ⊤
+  l₂′ = _≃ᴱ_.from lens-to-⊤≃ᴱ [ refl ]
+
+  l₁′≢l₂′ : ∀ b → l₁′ b ≢ l₂′
+  l₁′≢l₂′ b =
+    Stable-¬ _
+      [ l₁′ b ≡ l₂′                ↔⟨ Eq.≃-≡ (EEq.≃ᴱ→≃ $ inverse lens-to-⊤≃ᴱ)
+                                        {x = [ not-refl b ]} {y = [ refl ]} ⟩
+        [ not-refl b ] ≡ [ refl ]  ↝⟨ cong erased ⟩
+        not-refl b ≡ refl          ↝⟨ not-refl≢refl b ⟩□
+        ⊥                          □
       ]
 
 -- A lens which is used in some counterexamples below.
@@ -2318,22 +2335,26 @@ bad a = Traditional-lens→Lens (T.bad a)
 -- must satisfy (assuming univalence).
 
 getter-equivalence-but-not-coherent :
-  Univalence lzero →
+  @0 Univalence lzero →
   let open Lens (bad a) in
   Is-equivalence get ×
   ¬ (∀ a → cong get (set-get a) ≡ get-set a (get a)) ×
   ¬ (∀ a₁ a₂ a₃ →
      cong get (set-set a₁ a₂ a₃) ≡
      trans (get-set (set a₁ a₂) a₃) (sym (get-set a₁ a₃)))
-getter-equivalence-but-not-coherent =
-  T.getter-equivalence-but-not-coherent
+getter-equivalence-but-not-coherent univ =
+    _≃_.is-equivalence F.id
+  , Stable-¬ _
+      [ proj₁ $ proj₂ $ T.getter-equivalence-but-not-coherent univ ]
+  , Stable-¬ _
+      [ proj₂ $ proj₂ $ T.getter-equivalence-but-not-coherent univ ]
 
 -- The lenses bad a and Lens-combinators.id {A = ↑ a 𝕊¹} have equal
 -- setters, and their getters are equivalences, but they are not equal
 -- (assuming univalence).
 
 equal-setters-and-equivalences-as-getters-but-not-equal :
-  Univalence lzero →
+  @0 Univalence lzero →
   let l₁ = bad a
       l₂ = Lens-combinators.id {A = ↑ a 𝕊¹}
   in
@@ -2342,15 +2363,16 @@ equal-setters-and-equivalences-as-getters-but-not-equal :
   Lens.set l₁ ≡ Lens.set l₂ ×
   l₁ ≢ l₂
 equal-setters-and-equivalences-as-getters-but-not-equal {a = a} univ =
-  let is-equiv₁ , is-equiv₂ , set≡set , bad≢id =
-        TC.equal-setters-and-equivalences-as-getters-but-not-equal univ
+  let is-equiv , not-coherent , _ =
+        getter-equivalence-but-not-coherent univ
   in
-    is-equiv₁
-  , is-equiv₂
-  , set≡set
+    is-equiv
+  , _≃_.is-equivalence F.id
+  , refl _
   , Stable-¬ _
       [ bad a ≡ Lens-combinators.id  ↔⟨ inverse $ Eq.≃-≡ Lens≃Traditional-lens ⟩
-        T.bad a ≡ TC.id              ↝⟨ bad≢id ⟩□
+        T.bad a ≡ TC.id              ↝⟨ proj₂ $ proj₂ $ proj₂ $
+                                        TC.equal-setters-and-equivalences-as-getters-but-not-equal univ ⟩□
         ⊥                            □
       ]
 
@@ -2361,20 +2383,20 @@ equal-setters-and-equivalences-as-getters-but-not-equal {a = a} univ =
 -- (assuming univalence).
 
 ¬-≃ᴱ-↠-Σ-Lens-Is-equivalenceᴱ-get :
-  Univalence lzero →
+  @0 Univalence lzero →
   ¬ ∃ λ (f : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ↠
              (∃ λ (l : Lens (↑ a 𝕊¹) (↑ a 𝕊¹)) →
                 Is-equivalenceᴱ (Lens.get l))) →
       ∀ p → _≃ᴱ_.to (_↠_.from f p) ≡ Lens.get (proj₁ p)
 ¬-≃ᴱ-↠-Σ-Lens-Is-equivalenceᴱ-get {a = a} univ =
-  let is-equiv₁′ , is-equiv₂′ , setters-equal , bad≢id =
-        equal-setters-and-equivalences-as-getters-but-not-equal univ
-
-      is-equiv₁ = EEq.Is-equivalence→Is-equivalenceᴱ is-equiv₁′
-      is-equiv₂ = EEq.Is-equivalence→Is-equivalenceᴱ is-equiv₂′
-  in
   Stable-¬ _
-    [ (λ (f , hyp) →                                 $⟨ setters-equal ⟩
+    [ (let is-equiv₁′ , is-equiv₂′ , setters-equal , bad≢id =
+             equal-setters-and-equivalences-as-getters-but-not-equal univ
+
+           is-equiv₁ = EEq.Is-equivalence→Is-equivalenceᴱ is-equiv₁′
+           is-equiv₂ = EEq.Is-equivalence→Is-equivalenceᴱ is-equiv₂′
+       in
+       λ (f , hyp) →                                 $⟨ setters-equal ⟩
 
          Lens.set (bad a) ≡ Lens.set id              ↝⟨ getters-equal-if-setters-equal (bad a) id ⟩
 
@@ -2402,7 +2424,7 @@ equal-setters-and-equivalences-as-getters-but-not-equal {a = a} univ =
 -- proof (assuming univalence).
 
 ¬-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalence-get :
-  Univalence lzero →
+  @0 Univalence lzero →
   ¬ ∃ λ (f : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ≃ᴱ
              (∃ λ (l : Lens (↑ a 𝕊¹) (↑ a 𝕊¹)) →
                 Is-equivalenceᴱ (Lens.get l))) →
@@ -2745,7 +2767,7 @@ Has-quasi-inverseᴱ-id-not-proposition univ =
 -- lens between types in the same universe (assuming univalence).
 
 ¬Is-equivalenceᴱ↠Has-quasi-inverseᴱ :
-  Univalence lzero →
+  @0 Univalence lzero →
   ¬ ({A B : Type a}
      (l : Lens A B) →
      Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ l)
@@ -2769,7 +2791,7 @@ Has-quasi-inverseᴱ-id-not-proposition univ =
 -- lens between types in the same universe (assuming univalence).
 
 ¬Is-equivalenceᴱ≃Has-quasi-inverseᴱ :
-  Univalence lzero →
+  @0 Univalence lzero →
   ¬ ({A B : Type a}
      (l : Lens A B) →
      Is-equivalenceᴱ (Lens.get l) ≃ᴱ Has-quasi-inverseᴱ l)
@@ -3412,7 +3434,7 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
 -- (assuming univalence).
 
 ¬≃ᴱ↠≊ᴱ :
-  Univalence lzero →
+  @0 Univalence lzero →
   ¬ ∃ λ (≃ᴱ↠≊ᴱ : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ↠ (↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹)) →
       (x@(l , _) : ↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹) →
       _≃ᴱ_.to (_↠_.from ≃ᴱ↠≊ᴱ x) ≡ Lens.get l
@@ -3438,7 +3460,7 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
 -- functions (assuming univalence).
 
 ¬≃ᴱ≃ᴱ≊ᴱ :
-  Univalence lzero →
+  @0 Univalence lzero →
   ¬ ∃ λ (≃ᴱ≃ᴱ≊ᴱ : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ≃ᴱ (↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹)) →
       (x@(l , _) : ↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹) →
       _≃ᴱ_.to (_≃ᴱ_.from ≃ᴱ≃ᴱ≊ᴱ x) ≡ Lens.get l
@@ -3459,7 +3481,7 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
 -- that A is a set is dropped (assuming univalence).
 
 ≄ᴱΣ∥set⁻¹ᴱ∥× :
-  Univalence lzero →
+  @0 Univalence lzero →
   ¬ ({A B : Type a} (l : Lens A B) →
      A ≃ᴱ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥) × B))
 ≄ᴱΣ∥set⁻¹ᴱ∥× {a = a} univ =
