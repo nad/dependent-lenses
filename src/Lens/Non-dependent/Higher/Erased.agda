@@ -819,7 +819,7 @@ to-from-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get≡get _ _ = refl _
   @0 Univalence lzero →
   ¬ (Lens 𝕊¹ ⊤ ↠ Traditionalᴱ.Lens 𝕊¹ ⊤)
 ¬Lens↠Traditional-lens univ =
-  Stable-¬ _
+  Stable-¬
     [ (Lens 𝕊¹ ⊤ ↠ Traditionalᴱ.Lens 𝕊¹ ⊤)  ↝⟨ (λ f → from-equivalence Traditionalᴱ.Lens≃Traditional-lens F.∘
                                                       f F.∘
                                                       from-equivalence (inverse Lens≃Higher-lens)) ⟩
@@ -834,7 +834,7 @@ to-from-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get≡get _ _ = refl _
   @0 Univalence lzero →
   ¬ (Lens 𝕊¹ ⊤ ≃ᴱ Traditionalᴱ.Lens 𝕊¹ ⊤)
 ¬Lens≃ᴱTraditional-lens univ =
-  Stable-¬ _
+  Stable-¬
     [ (Lens 𝕊¹ ⊤ ≃ᴱ Traditionalᴱ.Lens 𝕊¹ ⊤)  ↝⟨ from-equivalence ⊚ EEq.≃ᴱ→≃ ⟩
       (Lens 𝕊¹ ⊤ ↠  Traditionalᴱ.Lens 𝕊¹ ⊤)  ↝⟨ ¬Lens↠Traditional-lens univ ⟩□
       ⊥                                      □
@@ -1090,7 +1090,7 @@ h-level-respects-lens-from-inhabited n l =
   @0 Univalence lzero →
   ¬ (∀ n → Lens ⊥₀ Bool → H-level n ⊥₀ → H-level n Bool)
 ¬-h-level-respects-lens univ =
-  Stable-¬ _
+  Stable-¬
     [ (∀ n → Lens ⊥ Bool → H-level n ⊥ → H-level n Bool)    ↝⟨ (λ hyp n l → hyp n (Higher-lens→Lens l)) ⟩
       (∀ n → H.Lens ⊥ Bool → H-level n ⊥ → H-level n Bool)  ↝⟨ H.¬-h-level-respects-lens univ ⟩□
       ⊥                                                     □
@@ -1113,7 +1113,7 @@ lens-from-proposition-to-non-set {a = a} {b = b} univ =
       ; inhabited = ⊥-elim
       }
   , ⊥-propositional
-  , Stable-¬ _
+  , Stable-¬
       [ Is-set (↑ b 𝕊¹)  ↝⟨ proj₂ $ proj₂ $ proj₂ $ proj₂ $ H.lens-from-proposition-to-non-set {a = a} univ ⟩□
         ⊥₀               □
       ]
@@ -1185,7 +1185,7 @@ get≡id→remainder-propositional =
   ¬ ({A : Type a} {B : Type b} →
      Contractible A → Contractible (Lens A B))
 ¬-Contractible-closed-domain univ =
-  Stable-¬ _
+  Stable-¬
     [ (∀ {A B} → Contractible A → Contractible (Lens A B))    ↝⟨ (λ hyp c → H-level-cong _ 0 Lens≃Higher-lens (hyp c)) ⟩
       (∀ {A B} → Contractible A → Contractible (H.Lens A B))  ↝⟨ H.¬-Contractible-closed-domain univ ⟩□
       ⊥                                                       □
@@ -2024,7 +2024,7 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
      (l : Lens A B) →
      Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ b l)
 ¬Is-equivalenceᴱ-get↠Has-quasi-inverseᴱ {a = a} b univ =
-  Stable-¬ _
+  Stable-¬
     [ ({A B : Type a}
        (l : Lens A B) →
        Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ b l)     ↝⟨ (λ hyp → lemma hyp) ⟩
@@ -2054,7 +2054,7 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
      (l : Lens A B) →
      Is-equivalenceᴱ (Lens.get l) ≃ᴱ Has-quasi-inverseᴱ b l)
 ¬Is-equivalenceᴱ-get≃ᴱHas-quasi-inverseᴱ {a = a} b univ =
-  Stable-¬ _
+  Stable-¬
     [ ({A B : Type a}
        (l : Lens A B) →
        Is-equivalenceᴱ (Lens.get l) ≃ᴱ Has-quasi-inverseᴱ b l)  ↝⟨ (λ hyp l → _≃_.surjection $ EEq.≃ᴱ→≃ $ hyp l) ⟩

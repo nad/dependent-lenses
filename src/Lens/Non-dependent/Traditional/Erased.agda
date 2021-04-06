@@ -585,7 +585,7 @@ lens-preserves-h-level-of-domain {A = A} {B = B} n =
   @0 Univalence (# 0) →
   ¬ Is-proposition (Lens 𝕊¹ ⊤)
 ¬-lens-to-⊤-propositional univ =
-  Stable-¬ _
+  Stable-¬
     [ Is-proposition (Lens 𝕊¹ ⊤)    ↝⟨ H-level-cong _ 1 Lens≃Traditional-lens ⟩
       Is-proposition (T.Lens 𝕊¹ ⊤)  ↝⟨ T.¬-lens-to-⊤-propositional univ ⟩□
       ⊥₀                            □
@@ -2377,7 +2377,7 @@ equal-setters-but-not-equal _ =
 
   l₁′≢l₂′ : ∀ b → l₁′ b ≢ l₂′
   l₁′≢l₂′ b =
-    Stable-¬ _
+    Stable-¬
       [ l₁′ b ≡ l₂′                ↔⟨ Eq.≃-≡ (EEq.≃ᴱ→≃ $ inverse lens-to-⊤≃ᴱ)
                                         {x = [ not-refl b ]} {y = [ refl ]} ⟩
         [ not-refl b ] ≡ [ refl ]  ↝⟨ cong erased ⟩
@@ -2404,9 +2404,9 @@ getter-equivalence-but-not-coherent :
      trans (get-set (set a₁ a₂) a₃) (sym (get-set a₁ a₃)))
 getter-equivalence-but-not-coherent univ =
     _≃_.is-equivalence F.id
-  , Stable-¬ _
+  , Stable-¬
       [ proj₁ $ proj₂ $ T.getter-equivalence-but-not-coherent univ ]
-  , Stable-¬ _
+  , Stable-¬
       [ proj₂ $ proj₂ $ T.getter-equivalence-but-not-coherent univ ]
 
 -- The lenses bad a and Lens-combinators.id {A = ↑ a 𝕊¹} have equal
@@ -2429,7 +2429,7 @@ equal-setters-and-equivalences-as-getters-but-not-equal {a = a} univ =
     is-equiv
   , _≃_.is-equivalence F.id
   , refl _
-  , Stable-¬ _
+  , Stable-¬
       [ bad a ≡ Lens-combinators.id  ↔⟨ inverse $ Eq.≃-≡ Lens≃Traditional-lens ⟩
         T.bad a ≡ TC.id              ↝⟨ proj₂ $ proj₂ $ proj₂ $
                                         TC.equal-setters-and-equivalences-as-getters-but-not-equal univ ⟩□
@@ -2449,7 +2449,7 @@ equal-setters-and-equivalences-as-getters-but-not-equal {a = a} univ =
                 Is-equivalenceᴱ (Lens.get l))) →
       ∀ p → _≃ᴱ_.to (_↠_.from f p) ≡ Lens.get (proj₁ p)
 ¬-≃ᴱ-↠-Σ-Lens-Is-equivalenceᴱ-get {a = a} univ =
-  Stable-¬ _
+  Stable-¬
     [ (let is-equiv₁′ , is-equiv₂′ , setters-equal , bad≢id =
              equal-setters-and-equivalences-as-getters-but-not-equal univ
 
@@ -2490,7 +2490,7 @@ equal-setters-and-equivalences-as-getters-but-not-equal {a = a} univ =
                 Is-equivalenceᴱ (Lens.get l))) →
       ∀ p → _≃ᴱ_.to (_≃ᴱ_.from f p) ≡ Lens.get (proj₁ p)
 ¬-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalence-get {a = a} univ =
-  Stable-¬ _
+  Stable-¬
     [ (∃ λ (f : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ≃ᴱ
            (∃ λ (l : Lens (↑ a 𝕊¹) (↑ a 𝕊¹)) →
               Is-equivalenceᴱ (Lens.get l))) →
@@ -2816,7 +2816,7 @@ Has-quasi-inverseᴱ-id-not-proposition :
     ¬ Is-proposition (Has-quasi-inverseᴱ (id {A = A}))
 Has-quasi-inverseᴱ-id-not-proposition univ =
     _
-  , Stable-¬ _
+  , Stable-¬
       [ Is-proposition (Has-quasi-inverseᴱ Lens-combinators.id)  ↝⟨ H-level-cong _ 1 $ Has-quasi-inverseᴱ≃Has-quasi-inverse TC.id ⟩
         Is-proposition (TC.Has-quasi-inverse TC.id)              ↝⟨ proj₂ $ TC.Has-quasi-inverse-id-not-proposition univ ⟩□
         ⊥                                                        □
@@ -2832,7 +2832,7 @@ Has-quasi-inverseᴱ-id-not-proposition univ =
      (l : Lens A B) →
      Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ l)
 ¬Is-equivalenceᴱ↠Has-quasi-inverseᴱ {a = a} univ =
-  Stable-¬ _
+  Stable-¬
     [ ({A B : Type a}
        (l : Lens A B) →
        Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ l)     ↝⟨ (λ hyp l →
@@ -2856,7 +2856,7 @@ Has-quasi-inverseᴱ-id-not-proposition univ =
      (l : Lens A B) →
      Is-equivalenceᴱ (Lens.get l) ≃ᴱ Has-quasi-inverseᴱ l)
 ¬Is-equivalenceᴱ≃Has-quasi-inverseᴱ {a = a} univ =
-  Stable-¬ _
+  Stable-¬
     [ ({A B : Type a}
        (l : Lens A B) →
        Is-equivalenceᴱ (Lens.get l) ≃ᴱ Has-quasi-inverseᴱ l)  ↝⟨ (λ hyp → _≃_.surjection ⊚ EEq.≃ᴱ→≃ ⊚ hyp) ⟩
@@ -3499,7 +3499,7 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
       (x@(l , _) : ↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹) →
       _≃ᴱ_.to (_↠_.from ≃ᴱ↠≊ᴱ x) ≡ Lens.get l
 ¬≃ᴱ↠≊ᴱ {a = a} univ =
-  Stable-¬ _
+  Stable-¬
     [ (∃ λ (≃ᴱ↠≊ᴱ : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ↠ (↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹)) →
          (x@(l , _) : ↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹) →
          _≃ᴱ_.to (_↠_.from ≃ᴱ↠≊ᴱ x) ≡ Lens.get l)            ↝⟨ Σ-map
@@ -3525,7 +3525,7 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
       (x@(l , _) : ↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹) →
       _≃ᴱ_.to (_≃ᴱ_.from ≃ᴱ≃ᴱ≊ᴱ x) ≡ Lens.get l
 ¬≃ᴱ≃ᴱ≊ᴱ {a = a} univ =
-  Stable-¬ _
+  Stable-¬
     [ (∃ λ (≃ᴱ≃ᴱ≊ᴱ : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ≃ᴱ (↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹)) →
          (x@(l , _) : ↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹) →
          _≃ᴱ_.to (_≃ᴱ_.from ≃ᴱ≃ᴱ≊ᴱ x) ≡ Lens.get l)               ↝⟨ Σ-map (_≃_.surjection ⊚ EEq.≃ᴱ→≃) P.id ⟩
@@ -3545,7 +3545,7 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
   ¬ ({A B : Type a} (l : Lens A B) →
      A ≃ᴱ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥) × B))
 ≄ᴱΣ∥set⁻¹ᴱ∥× {a = a} univ =
-  Stable-¬ _
+  Stable-¬
     [ ({A B : Type a} (l : Lens A B) →
        A ≃ᴱ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥) × B))  ↝⟨ EEq.≃ᴱ→≃ ⊚_ ⟩
 
