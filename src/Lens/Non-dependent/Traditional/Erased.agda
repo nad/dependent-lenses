@@ -34,7 +34,9 @@ open import Function-universe equality-with-J as F
   hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
-open import H-level.Truncation.Propositional eq as PT using (∥_∥; ∣_∣)
+open import H-level.Truncation.Propositional eq as PT using (∥_∥)
+open import H-level.Truncation.Propositional.Erased eq as TE
+  using (∥_∥ᴱ; ∣_∣)
 open import Preimage equality-with-J using (_⁻¹_)
 open import Surjection equality-with-J as Surjection using (_↠_)
 open import Univalence-axiom equality-with-J
@@ -1405,34 +1407,14 @@ lens-from-⊥≃⊤ =
 -- This result is based on Theorem 2.3.9 from "Lenses and View Update
 -- Translation" by Pierce and Schmitt.
 
-≃ᴱΣ∥set⁻¹ᴱ∥× :
+≃ᴱΣ∥set⁻¹ᴱ∥ᴱ× :
   @0 Is-set A →
   (l : Lens A B) →
-  A ≃ᴱ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥) × B)
-≃ᴱΣ∥set⁻¹ᴱ∥× {A = A} {B = B} A-set l = EEq.↔→≃ᴱ
+  A ≃ᴱ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥ᴱ) × B)
+≃ᴱΣ∥set⁻¹ᴱ∥ᴱ× {A = A} {B = B} A-set l = EEq.↔→≃ᴱ
   (λ a → (set a , ∣ a , [ refl _ ] ∣) , get a)
   (λ ((f , _) , b) → f b)
-  (λ ((f , p) , b) →
-     flip (PT.rec (×-closure 2
-                     (Σ-closure 2
-                        (Π-closure ext 2 λ _ → A-set) λ _ →
-                        mono₁ 1 PT.truncation-is-proposition)
-                     (B-set (f b))))
-       p λ (a , [ q ]) →
-     let
-       lemma₁ =
-         set (f b)      ≡⟨ cong (λ f → set (f b)) $ sym q ⟩
-         set (set a b)  ≡⟨ ⟨ext⟩ $ set-set a b ⟩
-         set a          ≡⟨ q ⟩∎
-         f              ∎
-
-       lemma₂ =
-         get (f b)      ≡⟨ cong (λ f → get (f b)) $ sym q ⟩
-         get (set a b)  ≡⟨ get-set _ _ ⟩∎
-         b              ∎
-     in
-     (set (f b) , ∣ f b , [ refl _ ] ∣) , get (f b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma₁ (PT.truncation-is-proposition _ _)) lemma₂ ⟩∎
-     (f         , p                   ) , b          ∎)
+  (λ ((f , p) , b) → TE.rec (e f p b) p)
   (λ a →
      set a (get a)  ≡⟨ set-get a ⟩∎
      a              ∎)
@@ -1442,6 +1424,29 @@ lens-from-⊥≃⊤ =
   @0 B-set : A → Is-set B
   B-set a =
     h-level-respects-lens-from-inhabited 2 l a A-set
+
+  @0 e : ∀ _ _ _ → TE.Rec _ _
+  e f _ b .TE.truncation-is-propositionʳ =
+    ×-closure 2
+      (Σ-closure 2
+         (Π-closure ext 2 λ _ → A-set) λ _ →
+         mono₁ 1 TE.truncation-is-proposition)
+      (B-set (f b))
+  e f p b .TE.∣∣ʳ (a , [ q ]) =
+    let
+      lemma₁ =
+        set (f b)      ≡⟨ cong (λ f → set (f b)) $ sym q ⟩
+        set (set a b)  ≡⟨ ⟨ext⟩ $ set-set a b ⟩
+        set a          ≡⟨ q ⟩∎
+        f              ∎
+
+      lemma₂ =
+        get (f b)      ≡⟨ cong (λ f → get (f b)) $ sym q ⟩
+        get (set a b)  ≡⟨ get-set _ _ ⟩∎
+        b              ∎
+    in
+    (set (f b) , ∣ f b , [ refl _ ] ∣) , get (f b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma₁ (TE.truncation-is-proposition _ _)) lemma₂ ⟩∎
+    (f         , p)                    , b          ∎
 
 -- If B is an inhabited set and there is a lens from A to B, then A is
 -- equivalent (with erased proofs) to the cartesian product of some
@@ -3604,26 +3609,29 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
       ⊥                                                               □
     ]
 
--- The lemma ≃ᴱΣ∥set⁻¹ᴱ∥× does not hold in general if the requirement
+-- The lemma ≃ᴱΣ∥set⁻¹ᴱ∥ᴱ× does not hold in general if the requirement
 -- that A is a set is dropped (assuming univalence).
 
-≄ᴱΣ∥set⁻¹ᴱ∥× :
+≄ᴱΣ∥set⁻¹ᴱ∥ᴱ× :
   @0 Univalence lzero →
   ¬ ({A B : Type a} (l : Lens A B) →
-     A ≃ᴱ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥) × B))
-≄ᴱΣ∥set⁻¹ᴱ∥× {a = a} univ =
+     A ≃ᴱ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥ᴱ) × B))
+≄ᴱΣ∥set⁻¹ᴱ∥ᴱ× {a = a} univ =
   Stable-¬
     [ ({A B : Type a} (l : Lens A B) →
-       A ≃ᴱ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥) × B))  ↝⟨ EEq.≃ᴱ→≃ ⊚_ ⟩
+       A ≃ᴱ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥ᴱ) × B))  ↝⟨ EEq.≃ᴱ→≃ ⊚_ ⟩
 
       ({A B : Type a} (l : Lens A B) →
-       A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥) × B))   ↝⟨ ((×-cong₁ λ _ → ∃-cong λ _ → PT.∥∥-cong $ inverse ECP.⁻¹≃⁻¹ᴱ) F.∘_) ⊚_ ⟩
+       A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥ᴱ) × B))   ↝⟨ ((×-cong₁ λ _ → ∃-cong λ _ → TE.∥∥ᴱ≃∥∥) F.∘_) ⊚_ ⟩
 
       ({A B : Type a} (l : Lens A B) →
-       A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ f ∥) × B))    ↝⟨ _⊚ Traditional-lens→Lens ⟩
+       A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥) × B))    ↝⟨ ((×-cong₁ λ _ → ∃-cong λ _ → PT.∥∥-cong $ inverse ECP.⁻¹≃⁻¹ᴱ) F.∘_) ⊚_ ⟩
+
+      ({A B : Type a} (l : Lens A B) →
+       A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ f ∥) × B))     ↝⟨ _⊚ Traditional-lens→Lens ⟩
 
       ({A B : Type a} (l : T.Lens A B) →
-       A ≃ ((∃ λ (f : B → A) → ∥ T.Lens.set l ⁻¹ f ∥) × B))  ↝⟨ TC.≄Σ∥set⁻¹∥× univ ⟩□
+       A ≃ ((∃ λ (f : B → A) → ∥ T.Lens.set l ⁻¹ f ∥) × B))   ↝⟨ TC.≄Σ∥set⁻¹∥× univ ⟩□
 
-      ⊥                                                      □
+      ⊥                                                       □
     ]
