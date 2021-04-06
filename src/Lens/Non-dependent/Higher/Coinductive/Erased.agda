@@ -53,8 +53,12 @@ private
 private
 
   -- A lemma used in the implementation of ∥∥ᴱ→≃.
+  --
+  -- This definition is erased because its implementation makes use of
+  -- code related to O.∥_∥¹ (a HIT with a non-erased higher
+  -- constructor).
 
-  ∥∥ᴱ→≃-lemma :
+  @0 ∥∥ᴱ→≃-lemma :
     Block "∥∥ᴱ→≃-lemma" →
     (f₀ : A → B) →
     (∃ λ (f₊ : ∀ n → ∥ A ∥¹-out-^ (1 + n) → B) →
