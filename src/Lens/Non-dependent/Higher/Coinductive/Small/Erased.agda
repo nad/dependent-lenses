@@ -15,7 +15,6 @@ open import Logical-equivalence using (_⇔_)
 open import Prelude as P hiding (id)
 
 open import Bijection equality-with-J using (_↔_)
-import Colimit.Sequential.Very-erased eq as CS
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq
@@ -28,11 +27,6 @@ open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq using (∥_∥)
-open import H-level.Truncation.Propositional.Erased eq as T
-  using (∥_∥ᴱ; ∣_∣)
-import H-level.Truncation.Propositional.Non-recursive.Erased eq as N
-open import H-level.Truncation.Propositional.One-step eq as O
-  using (∣_∣; ∥_∥¹-out-^; ∥_∥¹-in-^; ∣_,_∣-in-^)
 open import Preimage equality-with-J using (_⁻¹_)
 open import Tactic.Sigma-cong equality-with-J
 open import Univalence-axiom equality-with-J
