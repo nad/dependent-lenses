@@ -844,7 +844,7 @@ equal-setters-and-equivalences-as-getters-but-not-equal {a = ℓa} univ =
     is-equiv
   , _≃_.is-equivalence F.id
   , refl _
-  , (bad ℓa ≡ id                                         ↝⟨ (λ eq → subst (λ l → ∀ a → cong (get l) (set-get l a) ≡
+  , (bad ℓa ≡ id                                        ↝⟨ (λ eq → subst (λ l → ∀ a → cong (get l) (set-get l a) ≡
                                                                                       get-set l a (get l a))
                                                                          (sym eq)
                                                                          (λ _ → cong-refl _)) ⟩
