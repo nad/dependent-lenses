@@ -25,6 +25,7 @@ open import Prelude as P hiding (id; [_,_]) renaming (_∘_ to _⊚_)
 open import Bijection equality-with-J as Bijection using (_↔_)
 import Bool equality-with-J as Bool
 open import Circle eq using (𝕊¹)
+open import Circle.Erased eq as CE using (𝕊¹ᴱ)
 open import Equality.Decidable-UIP equality-with-J
 open import Equality.Decision-procedures equality-with-J
 open import Equality.Path.Isomorphisms eq hiding (univ)
@@ -817,14 +818,16 @@ to-from-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get≡get _ _ = refl _
 
 ¬Lens↠Traditional-lens :
   @0 Univalence lzero →
-  ¬ (Lens 𝕊¹ ⊤ ↠ Traditionalᴱ.Lens 𝕊¹ ⊤)
+  ¬ (Lens 𝕊¹ᴱ ⊤ ↠ Traditionalᴱ.Lens 𝕊¹ᴱ ⊤)
 ¬Lens↠Traditional-lens univ =
   Stable-¬
-    [ (Lens 𝕊¹ ⊤ ↠ Traditionalᴱ.Lens 𝕊¹ ⊤)  ↝⟨ (λ f → from-equivalence Traditionalᴱ.Lens≃Traditional-lens F.∘
-                                                      f F.∘
-                                                      from-equivalence (inverse Lens≃Higher-lens)) ⟩
-      (H.Lens 𝕊¹ ⊤ ↠ T.Lens 𝕊¹ ⊤)           ↝⟨ H.¬Lens↠Traditional-lens univ ⟩□
-      ⊥                                     □
+    [ (Lens 𝕊¹ᴱ ⊤ ↠ Traditionalᴱ.Lens 𝕊¹ᴱ ⊤)  ↔⟨ ≡⇒≃ $ cong (λ A → Lens A ⊤ ↠ Traditionalᴱ.Lens A ⊤) $ ≃⇒≡ univ $ inverse
+                                                 CE.𝕊¹≃𝕊¹ᴱ ⟩
+      (Lens 𝕊¹ ⊤ ↠ Traditionalᴱ.Lens 𝕊¹ ⊤)    ↝⟨ (λ f → from-equivalence Traditionalᴱ.Lens≃Traditional-lens F.∘
+                                                        f F.∘
+                                                        from-equivalence (inverse Lens≃Higher-lens)) ⟩
+      (H.Lens 𝕊¹ ⊤ ↠ T.Lens 𝕊¹ ⊤)             ↝⟨ H.¬Lens↠Traditional-lens univ ⟩□
+      ⊥                                       □
     ]
 
 -- In general there is no equivalence with erased proofs between
@@ -832,12 +835,12 @@ to-from-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get≡get _ _ = refl _
 
 ¬Lens≃ᴱTraditional-lens :
   @0 Univalence lzero →
-  ¬ (Lens 𝕊¹ ⊤ ≃ᴱ Traditionalᴱ.Lens 𝕊¹ ⊤)
+  ¬ (Lens 𝕊¹ᴱ ⊤ ≃ᴱ Traditionalᴱ.Lens 𝕊¹ᴱ ⊤)
 ¬Lens≃ᴱTraditional-lens univ =
   Stable-¬
-    [ (Lens 𝕊¹ ⊤ ≃ᴱ Traditionalᴱ.Lens 𝕊¹ ⊤)  ↝⟨ from-equivalence ⊚ EEq.≃ᴱ→≃ ⟩
-      (Lens 𝕊¹ ⊤ ↠  Traditionalᴱ.Lens 𝕊¹ ⊤)  ↝⟨ ¬Lens↠Traditional-lens univ ⟩□
-      ⊥                                      □
+    [ (Lens 𝕊¹ᴱ ⊤ ≃ᴱ Traditionalᴱ.Lens 𝕊¹ᴱ ⊤)  ↝⟨ from-equivalence ⊚ EEq.≃ᴱ→≃ ⟩
+      (Lens 𝕊¹ᴱ ⊤ ↠ Traditionalᴱ.Lens 𝕊¹ᴱ ⊤)   ↝⟨ ¬Lens↠Traditional-lens univ ⟩□
+      ⊥                                        □
     ]
 
 -- Some lemmas used in Lens↠Traditional-lens and
@@ -1105,17 +1108,18 @@ lens-from-proposition-to-non-set :
   Lens A B × Is-proposition A × ¬ Is-set B
 lens-from-proposition-to-non-set {a = a} {b = b} univ =
     ⊥
-  , ↑ b 𝕊¹
+  , ↑ b 𝕊¹ᴱ
   , record
       { R         = ⊥
-      ; equiv     = ⊥           ↔⟨ inverse ×-left-zero ⟩□
-                    ⊥ × ↑ _ 𝕊¹  □
+      ; equiv     = ⊥            ↔⟨ inverse ×-left-zero ⟩□
+                    ⊥ × ↑ _ 𝕊¹ᴱ  □
       ; inhabited = ⊥-elim
       }
   , ⊥-propositional
   , Stable-¬
-      [ Is-set (↑ b 𝕊¹)  ↝⟨ proj₂ $ proj₂ $ proj₂ $ proj₂ $ H.lens-from-proposition-to-non-set {a = a} univ ⟩□
-        ⊥₀               □
+      [ Is-set (↑ b 𝕊¹ᴱ)  ↝⟨ H-level-cong _ 2 Bijection.↑↔ ⟩
+        Is-set 𝕊¹ᴱ        ↝⟨ CE.¬-𝕊¹ᴱ-set ⟩□
+        ⊥                 □
       ]
 
 -- Lenses with contractible domains have contractible codomains (in

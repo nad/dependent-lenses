@@ -20,7 +20,8 @@ open import Prelude as P hiding (id; [_,_]) renaming (_∘_ to _⊚_)
 
 import Bi-invertibility.Erased
 open import Bijection equality-with-J as Bij using (_↔_)
-open import Circle eq as Circle using (𝕊¹)
+open import Circle eq using (𝕊¹)
+open import Circle.Erased eq as CE using (𝕊¹ᴱ)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
@@ -579,14 +580,15 @@ lens-preserves-h-level-of-domain {A = A} {B = B} n =
   H-level (1 + n) (T.Lens A B)  ↝⟨ H-level-cong _ (1 + n) (inverse Lens≃Traditional-lens) ⟩□
   H-level (1 + n) (Lens A B)    □
 
--- Lens 𝕊¹ ⊤ is not propositional (assuming univalence).
+-- Lens 𝕊¹ᴱ ⊤ is not propositional (assuming univalence).
 
 ¬-lens-to-⊤-propositional :
   @0 Univalence (# 0) →
-  ¬ Is-proposition (Lens 𝕊¹ ⊤)
+  ¬ Is-proposition (Lens 𝕊¹ᴱ ⊤)
 ¬-lens-to-⊤-propositional univ =
   Stable-¬
-    [ Is-proposition (Lens 𝕊¹ ⊤)    ↝⟨ H-level-cong _ 1 Lens≃Traditional-lens ⟩
+    [ Is-proposition (Lens 𝕊¹ᴱ ⊤)   ↝⟨ H-level-cong _ 1 (Lens-cong (inverse CE.𝕊¹≃𝕊¹ᴱ) Eq.id) ⟩
+      Is-proposition (Lens 𝕊¹ ⊤)    ↝⟨ H-level-cong _ 1 Lens≃Traditional-lens ⟩
       Is-proposition (T.Lens 𝕊¹ ⊤)  ↝⟨ T.¬-lens-to-⊤-propositional univ ⟩□
       ⊥₀                            □
     ]
@@ -2346,8 +2348,8 @@ no-first-projection-lens =
 -- (assuming univalence).
 --
 -- (The lemma does not actually use the univalence argument, but
--- univalence is used by Circle.not-refl≢refl, which is only used in
--- an erased context.)
+-- univalence is used by CE.not-refl≢refl, which is only used in an
+-- erased context.)
 
 equal-setters-but-not-equal :
   @0 Univalence lzero →
@@ -2359,20 +2361,20 @@ equal-setters-but-not-equal :
     l₁ ≢ l₂
 equal-setters-but-not-equal _ =
   block λ b →
-  𝕊¹ , ⊤ , l₁′ b , l₂′ , refl _ , l₁′≢l₂′ b
+  𝕊¹ᴱ , ⊤ , l₁′ b , l₂′ , refl _ , l₁′≢l₂′ b
   where
   open Lens
 
-  not-refl : Block "not-refl" → (x : 𝕊¹) → x ≡ x
-  not-refl ⊠ = Circle.not-refl
+  @0 not-refl : Block "not-refl" → (x : 𝕊¹ᴱ) → x ≡ x
+  not-refl ⊠ = CE.not-refl
 
   @0 not-refl≢refl : ∀ b → not-refl b ≢ refl
-  not-refl≢refl ⊠ = Circle.not-refl≢refl
+  not-refl≢refl ⊠ = CE.not-refl≢refl
 
-  l₁′ : Block "not-refl" → Lens 𝕊¹ ⊤
+  l₁′ : Block "not-refl" → Lens 𝕊¹ᴱ ⊤
   l₁′ b = _≃ᴱ_.from lens-to-⊤≃ᴱ [ not-refl b ]
 
-  l₂′ : Lens 𝕊¹ ⊤
+  l₂′ : Lens 𝕊¹ᴱ ⊤
   l₂′ = _≃ᴱ_.from lens-to-⊤≃ᴱ [ refl ]
 
   l₁′≢l₂′ : ∀ b → l₁′ b ≢ l₂′
@@ -2387,12 +2389,22 @@ equal-setters-but-not-equal _ =
 
 -- A lens which is used in some counterexamples below.
 
-bad : (a : Level) → Lens (↑ a 𝕊¹) (↑ a 𝕊¹)
-bad a = Traditional-lens→Lens (T.bad a)
+bad : (a : Level) → Lens (↑ a 𝕊¹ᴱ) (↑ a 𝕊¹ᴱ)
+bad a = record
+  { get     = P.id
+  ; set     = const P.id
+  ; get-set = λ _ → cong lift ⊚ CE.not-refl ⊚ lower
+  ; set-get = refl
+  ; set-set = λ _ _ → cong lift ⊚ CE.not-refl ⊚ lower
+  }
 
 -- The lens bad a has a getter which is an equivalence, but it does
 -- not satisfy either of the coherence laws that Coherent-lens lenses
 -- must satisfy (assuming univalence).
+--
+-- (The lemma does not actually use the univalence argument, but
+-- univalence is used by CE.not-refl≢refl, which is only used in
+-- erased contexts.)
 
 getter-equivalence-but-not-coherent :
   @0 Univalence lzero →
@@ -2402,27 +2414,76 @@ getter-equivalence-but-not-coherent :
   ¬ (∀ a₁ a₂ a₃ →
      cong get (set-set a₁ a₂ a₃) ≡
      trans (get-set (set a₁ a₂) a₃) (sym (get-set a₁ a₃)))
-getter-equivalence-but-not-coherent univ =
+getter-equivalence-but-not-coherent {a = a} univ =
     _≃_.is-equivalence F.id
   , Stable-¬
-      [ proj₁ $ proj₂ $ T.getter-equivalence-but-not-coherent univ ]
-  , Stable-¬
-      [ proj₂ $ proj₂ $ T.getter-equivalence-but-not-coherent univ ]
+      [ ((x : ↑ a 𝕊¹ᴱ) → cong get (set-get x) ≡ get-set x (get x))    ↔⟨⟩
 
--- The lenses bad a and Lens-combinators.id {A = ↑ a 𝕊¹} have equal
+        ((x : ↑ a 𝕊¹ᴱ) →
+         cong P.id (refl _) ≡ cong lift (CE.not-refl (lower x)))      ↔⟨ (Π-cong ext Bij.↑↔ λ _ → Eq.id) ⟩
+
+        ((x : 𝕊¹ᴱ) → cong P.id (refl _) ≡ cong lift (CE.not-refl x))  ↝⟨ trans (trans (cong-refl _) (cong-id _)) ⊚_ ⟩
+
+        ((x : 𝕊¹ᴱ) → cong lift (refl x) ≡ cong lift (CE.not-refl x))  ↔⟨ (∀-cong ext λ _ →
+                                                                         Eq.≃-≡ $ inverse $ Eq.≃-≡ $ Eq.↔⇒≃ $ inverse Bij.↑↔) ⟩
+
+        ((x : 𝕊¹ᴱ) → refl x ≡ CE.not-refl x)                          ↔⟨ Eq.extensionality-isomorphism ext ⟩
+
+        refl ≡ CE.not-refl                                            ↝⟨ CE.not-refl≢refl ⊚ sym ⟩□
+
+        ⊥                                                             □
+      ]
+  , Stable-¬
+      [ ((x y z : ↑ a 𝕊¹ᴱ) →
+         cong get (set-set x y z) ≡
+         trans (get-set (set x y) z) (sym (get-set x z)))  ↔⟨⟩
+
+        ((x y z : ↑ a 𝕊¹ᴱ) →
+         cong P.id (cong lift (CE.not-refl (lower z))) ≡
+         trans (cong lift (CE.not-refl (lower z)))
+           (sym (cong lift (CE.not-refl (lower z)))))      ↔⟨ (Π-cong ext Bij.↑↔ λ _ →
+                                                               Π-cong ext Bij.↑↔ λ _ →
+                                                               Π-cong ext Bij.↑↔ λ _ →
+                                                               Eq.id) ⟩
+        ((x y z : 𝕊¹ᴱ) →
+         cong P.id (cong lift (CE.not-refl z)) ≡
+         trans (cong lift (CE.not-refl z))
+           (sym (cong lift (CE.not-refl z))))              ↝⟨ (λ hyp → hyp CE.base CE.base) ⟩
+
+        ((x : 𝕊¹ᴱ) →
+         cong P.id (cong lift (CE.not-refl x)) ≡
+         trans (cong lift (CE.not-refl x))
+           (sym (cong lift (CE.not-refl x))))              ↔⟨ (∀-cong ext λ _ → ≡⇒≃ $ cong₂ _≡_
+                                                                 (sym $ cong-id _)
+                                                                 (trans (trans-symʳ _) $
+                                                                  sym $ cong-refl _)) ⟩
+        ((x : 𝕊¹ᴱ) →
+         cong lift (CE.not-refl x) ≡ cong lift (refl x))   ↔⟨ (∀-cong ext λ _ →
+                                                               Eq.≃-≡ $ inverse $ Eq.≃-≡ $ Eq.↔⇒≃ $ inverse Bij.↑↔) ⟩
+
+        ((x : 𝕊¹ᴱ) → CE.not-refl x ≡ refl x)               ↔⟨ Eq.extensionality-isomorphism ext ⟩
+
+        CE.not-refl ≡ refl                                 ↝⟨ CE.not-refl≢refl ⟩□
+
+        ⊥                                                  □
+      ]
+  where
+  open Lens (bad a)
+
+-- The lenses bad a and Lens-combinators.id {A = ↑ a 𝕊¹ᴱ} have equal
 -- setters, and their getters are equivalences, but they are not equal
 -- (assuming univalence).
 
 equal-setters-and-equivalences-as-getters-but-not-equal :
   @0 Univalence lzero →
   let l₁ = bad a
-      l₂ = Lens-combinators.id {A = ↑ a 𝕊¹}
+      l₂ = Lens-combinators.id {A = ↑ a 𝕊¹ᴱ}
   in
   Is-equivalence (Lens.get l₁) ×
   Is-equivalence (Lens.get l₂) ×
   Lens.set l₁ ≡ Lens.set l₂ ×
   l₁ ≢ l₂
-equal-setters-and-equivalences-as-getters-but-not-equal {a = a} univ =
+equal-setters-and-equivalences-as-getters-but-not-equal {a = ℓa} univ =
   let is-equiv , not-coherent , _ =
         getter-equivalence-but-not-coherent univ
   in
@@ -2430,11 +2491,17 @@ equal-setters-and-equivalences-as-getters-but-not-equal {a = a} univ =
   , _≃_.is-equivalence F.id
   , refl _
   , Stable-¬
-      [ bad a ≡ Lens-combinators.id  ↔⟨ inverse $ Eq.≃-≡ Lens≃Traditional-lens ⟩
-        T.bad a ≡ TC.id              ↝⟨ proj₂ $ proj₂ $ proj₂ $
-                                        TC.equal-setters-and-equivalences-as-getters-but-not-equal univ ⟩□
-        ⊥                            □
+      [ bad ℓa ≡ id                                        ↝⟨ (λ eq → subst (λ l → ∀ a → cong (get l) (set-get l a) ≡
+                                                                                         get-set l a (get l a))
+                                                                            (sym eq)
+                                                                            (λ _ → cong-refl _)) ⟩
+        (∀ a → cong (get (bad ℓa)) (set-get (bad ℓa) a) ≡
+               get-set (bad ℓa) a (get (bad ℓa) a))        ↝⟨ not-coherent ⟩□
+        ⊥                                                  □
       ]
+  where
+  open Lens
+  open Lens-combinators
 
 -- There is in general no split surjection from equivalences with
 -- erased proofs to lenses with getters that are equivalences with
@@ -2444,8 +2511,8 @@ equal-setters-and-equivalences-as-getters-but-not-equal {a = a} univ =
 
 ¬-≃ᴱ-↠-Σ-Lens-Is-equivalenceᴱ-get :
   @0 Univalence lzero →
-  ¬ ∃ λ (f : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ↠
-             (∃ λ (l : Lens (↑ a 𝕊¹) (↑ a 𝕊¹)) →
+  ¬ ∃ λ (f : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ↠
+             (∃ λ (l : Lens (↑ a 𝕊¹ᴱ) (↑ a 𝕊¹ᴱ)) →
                 Is-equivalenceᴱ (Lens.get l))) →
       ∀ p → _≃ᴱ_.to (_↠_.from f p) ≡ Lens.get (proj₁ p)
 ¬-≃ᴱ-↠-Σ-Lens-Is-equivalenceᴱ-get {a = a} univ =
@@ -2485,19 +2552,19 @@ equal-setters-and-equivalences-as-getters-but-not-equal {a = a} univ =
 
 ¬-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalence-get :
   @0 Univalence lzero →
-  ¬ ∃ λ (f : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ≃ᴱ
-             (∃ λ (l : Lens (↑ a 𝕊¹) (↑ a 𝕊¹)) →
+  ¬ ∃ λ (f : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ≃ᴱ
+             (∃ λ (l : Lens (↑ a 𝕊¹ᴱ) (↑ a 𝕊¹ᴱ)) →
                 Is-equivalenceᴱ (Lens.get l))) →
       ∀ p → _≃ᴱ_.to (_≃ᴱ_.from f p) ≡ Lens.get (proj₁ p)
 ¬-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalence-get {a = a} univ =
   Stable-¬
-    [ (∃ λ (f : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ≃ᴱ
-           (∃ λ (l : Lens (↑ a 𝕊¹) (↑ a 𝕊¹)) →
+    [ (∃ λ (f : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ≃ᴱ
+           (∃ λ (l : Lens (↑ a 𝕊¹ᴱ) (↑ a 𝕊¹ᴱ)) →
               Is-equivalenceᴱ (Lens.get l))) →
          ∀ p → _≃ᴱ_.to (_≃ᴱ_.from f p) ≡ Lens.get (proj₁ p))  ↝⟨ Σ-map (_≃_.surjection ⊚ EEq.≃ᴱ→≃) P.id ⟩
 
-      (∃ λ (f : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ↠
-           (∃ λ (l : Lens (↑ a 𝕊¹) (↑ a 𝕊¹)) →
+      (∃ λ (f : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ↠
+           (∃ λ (l : Lens (↑ a 𝕊¹ᴱ) (↑ a 𝕊¹ᴱ)) →
               Is-equivalenceᴱ (Lens.get l))) →
          ∀ p → _≃ᴱ_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))   ↝⟨ ¬-≃ᴱ-↠-Σ-Lens-Is-equivalenceᴱ-get univ ⟩□
 
@@ -3495,22 +3562,22 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
 
 ¬≃ᴱ↠≊ᴱ :
   @0 Univalence lzero →
-  ¬ ∃ λ (≃ᴱ↠≊ᴱ : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ↠ (↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹)) →
-      (x@(l , _) : ↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹) →
+  ¬ ∃ λ (≃ᴱ↠≊ᴱ : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ↠ (↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ)) →
+      (x@(l , _) : ↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ) →
       _≃ᴱ_.to (_↠_.from ≃ᴱ↠≊ᴱ x) ≡ Lens.get l
 ¬≃ᴱ↠≊ᴱ {a = a} univ =
   Stable-¬
-    [ (∃ λ (≃ᴱ↠≊ᴱ : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ↠ (↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹)) →
-         (x@(l , _) : ↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹) →
-         _≃ᴱ_.to (_↠_.from ≃ᴱ↠≊ᴱ x) ≡ Lens.get l)            ↝⟨ Σ-map
-                                                                 ((∃-cong λ l → _≃_.surjection $ EEq.≃ᴱ→≃ $ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l) F.∘_)
-                                                                 (λ hyp _ → hyp _) ⟩
-      (∃ λ (f : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ↠
-                (∃ λ (l : Lens (↑ a 𝕊¹) (↑ a 𝕊¹)) →
+    [ (∃ λ (≃ᴱ↠≊ᴱ : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ↠ (↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ)) →
+         (x@(l , _) : ↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ) →
+         _≃ᴱ_.to (_↠_.from ≃ᴱ↠≊ᴱ x) ≡ Lens.get l)                   ↝⟨ Σ-map
+                                                                        ((∃-cong λ l → _≃_.surjection $ EEq.≃ᴱ→≃ $ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l) F.∘_)
+                                                                        (λ hyp _ → hyp _) ⟩
+      (∃ λ (f : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ↠
+                (∃ λ (l : Lens (↑ a 𝕊¹ᴱ) (↑ a 𝕊¹ᴱ)) →
                    Is-equivalenceᴱ (Lens.get l))) →
-         ∀ p → _≃ᴱ_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))  ↝⟨ ¬-≃ᴱ-↠-Σ-Lens-Is-equivalenceᴱ-get univ ⟩□
+         ∀ p → _≃ᴱ_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))         ↝⟨ ¬-≃ᴱ-↠-Σ-Lens-Is-equivalenceᴱ-get univ ⟩□
 
-      ⊥                                                      □
+      ⊥                                                             □
     ]
 
 -- There is in general no equivalence with erased proofs between
@@ -3521,20 +3588,20 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
 
 ¬≃ᴱ≃ᴱ≊ᴱ :
   @0 Univalence lzero →
-  ¬ ∃ λ (≃ᴱ≃ᴱ≊ᴱ : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ≃ᴱ (↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹)) →
-      (x@(l , _) : ↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹) →
+  ¬ ∃ λ (≃ᴱ≃ᴱ≊ᴱ : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ≃ᴱ (↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ)) →
+      (x@(l , _) : ↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ) →
       _≃ᴱ_.to (_≃ᴱ_.from ≃ᴱ≃ᴱ≊ᴱ x) ≡ Lens.get l
 ¬≃ᴱ≃ᴱ≊ᴱ {a = a} univ =
   Stable-¬
-    [ (∃ λ (≃ᴱ≃ᴱ≊ᴱ : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ≃ᴱ (↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹)) →
-         (x@(l , _) : ↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹) →
-         _≃ᴱ_.to (_≃ᴱ_.from ≃ᴱ≃ᴱ≊ᴱ x) ≡ Lens.get l)               ↝⟨ Σ-map (_≃_.surjection ⊚ EEq.≃ᴱ→≃) P.id ⟩
+    [ (∃ λ (≃ᴱ≃ᴱ≊ᴱ : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ≃ᴱ (↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ)) →
+         (x@(l , _) : ↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ) →
+         _≃ᴱ_.to (_≃ᴱ_.from ≃ᴱ≃ᴱ≊ᴱ x) ≡ Lens.get l)                   ↝⟨ Σ-map (_≃_.surjection ⊚ EEq.≃ᴱ→≃) P.id ⟩
 
-      (∃ λ (≃ᴱ↠≊ᴱ : (↑ a 𝕊¹ ≃ᴱ ↑ a 𝕊¹) ↠ (↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹)) →
-         (x@(l , _) : ↑ a 𝕊¹ ≊ᴱ ↑ a 𝕊¹) →
-         _≃ᴱ_.to (_↠_.from ≃ᴱ↠≊ᴱ x) ≡ Lens.get l)                 ↝⟨ ¬≃ᴱ↠≊ᴱ univ ⟩□
+      (∃ λ (≃ᴱ↠≊ᴱ : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ↠ (↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ)) →
+         (x@(l , _) : ↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ) →
+         _≃ᴱ_.to (_↠_.from ≃ᴱ↠≊ᴱ x) ≡ Lens.get l)                     ↝⟨ ¬≃ᴱ↠≊ᴱ univ ⟩□
 
-      ⊥                                                           □
+      ⊥                                                               □
     ]
 
 -- The lemma ≃ᴱΣ∥set⁻¹ᴱ∥× does not hold in general if the requirement
