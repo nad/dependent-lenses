@@ -45,9 +45,9 @@ import Lens.Non-dependent.Traditional.Combinators eq as TC
 
 private
   variable
-    a b c p         : Level
-    A B C D         : Type a
-    u v x₁ x₂ y₁ y₂ : A
+    a b c p             : Level
+    A A₁ A₂ B B₁ B₂ C D : Type a
+    u v x₁ x₂ y₁ y₂     : A
 
 ------------------------------------------------------------------------
 -- Traditional lenses
@@ -318,6 +318,66 @@ Very-stable-Lensⁿ {A = A} {B = B} n A-s B-s =
 
 ------------------------------------------------------------------------
 -- Some lens isomorphisms
+
+-- Lens preserves equivalences.
+
+Lens-cong : A₁ ≃ A₂ → B₁ ≃ B₂ → Lens A₁ B₁ ≃ Lens A₂ B₂
+Lens-cong {A₁ = A₁} {A₂ = A₂} {B₁ = B₁} {B₂ = B₂} A₁≃A₂ B₁≃B₂ =
+  Lens A₁ B₁                                             ↔⟨ Lens-as-Σ ⟩
+
+  (∃ λ (get : A₁ → B₁) →
+   ∃ λ (set : A₁ → B₁ → A₁) →
+   Erased ((∀ a b → get (set a b) ≡ b) ×
+           (∀ a → set a (get a) ≡ a) ×
+           (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂)))  ↝⟨ (Σ-cong (→-cong ext A₁≃A₂ B₁≃B₂) λ get →
+                                                             Σ-cong (→-cong ext A₁≃A₂ $ →-cong ext B₁≃B₂ A₁≃A₂) λ set →
+                                                             Erased-cong (
+                                                             (Π-cong ext A₁≃A₂ λ a → Π-cong ext B₁≃B₂ λ b →
+                                                              inverse (Eq.≃-≡ B₁≃B₂) F.∘
+                                                              (≡⇒≃ $ cong (_≡ _)
+      (get (set a b)                                            ≡⟨ sym $ cong₂ (λ a b → get (set a b))
+                                                                     (_≃_.left-inverse-of A₁≃A₂ _)
+                                                                     (_≃_.left-inverse-of B₁≃B₂ _) ⟩
+       get (set (_≃_.from A₁≃A₂ (_≃_.to A₁≃A₂ a))
+              (_≃_.from B₁≃B₂ (_≃_.to B₁≃B₂ b)))                ≡⟨ cong get $ sym $ _≃_.left-inverse-of A₁≃A₂ _ ⟩∎
+
+       get (_≃_.from A₁≃A₂ (_≃_.to A₁≃A₂
+              (set (_≃_.from A₁≃A₂ (_≃_.to A₁≃A₂ a))
+                 (_≃_.from B₁≃B₂ (_≃_.to B₁≃B₂ b)))))           ∎)))
+                                                               ×-cong
+                                                             (Π-cong ext A₁≃A₂ λ a →
+                                                              inverse (Eq.≃-≡ A₁≃A₂) F.∘
+                                                              (≡⇒≃ $ cong (_≡ _)
+      (set a (get a)                                             ≡⟨ cong (set a) $ sym $ _≃_.left-inverse-of B₁≃B₂ _ ⟩
+
+       set a (_≃_.from B₁≃B₂ (_≃_.to B₁≃B₂ (get a)))             ≡⟨ cong (λ a → set a (_≃_.from B₁≃B₂ (_≃_.to B₁≃B₂ (get a)))) $ sym $
+                                                                    _≃_.left-inverse-of A₁≃A₂ _ ⟩∎
+       set (_≃_.from A₁≃A₂ (_≃_.to A₁≃A₂ a))
+         (_≃_.from B₁≃B₂ (_≃_.to B₁≃B₂
+            (get (_≃_.from A₁≃A₂ (_≃_.to A₁≃A₂ a)))))            ∎)))
+                                                               ×-cong
+                                                             (inverse $ Π-cong ext (inverse A₁≃A₂) λ a →
+                                                              inverse $ Π-cong ext B₁≃B₂ λ b₁ →
+                                                              inverse $ Π-cong ext (inverse B₁≃B₂) λ b₂ →
+                                                              (≡⇒≃ $ cong (λ a′ → set a′ (_≃_.from B₁≃B₂ b₂) ≡
+                                                                                  set (_≃_.from A₁≃A₂ a) (_≃_.from B₁≃B₂ b₂))
+      (_≃_.from A₁≃A₂ (_≃_.to A₁≃A₂
+         (set (_≃_.from A₁≃A₂ a)
+            (_≃_.from B₁≃B₂ (_≃_.to B₁≃B₂ b₁))))                 ≡⟨ _≃_.left-inverse-of A₁≃A₂ _ ⟩
+
+       set (_≃_.from A₁≃A₂ a)
+         (_≃_.from B₁≃B₂ (_≃_.to B₁≃B₂ b₁))                      ≡⟨ cong (set (_≃_.from A₁≃A₂ a)) $
+                                                                    _≃_.left-inverse-of B₁≃B₂ _ ⟩∎
+
+       set (_≃_.from A₁≃A₂ a) b₁                                 ∎)) F.∘
+                                                              Eq.≃-≡ A₁≃A₂))) ⟩
+  (∃ λ (get : A₂ → B₂) →
+   ∃ λ (set : A₂ → B₂ → A₂) →
+   Erased ((∀ a b → get (set a b) ≡ b) ×
+           (∀ a → set a (get a) ≡ a) ×
+           (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂)))  ↔⟨ inverse Lens-as-Σ ⟩□
+
+  Lens A₂ B₂                                             □
 
 -- If B is a proposition (when A is inhabited), then Lens A B is
 -- equivalent (with erased proofs) to
