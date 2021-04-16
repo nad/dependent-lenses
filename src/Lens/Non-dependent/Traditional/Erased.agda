@@ -1414,7 +1414,7 @@ lens-from-⊥≃⊤ =
 ≃ᴱΣ∥set⁻¹ᴱ∥ᴱ× {A = A} {B = B} A-set l = EEq.↔→≃ᴱ
   (λ a → (set a , ∣ a , [ refl _ ] ∣) , get a)
   (λ ((f , _) , b) → f b)
-  (λ ((f , p) , b) → TE.rec (e f p b) p)
+  to-from
   (λ a →
      set a (get a)  ≡⟨ set-get a ⟩∎
      a              ∎)
@@ -1425,28 +1425,29 @@ lens-from-⊥≃⊤ =
   B-set a =
     h-level-respects-lens-from-inhabited 2 l a A-set
 
-  @0 e : ∀ _ _ _ → TE.Rec _ _
-  e f _ b .TE.truncation-is-propositionʳ =
-    ×-closure 2
-      (Σ-closure 2
-         (Π-closure ext 2 λ _ → A-set) λ _ →
-         mono₁ 1 TE.truncation-is-proposition)
-      (B-set (f b))
-  e f p b .TE.∣∣ʳ (a , [ q ]) =
-    let
-      lemma₁ =
-        set (f b)      ≡⟨ cong (λ f → set (f b)) $ sym q ⟩
-        set (set a b)  ≡⟨ ⟨ext⟩ $ set-set a b ⟩
-        set a          ≡⟨ q ⟩∎
-        f              ∎
+  @0 to-from : ∀ _ → _
+  to-from ((f , p) , b) = flip TE.rec p λ @0 where
+    .TE.truncation-is-propositionʳ →
+      ×-closure 2
+        (Σ-closure 2
+           (Π-closure ext 2 λ _ → A-set) λ _ →
+           mono₁ 1 TE.truncation-is-proposition)
+        (B-set (f b))
+    .TE.∣∣ʳ (a , [ q ]) →
+      let
+        lemma₁ =
+          set (f b)      ≡⟨ cong (λ f → set (f b)) $ sym q ⟩
+          set (set a b)  ≡⟨ ⟨ext⟩ $ set-set a b ⟩
+          set a          ≡⟨ q ⟩∎
+          f              ∎
 
-      lemma₂ =
-        get (f b)      ≡⟨ cong (λ f → get (f b)) $ sym q ⟩
-        get (set a b)  ≡⟨ get-set _ _ ⟩∎
-        b              ∎
-    in
-    (set (f b) , ∣ f b , [ refl _ ] ∣) , get (f b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma₁ (TE.truncation-is-proposition _ _)) lemma₂ ⟩∎
-    (f         , p)                    , b          ∎
+        lemma₂ =
+          get (f b)      ≡⟨ cong (λ f → get (f b)) $ sym q ⟩
+          get (set a b)  ≡⟨ get-set _ _ ⟩∎
+          b              ∎
+      in
+      (set (f b) , ∣ f b , [ refl _ ] ∣) , get (f b)  ≡⟨ cong₂ _,_ (Σ-≡,≡→≡ lemma₁ (TE.truncation-is-proposition _ _)) lemma₂ ⟩∎
+      (f         , p)                    , b          ∎
 
 -- If B is an inhabited set and there is a lens from A to B, then A is
 -- equivalent (with erased proofs) to the cartesian product of some
