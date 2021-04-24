@@ -23,6 +23,14 @@
 -- extensionality.
 --
 -- Some other differences are mentioned below.
+--
+-- Note that there is a known problem with guarded corecursion in
+-- Agda. Due to "quantifier inversion" certain types may not have the
+-- expected semantics when the option --guardedness is used. I expect
+-- that the results would still hold if this bug were fixed, but
+-- because I do not know what the rules of a fixed version of Agda
+-- would be I do not know if any changes to the code would be
+-- required.
 
 {-# OPTIONS --cubical --safe --guardedness #-}
 
