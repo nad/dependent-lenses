@@ -17,6 +17,7 @@ open import Prelude
 open import Bijection equality-with-J as Bij using (_↔_)
 import Bool equality-with-J as Bool
 open import Circle eq as Circle using (𝕊¹)
+open import Coherently-constant eq as C using (Coherently-constant)
 open import Equality.Decidable-UIP equality-with-J
 open import Equality.Decision-procedures equality-with-J
 open import Equality.Path.Isomorphisms eq hiding (univ)
@@ -27,6 +28,7 @@ open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq as Trunc
+  hiding (Coherently-constant)
 import Nat equality-with-J as Nat
 open import Preimage equality-with-J as Preimage using (_⁻¹_)
 open import Quotient eq
@@ -1476,7 +1478,7 @@ lenses-equal-if-setters-equal→constant→coherently-constant :
   ((l₁ l₂ : Lens (A × C) C) → Lens.set l₁ ≡ Lens.set l₂ → l₁ ≡ l₂) →
   (A≃B : C → A ≃ B) →
   Constant A≃B →
-  ∃ λ (A≃B′ : ∥ C ∥ → A ≃ B) → A≃B ≡ A≃B′ ∘ ∣_∣
+  Coherently-constant A≃B
 lenses-equal-if-setters-equal→constant→coherently-constant
   _ {A = A} {B = B} {C = C} lenses-equal-if-setters-equal A≃B c =
   A≃B′ , A≃B≡
@@ -1525,6 +1527,24 @@ lenses-equal-if-setters-equal→constant→coherently-constant
     subst id (proj₁ (l₁≡l₂′ ∣ c ∣)) (remainder (l₁ ∣ c ∣) (a , c))  ≡⟨ subst-id-in-terms-of-≡⇒↝ equivalence ⟩
     ≡⇒→ (proj₁ (l₁≡l₂′ ∣ c ∣)) (remainder (l₁ ∣ c ∣) (a , c))       ≡⟨⟩
     _≃_.to (A≃B′ ∣ c ∣) a                                           ∎
+
+-- It is not the case that, for all types A and B in Type and all
+-- lenses l₁ and l₂ from A to B, that l₁ is equal to l₂ if the lenses
+-- have equal setters (assuming univalence).
+
+¬-lenses-equal-if-setters-equal :
+  Univalence lzero →
+  ¬ ((A B : Type) (l₁ l₂ : Lens A B) →
+     Lens.set l₁ ≡ Lens.set l₂ → l₁ ≡ l₂)
+¬-lenses-equal-if-setters-equal univ =
+  ((A B : Type) (l₁ l₂ : Lens A B) →
+   Lens.set l₁ ≡ Lens.set l₂ → l₁ ≡ l₂)      ↝⟨ (λ hyp A B _ f c →
+                                                   lenses-equal-if-setters-equal→constant→coherently-constant
+                                                     lzero (hyp (A × B) B) f c) ⟩
+  ((A B : Type) → ∥ B ∥ → (f : B → A ≃ A) →
+   Constant f → Coherently-constant f)       ↝⟨ C.¬-Constant→Coherently-constant univ ⟩□
+
+  ⊥                                          □
 
 -- The functions ≃→lens and ≃→lens′ are pointwise equal (when
 -- applicable, assuming univalence).
