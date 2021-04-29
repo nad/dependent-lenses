@@ -103,6 +103,37 @@ private
   variable
     l₁ l₂ : Lens A B
 
+-- An example: A lens corresponding to the value of a function for a
+-- certain input.
+
+function-at : Decidable-equality A → A → Lens (A → B) B
+function-at _≟_ a = record
+  { get     = λ f → f a
+  ; set     = λ f b a′ → if a ≟ a′ then b else f a′
+  ; get-set = λ f b → lemma₁ (a ≟ a)
+  ; set-get = λ f → ⟨ext⟩ λ a′ → lemma₂ f (a ≟ a′)
+  ; set-set = λ f b₁ b₂ → ⟨ext⟩ λ a′ → lemma₃ (a ≟ a′)
+  }
+  where
+  lemma₁ :
+    ∀ {b₁ b₂} (d : Dec (a ≡ a)) →
+    if d then b₁ else b₂ ≡ b₁
+  lemma₁ (yes _)  = refl _
+  lemma₁ (no a≢a) = ⊥-elim $ a≢a (refl _)
+
+  lemma₂ :
+    ∀ f {a′} (d : Dec (a ≡ a′)) →
+    if d then f a else f a′ ≡ f a′
+  lemma₂ f (yes a≡a′) = cong f a≡a′
+  lemma₂ _ (no _)     = refl _
+
+  lemma₃ :
+    ∀ {a′ b₁ b₂ b₃} (d : Dec (a ≡ a′)) →
+    if d then b₂ else (if d then b₁ else b₃) ≡
+    if d then b₂ else b₃
+  lemma₃ (yes _) = refl _
+  lemma₃ (no _)  = refl _
+
 ------------------------------------------------------------------------
 -- Somewhat coherent lenses
 
