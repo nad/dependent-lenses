@@ -1968,3 +1968,20 @@ naive-category a =
   ({A B : Type a} → (A ≡ B) ≃ (A ≊ B))  ↝⟨ BM.≡≃≊→Univalence-≊ ⟩
   Univalent (naive-category a)          ↝⟨ ¬-univalent univ₀ univ ⟩□
   ⊥                                     □
+
+-- There is in general no pointwise equivalence between equivalences
+-- (between types in the same universe) and lenses with getters that
+-- are equivalences (assuming univalence).
+
+¬Π≃-≃-Σ-Lens-Is-equivalence-get :
+  Univalence lzero →
+  Univalence a →
+  ¬ ({A B : Type a} →
+     (A ≃ B) ≃ ∃ λ (l : Lens A B) → Is-equivalence (Lens.get l))
+¬Π≃-≃-Σ-Lens-Is-equivalence-get {a = a} univ₀ univ =
+  ({A B : Type a} →
+   (A ≃ B) ≃ ∃ λ (l : Lens A B) → Is-equivalence (Lens.get l))  ↝⟨ inverse (∃-cong Is-bi-invertible≃Is-equivalence-get) F.∘_ ⟩
+
+  ({A B : Type a} → (A ≃ B) ≃ (A ≊ B))                          ↝⟨ ¬Π≃≃≊ univ₀ univ ⟩□
+
+  ⊥                                                             □
