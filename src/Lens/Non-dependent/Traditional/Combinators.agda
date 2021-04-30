@@ -25,7 +25,7 @@ open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq as T using (∥_∥)
-import Integer equality-with-J as Int
+import Integer eq as Int
 open import Preimage equality-with-J using (_⁻¹_)
 open import Surjection equality-with-J as Surjection using (_↠_)
 open import Univalence-axiom equality-with-J
