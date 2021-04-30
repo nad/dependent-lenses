@@ -37,6 +37,7 @@
 module README.Higher-lenses where
 
 import Circle
+import Coherently-constant
 import Equality
 import Equality.Decidable-UIP
 import Equivalence
@@ -288,7 +289,7 @@ lemma-43 = E.lenses-equal-if-setters-equal→constant→coherently-constant
 -- Constant and CC.
 
 Constant = Equality.Decidable-UIP.Constant
-CC       = F.Coherently-constant
+CC       = Coherently-constant.Coherently-constant
 
 ------------------------------------------------------------------------
 -- IX: Homotopy levels

@@ -15,6 +15,7 @@ open import Logical-equivalence using (_⇔_)
 open import Prelude as P hiding (id)
 
 open import Bijection equality-with-J as B using (_↔_)
+import Coherently-constant eq as CC
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq
@@ -217,13 +218,13 @@ Coinductive-coherently-constant≃Coherently-constant univ′ univ =
 -- Two variants of Coherently-constant are pointwise equivalent
 -- (when applicable, assuming univalence).
 
-Capriotti-coherently-constant≃Coherently-constant :
+Coherently-constant≃Coherently-constant :
   {A : Type a} {P : A → Type p} →
   Univalence (a ⊔ lsuc p) →
   (univ : Univalence p) →
-  Capriotti.Coherently-constant P ≃ Coherently-constant univ P
-Capriotti-coherently-constant≃Coherently-constant {P = P} univ′ univ =
-  Capriotti.Coherently-constant P    ↝⟨ Coinductive.Coherently-constant≃Coherently-constant univ′ ⟩
+  CC.Coherently-constant P ≃ Coherently-constant univ P
+Coherently-constant≃Coherently-constant {P = P} univ′ univ =
+  CC.Coherently-constant P           ↝⟨ Coinductive.Coherently-constant≃Coherently-constant univ′ ⟩
   Coinductive.Coherently-constant P  ↝⟨ Coinductive-coherently-constant≃Coherently-constant univ′ univ ⟩□
   Coherently-constant univ P         □
 
@@ -704,12 +705,12 @@ Coherently-constant-Σ′ :
 Coherently-constant-Σ′ {P = P} {Q = Q}
   univ₁ univ₂ univ₃ univ₄ univ₅ univ₆ =
   curry
-    (Coherently-constant univ₁ P × Coherently-constant univ₂ Q          ↔⟨ inverse
-                                                                             (Capriotti-coherently-constant≃Coherently-constant univ₄ univ₁ ×-cong
-                                                                              Capriotti-coherently-constant≃Coherently-constant univ₅ univ₂) ⟩
-     Capriotti.Coherently-constant P × Capriotti.Coherently-constant Q  ↝⟨ uncurry Capriotti.Coherently-constant-Σ ⟩
-     Capriotti.Coherently-constant (λ x → ∃ λ (y : P x) → Q (x , y))    ↔⟨ Capriotti-coherently-constant≃Coherently-constant univ₆ univ₃ ⟩□
-     Coherently-constant univ₃ (λ x → ∃ λ (y : P x) → Q (x , y))        □)
+    (Coherently-constant univ₁ P × Coherently-constant univ₂ Q    ↔⟨ inverse
+                                                                       (Coherently-constant≃Coherently-constant univ₄ univ₁ ×-cong
+                                                                        Coherently-constant≃Coherently-constant univ₅ univ₂) ⟩
+     CC.Coherently-constant P × CC.Coherently-constant Q          ↝⟨ uncurry Capriotti.Coherently-constant-Σ ⟩
+     CC.Coherently-constant (λ x → ∃ λ (y : P x) → Q (x , y))     ↔⟨ Coherently-constant≃Coherently-constant univ₆ univ₃ ⟩□
+     Coherently-constant univ₃ (λ x → ∃ λ (y : P x) → Q (x , y))  □)
 
 ------------------------------------------------------------------------
 -- The lens type family

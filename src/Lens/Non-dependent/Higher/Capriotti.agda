@@ -15,6 +15,7 @@ open import Logical-equivalence using (_⇔_)
 open import Prelude
 
 open import Bijection equality-with-J as B using (_↔_)
+open import Coherently-constant eq using (Coherently-constant)
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq hiding (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
@@ -39,16 +40,6 @@ private
 
 ------------------------------------------------------------------------
 -- Coherently-constant
-
--- Coherently constant functions.
---
--- This definition is based on Paolo Capriotti's definition of higher
--- lenses.
-
-Coherently-constant :
-  {A : Type a} {B : Type b} → (A → B) → Type (a ⊔ b)
-Coherently-constant {A = A} {B = B} f =
-  ∃ λ (g : ∥ A ∥ → B) → f ≡ g ∘ ∣_∣
 
 -- A preservation lemma for Coherently-constant.
 --

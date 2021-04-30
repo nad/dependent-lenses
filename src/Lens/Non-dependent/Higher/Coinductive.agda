@@ -21,6 +21,7 @@ open import Logical-equivalence using (_⇔_)
 open import Prelude
 
 open import Bijection equality-with-J using (_↔_)
+import Coherently-constant eq as CC
 open import Colimit.Sequential eq as C using (∣_∣)
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq hiding (univ)
@@ -617,9 +618,9 @@ proj₂-to-∥∥→≃-property≡ univ {f = f} = ⟨ext⟩ λ x → ⟨ext⟩ 
 Coherently-constant≃Coherently-constant :
   {A : Type a} {B : Type b} {f : A → B} →
   Univalence (a ⊔ b) →
-  Higher.Coherently-constant f ≃ Coherently-constant f
+  CC.Coherently-constant f ≃ Coherently-constant f
 Coherently-constant≃Coherently-constant {A = A} {B = B} {f = f} univ =
-  Higher.Coherently-constant f                                       ↔⟨⟩
+  CC.Coherently-constant f                                           ↔⟨⟩
 
   (∃ λ (g : ∥ A ∥ → B) → f ≡ g ∘ ∣_∣)                                ↝⟨ (Σ-cong (∥∥→≃ univ) λ _ → F.id) ⟩
 
@@ -638,7 +639,7 @@ Coherently-constant≃Coherently-constant {A = A} {B = B} {f = f} univ =
 
 to-Coherently-constant≃Coherently-constant-property :
   ∀ {A : Type a} {B : Type b} {f : A → B}
-    {c : Higher.Coherently-constant f} {x y}
+    {c : CC.Coherently-constant f} {x y}
   (univ : Univalence (a ⊔ b)) →
   _≃_.to (Coherently-constant≃Coherently-constant univ)
     c .property x y ≡
@@ -729,9 +730,9 @@ Higher-lens≃Lens :
   Univalence (lsuc (a ⊔ b)) →
   Higher.Lens A B ≃ Lens A B
 Higher-lens≃Lens {A = A} {B = B} ⊠ univ =
-  Higher.Lens A B                                             ↔⟨⟩
-  (∃ λ (get : A → B) → Higher.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ → Coherently-constant≃Coherently-constant univ) ⟩□
-  (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))         □
+  Higher.Lens A B                                         ↔⟨⟩
+  (∃ λ (get : A → B) → CC.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ → Coherently-constant≃Coherently-constant univ) ⟩□
+  (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))     □
 
 -- The equivalence preserves getters and setters.
 
