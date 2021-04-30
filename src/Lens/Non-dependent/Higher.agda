@@ -41,7 +41,7 @@ import Lens.Non-dependent.Traditional eq as Traditional
 
 private
   variable
-    a b c r         : Level
+    a b c ℓ r       : Level
     A A₁ A₂ B B₁ B₂ : Type a
 
 ------------------------------------------------------------------------
@@ -290,6 +290,15 @@ isomorphism-to-lens {A = A} {B = B} {R = R} iso = record
                 ∥ B ∥ × B  □
   ; inhabited = id
   }
+
+------------------------------------------------------------------------
+-- An example
+
+-- A lens from a type in a smaller universe to a type in a (possibly)
+-- larger universe.
+
+↑-lens : Lens A (↑ ℓ A)
+↑-lens = ≃→lens (Eq.↔⇒≃ $ inverse Bij.↑↔)
 
 ------------------------------------------------------------------------
 -- Some results related to the remainder type
