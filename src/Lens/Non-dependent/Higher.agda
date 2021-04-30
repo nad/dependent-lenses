@@ -1528,23 +1528,23 @@ lenses-equal-if-setters-equal→constant→coherently-constant
     ≡⇒→ (proj₁ (l₁≡l₂′ ∣ c ∣)) (remainder (l₁ ∣ c ∣) (a , c))       ≡⟨⟩
     _≃_.to (A≃B′ ∣ c ∣) a                                           ∎
 
--- It is not the case that, for all types A and B in Type and all
+-- It is not the case that, for all types A and B in Type a and all
 -- lenses l₁ and l₂ from A to B, that l₁ is equal to l₂ if the lenses
 -- have equal setters (assuming univalence).
 
 ¬-lenses-equal-if-setters-equal :
   Univalence lzero →
-  ¬ ((A B : Type) (l₁ l₂ : Lens A B) →
+  ¬ ((A B : Type a) (l₁ l₂ : Lens A B) →
      Lens.set l₁ ≡ Lens.set l₂ → l₁ ≡ l₂)
-¬-lenses-equal-if-setters-equal univ =
-  ((A B : Type) (l₁ l₂ : Lens A B) →
-   Lens.set l₁ ≡ Lens.set l₂ → l₁ ≡ l₂)      ↝⟨ (λ hyp A B _ f c →
-                                                   lenses-equal-if-setters-equal→constant→coherently-constant
-                                                     lzero (hyp (A × B) B) f c) ⟩
-  ((A B : Type) → ∥ B ∥ → (f : B → A ≃ A) →
-   Constant f → Coherently-constant f)       ↝⟨ C.¬-Constant→Coherently-constant univ ⟩□
+¬-lenses-equal-if-setters-equal {a = a} univ =
+  ((A B : Type a) (l₁ l₂ : Lens A B) →
+   Lens.set l₁ ≡ Lens.set l₂ → l₁ ≡ l₂)        ↝⟨ (λ hyp A B _ f c →
+                                                     lenses-equal-if-setters-equal→constant→coherently-constant
+                                                       lzero (hyp (B × A) A) f c) ⟩
+  ((A B : Type a) → ∥ A ∥ → (f : A → B ≃ B) →
+   Constant f → Coherently-constant f)         ↝⟨ C.¬-Constant→Coherently-constant univ ⟩□
 
-  ⊥                                          □
+  ⊥                                            □
 
 -- The functions ≃→lens and ≃→lens′ are pointwise equal (when
 -- applicable, assuming univalence).
