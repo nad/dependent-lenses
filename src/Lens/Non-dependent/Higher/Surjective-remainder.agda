@@ -12,15 +12,11 @@ module Lens.Non-dependent.Higher.Surjective-remainder
 
 open P.Derived-definitions-and-properties eq
 
-open import Logical-equivalence using (_⇔_)
 open import Prelude
 
-open import Bijection equality-with-J using (_↔_)
 open import Equality.Path.Isomorphisms eq hiding (univ)
-open import Equivalence equality-with-J as Eq using (_≃_; Is-equivalence)
-open import Function-universe equality-with-J as F
-open import H-level equality-with-J
-open import H-level.Closure equality-with-J
+open import Equivalence equality-with-J as Eq using (_≃_)
+open import Function-universe equality-with-J hiding (_∘_)
 open import H-level.Truncation.Propositional eq
 
 open import Lens.Non-dependent eq
@@ -35,13 +31,32 @@ private
 -- this definition the function called inhabited is replaced by a
 -- requirement that the remainder function should be surjective.
 
-Lens : Type a → Type b → Type (lsuc (a ⊔ b))
-Lens {a = a} {b = b} A B =
-  ∃ λ (get       : A → B) →
-  ∃ λ (R         : Type (a ⊔ b)) →
-  ∃ λ (remainder : A → R) →
-    Is-equivalence (λ a → remainder a , get a) ×
-    Surjective remainder
+record Lens (A : Type a) (B : Type b) : Type (lsuc (a ⊔ b)) where
+  field
+    -- Remainder type.
+    R : Type (a ⊔ b)
+
+    -- Equivalence.
+    equiv : A ≃ (R × B)
+
+  -- Remainder.
+
+  remainder : A → R
+  remainder a = proj₁ (_≃_.to equiv a)
+
+  field
+    -- The remainder function is surjective.
+    remainder-surjective : Surjective remainder
+
+  -- Getter.
+
+  get : A → B
+  get a = proj₂ (_≃_.to equiv a)
+
+  -- Setter.
+
+  set : A → B → A
+  set a b = _≃_.from equiv (remainder a , b)
 
 instance
 
@@ -50,78 +65,57 @@ instance
   has-getter-and-setter :
     Has-getter-and-setter (Lens {a = a} {b = b})
   has-getter-and-setter = record
-    { get = λ (get , _) → get
-    ; set = λ (_ , _ , rem , equiv , _) a b →
-              _≃_.from Eq.⟨ _ , equiv ⟩ (rem a , b)
+    { get = Lens.get
+    ; set = Lens.set
     }
 
--- Higher.Lens A B is isomorphic to Lens A B.
+-- Lens can be expressed as a nested Σ-type.
 
-Higher-lens↔Lens : Higher.Lens A B ↔ Lens A B
-Higher-lens↔Lens {A = A} {B = B} =
+Lens-as-Σ :
+  {A : Type a} {B : Type b} →
+  Lens A B ≃
+  ∃ λ (R : Type (a ⊔ b)) →
+  ∃ λ (equiv : A ≃ (R × B)) →
+    Surjective (proj₁ ∘ _≃_.to equiv)
+Lens-as-Σ = Eq.↔→≃
+  (λ l → R l , equiv l , remainder-surjective l)
+  (λ (R , equiv , remainder-surjective) → record
+     { R                    = R
+     ; equiv                = equiv
+     ; remainder-surjective = remainder-surjective
+     })
+  refl
+  refl
+  where
+  open Lens
 
-  Higher.Lens A B                                         ↔⟨ Higher.Lens-as-Σ ⟩
+-- Higher.Lens A B is equivalent to Lens A B.
+
+Higher-lens≃Lens : Higher.Lens A B ≃ Lens A B
+Higher-lens≃Lens {A = A} {B = B} =
+  Higher.Lens A B                              ↔⟨ Higher.Lens-as-Σ ⟩
 
   (∃ λ (R : Type _) →
      (A ≃ (R × B)) ×
-     (R → ∥ B ∥))                                         ↝⟨ (∃-cong λ _ → Eq.≃-as-Σ ×-cong F.id) ⟩
-
+     (R → ∥ B ∥))                              ↝⟨ (∃-cong λ R → ∃-cong λ eq → ∀-cong ext λ r →
+                                                   ∥∥-cong-⇔ (record
+                                                     { to   = λ b → _≃_.from eq (r , b)
+                                                            , (
+      proj₁ (_≃_.to eq (_≃_.from eq (r , b)))                 ≡⟨ cong proj₁ $ _≃_.right-inverse-of eq _ ⟩∎
+      r                                                       ∎)
+                                                     ; from = proj₂ ∘ _≃_.to eq ∘ proj₁
+                                                     })) ⟩
   (∃ λ (R : Type _) →
-     (∃ λ (f : A → R × B) → Eq.Is-equivalence f) ×
-     (R → ∥ B ∥))                                         ↝⟨ (∃-cong λ _ → inverse Σ-assoc) ⟩
+   ∃ λ (equiv : A ≃ (R × B)) →
+     Surjective (proj₁ ∘ _≃_.to equiv))        ↝⟨ inverse Lens-as-Σ ⟩□
 
-  (∃ λ (R : Type _) →
-   ∃ λ (f : A → R × B) →
-     Eq.Is-equivalence f ×
-     (R → ∥ B ∥))                                         ↝⟨ (∃-cong λ _ → Σ-cong ΠΣ-comm λ _ → F.id) ⟩
+  Lens A B                                     □
 
-  (∃ λ (R  : Type _) →
-   ∃ λ (rg : (A → R) × (A → B)) →
-     Eq.Is-equivalence (λ a → proj₁ rg a , proj₂ rg a) ×
-     (R → ∥ B ∥))                                         ↝⟨ (∃-cong λ _ → inverse Σ-assoc) ⟩
+-- The equivalence preserves getters and setters.
 
-  (∃ λ (R         : Type _) →
-   ∃ λ (remainder : A → R) →
-   ∃ λ (get       : A → B) →
-     Eq.Is-equivalence (λ a → remainder a , get a) ×
-     (R → ∥ B ∥))                                         ↝⟨ (∃-cong λ _ → ∃-comm) ⟩
-
-  (∃ λ (R         : Type _) →
-   ∃ λ (get       : A → B) →
-   ∃ λ (remainder : A → R) →
-     Eq.Is-equivalence (λ a → remainder a , get a) ×
-     (R → ∥ B ∥))                                         ↝⟨ ∃-comm ⟩
-
-  (∃ λ (get       : A → B) →
-   ∃ λ (R         : Type _) →
-   ∃ λ (remainder : A → R) →
-     Eq.Is-equivalence (λ a → remainder a , get a) ×
-     (R → ∥ B ∥))                                         ↝⟨ (∃-cong λ get → ∃-cong λ R → ∃-cong λ rem → ∃-cong λ eq →
-                                                              ∀-cong ext λ _ → ∥∥-cong $
-                                                              lemma get R rem eq _) ⟩□
-  (∃ λ (get       : A → B) →
-   ∃ λ (R         : Type _) →
-   ∃ λ (remainder : A → R) →
-     Eq.Is-equivalence (λ a → remainder a , get a) ×
-     Surjective remainder)                                □
-
-  where
-  lemma : ∀ _ _ _ _ _ → _
-  lemma = λ _ _ remainder eq r →
-    B                            ↝⟨ (inverse $ drop-⊤-right λ _ →
-                                     _⇔_.to contractible⇔↔⊤ $
-                                     singleton-contractible _) ⟩
-    B × Singleton r              ↝⟨ Σ-assoc ⟩
-    (∃ λ { (_ , r′) → r′ ≡ r })  ↝⟨ (Σ-cong ×-comm λ _ → F.id) ⟩
-    (∃ λ { (r′ , _) → r′ ≡ r })  ↝⟨ (inverse $ Σ-cong Eq.⟨ _ , eq ⟩ λ _ → F.id) ⟩□
-    (∃ λ a → remainder a ≡ r)    □
-
--- The isomorphism preserves getters and setters.
-
-Higher-lens↔Lens-preserves-getters-and-setters :
+Higher-lens≃Lens-preserves-getters-and-setters :
   Preserves-getters-and-setters-⇔ A B
-    (_↔_.logical-equivalence Higher-lens↔Lens)
-Higher-lens↔Lens-preserves-getters-and-setters =
-  Preserves-getters-and-setters-→-↠-⇔
-    (_↔_.surjection Higher-lens↔Lens)
+    (_≃_.logical-equivalence Higher-lens≃Lens)
+Higher-lens≃Lens-preserves-getters-and-setters =
     (λ _ → refl _ , refl _)
+  , (λ _ → refl _ , refl _)
