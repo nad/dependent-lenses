@@ -9,8 +9,6 @@
 -- Lens.Non-dependent.Equivalent-preimages
 -- (higher-lens-preserves-h-level-of-domain).
 
-{-# OPTIONS --cubical --safe #-}
-
 import Equality.Path as P
 
 module Lens.Non-dependent.Higher.Erased

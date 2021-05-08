@@ -5,8 +5,6 @@
 -- This variant uses ∥_∥ᴱ instead of ∥_∥.
 ------------------------------------------------------------------------
 
-{-# OPTIONS --cubical --safe #-}
-
 import Equality.Path as P
 
 module Lens.Non-dependent.Higher.Capriotti.Variant.Erased.Variant

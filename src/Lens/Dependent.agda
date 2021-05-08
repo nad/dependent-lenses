@@ -15,8 +15,6 @@
 -- usage of univalence in types, but at the time of writing there is
 -- some library code that does not do this.
 
-{-# OPTIONS --cubical --safe #-}
-
 module Lens.Dependent where
 
 open import Equality.Propositional.Cubical

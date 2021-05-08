@@ -2,8 +2,6 @@
 -- Traditional non-dependent lenses
 ------------------------------------------------------------------------
 
-{-# OPTIONS --cubical --safe #-}
-
 import Equality.Path as P
 
 module Lens.Non-dependent.Traditional

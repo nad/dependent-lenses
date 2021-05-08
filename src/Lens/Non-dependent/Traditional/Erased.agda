@@ -6,8 +6,6 @@
 -- or less everything in Lens.Non-dependent.Traditional, except for
 -- the section called "A category".
 
-{-# OPTIONS --cubical --safe #-}
-
 import Equality.Path as P
 
 module Lens.Non-dependent.Traditional.Erased

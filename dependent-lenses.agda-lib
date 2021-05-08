@@ -1,4 +1,7 @@
 name: dependent-lenses
 depend: equality
 include: src
-flags: --no-import-sorts
+flags:
+  --cubical
+  --safe
+  --no-import-sorts

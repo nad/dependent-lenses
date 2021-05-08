@@ -6,8 +6,6 @@
 -- If lenses are only used in programs, and types used in programs are
 -- always sets, then higher lenses might be pointless.
 
-{-# OPTIONS --cubical --safe --no-import-sorts #-}
-
 open import Equality.Path as P hiding (Is-proposition; Is-set)
 
 module README.Not-a-set

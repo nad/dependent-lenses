@@ -33,7 +33,7 @@
 -- would be I do not know if any changes to the code would be
 -- required.
 
-{-# OPTIONS --cubical --safe --guardedness #-}
+{-# OPTIONS --guardedness #-}
 
 module README.Higher-lenses where
 

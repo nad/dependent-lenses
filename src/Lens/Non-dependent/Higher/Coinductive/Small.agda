@@ -2,7 +2,7 @@
 -- Small coinductive higher lenses
 ------------------------------------------------------------------------
 
-{-# OPTIONS --cubical --safe --guardedness #-}
+{-# OPTIONS --guardedness #-}
 
 import Equality.Path as P
 

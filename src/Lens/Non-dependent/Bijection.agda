@@ -2,8 +2,6 @@
 -- "Lenses" defined using bijections
 ------------------------------------------------------------------------
 
-{-# OPTIONS --cubical --safe #-}
-
 import Equality.Path as P
 
 module Lens.Non-dependent.Bijection
