@@ -23,9 +23,10 @@ import Equivalence P.equality-with-J as PEq
 open import Equivalence.Erased equality-with-J as EEq using (_≃ᴱ_)
 open import Function-universe equality-with-J hiding (_∘_)
 import Function-universe P.equality-with-J as PF
-open import H-level.Truncation.Propositional.One-step eq using (∥_∥¹)
+open import H-level.Truncation.Propositional.One-step eq as O
+  using (∥_∥¹; ∥∥¹ᴱ→∥∥¹)
 open import H-level.Truncation.Propositional.One-step.Erased eq as OE
-  using (∥_∥¹ᴱ; ∥∥¹ᴱ→∥∥¹)
+  using (∥_∥¹ᴱ)
 open import Univalence-axiom equality-with-J
 import Univalence-axiom P.equality-with-J as PU
 
@@ -83,7 +84,7 @@ Coherently→Coherentlyᴱ :
 Coherently→Coherentlyᴱ _    c .property = c .C.property
 Coherently→Coherentlyᴱ univ c .coherent =
   Coherently→Coherentlyᴱ univ
-    (_≃_.from (C.Coherently-cong′ univ OE.∥∥¹ᴱ≃∥∥¹)
+    (_≃_.from (C.Coherently-cong′ univ O.∥∥¹ᴱ≃∥∥¹)
        (c .C.coherent))
 
 -- In erased contexts Coherently and Coherentlyᴱ are, in a certain
@@ -99,7 +100,7 @@ Coherentlyᴱ⇔Coherently univ ._⇔_.from = Coherently→Coherentlyᴱ univ
 Coherentlyᴱ⇔Coherently univ ._⇔_.to c .C.property = c .property
 Coherentlyᴱ⇔Coherently univ ._⇔_.to c .C.coherent =
   Coherentlyᴱ⇔Coherently univ ._⇔_.to
-    (_≃_.to (Coherentlyᴱ-cong′ univ OE.∥∥¹ᴱ≃∥∥¹)
+    (_≃_.to (Coherentlyᴱ-cong′ univ O.∥∥¹ᴱ≃∥∥¹)
        (c .coherent))
 
 private

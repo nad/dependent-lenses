@@ -26,7 +26,7 @@ open import Erased.Cubical eq
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
-open import H-level.Truncation.Propositional eq using (∥_∥; ∣_∣)
+open import H-level.Truncation.Propositional eq as PT using (∥_∥; ∣_∣)
 open import H-level.Truncation.Propositional.Erased eq as T
   using (∥_∥ᴱ; ∣_∣)
 open import Preimage equality-with-J using (_⁻¹_)
@@ -96,7 +96,7 @@ Coherently-constant≃Variant-coherently-constant {A = A} {P = P} =
                                                            Contractible-last-part-of-Coherently-constant) ⟩
   (∃ λ (Q : ∥ A ∥ᴱ → _) → ∀ x → P x ≃ᴱ Q ∣ x ∣)        ↝⟨ (∃-cong λ _ → ∀-cong ext λ _ → inverse
                                                            EEq.≃≃≃ᴱ) ⟩
-  (∃ λ (Q : ∥ A ∥ᴱ → _) → ∀ x → P x ≃  Q ∣ x ∣)        ↝⟨ (Σ-cong {k₁ = equivalence} (→-cong₁ ext T.∥∥ᴱ≃∥∥) λ _ → F.id) ⟩□
+  (∃ λ (Q : ∥ A ∥ᴱ → _) → ∀ x → P x ≃  Q ∣ x ∣)        ↝⟨ (Σ-cong {k₁ = equivalence} (→-cong₁ ext PT.∥∥ᴱ≃∥∥) λ _ → F.id) ⟩□
   (∃ λ (Q : ∥ A ∥  → _) → ∀ x → P x ≃  Q ∣ x ∣)        □
 
 -- In erased contexts Coherently-constant (f ⁻¹ᴱ_) is equivalent to
@@ -635,7 +635,7 @@ Lens⇔Higher-lens {A = A} {B = B} ⊠ = record
                                                                     inverse Σ-assoc ⟩□
           Σ ∥ B ∥ᴱ H × B                                         □
 
-      ; inhabited = _≃_.to T.∥∥ᴱ≃∥∥ ∘ proj₁
+      ; inhabited = _≃_.to PT.∥∥ᴱ≃∥∥ ∘ proj₁
       }
   ; from = λ l →
         Higher.Lens.get l
@@ -680,7 +680,7 @@ Lens≃ᴱHigher-lens {A = A} {B = B} bl univ =
     ( (∥ B ∥ᴱ × R  ↔⟨ (drop-⊤-left-× λ r → _⇔_.to contractible⇔↔⊤ $
                        propositional⇒inhabited⇒contractible
                          T.truncation-is-proposition
-                         (_≃_.from T.∥∥ᴱ≃∥∥ (inhabited r))) ⟩□
+                         (_≃_.from PT.∥∥ᴱ≃∥∥ (inhabited r))) ⟩□
        R          □)
     , (λ _ → refl _)
     )

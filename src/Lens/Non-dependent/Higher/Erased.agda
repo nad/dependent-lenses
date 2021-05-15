@@ -38,6 +38,7 @@ open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq as PT
+open import H-level.Truncation.Propositional.Completely-erased eq
 open import H-level.Truncation.Propositional.Erased eq as TE
   using (∥_∥ᴱ)
 open import Preimage equality-with-J using (_⁻¹_)
@@ -877,7 +878,7 @@ private
       ∀ bc l → from bc (Lens.traditional-lens l) ≡ l
     from∘to univ ⊠ l′ =
       _↔_.from (equality-characterisation₃ univ)
-        ( ((∃ λ (f : B → A) → ∥ set ⁻¹ᴱ f ∥ᴱ) × Erased ∥ B ∥  ↔⟨ (∃-cong λ _ → TE.∥∥ᴱ≃∥∥) ×-cong from-bijection (erased Erased↔) ⟩
+        ( ((∃ λ (f : B → A) → ∥ set ⁻¹ᴱ f ∥ᴱ) × Erased ∥ B ∥  ↔⟨ (∃-cong λ _ → PT.∥∥ᴱ≃∥∥) ×-cong from-bijection (erased Erased↔) ⟩
            (∃ λ (f : B → A) → ∥ set ⁻¹ᴱ f ∥) × ∥ B ∥          ↝⟨ (×-cong₁ lemma₃) ⟩
            (∥ B ∥ → R) × ∥ B ∥                                ↝⟨ lemma₂ ⟩□
            R                                                  □)

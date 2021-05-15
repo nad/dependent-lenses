@@ -3621,7 +3621,7 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
        A ≃ᴱ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥ᴱ) × B))  ↝⟨ EEq.≃ᴱ→≃ ⊚_ ⟩
 
       ({A B : Type a} (l : Lens A B) →
-       A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥ᴱ) × B))   ↝⟨ ((×-cong₁ λ _ → ∃-cong λ _ → TE.∥∥ᴱ≃∥∥) F.∘_) ⊚_ ⟩
+       A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥ᴱ) × B))   ↝⟨ ((×-cong₁ λ _ → ∃-cong λ _ → PT.∥∥ᴱ≃∥∥) F.∘_) ⊚_ ⟩
 
       ({A B : Type a} (l : Lens A B) →
        A ≃ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥) × B))    ↝⟨ ((×-cong₁ λ _ → ∃-cong λ _ → PT.∥∥-cong $ inverse ECP.⁻¹≃⁻¹ᴱ) F.∘_) ⊚_ ⟩
