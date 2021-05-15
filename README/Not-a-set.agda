@@ -6,6 +6,9 @@
 -- If lenses are only used in programs, and types used in programs are
 -- always sets, then higher lenses might be pointless.
 
+-- This module uses univalence without tracking such uses in the types
+-- of functions.
+
 open import Equality.Path as P hiding (Is-proposition; Is-set)
 
 module README.Not-a-set
