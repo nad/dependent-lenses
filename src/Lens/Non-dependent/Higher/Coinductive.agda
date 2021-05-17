@@ -8,7 +8,7 @@
 -- with help from Andrea Vezzosi (see
 -- Lens.Non-dependent.Higher.Coherently.Coinductive).
 
-{-# OPTIONS --guardedness #-}
+{-# OPTIONS --cubical --guardedness #-}
 
 import Equality.Path as P
 

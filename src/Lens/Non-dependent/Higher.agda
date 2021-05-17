@@ -2,6 +2,8 @@
 -- Higher lenses
 ------------------------------------------------------------------------
 
+{-# OPTIONS --cubical #-}
+
 import Equality.Path as P
 
 module Lens.Non-dependent.Higher

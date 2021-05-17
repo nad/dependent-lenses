@@ -2,7 +2,7 @@
 -- A variant of Coherently with an erased field
 ------------------------------------------------------------------------
 
-{-# OPTIONS --guardedness #-}
+{-# OPTIONS --cubical --guardedness #-}
 
 import Equality.Path as P
 

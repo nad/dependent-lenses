@@ -9,6 +9,8 @@
 -- This module uses univalence without tracking such uses in the types
 -- of functions.
 
+{-# OPTIONS --cubical #-}
+
 open import Equality.Path as P hiding (Is-proposition; Is-set)
 
 module README.Not-a-set

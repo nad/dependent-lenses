@@ -837,16 +837,16 @@ record Erased-proofs
          (univ : Univalence (a ⊔ b))
          (get : A → B) (set : A → B → A) : Type (a ⊔ b) where
   field
-    get⁻¹-coherently-constant : S.Coherently-constant univ (get ⁻¹_)
+    @0 get⁻¹-coherently-constant : S.Coherently-constant univ (get ⁻¹_)
 
-  erased-lens : S.Lens univ A B
+  @0 erased-lens : S.Lens univ A B
   erased-lens = record
     { get                       = get
     ; get⁻¹-coherently-constant = get⁻¹-coherently-constant
     }
 
   field
-    set≡set : set ≡ S.Lens.set erased-lens
+    @0 set≡set : set ≡ S.Lens.set erased-lens
 
 -- Extracts "erased proofs" from a lens (in erased contexts).
 

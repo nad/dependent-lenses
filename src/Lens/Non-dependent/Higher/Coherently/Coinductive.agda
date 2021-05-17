@@ -6,7 +6,7 @@
 -- Lens.Non-dependent.Higher.Coinductive and
 -- Lens.Non-dependent.Higher.Coinductive.Small.
 
-{-# OPTIONS --guardedness #-}
+{-# OPTIONS --cubical --guardedness #-}
 
 import Equality.Path as P
 

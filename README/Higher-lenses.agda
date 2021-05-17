@@ -34,7 +34,7 @@
 -- not know what the rules of a fixed version of Agda would be I do
 -- not know if any changes to the code would be required.
 
-{-# OPTIONS --guardedness #-}
+{-# OPTIONS --cubical --guardedness #-}
 
 module README.Higher-lenses where
 

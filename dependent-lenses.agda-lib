@@ -2,6 +2,6 @@ name: dependent-lenses
 depend: equality
 include: src
 flags:
-  --cubical
+  --erased-cubical
   --safe
   --no-import-sorts

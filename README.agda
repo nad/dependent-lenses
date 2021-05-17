@@ -3,7 +3,7 @@
 -- Nils Anders Danielsson
 ------------------------------------------------------------------------
 
-{-# OPTIONS --guardedness #-}
+{-# OPTIONS --cubical --guardedness #-}
 
 module README where
 

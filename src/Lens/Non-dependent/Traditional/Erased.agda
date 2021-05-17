@@ -113,27 +113,6 @@ Lens-as-Σ = record
   where
   open Lens
 
--- Lenses without erased proofs can be turned into lenses with erased
--- proofs.
-
-Traditional-lens→Lens : T.Lens A B → Lens A B
-Traditional-lens→Lens {A = A} {B = B} =
-  T.Lens A B                                             ↔⟨ T.Lens-as-Σ ⟩
-
-  (∃ λ (get : A → B) →
-   ∃ λ (set : A → B → A) →
-   (∀ a b → get (set a b) ≡ b) ×
-   (∀ a → set a (get a) ≡ a) ×
-   (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂))           ↝⟨ (∃-cong λ _ → ∃-cong λ _ → [_]→) ⟩
-
-  (∃ λ (get : A → B) →
-   ∃ λ (set : A → B → A) →
-   Erased ((∀ a b → get (set a b) ≡ b) ×
-           (∀ a → set a (get a) ≡ a) ×
-           (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂)))  ↔⟨ inverse Lens-as-Σ ⟩□
-
-  Lens A B                                               □
-
 -- In erased contexts Lens A B is equivalent to T.Lens A B.
 
 @0 Lens≃Traditional-lens : Lens A B ≃ T.Lens A B
@@ -153,6 +132,12 @@ Lens≃Traditional-lens {A = A} {B = B} =
    (∀ a b₁ b₂ → set (set a b₁) b₂ ≡ set a b₂))           ↔⟨ inverse T.Lens-as-Σ ⟩□
 
   T.Lens A B                                             □
+
+-- Lenses without erased proofs can be turned into lenses with erased
+-- proofs (in erased contexts).
+
+@0 Traditional-lens→Lens : T.Lens A B → Lens A B
+Traditional-lens→Lens = _≃_.from Lens≃Traditional-lens
 
 private
 
@@ -217,32 +202,6 @@ Coherent-lens-as-Σ = Eq.↔→≃
   refl
   where
   open Coherent-lens
-
--- Somewhat coherent lenses without erased proofs can be turned into
--- somewhat coherent lenses with erased proofs.
-
-Traditional-coherent-lens→Coherent-lens :
-  T.Coherent-lens A B → Coherent-lens A B
-Traditional-coherent-lens→Coherent-lens {A = A} {B = B} =
-
-  T.Coherent-lens A B                                         ↔⟨ T.Coherent-lens-as-Σ ⟩
-
-  (∃ λ (l : T.Lens A B) →
-   let open T.Lens l in
-   (∀ a → cong get (set-get a) ≡ get-set a (get a)) ×
-   (∀ a b₁ b₂ →
-    cong get (set-set a b₁ b₂) ≡
-    trans (get-set (set a b₁) b₂) (sym (get-set a b₂))))      ↝⟨ Σ-map Traditional-lens→Lens [_]→ ⟩
-
-  (∃ λ (l : Lens A B) →
-   let open Lens l in
-   Erased
-     ((∀ a → cong get (set-get a) ≡ get-set a (get a)) ×
-      (∀ a b₁ b₂ →
-       cong get (set-set a b₁ b₂) ≡
-       trans (get-set (set a b₁) b₂) (sym (get-set a b₂)))))  ↔⟨ inverse Coherent-lens-as-Σ ⟩□
-
-  Coherent-lens A B                                           □
 
 -- In erased contexts Coherent-lens A B is equivalent to
 -- T.Coherent-lens A B.
@@ -1703,7 +1662,7 @@ module Lens-combinators where
   -- Identity lens.
 
   id : Lens A A
-  id = Traditional-lens→Lens TC.id
+  id = ≃ᴱ→lens F.id
 
   -- The identity lens is equal to the one obtained from the
   -- traditional identity lens without erased proofs.
@@ -1734,7 +1693,7 @@ module Lens-combinators where
 
   -- Traditional-lens→Lens commutes with composition.
 
-  Traditional-lens-∘≡∘ :
+  @0 Traditional-lens-∘≡∘ :
     {l₁ : T.Lens B C} {l₂ : T.Lens A B} →
     Traditional-lens→Lens (l₁ TC.∘ l₂) ≡
     Traditional-lens→Lens l₁ ∘ Traditional-lens→Lens l₂
@@ -2596,23 +2555,6 @@ open B public
   using ()
   renaming (_≅ᴱ_ to _≅ᴱ_; Has-quasi-inverseᴱ to Has-quasi-inverseᴱ)
 
--- TC.Has-quasi-inverse l implies
--- Has-quasi-inverseᴱ (Traditional-lens→Lens l).
-
-Has-quasi-inverse→Has-quasi-inverseᴱ :
-  (l : T.Lens A B) →
-  TC.Has-quasi-inverse l → Has-quasi-inverseᴱ (Traditional-lens→Lens l)
-Has-quasi-inverse→Has-quasi-inverseᴱ l =
-  (∃ λ l⁻¹ →         l  TC.∘ l⁻¹ ≡ TC.id × l⁻¹ TC.∘ l  ≡ TC.id )  ↝⟨ Σ-map Traditional-lens→Lens
-                                                                           (Σ-map (cong Traditional-lens→Lens)
-                                                                                  (cong Traditional-lens→Lens)) ⟩
-  (∃ λ l⁻¹ →         l′ LC.∘ l⁻¹ ≡ LC.id × l⁻¹ LC.∘ l′ ≡ LC.id )  ↝⟨ Σ-map P.id [_]→ ⟩□
-  (∃ λ l⁻¹ → Erased (l′ LC.∘ l⁻¹ ≡ LC.id × l⁻¹ LC.∘ l′ ≡ LC.id))  □
-  where
-  module LC = Lens-combinators
-
-  l′ = Traditional-lens→Lens l
-
 -- In erased contexts Has-quasi-inverseᴱ (Traditional-lens→Lens l) is
 -- equivalent to TC.Has-quasi-inverse l.
 
@@ -2630,13 +2572,6 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse l =
   module LC = Lens-combinators
 
   l′ = Traditional-lens→Lens l
-
--- A TC.≅ B implies A ≅ᴱ B.
-
-≅→≅ᴱ : A TC.≅ B → A ≅ᴱ B
-≅→≅ᴱ {A = A} {B = B} =
-  (∃ λ (l : T.Lens A B) → TC.Has-quasi-inverse l)  ↝⟨ Σ-map Traditional-lens→Lens (λ {l} → Has-quasi-inverse→Has-quasi-inverseᴱ l) ⟩□
-  (∃ λ (l : Lens A B) → Has-quasi-inverseᴱ l)      □
 
 -- In erased contexts A ≅ᴱ B is equivalent to A TC.≅ B.
 
@@ -2956,21 +2891,6 @@ open BM public
   renaming (Is-bi-invertibleᴱ-propositional to
             Is-bi-invertibleᴱ-propositional)
 
--- TC.Has-left-inverse l implies
--- Has-left-inverseᴱ (Traditional-lens→Lens l).
-
-Has-left-inverse→Has-left-inverseᴱ :
-  (l : T.Lens A B) →
-  TC.Has-left-inverse l → Has-left-inverseᴱ (Traditional-lens→Lens l)
-Has-left-inverse→Has-left-inverseᴱ l =
-  (∃ λ l⁻¹ →         l⁻¹ TC.∘ l  ≡ TC.id )  ↝⟨ Σ-map Traditional-lens→Lens (cong Traditional-lens→Lens) ⟩
-  (∃ λ l⁻¹ →         l⁻¹ LC.∘ l′ ≡ LC.id )  ↝⟨ Σ-map P.id [_]→ ⟩□
-  (∃ λ l⁻¹ → Erased (l⁻¹ LC.∘ l′ ≡ LC.id))  □
-  where
-  module LC = Lens-combinators
-
-  l′ = Traditional-lens→Lens l
-
 -- In erased contexts Has-left-inverseᴱ (Traditional-lens→Lens l) is
 -- equivalent to TC.Has-left-inverse l.
 
@@ -2981,21 +2901,6 @@ Has-left-inverseᴱ≃Has-left-inverse l =
   (∃ λ l⁻¹ → Erased (l⁻¹ LC.∘ l′ ≡ LC.id))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
   (∃ λ l⁻¹ →         l⁻¹ LC.∘ l′ ≡ LC.id )  ↝⟨ (Σ-cong Lens≃Traditional-lens λ _ → inverse $ Eq.≃-≡ Lens≃Traditional-lens) ⟩□
   (∃ λ l⁻¹ →         l⁻¹ TC.∘ l  ≡ TC.id )  □
-  where
-  module LC = Lens-combinators
-
-  l′ = Traditional-lens→Lens l
-
--- TC.Has-right-inverse l implies
--- Has-right-inverseᴱ (Traditional-lens→Lens l).
-
-Has-right-inverse→Has-right-inverseᴱ :
-  (l : T.Lens A B) →
-  TC.Has-right-inverse l → Has-right-inverseᴱ (Traditional-lens→Lens l)
-Has-right-inverse→Has-right-inverseᴱ l =
-  (∃ λ l⁻¹ →         l  TC.∘ l⁻¹ ≡ TC.id )  ↝⟨ Σ-map Traditional-lens→Lens (cong Traditional-lens→Lens) ⟩
-  (∃ λ l⁻¹ →         l′ LC.∘ l⁻¹ ≡ LC.id )  ↝⟨ Σ-map P.id [_]→ ⟩□
-  (∃ λ l⁻¹ → Erased (l′ LC.∘ l⁻¹ ≡ LC.id))  □
   where
   module LC = Lens-combinators
 
@@ -3016,21 +2921,6 @@ Has-right-inverseᴱ≃Has-right-inverse l =
 
   l′ = Traditional-lens→Lens l
 
--- TC.Is-bi-invertible l implies
--- Is-bi-invertibleᴱ (Traditional-lens→Lens l).
-
-Is-bi-invertible→Is-bi-invertibleᴱ :
-  (l : T.Lens A B) →
-  TC.Is-bi-invertible l → Is-bi-invertibleᴱ (Traditional-lens→Lens l)
-Is-bi-invertible→Is-bi-invertibleᴱ l =
-  TC.Is-bi-invertible l                           ↔⟨⟩
-  TC.Has-left-inverse l × TC.Has-right-inverse l  ↝⟨ Σ-map (Has-left-inverse→Has-left-inverseᴱ l)
-                                                           (Has-right-inverse→Has-right-inverseᴱ l) ⟩
-  Has-left-inverseᴱ l′ × Has-right-inverseᴱ l′    ↔⟨⟩
-  Is-bi-invertibleᴱ l′                            □
-  where
-  l′ = Traditional-lens→Lens l
-
 -- In erased contexts Is-bi-invertibleᴱ (Traditional-lens→Lens l) is
 -- equivalent to TC.Is-bi-invertible l.
 
@@ -3045,13 +2935,6 @@ Is-bi-invertibleᴱ≃Is-bi-invertible l =
   TC.Is-bi-invertible l                           □
   where
   l′ = Traditional-lens→Lens l
-
--- A TC.≊ B implies A ≊ᴱ B.
-
-≊→≊ᴱ : A TC.≊ B → A ≊ᴱ B
-≊→≊ᴱ {A = A} {B = B} =
-  (∃ λ (l : T.Lens A B) → TC.Is-bi-invertible l)  ↝⟨ Σ-map Traditional-lens→Lens (λ {l} → Is-bi-invertible→Is-bi-invertibleᴱ l) ⟩□
-  (∃ λ (l : Lens A B) → Is-bi-invertibleᴱ l)      □
 
 -- In erased contexts A ≊ᴱ B is equivalent to A TC.≊ B.
 

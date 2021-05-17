@@ -2,6 +2,8 @@
 -- Identity and composition for traditional non-dependent lenses
 ------------------------------------------------------------------------
 
+{-# OPTIONS --cubical #-}
+
 import Equality.Path as P
 
 module Lens.Non-dependent.Traditional.Combinators
@@ -19,6 +21,7 @@ open import Circle eq as Circle using (𝕊¹)
 open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
+open import Erased.Cubical eq as E using (Erased; [_])
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
@@ -1230,9 +1233,13 @@ Has-quasi-inverse-id-not-proposition _ =
      Is-proposition ((x : X) → x ≡ x)              ↝⟨ ¬-prop ⟩□
      ⊥                                             □)
   where
-  X,¬-prop = Circle.¬-type-of-refl-propositional
-  X        = proj₁ X,¬-prop
-  ¬-prop   = proj₂ X,¬-prop
+  X      = Erased (proj₁ Circle.¬-type-of-refl-propositional)
+  ¬-prop =
+    E.Stable-¬
+      [ Is-proposition ((x : X) → x ≡ x)       ↝⟨ H-level-cong _ 1 (Π-cong ext (E.erased E.Erased↔) λ _ → inverse E.≡≃[]≡[]) ⟩
+        Is-proposition ((x : ↑ _ 𝕊¹) → x ≡ x)  ↝⟨ proj₂ Circle.¬-type-of-refl-propositional ⟩□
+        ⊥                                      □
+      ]
 
   q = id , left-identity _ , right-identity _
 

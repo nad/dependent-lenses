@@ -2,6 +2,8 @@
 -- Paolo Capriotti's variant of higher lenses
 ------------------------------------------------------------------------
 
+{-# OPTIONS --cubical #-}
+
 import Equality.Path as P
 
 module Lens.Non-dependent.Higher.Capriotti
