@@ -301,6 +301,24 @@ isomorphism-to-lens {A = A} {B = B} {R = R} iso = record
 ------------------------------------------------------------------------
 -- Some results related to the remainder type
 
+-- The inhabited field is equivalent to stating that the remainder
+-- function is surjective.
+
+inhabited≃remainder-surjective :
+  {A : Type a} {B : Type b} {R : Type (a ⊔ b)}
+  (equiv : A ≃ (R × B)) →
+  let remainder : A → R
+      remainder a = proj₁ (_≃_.to equiv a)
+  in
+  (R → ∥ B ∥) ≃ Surjective remainder
+inhabited≃remainder-surjective eq =
+  ∀-cong ext λ r → ∥∥-cong-⇔ (record
+    { to   = λ b → _≃_.from eq (r , b)
+           , (proj₁ (_≃_.to eq (_≃_.from eq (r , b)))  ≡⟨ cong proj₁ $ _≃_.right-inverse-of eq _ ⟩∎
+              r                                        ∎)
+    ; from = proj₂ ∘ _≃_.to eq ∘ proj₁
+    })
+
 -- The remainder type of a lens l : Lens A B is, for every b : B,
 -- equivalent to the preimage of the getter with respect to b.
 --

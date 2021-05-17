@@ -234,6 +234,11 @@ get       = E.Lens.get
 remainder = E.Lens.remainder
 set       = E.Lens.set
 
+-- The inhabited field is equivalent to stating that the remainder
+-- function is surjective.
+
+inhabited≃remainder-surjective = E.inhabited≃remainder-surjective
+
 -- Lemmas 24-27.
 
 lemma-24 = E.Lens.get-set

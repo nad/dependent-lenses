@@ -95,14 +95,7 @@ Higher-lens≃Lens {A = A} {B = B} =
 
   (∃ λ (R : Type _) →
      (A ≃ (R × B)) ×
-     (R → ∥ B ∥))                              ↝⟨ (∃-cong λ R → ∃-cong λ eq → ∀-cong ext λ r →
-                                                   ∥∥-cong-⇔ (record
-                                                     { to   = λ b → _≃_.from eq (r , b)
-                                                            , (
-      proj₁ (_≃_.to eq (_≃_.from eq (r , b)))                 ≡⟨ cong proj₁ $ _≃_.right-inverse-of eq _ ⟩∎
-      r                                                       ∎)
-                                                     ; from = proj₂ ∘ _≃_.to eq ∘ proj₁
-                                                     })) ⟩
+     (R → ∥ B ∥))                              ↝⟨ (∃-cong λ _ → ∃-cong Higher.inhabited≃remainder-surjective) ⟩
   (∃ λ (R : Type _) →
    ∃ λ (equiv : A ≃ (R × B)) →
      Surjective (proj₁ ∘ _≃_.to equiv))        ↝⟨ inverse Lens-as-Σ ⟩□
