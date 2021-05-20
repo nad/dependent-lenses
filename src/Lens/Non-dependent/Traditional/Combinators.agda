@@ -16,14 +16,14 @@ import Bi-invertibility
 open import Bijection equality-with-J as Bijection using (_↔_)
 open import Category equality-with-J as C using (Category; Precategory)
 open import Circle eq as Circle using (𝕊¹)
-open import Equality.Path.Isomorphisms eq hiding (univ)
+open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq as T using (∥_∥)
-import Integer eq as Int
+import Integer equality-with-J as Int
 open import Preimage equality-with-J using (_⁻¹_)
 open import Surjection equality-with-J as Surjection using (_↠_)
 open import Univalence-axiom equality-with-J

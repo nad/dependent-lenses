@@ -13,7 +13,7 @@ open import Logical-equivalence using (_⇔_)
 open import Prelude as P hiding (id)
 
 open import Bijection equality-with-J as B using (_↔_)
-open import Equality.Path.Isomorphisms eq hiding (univ)
+open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq using (_≃_)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J

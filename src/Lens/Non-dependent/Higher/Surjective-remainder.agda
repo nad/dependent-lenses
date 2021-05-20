@@ -12,7 +12,7 @@ open P.Derived-definitions-and-properties eq
 
 open import Prelude
 
-open import Equality.Path.Isomorphisms eq hiding (univ)
+open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq using (_≃_)
 open import Function-universe equality-with-J hiding (_∘_)
 open import H-level.Truncation.Propositional eq

@@ -18,6 +18,7 @@ private
   open module D = Derived-definitions-and-properties eq
     using (Is-proposition; Is-set)
 
+open import Equality.Path.Univalence
 open import Prelude
 
 open import Bijection equality-with-J as Bijection using (_↔_)

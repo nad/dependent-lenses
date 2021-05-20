@@ -20,7 +20,7 @@ import Bi-invertibility.Erased
 open import Bijection equality-with-J as Bij using (_↔_)
 open import Circle eq using (𝕊¹)
 open import Circle.Erased eq as CE using (𝕊¹ᴱ)
-open import Equality.Path.Isomorphisms eq hiding (univ)
+open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Equivalence.Erased.Cubical eq as EEq

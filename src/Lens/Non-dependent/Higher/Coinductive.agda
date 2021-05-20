@@ -24,7 +24,7 @@ open import Bijection equality-with-J using (_↔_)
 import Coherently-constant eq as CC
 open import Colimit.Sequential eq as C using (∣_∣)
 open import Equality.Decidable-UIP equality-with-J using (Constant)
-open import Equality.Path.Isomorphisms eq hiding (univ)
+open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq using (_≃_)
 import Equivalence.Half-adjoint equality-with-J as HA
 open import Function-universe equality-with-J as F hiding (id; _∘_)

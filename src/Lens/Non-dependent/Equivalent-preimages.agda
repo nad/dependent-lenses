@@ -14,7 +14,7 @@ open import Logical-equivalence using (_⇔_)
 open import Prelude renaming (_∘_ to _⊚_)
 
 open import Bijection equality-with-J as B using (_↔_)
-open import Equality.Path.Isomorphisms eq hiding (univ)
+open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Function-universe equality-with-J as F

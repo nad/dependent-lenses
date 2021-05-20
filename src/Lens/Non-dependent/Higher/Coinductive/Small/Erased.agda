@@ -16,7 +16,7 @@ open import Prelude as P hiding (id)
 
 open import Bijection equality-with-J using (_↔_)
 open import Equality.Decidable-UIP equality-with-J using (Constant)
-open import Equality.Path.Isomorphisms eq hiding (univ)
+open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Equivalence.Erased.Cubical eq as EEq using (_≃ᴱ_)

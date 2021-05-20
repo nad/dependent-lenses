@@ -14,7 +14,7 @@ open import Logical-equivalence using (_⇔_)
 open import Prelude
 
 open import Bijection equality-with-J using (_↔_)
-open import Equality.Path.Isomorphisms eq hiding (univ)
+open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq using (_≃_)
 open import Equivalence.Erased.Cubical eq as EEq using (_≃ᴱ_)
 open import Equivalence.Erased.Contractible-preimages.Cubical eq as ECP

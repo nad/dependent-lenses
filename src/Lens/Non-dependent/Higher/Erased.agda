@@ -26,7 +26,7 @@ open import Circle eq using (𝕊¹)
 open import Circle.Erased eq as CE using (𝕊¹ᴱ)
 open import Equality.Decidable-UIP equality-with-J
 open import Equality.Decision-procedures equality-with-J
-open import Equality.Path.Isomorphisms eq hiding (univ)
+open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Equivalence.Erased equality-with-J as EEq

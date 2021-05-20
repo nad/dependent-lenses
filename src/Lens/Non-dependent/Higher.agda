@@ -18,7 +18,7 @@ open import Circle eq as Circle using (𝕊¹)
 open import Coherently-constant eq as C using (Coherently-constant)
 open import Equality.Decidable-UIP equality-with-J
 open import Equality.Decision-procedures equality-with-J
-open import Equality.Path.Isomorphisms eq hiding (univ)
+open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 import Equivalence.Half-adjoint equality-with-J as HA

@@ -15,6 +15,7 @@ module Lens.Non-dependent.Higher.Coherently.Coinductive
 
 open P.Derived-definitions-and-properties eq
 
+import Equality.Path.Univalence as EPU
 open import Prelude
 
 open import Bijection equality-with-J as B using (_↔_)
@@ -22,7 +23,7 @@ import Bijection P.equality-with-J as PB
 open import Container.Indexed equality-with-J
 open import Container.Indexed.M.Codata eq
 import Container.Indexed.M.Function equality-with-J as F
-open import Equality.Path.Isomorphisms eq hiding (univ)
+open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq using (_≃_)
 import Equivalence P.equality-with-J as PEq
 open import Function-universe equality-with-J hiding (id; _∘_)
@@ -133,7 +134,7 @@ private
   -- A preservation lemma for Coherently.
   --
   -- The lemma does not use the univalence argument, instead it uses
-  -- P.univ directly.
+  -- EPU.univ (and EPU.≃⇒≡) directly.
 
   Coherently-cong-≡ :
     Block "Coherently-cong-≡" →
@@ -159,34 +160,34 @@ private
     P.Σ-≡,≡→≡′
 
       (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) →
-       P.≃⇒≡ (P₁≃P₂ f))
+       EPU.≃⇒≡ (P₁≃P₂ f))
 
       (P.implicit-extensionality P.ext λ A → P.⟨ext⟩ λ f →
          P.subst (λ P → {A : Type a} (f : A → B) → P A f → ∥ A ∥¹ → B)
            (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) →
-            P.≃⇒≡ (P₁≃P₂ f))
+            EPU.≃⇒≡ (P₁≃P₂ f))
            step₁ f                                                      P.≡⟨ P.trans (P.cong (_$ f) $ P.sym $
                                                                                       P.push-subst-implicit-application
-                                                                                        (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) → P.≃⇒≡ (P₁≃P₂ f))
+                                                                                        (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) → EPU.≃⇒≡ (P₁≃P₂ f))
                                                                                         (λ P A → (f : A → B) → P A f → ∥ A ∥¹ → B)
                                                                                         {f = const _} {g = step₁}) $
                                                                              P.sym $ P.push-subst-application
-                                                                                       (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) → P.≃⇒≡ (P₁≃P₂ f))
+                                                                                       (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) → EPU.≃⇒≡ (P₁≃P₂ f))
                                                                                        (λ P f → P A f → ∥ A ∥¹ → B)
                                                                                        {f = const f} {g = step₁} ⟩
          P.subst (λ P → P A f → ∥ A ∥¹ → B)
            (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) →
-            P.≃⇒≡ (P₁≃P₂ f))
+            EPU.≃⇒≡ (P₁≃P₂ f))
            (step₁ f)                                                    P.≡⟨⟩
 
          P.subst (λ P → P → ∥ A ∥¹ → B)
-           (P.≃⇒≡ (P₁≃P₂ f))
+           (EPU.≃⇒≡ (P₁≃P₂ f))
            (step₁ f)                                                    P.≡⟨ P.sym $
                                                                              PU.transport-theorem
                                                                                (λ P → P → ∥ A ∥¹ → B)
                                                                                (PF.→-cong₁ _)
                                                                                (λ _ → P.refl)
-                                                                               P.univ
+                                                                               EPU.univ
                                                                                (P₁≃P₂ f)
                                                                                (step₁ f) ⟩
          PF.→-cong₁ _ (P₁≃P₂ f) (step₁ f)                               P.≡⟨⟩
