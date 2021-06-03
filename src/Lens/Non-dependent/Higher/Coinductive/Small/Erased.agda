@@ -836,14 +836,15 @@ Lens→Erased-proofs {univ = univ} l = proofs ⊠
 
     open Erased-proofs
 
-    module L = Lens (_≃_.from (Lens≃Lens bl) l)
+    l′ = _≃_.from (Lens≃Lens bl) l
 
-    @0 proofs : Erased-proofs univ L.get L.set
-    proofs .get-set                   = L.get-set
-    proofs .get⁻¹-const-equivalence   = L.get⁻¹-const-equivalence
-    proofs .get⁻¹-coherently-constant = L.get⁻¹-coherently-constant
+    proofs : Erased-proofs univ (Lens.get l′) (Lens.set l′)
+    proofs .get-set                   = Lens.get-set l′
+    proofs .get⁻¹-const-equivalence   = Lens.get⁻¹-const-equivalence l′
+    proofs .get⁻¹-coherently-constant =
+      Lens.get⁻¹-coherently-constant l′
     proofs .get⁻¹-coherently-constant-property≡get⁻¹-constant =
-      L.get⁻¹-coherently-constant-property≡get⁻¹-constant
+      Lens.get⁻¹-coherently-constant-property≡get⁻¹-constant l′
 
 -- Converts two functions and some erased proofs to a lens.
 --
