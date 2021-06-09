@@ -743,6 +743,13 @@ record Lens (univ : Univalence (a ⊔ b)) (A : Type a) (B : Type b) :
     get ⁻¹ b                   ↝⟨ proj₁ ⟩□
     A                          □
 
+  -- The setter could have been defined using Constant-≃-get-⁻¹-≃.
+
+  set≡ :
+    ∀ bl →
+    set ≡ proj₁ (_≃_.to (Constant-≃-get-⁻¹-≃ bl) get⁻¹-constant)
+  set≡ ⊠ = refl _
+
 instance
 
   -- The lenses defined above have getters and setters.
