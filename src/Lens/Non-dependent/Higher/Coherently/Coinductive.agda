@@ -55,7 +55,7 @@ private
 -- M-type to make it easier to prove that two variants of coinductive
 -- lenses are equivalent: the lemma Coherently-cong-≡ below is based
 -- on his idea, and Coherently is a less general variant of the M-type
--- that he suggested. See also Coherently-with-restriction below,
+-- that he suggested. See also Coherently-with-restriction′ below,
 -- which is defined as an indexed M-type.
 
 record Coherently
