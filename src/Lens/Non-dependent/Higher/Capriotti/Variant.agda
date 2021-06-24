@@ -812,9 +812,6 @@ lenses-equal-if-setters-equal→set⁻¹-proposition
 -- If a certain variant of Higher.lenses-equal-if-setters-equal can be
 -- proved, then lenses with equal setters are equal (assuming
 -- univalence).
---
--- TODO: Can one, given the same assumptions, prove that
--- Higher.Lens.set is an embedding?
 
 lenses-equal-if-setters-equal→lenses-equal-if-setters-equal :
   {A : Type a} {B : Type b} →
