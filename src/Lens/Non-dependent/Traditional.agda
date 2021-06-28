@@ -27,7 +27,7 @@ open import Surjection equality-with-J using (_↠_)
 open import Univalence-axiom equality-with-J
 
 open import Lens.Non-dependent eq as Non-dependent
-  hiding (no-first-projection-lens)
+  hiding (no-first-projection-lens; no-singleton-projection-lens)
 
 private
   variable
@@ -1528,6 +1528,20 @@ no-first-projection-lens :
 no-first-projection-lens =
   Non-dependent.no-first-projection-lens
     Lens contractible-to-contractible
+
+-- A variant of the previous result: If A is merely inhabited, and one
+-- can "project" out a boolean from a value of type A, but this
+-- boolean is necessarily true, then there is no lens corresponding to
+-- this projection.
+
+no-singleton-projection-lens :
+  ∥ A ∥ →
+  (bool : A → Bool) →
+  (∀ x → bool x ≡ true) →
+  ¬ ∃ λ (l : Lens A Bool) →
+      ∀ x → Lens.get l x ≡ bool x
+no-singleton-projection-lens =
+  Non-dependent.no-singleton-projection-lens _ _ Lens.get-set
 
 -- There are two lenses with equal setters that are not equal
 -- (assuming univalence).

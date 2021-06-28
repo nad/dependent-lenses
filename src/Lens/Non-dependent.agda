@@ -13,21 +13,23 @@ open import Logical-equivalence using (_⇔_)
 open import Prelude
 
 open import Bijection equality-with-J as Bij using (module _↔_)
+open import Equality.Decision-procedures equality-with-J
 open import Equivalence equality-with-J using (_≃_)
 open import Erased.Cubical eq
 open import Function-universe equality-with-J as F hiding (_∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
+open import H-level.Truncation.Propositional eq as T using (∥_∥)
 open import Surjection equality-with-J using (_↠_)
 
 private
   variable
-    a b c c₁ c₂ c₃    : Level
+    a b c c₁ c₂ c₃ l  : Level
     A B               : Type a
     Lens₁ Lens₂ Lens₃ : Type a → Type b → Type c
 
 ------------------------------------------------------------------------
--- An existence result
+-- Some existence results
 
 -- There is, in general, no lens for the first projection from a
 -- Σ-type, assuming that lenses with contractible domains have
@@ -44,6 +46,32 @@ no-first-projection-lens _ contractible-to-contractible l =
       Contractible Bool              ↝⟨ mono₁ 0 ⟩
       Is-proposition Bool            ↝⟨ ¬-Bool-propositional ⟩□
       ⊥                              □
+    ]
+
+-- A variant of the previous result: If A is merely inhabited, and one
+-- can "project" out a boolean from a value of type A, but this
+-- boolean is necessarily true, then there is no lens corresponding to
+-- this projection (if the get-set law holds).
+
+no-singleton-projection-lens :
+  {Lens : Type l}
+  (get : Lens → A → Bool)
+  (set : Lens → A → Bool → A)
+  (get-set : ∀ l a b → get l (set l a b) ≡ b) →
+  ∥ A ∥ →
+  (bool : A → Bool) →
+  (∀ x → bool x ≡ true) →
+  ¬ ∃ λ (l : Lens) →
+      ∀ x → get l x ≡ bool x
+no-singleton-projection-lens
+  get set get-set x bool is-true (l , get≡bool) =
+  _↔_.to Erased-⊥↔⊥
+    [ (flip (T.rec ⊥-propositional) x λ x →
+       Bool.true≢false
+         (true                   ≡⟨ sym $ is-true _ ⟩
+          bool (set l x false)   ≡⟨ sym $ get≡bool _ ⟩
+          get l (set l x false)  ≡⟨ get-set _ _ _ ⟩∎
+          false                  ∎))
     ]
 
 ------------------------------------------------------------------------

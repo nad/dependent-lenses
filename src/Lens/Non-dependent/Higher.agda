@@ -34,13 +34,14 @@ open import Surjection equality-with-J using (_↠_)
 open import Univalence-axiom equality-with-J
 
 open import Lens.Non-dependent eq as Non-dependent
-  hiding (no-first-projection-lens)
+  hiding (no-first-projection-lens; no-singleton-projection-lens)
 import Lens.Non-dependent.Traditional eq as Traditional
 
 private
   variable
-    a b c ℓ r       : Level
+    a b c ℓ p r     : Level
     A A₁ A₂ B B₁ B₂ : Type a
+    P               : A → Type p
 
 ------------------------------------------------------------------------
 -- Higher lenses
@@ -2443,7 +2444,7 @@ domain-0+⇒lens-1+′ {A = A} {B} univ n hA =
        A ≃ (proj₁ p × B) × (proj₁ p → ∥ B ∥))            □
 
 ------------------------------------------------------------------------
--- An existence result
+-- Some existence results
 
 -- There is, in general, no lens for the first projection from a
 -- Σ-type.
@@ -2453,6 +2454,20 @@ no-first-projection-lens :
 no-first-projection-lens =
   Non-dependent.no-first-projection-lens
     Lens contractible-to-contractible
+
+-- A variant of the previous result: If A is merely inhabited, and one
+-- can "project" out a boolean from a value of type A, but this
+-- boolean is necessarily true, then there is no lens corresponding to
+-- this projection.
+
+no-singleton-projection-lens :
+  ∥ A ∥ →
+  (bool : A → Bool) →
+  (∀ x → bool x ≡ true) →
+  ¬ ∃ λ (l : Lens A Bool) →
+      ∀ x → Lens.get l x ≡ bool x
+no-singleton-projection-lens =
+  Non-dependent.no-singleton-projection-lens _ _ Lens.get-set
 
 ------------------------------------------------------------------------
 -- Equal lenses can be "observably different"
