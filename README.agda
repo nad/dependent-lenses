@@ -55,3 +55,13 @@ import README.Not-a-set
 -- Danielsson and Andrea Vezzosi.
 
 import README.Higher-Lenses
+
+-- The lenses fst and snd.
+
+import README.Fst-snd
+
+-- Pointers to code corresponding to some definitions and results from
+-- the paper "Compiling Programs with Erased Univalence" by Andreas
+-- Abel, Nils Anders Danielsson and Andrea Vezzosi.
+
+import README.Compiling-Programs-with-Erased-Univalence
