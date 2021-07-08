@@ -141,7 +141,7 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ :
   Block "Constantᴱ-⁻¹ᴱ-≃ᴱ" →
   Constantᴱ (get ⁻¹ᴱ_) ≃ᴱ
   (∃ λ (set : A → B → A) →
-   Erased (∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
+   Erased (∃ λ (get-set : ∀ a b → get (set a b) ≡ b) →
            ∀ b₁ b₂ →
            let f : get ⁻¹ b₁ → get ⁻¹ b₂
                f = λ (a , _) → set a b₂ , get-set a b₂
@@ -194,8 +194,7 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
                                                                               EEq.Σ-cong-≃ᴱ-Erased
                                                                                 (∀-cong ext λ _ →
                                                                                  EEq.drop-⊤-left-Π-≃ᴱ ext
-                                                                                   (_⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤
-                                                                                    Contractibleᴱ-Erased-other-singleton)
+                                                                                   Erased-other-singleton≃ᴱ⊤
                                                                                    (λ _ _ → F.id)) λ f →
                                                                               Erased-cong (
                                                                               ∀-cong ext λ b₁ →
@@ -216,7 +215,7 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
            in
            Is-equivalence g))                                             ↔⟨ ΠΣ-comm ⟩
 
-  (∃ λ (f : (b : B) → A → get ⁻¹ᴱ b) →
+  (∃ λ (f : ∀ b → A → get ⁻¹ᴱ b) →
    ∀ b₂ →
    Erased (∀ b₁ →
            let g : get ⁻¹ b₁ → get ⁻¹ b₂
@@ -224,14 +223,14 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
            in
            Is-equivalence g))                                             ↔⟨ (∃-cong λ _ → inverse Erased-Π↔Π) ⟩
 
-  (∃ λ (f : (b : B) → A → get ⁻¹ᴱ b) →
+  (∃ λ (f : ∀ b → A → get ⁻¹ᴱ b) →
    Erased (∀ b₂ b₁ →
            let g : get ⁻¹ b₁ → get ⁻¹ b₂
                g = λ (a , _) → Σ-map P.id erased (f b₂ a)
            in
            Is-equivalence g))                                             ↔⟨ Σ-cong Π-comm (λ _ → Erased-cong Π-comm) ⟩
 
-  (∃ λ (f : A → (b : B) → get ⁻¹ᴱ b) →
+  (∃ λ (f : A → ∀ b → get ⁻¹ᴱ b) →
    Erased (∀ b₁ b₂ →
            let g : get ⁻¹ b₁ → get ⁻¹ b₂
                g = λ (a , _) → Σ-map P.id erased (f a b₂)
@@ -239,7 +238,7 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
            Is-equivalence g))                                             ↔⟨ Σ-cong (∀-cong ext λ _ → ΠΣ-comm) (λ _ → Eq.id) ⟩
 
   (∃ λ (f : A → ∃ λ (set : B → A) →
-                (b : B) → Erased (get (set b) ≡ b)) →
+                ∀ b → Erased (get (set b) ≡ b)) →
    Erased (∀ b₁ b₂ →
            let g : get ⁻¹ b₁ → get ⁻¹ b₂
                g = λ (a , _) → proj₁ (f a) b₂ , erased (proj₂ (f a) b₂)
@@ -248,7 +247,7 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
                                                                                (∀-cong ext λ _ → ∃-cong λ _ → inverse Erased-Π↔Π)
                                                                                (λ _ → Eq.id) ⟩
   (∃ λ (f : A → ∃ λ (set : B → A) →
-                Erased ((b : B) → get (set b) ≡ b)) →
+                Erased (∀ b → get (set b) ≡ b)) →
    Erased (∀ b₁ b₂ →
            let g : get ⁻¹ b₁ → get ⁻¹ b₂
                g = λ (a , _) → proj₁ (f a) b₂ , erased (proj₂ (f a)) b₂
@@ -257,7 +256,7 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
 
   (∃ λ ((set , get-set) :
         ∃ λ (set : A → B → A) →
-        (a : A) → Erased ((b : B) → get (set a b) ≡ b)) →
+        ∀ a → Erased (∀ b → get (set a b) ≡ b)) →
    Erased (∀ b₁ b₂ →
            let f : get ⁻¹ b₁ → get ⁻¹ b₂
                f = λ (a , _) → set a b₂ , erased (get-set a) b₂
@@ -266,7 +265,7 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
 
   (∃ λ ((set , [ get-set ]) :
         ∃ λ (set : A → B → A) →
-        Erased ((a : A) (b : B) → get (set a b) ≡ b)) →
+        Erased (∀ a b → get (set a b) ≡ b)) →
    Erased (∀ b₁ b₂ →
            let f : get ⁻¹ b₁ → get ⁻¹ b₂
                f = λ (a , _) → set a b₂ , get-set a b₂
@@ -274,12 +273,12 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
            Is-equivalence f))                                             ↔⟨ inverse Σ-assoc ⟩
 
   (∃ λ (set : A → B → A) →
-   ∃ λ (([ get-set ]) : Erased ((a : A) (b : B) → get (set a b) ≡ b)) →
+   ∃ λ (([ get-set ]) : Erased (∀ a b → get (set a b) ≡ b)) →
    Erased (∀ b₁ b₂ →
            Is-equivalence λ (a , _) → set a b₂ , get-set a b₂))           ↔⟨ (∃-cong λ _ → inverse
                                                                               Erased-Σ↔Σ) ⟩□
   (∃ λ (set : A → B → A) →
-   Erased (∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
+   Erased (∃ λ (get-set : ∀ a b → get (set a b) ≡ b) →
            ∀ b₁ b₂ →
            Is-equivalence λ (a , _) → set a b₂ , get-set a b₂))           □
 

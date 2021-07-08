@@ -604,8 +604,7 @@ Lens⇔Higher-lens {A = A} {B = B} ⊠ = record
       { R = Σ ∥ B ∥ᴱ H
 
       ; equiv =
-          A                                                      ↝⟨ (inverse $ drop-⊤-right λ _ → _⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤
-                                                                     Contractibleᴱ-Erased-other-singleton) ⟩
+          A                                                      ↝⟨ (inverse $ drop-⊤-right λ _ → Erased-other-singleton≃ᴱ⊤) ⟩
           (∃ λ (a : A) → ∃ λ (b : B) → Erased (get a ≡ b))       ↔⟨ ∃-comm ⟩
           (∃ λ (b : B) → get ⁻¹ᴱ b)                              ↝⟨ ∃-cong get⁻¹ᴱ-≃ᴱ ⟩
           (∃ λ (b : B) → H ∣ b ∣)                                ↝⟨ EEq.↔→≃ᴱ
