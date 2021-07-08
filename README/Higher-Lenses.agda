@@ -36,7 +36,7 @@
 
 {-# OPTIONS --cubical --guardedness #-}
 
-module README.Higher-lenses where
+module README.Higher-Lenses where
 
 import Circle
 import Coherently-constant

@@ -51,7 +51,7 @@ import README.Record-getters-and-setters
 import README.Not-a-set
 
 -- Pointers to code corresponding to many definitions and results from
--- the paper "Higher lenses" by Paolo Capriotti, Nils Anders
+-- the paper "Higher Lenses" by Paolo Capriotti, Nils Anders
 -- Danielsson and Andrea Vezzosi.
 
-import README.Higher-lenses
+import README.Higher-Lenses
