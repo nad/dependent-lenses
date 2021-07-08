@@ -58,6 +58,7 @@ private
     a b c d p r     : Level
     A A₁ A₂ B B₁ B₂ : Type a
     P               : A → Type p
+    x x′ y y′       : A
     n               : ℕ
 
 ------------------------------------------------------------------------
@@ -330,6 +331,42 @@ instance
                 Erased ∥ B ∥ × B  □
   ; inhabited = erased
   }
+
+------------------------------------------------------------------------
+-- Some example lenses
+
+-- A lens for the first projection.
+
+fst :
+  {A : Type a} {B : Type b} →
+  Lens (A × B) A
+fst {a = a} {A = A} {B = B} =
+  ≃ᴱ×→Lens
+    (A × B      ↔⟨ ×-comm ⟩
+     B × A      ↔⟨ inverse Bijection.↑↔ ×-cong F.id ⟩□
+     ↑ a B × A  □)
+
+_ : Lens.get fst (x , y) ≡ x
+_ = refl _
+
+_ : Lens.set fst (x , y) x′ ≡ (x′ , y)
+_ = refl _
+
+-- A lens for the second projection.
+
+snd :
+  {A : Type a} {B : Type b} →
+  Lens (A × B) B
+snd {b = b} {A = A} {B = B} =
+  ≃ᴱ×→Lens
+    (A × B      ↔⟨ inverse Bijection.↑↔ ×-cong F.id ⟩□
+     ↑ b A × B  □)
+
+_ : Lens.get snd (x , y) ≡ y
+_ = refl _
+
+_ : Lens.set snd (x , y) y′ ≡ (x , y′)
+_ = refl _
 
 ------------------------------------------------------------------------
 -- Equality characterisation lemmas for lenses
