@@ -46,6 +46,8 @@ private
   variable
     a b p : Level
     A B   : Type a
+    P     : A → Type p
+    f     : (x : A) → P x
 
 ------------------------------------------------------------------------
 -- Weakly constant functions
@@ -132,6 +134,11 @@ Constant≃Constant′ f = Eq.↔→≃
 Coherently-constant :
   {A : Type a} {B : Type b} (f : A → B) → Type (a ⊔ b)
 Coherently-constant = Coherently Constant O.rec′
+
+-- Coherently constant functions are weakly constant.
+
+constant : Coherently-constant f → Constant f
+constant c = c .property
 
 -- An alternative to Coherently-constant.
 
