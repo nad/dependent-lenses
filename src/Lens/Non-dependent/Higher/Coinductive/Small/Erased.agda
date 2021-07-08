@@ -38,6 +38,7 @@ open import Lens.Non-dependent.Higher.Coherently.Coinductive eq
 import Lens.Non-dependent.Higher.Coinductive eq as C
 import Lens.Non-dependent.Higher.Coinductive.Erased eq as CE
 import Lens.Non-dependent.Higher.Coinductive.Small eq as S
+import Lens.Non-dependent.Higher.Erased eq as E
 
 private
   variable
@@ -776,6 +777,42 @@ Lens≃ᴱLens-preserves-getters-and-setters ⊠ univ′ univ =
               (get⁻¹ᴱ-const (get a) b (a , [ refl (get a) ])))  ≡⟨ cong proj₁ $ subst-refl _ _ ⟩∎
 
          proj₁ (get⁻¹ᴱ-const (get a) b (a , [ refl (get a) ]))  ∎)
+
+-- Lens univ A B is equivalent to E.Lens A B (with erased proofs,
+-- assuming univalence).
+
+Lens≃ᴱLensᴱ :
+  Block "Lens≃ᴱLensᴱ" →
+  {A : Type a} {B : Type b}
+  {@0 univ : Univalence (a ⊔ b)} →
+  @0 Univalence (lsuc (a ⊔ b)) →
+  Lens univ A B ≃ᴱ E.Lens A B
+Lens≃ᴱLensᴱ bl {A = A} {B = B} {univ = univ} univ′ =
+  Lens univ A B  ↝⟨ Lens≃ᴱLens bl univ′ univ ⟩
+  CE.Lens A B    ↝⟨ CE.Lens≃ᴱLens bl univ′ univ ⟩
+  V.Lens A B     ↝⟨ V.Lens≃ᴱHigher-lens bl univ ⟩□
+  E.Lens A B     □
+
+-- The equivalence preserves getters and setters (in erased contexts).
+
+@0 Lens≃ᴱLensᴱ-preserves-getters-and-setters :
+  (bl : Block "Lens→Lens")
+  {A : Type a} {B : Type b}
+  (@0 univ′ : Univalence (lsuc (a ⊔ b)))
+  (@0 univ : Univalence (a ⊔ b)) →
+  Preserves-getters-and-setters-⇔ A B
+    (_≃ᴱ_.logical-equivalence (Lens≃ᴱLensᴱ bl {univ = univ} univ′))
+Lens≃ᴱLensᴱ-preserves-getters-and-setters bl univ′ univ =
+  Preserves-getters-and-setters-⇔-∘
+    {f = _≃ᴱ_.logical-equivalence (V.Lens≃ᴱHigher-lens bl univ) F.∘
+         _≃ᴱ_.logical-equivalence (CE.Lens≃ᴱLens bl univ′ univ)}
+    {g = _≃ᴱ_.logical-equivalence (Lens≃ᴱLens bl univ′ univ)}
+    (Preserves-getters-and-setters-⇔-∘
+       {f = _≃ᴱ_.logical-equivalence (V.Lens≃ᴱHigher-lens bl univ)}
+       {g = _≃ᴱ_.logical-equivalence (CE.Lens≃ᴱLens bl univ′ univ)}
+       (V.Lens≃ᴱHigher-lens-preserves-getters-and-setters bl univ)
+       (CE.Lens≃ᴱLens-preserves-getters-and-setters bl univ′ univ))
+    (Lens≃ᴱLens-preserves-getters-and-setters bl univ′ univ)
 
 -- In erased contexts Lens univ A B is equivalent to S.Lens univ A B.
 
