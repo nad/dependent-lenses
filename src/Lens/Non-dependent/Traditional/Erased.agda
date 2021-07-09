@@ -2,10 +2,6 @@
 -- Traditional non-dependent lenses with erased lens laws
 ------------------------------------------------------------------------
 
--- At the time of writing there are counterparts in this file of more
--- or less everything in Lens.Non-dependent.Traditional, except for
--- the section called "A category".
-
 import Equality.Path as P
 
 module Lens.Non-dependent.Traditional.Erased

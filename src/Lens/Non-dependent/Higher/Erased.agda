@@ -2,13 +2,6 @@
 -- Higher lenses with erased proofs
 ------------------------------------------------------------------------
 
--- At the time of writing there are counterparts in this file of more
--- or less everything in Lens.Non-dependent.Higher, except for parts
--- of the section called "A category". There is also a counterpart to
--- one of the properties related to higher lenses from
--- Lens.Non-dependent.Equivalent-preimages
--- (higher-lens-preserves-h-level-of-domain).
-
 import Equality.Path as P
 
 module Lens.Non-dependent.Higher.Erased
