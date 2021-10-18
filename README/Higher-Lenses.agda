@@ -6,6 +6,10 @@
 -- The paper is coauthored with Paolo Capriotti and Andrea Vezzosi.
 ------------------------------------------------------------------------
 
+-- Note that this version of the code contains changes made after the
+-- paper was published. For the code cited in the paper, see
+-- https://doi.org/10.5281/zenodo.4727911.
+
 -- Most of the code referenced below can be found in modules that are
 -- parametrised by a notion of equality. One can use them both with
 -- Cubical Agda paths and with the Cubical Agda identity type family.
