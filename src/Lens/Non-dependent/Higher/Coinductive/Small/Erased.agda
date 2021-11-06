@@ -199,10 +199,10 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
                                                                               Erased-cong (
                                                                               ∀-cong ext λ b₁ →
                                                                               Is-equivalence-cong ext λ (a , eq) →
-      Σ-map P.id erased (f a (b₁ , [ eq ]))                                       ≡⟨ cong (Σ-map P.id erased ∘ f a) $ sym $
+      Σ-map P.id erased (f a (b₁ , [ eq ]))                                     ≡⟨ cong (Σ-map P.id erased ∘ f a) $ sym $
                                                                                    erased (proj₂ Contractibleᴱ-Erased-other-singleton) _ ⟩
 
-      Σ-map P.id erased (f a (get a , [ refl _ ]))                                ≡⟨ cong (Σ-map P.id erased) $ sym $ subst-refl _ _ ⟩∎
+      Σ-map P.id erased (f a (get a , [ refl _ ]))                              ≡⟨ cong (Σ-map P.id erased) $ sym $ subst-refl _ _ ⟩∎
 
       Σ-map P.id erased
         (subst (const _) (refl _) (f a (get a , [ refl _ ])))                   ∎)) ⟩
