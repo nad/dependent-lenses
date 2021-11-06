@@ -54,7 +54,6 @@ import Erased.Cubical
 import Erased.Level-1
 import Erased.Stability
 import H-level.Truncation.Propositional
-import H-level.Truncation.Propositional.Completely-erased
 import H-level.Truncation.Propositional.Erased
 import H-level.Truncation.Propositional.Non-recursive
 import H-level.Truncation.Propositional.Non-recursive.Erased
@@ -146,12 +145,12 @@ from-to         = Equivalence.Erased.Basics._≃ᴱ_.left-inverse-of
 Erased≃ = Erased.Level-1.Erased↔
 
 -- Lemmas 41 and 42 are proved in modules parametrised by definitions
--- of []-cong, in the latter case []-cong is also assumed to satisfy
--- certain properties (that hold for the definition mentioned above).
--- Some definitions below are also defined in such modules.
+-- of []-cong, which is also assumed to satisfy certain properties
+-- (that hold for the definition mentioned above). Some definitions
+-- below are also defined in such modules.
 
-Lemma-41 = Erased.Level-1.[]-cong₁.Erased-cong-≃
-Lemma-42 = Equivalence.Erased.[]-cong.Σ-cong-≃ᴱ-Erased
+Lemma-41 = Erased.Level-1.Erased-cong.Erased-cong-≃
+Lemma-42 = Equivalence.Erased.[]-cong₁.Σ-cong-≃ᴱ-Erased
 
 -- The functions substᴱ and subst.
 
@@ -287,7 +286,7 @@ constant = Lens.Non-dependent.Higher.Coinductive.constant
 
 -- Lemmas 74–77.
 
-Lemma-74 = Erased.Stability.[]-cong.Erased-other-singleton≃ᴱ⊤
+Lemma-74 = Erased.Stability.Erased-other-singleton≃ᴱ⊤
 Lemma-75 = Lens.Non-dependent.Higher.Coinductive.Erased.∥∥ᴱ→≃
 Lemma-76 = Equivalence.Erased.other-singleton-with-Π-≃ᴱ-≃ᴱ-⊤
 Lemma-77 = H-level.Truncation.Propositional.Erased.Σ-Π-∥∥ᴱ-Erased-≡-≃
@@ -301,8 +300,7 @@ sndᴱ = Lens.Non-dependent.Higher.Erased.snd
 
 -- Lemma 79.
 
-Lemma-79 =
-  H-level.Truncation.Propositional.Completely-erased.Erased-∥∥×≃
+Lemma-79 = H-level.Truncation.Propositional.Erased-∥∥×≃
 
 -- A slightly more general variant of snd^C.
 

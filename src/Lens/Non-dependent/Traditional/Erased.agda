@@ -381,7 +381,7 @@ lens-to-proposition≃ᴱ {A = A} {B = B} B-prop =
      Erased
        ((∀ a → f a ≡ a) ×
         (∀ a → B → B → f (f a) ≡ f a)))                             ↝⟨ (∃-cong λ get → ∃-cong λ _ → Erased-cong (∃-cong λ _ →
-                                                                        ∀-cong ext λ a →
+                                                                        ∀-cong [ ext ] λ a →
                                                                         EEq.drop-⊤-left-Π-≃ᴱ-Erased ext (B≃ᴱ⊤ get a) F.∘
                                                                         EEq.drop-⊤-left-Π-≃ᴱ-Erased ext (B≃ᴱ⊤ get a))) ⟩
   ((A → B) ×
@@ -414,7 +414,7 @@ lens-to-proposition≃ᴱ {A = A} {B = B} B-prop =
 
   A→B→A≃ᴱA→A : (A → B) → (A → B → A) ≃ᴱ (A → A)
   A→B→A≃ᴱA→A get =
-    (A → B → A)  ↝⟨ ∀-cong ext (λ a → EEq.drop-⊤-left-Π-≃ᴱ-Erased ext $ B≃ᴱ⊤ get a) ⟩□
+    (A → B → A)  ↝⟨ ∀-cong [ ext ] (λ a → EEq.drop-⊤-left-Π-≃ᴱ-Erased ext $ B≃ᴱ⊤ get a) ⟩□
     (A → A)      □
 
 -- If equality is very stable for A (when B is inhabited) and B is a

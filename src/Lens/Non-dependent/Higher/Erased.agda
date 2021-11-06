@@ -31,7 +31,6 @@ open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq as PT
-open import H-level.Truncation.Propositional.Completely-erased eq
 open import H-level.Truncation.Propositional.Erased eq as TE
   using (∥_∥ᴱ)
 open import Preimage equality-with-J using (_⁻¹_)
@@ -666,7 +665,7 @@ Lens-cong′ A₁≃A₂ B₁≃B₂ =
   ∃-cong λ _ →
   EEq.≃ᴱ-cong ext A₁≃A₂ (F.id ×-cong B₁≃B₂)
     ×-cong
-  Erased-cong (→-cong ext F.id (∥∥-cong B₁≃B₂))
+  Erased-cong (→-cong [ ext ] F.id (∥∥-cong B₁≃B₂))
 
 -- Lens preserves level-preserving equivalences with erased proofs.
 
@@ -738,7 +737,7 @@ lens-to-contractible≃ᴱ⊤ :
   Lens A B ≃ᴱ ⊤
 lens-to-contractible≃ᴱ⊤ {A = A} {B} univ cB =
   Lens A B  ↝⟨ lens-to-proposition≃ᴱget univ (λ a → mono₁ 0 (ECP.Contractibleᴱ→Contractible (cB a))) ⟩
-  (A → B)   ↝⟨ ∀-cong ext (_⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ ⊚ cB) ⟩
+  (A → B)   ↝⟨ ∀-cong [ ext ] (_⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ ⊚ cB) ⟩
   (A → ⊤)   ↔⟨ →-right-zero ⟩□
   ⊤         □
 
@@ -751,7 +750,7 @@ lens-to-⊥≃ᴱ¬ :
   Lens A (⊥ {ℓ = b}) ≃ᴱ (¬ A)
 lens-to-⊥≃ᴱ¬ {A = A} univ =
   Lens A ⊥  ↝⟨ lens-to-proposition≃ᴱget univ (λ _ → ⊥-propositional) ⟩
-  (A → ⊥)   ↝⟨ inverse $ ¬↔→⊥ ext ⟩□
+  (A → ⊥)   ↝⟨ inverse $ ¬↔→⊥ [ ext ] ⟩□
   ¬ A       □
 
 -- If A is contractible (with an erased proof), then Lens A B is
@@ -772,7 +771,7 @@ lens-from-contractible≃ᴱcodomain-contractible {A = A} {B} univ cA =
   (∃ λ R → Contractibleᴱ (R × B) × Erased (R → ∥ B ∥))                ↝⟨ (∃-cong λ _ → ×-cong₁ λ _ → EEq.Contractibleᴱ-commutes-with-× ext) ⟩
   (∃ λ R → (Contractibleᴱ R × Contractibleᴱ B) × Erased (R → ∥ B ∥))  ↔⟨ (∃-cong λ _ → inverse ×-assoc) ⟩
   (∃ λ R → Contractibleᴱ R × Contractibleᴱ B × Erased (R → ∥ B ∥))    ↝⟨ (∃-cong λ _ → ∃-cong λ cR → ∃-cong λ _ → Erased-cong (
-                                                                          →-cong ext (_⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ cR) F.id)) ⟩
+                                                                          →-cong [ ext ] (_⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ cR) F.id)) ⟩
   (∃ λ R → Contractibleᴱ R × Contractibleᴱ B × Erased (⊤ → ∥ B ∥))    ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ → Erased-cong Π-left-identity) ⟩
   (∃ λ R → Contractibleᴱ R × Contractibleᴱ B × Erased ∥ B ∥)          ↔⟨ (∃-cong λ _ → ×-comm) ⟩
   (∃ λ R → (Contractibleᴱ B × Erased ∥ B ∥) × Contractibleᴱ R)        ↔⟨ ∃-comm ⟩

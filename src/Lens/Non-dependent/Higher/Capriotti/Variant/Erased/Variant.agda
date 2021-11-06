@@ -192,8 +192,8 @@ Coherently-constant≃ᴱCoherently-constant′ {P = P} =
                                                                               (∀-cong ext λ _ → Eq.extensionality-isomorphism bad-ext))) ⟩
     (∀ x y →
      ∃ λ (Q→Q : Q ∣ x ∣ → Q ∣ y ∣) →
-     Erased (Q→Q ≡ subst Q (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)))    ↝⟨ (∀-cong ext λ _ → ∀-cong ext λ _ →
-                                                                              let lemma = inverse $ →-cong ext (P≃Q _) (P≃Q _) in
+     Erased (Q→Q ≡ subst Q (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)))    ↝⟨ (∀-cong [ ext ] λ _ → ∀-cong [ ext ] λ _ →
+                                                                              let lemma = inverse $ →-cong [ ext ] (P≃Q _) (P≃Q _) in
                                                                               EEq.Σ-cong-≃ᴱ-Erased lemma λ _ →
                                                                               Erased-cong (from-equivalence $ inverse $
                                                                               Eq.≃-≡ $ EEq.≃ᴱ→≃ lemma)) ⟩

@@ -153,15 +153,17 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
   (∀ b₁ b₂ →
    ∃ λ (f : get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
    Erased (Is-equivalence f))                                             ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ → ∃-cong λ f → Erased-cong (
-                                                                              Is-equivalence≃Is-equivalence-∘ˡ {k = equivalence} ext $
-                                                                              _≃_.is-equivalence $ from-bijection $
-                                                                              ∃-cong λ _ → erased Erased↔)) ⟩
+                                                                              Is-equivalence≃Is-equivalence-∘ˡ
+                                                                                (_≃_.is-equivalence $ from-bijection $
+                                                                                 ∃-cong λ _ → erased Erased↔)
+                                                                                {k = equivalence} ext)) ⟩
   (∀ b₁ b₂ →
    ∃ λ (f : get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
    Erased (Is-equivalence (Σ-map P.id erased ∘ f)))                       ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ → ∃-cong λ f → Erased-cong (
-                                                                              Is-equivalence≃Is-equivalence-∘ʳ {k = equivalence} ext $
-                                                                              _≃_.is-equivalence $ from-bijection $
-                                                                              ∃-cong λ _ → inverse $ erased Erased↔)) ⟩
+                                                                              Is-equivalence≃Is-equivalence-∘ʳ
+                                                                                (_≃_.is-equivalence $ from-bijection $
+                                                                                 ∃-cong λ _ → inverse $ erased Erased↔)
+                                                                                {k = equivalence} ext)) ⟩
   (∀ b₁ b₂ →
    ∃ λ (f : get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
    Erased (Is-equivalence (Σ-map P.id erased ∘ f ∘ Σ-map P.id [_]→)))     ↔⟨ Π-comm ⟩
@@ -190,15 +192,15 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
            let g : get ⁻¹ b₁ → get ⁻¹ b₂
                g = λ (a , eq) → Σ-map P.id erased (f a (b₁ , [ eq ]))
            in
-           Is-equivalence g))                                             ↝⟨ (∀-cong ext λ _ →
+           Is-equivalence g))                                             ↝⟨ (∀-cong [ ext ] λ _ →
                                                                               EEq.Σ-cong-≃ᴱ-Erased
-                                                                                (∀-cong ext λ _ →
+                                                                                (∀-cong [ ext ] λ _ →
                                                                                  EEq.drop-⊤-left-Π-≃ᴱ ext
                                                                                    Erased-other-singleton≃ᴱ⊤
                                                                                    (λ _ _ → F.id)) λ f →
                                                                               Erased-cong (
-                                                                              ∀-cong ext λ b₁ →
-                                                                              Is-equivalence-cong ext λ (a , eq) →
+                                                                              ∀-cong [ ext ] λ b₁ →
+                                                                              Is-equivalence-cong [ ext ] λ (a , eq) →
       Σ-map P.id erased (f a (b₁ , [ eq ]))                                     ≡⟨ cong (Σ-map P.id erased ∘ f a) $ sym $
                                                                                    erased (proj₂ Contractibleᴱ-Erased-other-singleton) _ ⟩
 

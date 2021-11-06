@@ -129,7 +129,7 @@ Constant-≃-get-⁻¹-≃ bl {A = A} {B = B} {get = get} =
     (∀ b₂ →
      ∃ λ (f : ∀ a b₁ → get a ≡ b₁ → get ⁻¹ b₂) →
      ∀ b₁ → Is-equivalence (uncurry (flip f b₁)))                   ↝⟨ (∀-cong ext λ _ →
-                                                                        Σ-cong (∀-cong ext λ _ → inverse $ ∀-intro {k = equivalence} ext _) λ f →
+                                                                        Σ-cong (∀-cong ext λ _ → inverse $ ∀-intro _ {k = equivalence} ext) λ f →
                                                                         ∀-cong ext λ b₁ →
                                                                         Is-equivalence-cong {k = equivalence} ext λ (a , eq) →
         uncurry (f a) (b₁ , eq)                                           ≡⟨ cong (uncurry (f a)) $ sym $
@@ -168,8 +168,10 @@ Constant-≃-get-⁻¹-≃ bl {A = A} {B = B} {get = get} =
            (set a b₂ , get-set a b₂)                            ∎)
 
   equiv₃ : Unit → _ ≃ _
-  equiv₃ _ ._≃_.to             = _≃_.to equiv₂
-  equiv₃ ⊠ ._≃_.is-equivalence = _≃_.is-equivalence equiv₂
+  equiv₃ bl = Eq.⟨ _≃_.to equiv₂ , is-equiv bl ⟩
+    where
+    is-equiv : Unit → _
+    is-equiv ⊠ = _≃_.is-equivalence equiv₂
 
 -- Constant-≃-get-⁻¹-≃ computes in a certain way.
 
