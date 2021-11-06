@@ -2,8 +2,6 @@
 -- Dependent lenses
 ------------------------------------------------------------------------
 
-{-# OPTIONS --cubical #-}
-
 -- Some code below depends on UIP for Type ℓ (for some ℓ). This kind
 -- of assumption is inconsistent in Cubical Agda. However, Andrea
 -- Vezzosi and I have discussed whether UIP, the propositional

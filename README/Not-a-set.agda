@@ -9,8 +9,6 @@
 -- This module uses univalence without tracking such uses in the types
 -- of functions.
 
-{-# OPTIONS --cubical #-}
-
 open import Equality.Path as P hiding (Is-proposition; Is-set)
 
 module README.Not-a-set
@@ -28,6 +26,7 @@ import Bijection D.equality-with-J as DB
 import Bool equality-with-J as B
 open import Equality.Decision-procedures equality-with-J
 import Equality.Path.Isomorphisms eq as I
+import Erased.Cubical eq as E
 open import Equivalence equality-with-J as Eq using (_≃_)
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 import H-level D.equality-with-J as H-level
@@ -50,21 +49,23 @@ Printable = ∃ λ (A : Type) → A × (A → String)
 
 ¬-Printable-set : ¬ Is-set Printable
 ¬-Printable-set =
-  Is-set Printable        ↝⟨ DB._↔_.to (I.H-level↔H-level 2) ⟩
-  P.Is-set Printable      ↝⟨ (λ h → h _ _) ⟩
-  refl ≡ q                ↝⟨ cong (cong proj₁) ⟩
-  refl ≡ cong proj₁ q     ↝⟨ flip trans (proj₁-Σ-≡,≡→≡ {B = λ A → A × (A → String)} {y₁ = proj₂ x} _ refl) ⟩
-  refl ≡ q′               ↝⟨ cong (λ eq → subst id eq (just true)) ⟩
-  just true ≡ just false  ↝⟨ Bool.true≢false ∘ ⊎.cancel-inj₂ ⟩□
-  ⊥                       □
+  E.Stable-¬
+    E.[ Is-set Printable        ↝⟨ DB._↔_.to (I.H-level↔H-level 2) ⟩
+        P.Is-set Printable      ↝⟨ (λ h → h _ _) ⟩
+        refl ≡ q                ↝⟨ cong (cong proj₁) ⟩
+        refl ≡ cong proj₁ q     ↝⟨ flip trans (proj₁-Σ-≡,≡→≡ {B = λ A → A × (A → String)} {y₁ = proj₂ x} _ refl) ⟩
+        refl ≡ q′               ↝⟨ cong (λ eq → subst id eq (just true)) ⟩
+        just true ≡ just false  ↝⟨ Bool.true≢false ∘ ⊎.cancel-inj₂ ⟩□
+        ⊥                       □
+      ]
   where
   x : Printable
   x = Maybe Bool , nothing , λ _ → ""
 
-  q′ : Maybe Bool ≡ Maybe Bool
+  @0 q′ : Maybe Bool ≡ Maybe Bool
   q′ = ≃⇒≡ (F.id ⊎-cong Eq.↔⇒≃ B.swap)
 
-  q : x ≡ x
+  @0 q : x ≡ x
   q = Σ-≡,≡→≡ q′ refl
 
 ------------------------------------------------------------------------
@@ -85,13 +86,15 @@ Stream A = ∃ λ (S : Type) → (S → Step A S) × S
 
 ¬-Stream-set : ¬ Is-set (Stream A)
 ¬-Stream-set {A = A} =
-  Is-set (Stream A)       ↝⟨ DB._↔_.to (I.H-level↔H-level 2) ⟩
-  P.Is-set (Stream A)     ↝⟨ (λ h → h _ _) ⟩
-  refl ≡ p                ↝⟨ cong (cong proj₁) ⟩
-  refl ≡ cong proj₁ p     ↝⟨ flip trans (proj₁-Σ-≡,≡→≡ {B = F} {y₁ = proj₂ t} _ refl) ⟩
-  refl ≡ q                ↝⟨ cong (λ eq → subst id eq (just true)) ⟩
-  just true ≡ just false  ↝⟨ Bool.true≢false ∘ ⊎.cancel-inj₂ ⟩□
-  ⊥                       □
+  E.Stable-¬
+    E.[ Is-set (Stream A)       ↝⟨ DB._↔_.to (I.H-level↔H-level 2) ⟩
+        P.Is-set (Stream A)     ↝⟨ (λ h → h _ _) ⟩
+        refl ≡ p                ↝⟨ cong (cong proj₁) ⟩
+        refl ≡ cong proj₁ p     ↝⟨ flip trans (proj₁-Σ-≡,≡→≡ {B = F} {y₁ = proj₂ t} _ refl) ⟩
+        refl ≡ q                ↝⟨ cong (λ eq → subst id eq (just true)) ⟩
+        just true ≡ just false  ↝⟨ Bool.true≢false ∘ ⊎.cancel-inj₂ ⟩□
+        ⊥                       □
+      ]
   where
   F : Type → Type
   F S = (S → Step A S) × S
@@ -101,10 +104,10 @@ Stream A = ∃ λ (S : Type) → (S → Step A S) × S
     , const done
     , nothing
 
-  q : Maybe Bool ≡ Maybe Bool
+  @0 q : Maybe Bool ≡ Maybe Bool
   q = ≃⇒≡ (F.id ⊎-cong Eq.↔⇒≃ B.swap)
 
-  p : t ≡ t
+  @0 p : t ≡ t
   p = Σ-≡,≡→≡ q refl
 
 -- Streams, with the added requirement that the state type must be a
@@ -117,13 +120,15 @@ Streamˢ A = ∃ λ (S : Type) → Is-set S × (S → Step A S) × S
 
 ¬-Streamˢ-set : ¬ Is-set (Streamˢ A)
 ¬-Streamˢ-set {A = A} =
-  Is-set (Streamˢ A)      ↝⟨ DB._↔_.to (I.H-level↔H-level 2) ⟩
-  P.Is-set (Streamˢ A)    ↝⟨ (λ h → h _ _) ⟩
-  refl ≡ p                ↝⟨ cong (cong proj₁) ⟩
-  refl ≡ cong proj₁ p     ↝⟨ flip trans (proj₁-Σ-≡,≡→≡ {B = F} {y₁ = proj₂ t} _ refl) ⟩
-  refl ≡ q                ↝⟨ cong (λ eq → subst id eq (inj₂ true)) ⟩
-  just true ≡ just false  ↝⟨ Bool.true≢false ∘ ⊎.cancel-inj₂ ⟩□
-  ⊥                       □
+  E.Stable-¬
+    E.[ Is-set (Streamˢ A)      ↝⟨ DB._↔_.to (I.H-level↔H-level 2) ⟩
+        P.Is-set (Streamˢ A)    ↝⟨ (λ h → h _ _) ⟩
+        refl ≡ p                ↝⟨ cong (cong proj₁) ⟩
+        refl ≡ cong proj₁ p     ↝⟨ flip trans (proj₁-Σ-≡,≡→≡ {B = F} {y₁ = proj₂ t} _ refl) ⟩
+        refl ≡ q                ↝⟨ cong (λ eq → subst id eq (inj₂ true)) ⟩
+        just true ≡ just false  ↝⟨ Bool.true≢false ∘ ⊎.cancel-inj₂ ⟩□
+        ⊥                       □
+      ]
   where
   F : Type → Type
   F S = Is-set S × (S → Step A S) × S
@@ -134,10 +139,10 @@ Streamˢ A = ∃ λ (S : Type) → Is-set S × (S → Step A S) × S
     , const done
     , nothing
 
-  q : Maybe Bool ≡ Maybe Bool
+  @0 q : Maybe Bool ≡ Maybe Bool
   q = ≃⇒≡ (F.id ⊎-cong Eq.↔⇒≃ B.swap)
 
-  p : t ≡ t
+  @0 p : t ≡ t
   p =
     Σ-≡,≡→≡ q $
     cong₂ _,_
@@ -180,13 +185,15 @@ module Tm-with-predicate
 
   ¬-Tm-set : A → ¬ Is-set (Tm A)
   ¬-Tm-set {A = A} a =
-    Is-set (Tm A)           ↝⟨ DB._↔_.to (I.H-level↔H-level 2) ⟩
-    P.Is-set (Tm A)         ↝⟨ (λ h → h _ _) ⟩
-    refl ≡ p                ↝⟨ cong map-injective ⟩
-    refl ≡ map-injective p  ↝⟨ flip trans lemma ⟩
-    refl ≡ p₁               ↝⟨ cong (λ eq → subst id eq (just true)) ⟩
-    just true ≡ just false  ↝⟨ Bool.true≢false ∘ ⊎.cancel-inj₂ ⟩□
-    ⊥                       □
+    E.Stable-¬
+      E.[ Is-set (Tm A)           ↝⟨ DB._↔_.to (I.H-level↔H-level 2) ⟩
+          P.Is-set (Tm A)         ↝⟨ (λ h → h _ _) ⟩
+          refl ≡ p                ↝⟨ cong map-injective ⟩
+          refl ≡ map-injective p  ↝⟨ flip trans lemma ⟩
+          refl ≡ p₁               ↝⟨ cong (λ eq → subst id eq (just true)) ⟩
+          just true ≡ just false  ↝⟨ Bool.true≢false ∘ ⊎.cancel-inj₂ ⟩□
+          ⊥                       □
+        ]
     where
     F : Type → Type₁
     F B = P B × Tm (B → A) × Tm B
@@ -199,10 +206,10 @@ module Tm-with-predicate
        , literal (const a)
        , literal nothing
 
-    p₁ : Maybe Bool ≡ Maybe Bool
+    @0 p₁ : Maybe Bool ≡ Maybe Bool
     p₁ = ≃⇒≡ (F.id ⊎-cong Eq.↔⇒≃ B.swap)
 
-    p₂ : subst F p₁ t′ ≡ t′
+    @0 p₂ : subst F p₁ t′ ≡ t′
     p₂ =
       cong₂ _,_
         (DB._↔_.to (I.H-level↔H-level 1) P-Maybe-Bool-propositional _ _)
@@ -211,7 +218,7 @@ module Tm-with-predicate
             literal (subst (λ B → B → A) p₁ (const a))       ≡⟨ (cong literal $ ⟨ext⟩ λ b → subst-→-domain id p₁ {u = b}) ⟩∎
             literal (const a)                                ∎))
 
-    p : t ≡ t
+    @0 p : t ≡ t
     p = _≃_.to (Eq.≃-≡ Tm≃) $ cong inj₂ $ Σ-≡,≡→≡ p₁ p₂
 
     map-injective :
@@ -224,7 +231,7 @@ module Tm-with-predicate
       (B , p , f , t) ≡ (B , p , f , t)                ↝⟨ cong proj₁ ⟩□
       B ≡ B                                            □
 
-    lemma : map-injective p ≡ p₁
+    @0 lemma : map-injective p ≡ p₁
     lemma =
       map-injective p                                ≡⟨⟩
 

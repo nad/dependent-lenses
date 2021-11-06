@@ -7,6 +7,11 @@
 -- The paper is coauthored with Andreas Abel and Andrea Vezzosi.
 ------------------------------------------------------------------------
 
+-- Note that this version of the code contains some changes that were
+-- made after the paper was written. In particular, now the variant of
+-- Agda that is activated using --erased-cubical supports higher
+-- inductive types with non-erased higher constructors.
+
 -- Most of the code referenced below can be found in modules that are
 -- parametrised by a notion of equality. One can use them both with
 -- Cubical Agda paths and with the Cubical Agda identity type family.
@@ -80,17 +85,12 @@ cong = Equality.Path.cong
 ext  = Equality.Path.⟨ext⟩
 
 -- The propositional truncation operator.
---
--- The current module uses --erased-cubical, so this operator, which
--- is defined using --cubical, can only be used in erased contexts.
 
-@0 ∥_∥ : _
 ∥_∥ = H-level.Truncation.Propositional.∥_∥
 
 -- The map function. This function is not defined in the same way as
 -- in the paper, it is defined using a non-dependent eliminator.
 
-@0 map : _
 map = H-level.Truncation.Propositional.∥∥-map
 
 -- The propositional truncation operator with an erased truncation
@@ -110,6 +110,9 @@ _≃_            = Equivalence._≃_
 Univalence = Univalence-axiom.Univalence
 
 -- A proof of univalence. The proof uses glue.
+--
+-- The current module uses --erased-cubical, so this proof, which is
+-- defined using --cubical, can only be used in erased contexts.
 
 @0 univ : _
 univ = Equality.Path.Univalence.univ
@@ -169,26 +172,20 @@ Lemma-47 = Equivalence.Erased.drop-⊤-left-Σ-≃ᴱ
 
 -- ∥_∥¹ and Colimit.
 
-@0 ∥_∥¹ : _
-∥_∥¹ = H-level.Truncation.Propositional.One-step.∥_∥¹
-@0 Colimit : _
+∥_∥¹    = H-level.Truncation.Propositional.One-step.∥_∥¹
 Colimit = Colimit.Sequential.Colimit
 
 -- Lemma 50.
 
-@0 Lemma-50 : _
 Lemma-50 = Colimit.Sequential.universal-property
 
 -- ∥_∥¹-out and ∥_∥ᴺ.
 
-@0 ∥_∥¹-out : _
 ∥_∥¹-out = H-level.Truncation.Propositional.One-step.∥_∥¹-out-^
-@0 ∥_∥ᴺ : _
-∥_∥ᴺ = H-level.Truncation.Propositional.Non-recursive.∥_∥
+∥_∥ᴺ     = H-level.Truncation.Propositional.Non-recursive.∥_∥
 
 -- ∥_∥ᴺ and ∥_∥ are pointwise equivalent.
 
-@0 ∥∥ᴺ≃∥∥ : _
 ∥∥ᴺ≃∥∥ = H-level.Truncation.Propositional.Non-recursive.∥∥≃∥∥
 
 -- Colimitᴱ.
@@ -212,12 +209,9 @@ Lemma-56 = H-level.Truncation.Propositional.Erased.∥∥ᴱ≃∥∥ᴱ
 
 -- Lensᴱ, get and set.
 
-@0 Lensᴱ : _
 Lensᴱ = Lens.Non-dependent.Higher.Lens
-@0 get : _
-get = Lens.Non-dependent.Higher.Lens.get
-@0 set : _
-set = Lens.Non-dependent.Higher.Lens.set
+get   = Lens.Non-dependent.Higher.Lens.get
+set   = Lens.Non-dependent.Higher.Lens.set
 
 -- Lensᴱᴱ.
 
@@ -274,15 +268,16 @@ _⁻¹ᴱ_ = Equivalence.Erased.Contractible-preimages._⁻¹ᴱ_
 
 Coherently-constant₁ᴱ =
   Lens.Non-dependent.Higher.Capriotti.Variant.Erased.Variant.Coherently-constant
-@0 Coherently-constant : _
-Coherently-constant = Coherently-constant.Coherently-constant
+Coherently-constant =
+  Coherently-constant.Coherently-constant
 Coherently-constant₂ᴱ =
   Lens.Non-dependent.Higher.Coinductive.Erased.Coherently-constant
 @0 Coherently-constant₂^C : _
 Coherently-constant₂^C =
   Lens.Non-dependent.Higher.Coinductive.Coherently-constant
 @0 constant : _
-constant = Lens.Non-dependent.Higher.Coinductive.constant
+constant =
+  Lens.Non-dependent.Higher.Coinductive.constant
 
 -- Lemmas 74–77.
 

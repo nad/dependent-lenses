@@ -3,8 +3,6 @@
 -- coinduction
 ------------------------------------------------------------------------
 
-{-# OPTIONS --cubical #-}
-
 import Equality.Path as P
 
 module Lens.Non-dependent.Higher.Coherently.Not-coinductive

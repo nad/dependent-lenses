@@ -2,7 +2,7 @@
 -- A variant of Coherently with an erased field
 ------------------------------------------------------------------------
 
-{-# OPTIONS --cubical --guardedness #-}
+{-# OPTIONS --guardedness #-}
 
 import Equality.Path as P
 
@@ -73,20 +73,6 @@ Coherentlyᴱ-cong′ {f = f} {P = P} {step = step} univ A₁≃A₂ =
     Eq.id
     A₁≃A₂
 
--- Coherently can be converted to Coherentlyᴱ in a certain way
--- (assuming univalence).
-
-Coherently→Coherentlyᴱ :
-  {P : {A : Type a} → (A → B) → Type p}
-  {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B} →
-  @0 Univalence a →
-  Coherently P step f → Coherentlyᴱ P (λ f p → step f p ∘ ∥∥¹ᴱ→∥∥¹) f
-Coherently→Coherentlyᴱ _    c .property = c .C.property
-Coherently→Coherentlyᴱ univ c .coherent =
-  Coherently→Coherentlyᴱ univ
-    (_≃_.from (C.Coherently-cong′ univ O.∥∥¹ᴱ≃∥∥¹)
-       (c .C.coherent))
-
 -- In erased contexts Coherently and Coherentlyᴱ are, in a certain
 -- sense, logically equivalent (assuming univalence).
 
@@ -95,7 +81,11 @@ Coherently→Coherentlyᴱ univ c .coherent =
   {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B} →
   Univalence a →
   Coherentlyᴱ P (λ f p → step f p ∘ ∥∥¹ᴱ→∥∥¹) f ⇔ Coherently P step f
-Coherentlyᴱ⇔Coherently univ ._⇔_.from = Coherently→Coherentlyᴱ univ
+Coherentlyᴱ⇔Coherently univ ._⇔_.from c .property = c .C.property
+Coherentlyᴱ⇔Coherently univ ._⇔_.from c .coherent =
+  Coherentlyᴱ⇔Coherently univ ._⇔_.from
+    (_≃_.from (C.Coherently-cong′ univ O.∥∥¹ᴱ≃∥∥¹)
+       (c .C.coherent))
 
 Coherentlyᴱ⇔Coherently univ ._⇔_.to c .C.property = c .property
 Coherentlyᴱ⇔Coherently univ ._⇔_.to c .C.coherent =
@@ -110,7 +100,7 @@ private
   -- The lemma does not use the univalence argument, instead it uses
   -- EPU.univ (and EPU.≃⇒≡) directly.
 
-  Coherentlyᴱ-cong-≡ :
+  @0 Coherentlyᴱ-cong-≡ :
     Block "Coherentlyᴱ-cong-≡" →
     {A : Type a}
     {P₁ P₂ : {A : Type a} → (A → B) → Type p}

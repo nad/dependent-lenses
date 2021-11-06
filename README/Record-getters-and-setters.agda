@@ -3,8 +3,6 @@
 -- definition of composable record setters and getters
 ------------------------------------------------------------------------
 
-{-# OPTIONS --cubical #-}
-
 -- This module uses both dependent and non-dependent lenses, in order
 -- to illustrate a problem with the non-dependent ones. It also uses
 -- two kinds of dependent lenses, in order to illustrate a minor
