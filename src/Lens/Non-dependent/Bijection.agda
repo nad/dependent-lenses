@@ -57,7 +57,7 @@ Lens-⊥-⊥≃Type :
 Lens-⊥-⊥≃Type =
   Lens ⊥ ⊥               ↔⟨ (∃-cong λ _ → Eq.↔↔≃ ext (mono₁ 1 ⊥-propositional)) ⟩
   (∃ λ R → ⊥ ≃ (R × ⊥))  ↔⟨ (∃-cong λ _ → Eq.≃-preserves-bijections ext F.id ×-right-zero) ⟩
-  (∃ λ R → ⊥ ≃ ⊥₀)       ↔⟨ (∃-cong λ _ → ≃⊥≃¬ ext) ⟩
+  (∃ λ R → ⊥ ≃ ⊥₀)       ↝⟨ (∃-cong λ _ → ≃⊥≃¬ ext) ⟩
   (∃ λ R → ¬ ⊥)          ↔⟨ drop-⊤-right (λ _ → ¬⊥↔⊤ {k = bijection} ext) ⟩□
   Type _                 □
 
