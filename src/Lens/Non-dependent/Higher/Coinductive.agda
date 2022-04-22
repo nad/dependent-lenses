@@ -344,8 +344,8 @@ private
                                                                                     trans (cong sym $
                                                                                            trans (sym $ cong-∘ _ _ _) $
                                                                                            trans (cong (cong (_$ ∣ n , x ∣-in-^)) $
-                                                                                                  cong-ext ext)
-                                                                                           (cong-refl _))
+                                                                                                  cong-ext ext) $
+                                                                                           cong-refl _)
                                                                                     sym-refl) $
                                                                              trans-reflˡ _ ⟩
 
