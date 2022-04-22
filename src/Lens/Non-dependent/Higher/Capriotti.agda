@@ -17,6 +17,7 @@ open import Coherently-constant eq using (Coherently-constant)
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq using (_≃_)
+open import Extensionality equality-with-J
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
@@ -133,11 +134,11 @@ Constant↠Coherently-constant {f = f} s = record
           trans (cong (_∘ s) eq)
             (⟨ext⟩ λ x →
              cong g (T.truncation-is-proposition ∣ s x ∣ x)))            ≡⟨ cong₂ trans
-                                                                              (trans (ext-trans _ _) $
+                                                                              (trans (ext-trans ext) $
                                                                                cong₂ trans
                                                                                  (_≃_.right-inverse-of
-                                                                                    (Eq.extensionality-isomorphism bad-ext) _)
-                                                                                 (trans (ext-trans _ _) $
+                                                                                    (Eq.extensionality-isomorphism ext) _)
+                                                                                 (trans (ext-trans ext) $
                                                                                   cong (trans _) $
                                                                                   cong ⟨ext⟩ $ ⟨ext⟩ λ _ →
                                                                                   trans (sym $ cong-∘ _ _ _) $
@@ -145,7 +146,7 @@ Constant↠Coherently-constant {f = f} s = record
                                                                               (trans (cong-trans _ _ _) $
                                                                                cong₂ trans
                                                                                  (cong-∘ _ _ _)
-                                                                                 (cong-pre-∘-ext _)) ⟩
+                                                                                 (cong-pre-∘-ext ext ext)) ⟩
        trans
          (trans eq
             (trans (⟨ext⟩ λ x →
@@ -163,10 +164,10 @@ Constant↠Coherently-constant {f = f} s = record
                                                                                       trans (cong (cong _) $
                                                                                              H-level.mono₁ 1 T.truncation-is-proposition _ _) $
                                                                                       cong-sym _ _) $
-                                                                               ext-sym _)
+                                                                               ext-sym ext)
                                                                               (cong (flip trans _) $
                                                                                _≃_.right-inverse-of
-                                                                                 (Eq.extensionality-isomorphism bad-ext) _) ⟩
+                                                                                 (Eq.extensionality-isomorphism ext) _) ⟩
        trans eq
          (trans (sym $
                  ⟨ext⟩ λ x →
@@ -283,8 +284,8 @@ equality-characterisation₁ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
   (∃ λ (g : get l₁ ≡ get l₂) →
    ∃ λ (h : H l₁ ≡ H l₂) →
      trans (sym (cong _⁻¹_ g)) (trans (get⁻¹-≡ l₁) (cong (_∘ ∣_∣) h)) ≡
-     get⁻¹-≡ l₂)                                                         ↝⟨ (Σ-cong-contra (Eq.extensionality-isomorphism bad-ext) λ _ →
-                                                                             Σ-cong-contra (Eq.extensionality-isomorphism bad-ext) λ _ →
+     get⁻¹-≡ l₂)                                                         ↝⟨ (Σ-cong-contra (Eq.extensionality-isomorphism ext) λ _ →
+                                                                             Σ-cong-contra (Eq.extensionality-isomorphism ext) λ _ →
                                                                              F.id) ⟩
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
    ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
@@ -292,7 +293,7 @@ equality-characterisation₁ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
        (trans (get⁻¹-≡ l₁) (cong (_∘ ∣_∣) (⟨ext⟩ h))) ≡
      get⁻¹-≡ l₂)                                                         ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ≡⇒↝ _ $
                                                                              cong (λ eq → trans _ (trans _ eq) ≡ _) $
-                                                                             cong-pre-∘-ext _) ⟩□
+                                                                             cong-pre-∘-ext ext ext) ⟩□
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
    ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
      trans (sym (cong _⁻¹_ (⟨ext⟩ g)))
@@ -360,7 +361,7 @@ Variant-coherently-constant≃Coherently-constant
 
   Variant.Coherently-constant P                     ↔⟨⟩
   (∃ λ (H : ∥ A ∥ → Type p) → ∀ b → P b ≃ H ∣ b ∣)  ↝⟨ (∃-cong λ _ → ∀-cong ext λ _ → inverse $ ≡≃≃ univ) ⟩
-  (∃ λ (H : ∥ A ∥ → Type p) → ∀ b → P b ≡ H ∣ b ∣)  ↝⟨ (∃-cong λ _ → Eq.extensionality-isomorphism bad-ext) ⟩
+  (∃ λ (H : ∥ A ∥ → Type p) → ∀ b → P b ≡ H ∣ b ∣)  ↝⟨ (∃-cong λ _ → Eq.extensionality-isomorphism ext) ⟩
   (∃ λ (H : ∥ A ∥ → Type p) → P ≡ H ∘ ∣_∣)          ↔⟨⟩
   Coherently-constant P                             □
 
@@ -409,7 +410,7 @@ Variant-lens≃Lens-preserves-getters-and-setters
     ∀ (l : Variant.Lens A B) b →
     ≡⇒≃ (cong (_$ b) (⟨ext⟩ (≃⇒≡ univ ∘ get⁻¹-≃ l))) ≡ get⁻¹-≃ l b
   lemma l b =
-    ≡⇒≃ (cong (_$ b) (⟨ext⟩ (≃⇒≡ univ ∘ get⁻¹-≃ l)))  ≡⟨ cong ≡⇒≃ $ cong-ext (≃⇒≡ univ ∘ get⁻¹-≃ l) ⟩
+    ≡⇒≃ (cong (_$ b) (⟨ext⟩ (≃⇒≡ univ ∘ get⁻¹-≃ l)))  ≡⟨ cong ≡⇒≃ $ cong-ext {f≡g = ≃⇒≡ univ ∘ get⁻¹-≃ l} ext ⟩
     ≡⇒≃ (≃⇒≡ univ (get⁻¹-≃ l b))                      ≡⟨ _≃_.right-inverse-of (≡≃≃ univ) _ ⟩∎
     get⁻¹-≃ l b                                       ∎
 

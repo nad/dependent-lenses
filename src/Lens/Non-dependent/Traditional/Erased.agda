@@ -24,6 +24,7 @@ open import Equivalence.Erased.Cubical eq as EEq
 open import Equivalence.Erased.Contractible-preimages equality-with-J
   as ECP using (Contractibleᴱ; _⁻¹ᴱ_)
 open import Erased.Cubical eq
+open import Extensionality equality-with-J
 open import Function-universe equality-with-J as F
   hiding (id; _∘_)
 open import H-level equality-with-J as H-level
@@ -1205,10 +1206,10 @@ abstract
         ext⁻¹ (ext⁻¹ s a) b₂                                                    ∎)
                                                                                 (
         s                                                                       ≡⟨ sym $ _≃_.right-inverse-of
-                                                                                           (Eq.extensionality-isomorphism bad-ext) _ ⟩
+                                                                                           (Eq.extensionality-isomorphism ext) _ ⟩
         ⟨ext⟩ (ext⁻¹ s)                                                         ≡⟨ (cong ⟨ext⟩ $ ⟨ext⟩ λ _ → sym $
                                                                                     _≃_.right-inverse-of
-                                                                                      (Eq.extensionality-isomorphism bad-ext) _) ⟩∎
+                                                                                      (Eq.extensionality-isomorphism ext) _) ⟩∎
         ⟨ext⟩ (⟨ext⟩ ⊚ ext⁻¹ ⊚ ext⁻¹ s)                                         ∎))) ⟩□
 
     (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
@@ -1531,7 +1532,7 @@ lens-from-⊥≃⊤ =
          trans (sym (get-set a (get a)))
            (trans (cong (get ⊚ set a) h)
               (get-set a b₀))                                ≡⟨ cong (λ f → trans (sym (f (get a))) (trans (cong (get ⊚ set a) h) (f b₀))) $ sym $
-                                                                _≃_.left-inverse-of (Eq.extensionality-isomorphism bad-ext) (get-set a) ⟩
+                                                                _≃_.left-inverse-of (Eq.extensionality-isomorphism ext) (get-set a) ⟩
          trans (sym (ext⁻¹ (⟨ext⟩ (get-set a)) (get a)))
            (trans (cong (get ⊚ set a) h)
               (ext⁻¹ (⟨ext⟩ (get-set a)) b₀))                ≡⟨ elim₁
@@ -2210,10 +2211,10 @@ module Lens-combinators where
         (∀ a a₁ a₂ → trans (set-set a a₁ a₂) (s a₂) ≡ s a₂)))            ↔⟨ (∃-cong λ _ → ∃-cong λ s → Erased-cong (∃-cong λ _ → ∃-cong λ _ →
                                                                              ∀-cong ext λ a → ∀-cong ext λ a₁ → ∀-cong ext λ a₂ →
                                                                              ≡⇒↝ F.equivalence $ cong (trans _ (s _) ≡_) (
-        s a₂                                                                   ≡⟨ sym $ cong-ext s ⟩
+        s a₂                                                                   ≡⟨ sym $ cong-ext ext ⟩
         cong (λ set → set a₂) (⟨ext⟩ s)                                        ≡⟨ sym $ cong-∘ _ _ (⟨ext⟩ s) ⟩
         cong (λ set → set (set a a₁) a₂) (cong const (⟨ext⟩ s))                ≡⟨ cong (cong (λ set → set (set a a₁) a₂)) $ sym $
-                                                                                  ext-const (⟨ext⟩ s) ⟩∎
+                                                                                  ext-const ext ⟩∎
         cong (λ set → set (set a a₁) a₂) (⟨ext⟩ λ _ → ⟨ext⟩ s)                 ∎))) ⟩
 
     (∃ λ (g : ∀ a → get a ≡ a) →
@@ -2637,7 +2638,7 @@ equality-characterisation-for-sets-≅ᴱ
       let lemma =
             cong (λ set → _≃ᴱ_.to C≃D (_≃ᴱ_.from C≃D (set d₁ d₂)))
               (⟨ext⟩ λ _ → ⟨ext⟩ $ _≃ᴱ_.right-inverse-of C≃D)       ≡⟨ cong (cong (λ set → _≃ᴱ_.to C≃D (_≃ᴱ_.from C≃D (set d₁ d₂)))) $
-                                                                       ext-const (⟨ext⟩ $ _≃ᴱ_.right-inverse-of C≃D) ⟩
+                                                                       ext-const ext ⟩
 
             cong (λ set → _≃ᴱ_.to C≃D (_≃ᴱ_.from C≃D (set d₁ d₂)))
               (cong const $ ⟨ext⟩ $ _≃ᴱ_.right-inverse-of C≃D)      ≡⟨ cong-∘ _ _ (⟨ext⟩ $ _≃ᴱ_.right-inverse-of C≃D) ⟩
@@ -2647,7 +2648,7 @@ equality-characterisation-for-sets-≅ᴱ
 
             cong (_≃ᴱ_.to C≃D ⊚ _≃ᴱ_.from C≃D)
               (cong (λ set → set d₂)
-                 (⟨ext⟩ $ _≃ᴱ_.right-inverse-of C≃D))               ≡⟨ cong (cong (_≃ᴱ_.to C≃D ⊚ _≃ᴱ_.from C≃D)) $ cong-ext _ ⟩
+                 (⟨ext⟩ $ _≃ᴱ_.right-inverse-of C≃D))               ≡⟨ cong (cong (_≃ᴱ_.to C≃D ⊚ _≃ᴱ_.from C≃D)) $ cong-ext ext ⟩
 
             cong (_≃ᴱ_.to C≃D ⊚ _≃ᴱ_.from C≃D)
               (_≃ᴱ_.right-inverse-of C≃D _)                         ≡⟨ sym $ cong-∘ _ _ (_≃ᴱ_.right-inverse-of C≃D _) ⟩
@@ -2668,7 +2669,7 @@ equality-characterisation-for-sets-≅ᴱ
                                                                                             (trans (cong (_≃ᴱ_.to C≃D) (_≃ᴱ_.left-inverse-of C≃D _))
                                                                                                (_≃ᴱ_.right-inverse-of C≃D _)))
                                                                              lemma
-                                                                             (cong-ext _) ⟩
+                                                                             (cong-ext ext) ⟩
       trans (sym
         (trans (cong (_≃ᴱ_.to C≃D) (_≃ᴱ_.left-inverse-of C≃D _))
            (_≃ᴱ_.right-inverse-of C≃D _)))
@@ -2682,13 +2683,13 @@ equality-characterisation-for-sets-≅ᴱ
       let lemma =
             cong (λ set → set d (_≃ᴱ_.to C≃D (_≃ᴱ_.from C≃D d)))
               (⟨ext⟩ λ _ → ⟨ext⟩ $ _≃ᴱ_.right-inverse-of C≃D)     ≡⟨ cong (cong (λ set → set d (_≃ᴱ_.to C≃D (_≃ᴱ_.from C≃D d)))) $
-                                                                     ext-const (⟨ext⟩ $ _≃ᴱ_.right-inverse-of C≃D) ⟩
+                                                                     ext-const ext ⟩
 
             cong (λ set → set d (_≃ᴱ_.to C≃D (_≃ᴱ_.from C≃D d)))
               (cong const $ ⟨ext⟩ $ _≃ᴱ_.right-inverse-of C≃D)    ≡⟨ cong-∘ _ _ (⟨ext⟩ $ _≃ᴱ_.right-inverse-of C≃D) ⟩
 
             cong (λ set → set (_≃ᴱ_.to C≃D (_≃ᴱ_.from C≃D d)))
-              (⟨ext⟩ $ _≃ᴱ_.right-inverse-of C≃D)                 ≡⟨ cong-ext _ ⟩∎
+              (⟨ext⟩ $ _≃ᴱ_.right-inverse-of C≃D)                 ≡⟨ cong-ext ext ⟩∎
 
             _≃ᴱ_.right-inverse-of C≃D _                           ∎
       in
@@ -2700,7 +2701,7 @@ equality-characterisation-for-sets-≅ᴱ
         (trans
            (cong (_≃ᴱ_.to C≃D) (_≃ᴱ_.left-inverse-of C≃D _))
            (_≃ᴱ_.left-inverse-of (inverse C≃D) _))                    ≡⟨ cong₂ (λ p q → trans (sym p) q)
-                                                                           (cong₂ trans lemma (cong-ext _))
+                                                                           (cong₂ trans lemma (cong-ext ext))
                                                                            (cong₂ trans
                                                                               (_≃ᴱ_.left-right-lemma C≃D _)
                                                                               (EEq.left-inverse-of∘inverse C≃D)) ⟩
@@ -2729,14 +2730,14 @@ equality-characterisation-for-sets-≅ᴱ
       subst (λ set → set (set d d₁) d₂ ≡ set d d₂)
          (⟨ext⟩ λ _ → ⟨ext⟩ $ _≃ᴱ_.right-inverse-of C≃D)
          (refl _)                                            ≡⟨ cong (flip (subst (λ set → set (set d d₁) d₂ ≡ set d d₂)) _) $
-                                                                ext-const (⟨ext⟩ $ _≃ᴱ_.right-inverse-of C≃D) ⟩
+                                                                ext-const ext ⟩
       subst (λ set → set (set d d₁) d₂ ≡ set d d₂)
         (cong const $ ⟨ext⟩ $ _≃ᴱ_.right-inverse-of C≃D)
         (refl _)                                             ≡⟨ sym $ subst-∘ _ _ _ ⟩
 
       subst (λ set → set d₂ ≡ set d₂)
         (⟨ext⟩ $ _≃ᴱ_.right-inverse-of C≃D)
-        (refl _)                                             ≡⟨ subst-ext _ _ ⟩
+        (refl _)                                             ≡⟨ subst-ext ext ⟩
 
       subst (λ set → set ≡ set)
         (_≃ᴱ_.right-inverse-of C≃D d₂)
@@ -3155,7 +3156,7 @@ Is-equivalenceᴱ-get→Is-bi-invertibleᴱ {A = A} {B = B} l′ is-equiv =
                                                                                                                     (get l (from b₂)))))
                                                                                                      (f _)))
                                                                                            (cong (get l) (set-set l (from b) b₁ b₂))) $ sym $
-                                                                             _≃_.left-inverse-of (Eq.extensionality-isomorphism bad-ext)
+                                                                             _≃_.left-inverse-of (Eq.extensionality-isomorphism ext)
                                                                                right-inverse-of ⟩
            trans (trans (sym (ext⁻¹ (⟨ext⟩ right-inverse-of) _))
                     (trans (sym (cong (get l)
@@ -3255,7 +3256,7 @@ Is-equivalenceᴱ-get→Is-bi-invertibleᴱ {A = A} {B = B} l′ is-equiv =
                lemma₂ = λ a →
                  trans (left-inverse-of (f a))
                    (left-inverse-of a)                        ≡⟨ cong (λ g → trans (g (f a)) (g a)) $ sym $
-                                                                 _≃_.left-inverse-of (Eq.extensionality-isomorphism bad-ext)
+                                                                 _≃_.left-inverse-of (Eq.extensionality-isomorphism ext)
                                                                    left-inverse-of ⟩∎
                  trans (ext⁻¹ (⟨ext⟩ left-inverse-of) (f a))
                    (ext⁻¹ (⟨ext⟩ left-inverse-of) a)          ∎
@@ -3349,7 +3350,7 @@ Is-equivalenceᴱ-get→Is-bi-invertibleᴱ {A = A} {B = B} l′ is-equiv =
                    (trans (sym (cong (from ⊚ get l) q))
                       (left-inverse-of _))                         ≡⟨ cong (λ g → trans (sym (g _))
                                                                                     (trans (sym (cong (from ⊚ get l) q)) (g _))) $ sym $
-                                                                      _≃_.left-inverse-of (Eq.extensionality-isomorphism bad-ext)
+                                                                      _≃_.left-inverse-of (Eq.extensionality-isomorphism ext)
                                                                         left-inverse-of ⟩∎
                  trans (sym (ext⁻¹ (⟨ext⟩ left-inverse-of) _))
                    (trans (sym (cong (from ⊚ get l) q))

@@ -20,6 +20,7 @@ open import Equivalence.Erased.Cubical eq as EEq using (_≃ᴱ_)
 open import Equivalence.Erased.Contractible-preimages.Cubical eq as ECP
   using (_⁻¹ᴱ_)
 open import Erased.Cubical eq
+open import Extensionality equality-with-J
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
@@ -277,8 +278,8 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
      ∀ b p →
      subst (_$ ∣ b ∣) h
        (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym g) p)) ≡
-     _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        ↝⟨ (Σ-cong-contra (Eq.extensionality-isomorphism bad-ext) λ _ →
-                                                                            Σ-cong-contra (Eq.extensionality-isomorphism bad-ext) λ _ →
+     _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        ↝⟨ (Σ-cong-contra (Eq.extensionality-isomorphism ext) λ _ →
+                                                                            Σ-cong-contra (Eq.extensionality-isomorphism ext) λ _ →
                                                                             F.id) ⟩
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
    ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
@@ -287,7 +288,7 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
        (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
      _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
                                                                             ≡⇒↝ _ $ cong (_≡ _) $
-                                                                            subst-ext _ _) ⟩□
+                                                                            subst-ext ext) ⟩□
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
    ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
      ∀ b p →
@@ -493,7 +494,7 @@ Lens≃ᴱHigher-lens {A = A} {B = B} bl univ =
                                                                             _≃ᴱ_.from (Higher.remainder≃ᴱget⁻¹ᴱ
                                                                                          (_⇔_.to (Lens⇔Higher-lens bl) l) b)) $
                                                                       trans (cong (flip (subst (_⁻¹ᴱ b)) p) $
-                                                                             trans (cong sym ext-refl) $
+                                                                             trans (cong sym $ ext-refl ext) $
                                                                              sym-refl) $
                                                                       subst-refl _ _ ⟩
          _≃_.to (Σ∥B∥H≃H ∣ b ∣)

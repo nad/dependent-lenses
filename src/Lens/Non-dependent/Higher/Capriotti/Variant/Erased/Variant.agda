@@ -23,6 +23,7 @@ open import Equivalence.Erased.Cubical eq as EEq using (_≃ᴱ_)
 open import Equivalence.Erased.Contractible-preimages.Cubical eq as ECP
   using (_⁻¹ᴱ_; Contractibleᴱ)
 open import Erased.Cubical eq
+open import Extensionality equality-with-J
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
@@ -161,7 +162,7 @@ Coherently-constant≃ᴱCoherently-constant′ {P = P} =
     (∃ λ (Q→Q : ∀ x y → Q x → Q y) →
      Erased (∀ x y →
              Q→Q x y ≡ subst Q (T.truncation-is-proposition x y)))        ↔⟨ (∀-cong ext λ _ → ∃-cong λ _ → Erased-cong (from-equivalence $
-                                                                              Eq.extensionality-isomorphism bad-ext)) F.∘
+                                                                              Eq.extensionality-isomorphism ext)) F.∘
                                                                              inverse ΠΣ-comm F.∘
                                                                              (∃-cong λ _ → Erased-Π↔Π) ⟩
     (∀ x →
@@ -172,7 +173,7 @@ Coherently-constant≃ᴱCoherently-constant′ {P = P} =
      ∃ λ (Q→Q : ∀ y → Q x → Q ∣ y ∣) →
      Erased (Q→Q ≡ λ y → subst Q (T.truncation-is-proposition x ∣ y ∣)))  ↔⟨ (∃-cong λ _ →
                                                                               (Erased-cong (from-equivalence $
-                                                                               Eq.extensionality-isomorphism bad-ext)) F.∘
+                                                                               Eq.extensionality-isomorphism ext)) F.∘
                                                                               inverse Erased-Π↔Π) F.∘
                                                                              ΠΣ-comm ⟩
     (∃ λ (Q→Q : ∀ x y → Q x → Q ∣ y ∣) →
@@ -188,8 +189,8 @@ Coherently-constant≃ᴱCoherently-constant′ {P = P} =
                                                                               ((∀-cong ext λ _ → Erased-Π↔Π) F.∘
                                                                                Erased-Π↔Π) F.∘
                                                                               Erased-cong (from-equivalence $ inverse $
-                                                                              Eq.extensionality-isomorphism bad-ext F.∘
-                                                                              (∀-cong ext λ _ → Eq.extensionality-isomorphism bad-ext))) ⟩
+                                                                              Eq.extensionality-isomorphism ext F.∘
+                                                                              (∀-cong ext λ _ → Eq.extensionality-isomorphism ext))) ⟩
     (∀ x y →
      ∃ λ (Q→Q : Q ∣ x ∣ → Q ∣ y ∣) →
      Erased (Q→Q ≡ subst Q (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)))    ↝⟨ (∀-cong [ ext ] λ _ → ∀-cong [ ext ] λ _ →
@@ -203,8 +204,8 @@ Coherently-constant≃ᴱCoherently-constant′ {P = P} =
              _≃ᴱ_.from (P≃Q y) ∘
              subst Q (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ∘
              _≃ᴱ_.to (P≃Q x)))                                            ↔⟨ (∃-cong λ _ → Erased-cong (from-equivalence $
-                                                                              Eq.extensionality-isomorphism bad-ext F.∘
-                                                                              (∀-cong ext λ _ → Eq.extensionality-isomorphism bad-ext))) F.∘
+                                                                              Eq.extensionality-isomorphism ext F.∘
+                                                                              (∀-cong ext λ _ → Eq.extensionality-isomorphism ext))) F.∘
                                                                              (∃-cong λ _ →
                                                                               inverse $
                                                                               (∀-cong ext λ _ → Erased-Π↔Π) F.∘
@@ -524,8 +525,8 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
      ∀ b p →
      subst (_$ ∣ b ∣) h
        (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym g) p)) ≡
-     _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        ↝⟨ (Σ-cong-contra (Eq.extensionality-isomorphism bad-ext) λ _ →
-                                                                            Σ-cong-contra (Eq.extensionality-isomorphism bad-ext) λ _ →
+     _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        ↝⟨ (Σ-cong-contra (Eq.extensionality-isomorphism ext) λ _ →
+                                                                            Σ-cong-contra (Eq.extensionality-isomorphism ext) λ _ →
                                                                             F.id) ⟩
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
    ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
@@ -534,7 +535,7 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
        (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
      _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
                                                                             ≡⇒↝ _ $ cong (_≡ _) $
-                                                                            subst-ext _ _) ⟩□
+                                                                            subst-ext ext) ⟩□
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
    ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
      ∀ b p →
@@ -701,7 +702,7 @@ Lens≃ᴱHigher-lens {A = A} {B = B} bl univ =
                                                                             _≃ᴱ_.from (Higher.remainder≃ᴱget⁻¹ᴱ
                                                                                          (_⇔_.to (Lens⇔Higher-lens bl) l) b)) $
                                                                       trans (cong (flip (subst (_⁻¹ᴱ b)) p) $
-                                                                             trans (cong sym ext-refl) $
+                                                                             trans (cong sym $ ext-refl ext) $
                                                                              sym-refl) $
                                                                       subst-refl _ _ ⟩
          _≃_.to (Σ∥B∥ᴱH≃H ∣ b ∣)

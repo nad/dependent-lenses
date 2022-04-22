@@ -27,6 +27,7 @@ open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq using (_≃_)
 import Equivalence.Half-adjoint equality-with-J as HA
+open import Extensionality equality-with-J
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
@@ -110,7 +111,7 @@ Constant≃Constant′ f = Eq.↔→≃
 
         trans (sym (cong (_$ ∣ x ∣) (⟨ext⟩ lem))) (refl (f x))     ≡⟨ trans-reflʳ _ ⟩
 
-        sym (cong (_$ ∣ x ∣) (⟨ext⟩ lem))                          ≡⟨ cong sym $ cong-ext _ ⟩
+        sym (cong (_$ ∣ x ∣) (⟨ext⟩ lem))                          ≡⟨ cong sym $ cong-ext ext ⟩
 
         sym (lem ∣ x ∣)                                            ≡⟨⟩
 
@@ -250,11 +251,11 @@ private
              (cong (λ f → f n x)
                 (⟨ext⟩ λ n → ⟨ext⟩ λ x → to₁-from f c n x)))        ≡⟨ cong₂ (λ p q → trans (sym p) (trans (to₂ (f 0) (from f c) n x) q))
                                                                          (trans (sym $ cong-∘ _ _ _) $
-                                                                          trans (cong (cong _) $ cong-ext _) $
-                                                                          cong-ext _)
+                                                                          trans (cong (cong _) $ cong-ext ext) $
+                                                                          cong-ext ext)
                                                                          (trans (sym $ cong-∘ _ _ _) $
-                                                                          trans (cong (cong _) $ cong-ext _) $
-                                                                          cong-ext _) ⟩
+                                                                          trans (cong (cong _) $ cong-ext ext) $
+                                                                          cong-ext ext) ⟩
         trans (sym (to₁-from f c (suc n) ∣ n , x ∣-in-^))
           (trans (to₂ (f 0) (from f c) n x)
              (to₁-from f c n x))                                    ≡⟨ to₂-from f c n x ⟩∎
@@ -343,7 +344,7 @@ private
                                                                                     trans (cong sym $
                                                                                            trans (sym $ cong-∘ _ _ _) $
                                                                                            trans (cong (cong (_$ ∣ n , x ∣-in-^)) $
-                                                                                                  cong-ext _)
+                                                                                                  cong-ext ext)
                                                                                            (cong-refl _))
                                                                                     sym-refl) $
                                                                              trans-reflˡ _ ⟩
@@ -351,7 +352,7 @@ private
            trans (eq′ n x) (cong (λ f → f n x) (⟨ext⟩ r))                 ≡⟨ cong (trans _) $
                                                                              trans (sym $ cong-∘ _ _ _) $
                                                                              cong (cong (_$ x)) $
-                                                                             cong-ext _ ⟩
+                                                                             cong-ext ext ⟩
 
            trans (eq′ n x) (cong (_$ x) $ r n)                            ≡⟨ ℕ-case
                                                                                {P = λ n → ∀ x → trans (eq′ n x) (cong (_$ x) $ r n) ≡ eq n x}
@@ -488,12 +489,12 @@ from-Coherently-constant′≃-property
        (ℕ-case f g , ℕ-case g₀ g₊))                                    ≡⟨ cong (cong (_$ 0)) $
                                                                           proj₁-Σ-≡,≡→≡ _ _ ⟩
     (cong (_$ 0) $ ⟨ext⟩ λ n → ⟨ext⟩ λ x →
-     ∃Coherently-constant′≃.to₁-from (ℕ-case f g) (ℕ-case g₀ g₊) n x)  ≡⟨ cong-ext _ ⟩
+     ∃Coherently-constant′≃.to₁-from (ℕ-case f g) (ℕ-case g₀ g₊) n x)  ≡⟨ cong-ext ext ⟩
 
     (⟨ext⟩ λ x →
      ∃Coherently-constant′≃.to₁-from (ℕ-case f g) (ℕ-case g₀ g₊) 0 x)  ≡⟨⟩
 
-    (⟨ext⟩ λ _ → refl _)                                               ≡⟨ ext-refl ⟩∎
+    (⟨ext⟩ λ _ → refl _)                                               ≡⟨ ext-refl ext ⟩∎
 
     refl _                                                             ∎
 

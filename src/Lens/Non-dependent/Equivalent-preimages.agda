@@ -17,6 +17,7 @@ open import Bijection equality-with-J as B using (_↔_)
 open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
+open import Extensionality equality-with-J
 open import Function-universe equality-with-J as F
   hiding (id; _∘_; ∘⁻¹≃)
 open import H-level equality-with-J as H-level
@@ -323,7 +324,7 @@ equality-characterisation {l₁ = l₁} {l₂ = l₂} =
                                                                   ignore-propositional-component
                                                                     (Π-closure ext 1 λ _ →
                                                                      Π-closure ext 1 λ _ →
-                                                                     Eq.propositional ext _) ⟩
+                                                                     Is-equivalence-propositional ext) ⟩
   ((get l₁ , get⁻¹-const l₁) , get⁻¹-const-∘ l₁) ≡
   ((get l₂ , get⁻¹-const l₂) , get⁻¹-const-∘ l₂)               ↔⟨ inverse B.Σ-≡,≡↔≡ ⟩
 
@@ -356,7 +357,7 @@ equality-characterisation {l₁ = l₁} {l₂ = l₂} =
           ∀ b₁ b₂ b₃ (p : get ⁻¹ b₁) →
           gc b₂ b₃ (gc b₁ b₂ p) ≡ gc b₁ b₃ p)
        (Σ-≡,≡→≡ g gc) (get⁻¹-const-∘ l₁) ≡
-     get⁻¹-const-∘ l₂)                                         ↝⟨ (Σ-cong-contra (Eq.extensionality-isomorphism bad-ext) λ _ → F.id) ⟩
+     get⁻¹-const-∘ l₂)                                         ↝⟨ (Σ-cong-contra (Eq.extensionality-isomorphism ext) λ _ → F.id) ⟩
 
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
    ∃ λ (gc : subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
@@ -400,15 +401,15 @@ equality-characterisation {l₁ = l₁} {l₂ = l₂} =
   lemma₂ g =
     subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
       (⟨ext⟩ g) (get⁻¹-const l₁) ≡
-    get⁻¹-const l₂                                              ↝⟨ inverse $ Eq.extensionality-isomorphism bad-ext ⟩
+    get⁻¹-const l₂                                              ↝⟨ inverse $ Eq.extensionality-isomorphism ext ⟩
 
     (∀ b₁ → subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
                (⟨ext⟩ g) (get⁻¹-const l₁) b₁ ≡
-            get⁻¹-const l₂ b₁)                                  ↝⟨ (∀-cong ext λ _ → inverse $ Eq.extensionality-isomorphism bad-ext) ⟩
+            get⁻¹-const l₂ b₁)                                  ↝⟨ (∀-cong ext λ _ → inverse $ Eq.extensionality-isomorphism ext) ⟩
 
     (∀ b₁ b₂ → subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
                  (⟨ext⟩ g) (get⁻¹-const l₁) b₁ b₂ ≡
-               get⁻¹-const l₂ b₁ b₂)                            ↝⟨ (∀-cong ext λ _ → ∀-cong ext λ _ → inverse $ Eq.extensionality-isomorphism bad-ext) ⟩□
+               get⁻¹-const l₂ b₁ b₂)                            ↝⟨ (∀-cong ext λ _ → ∀-cong ext λ _ → inverse $ Eq.extensionality-isomorphism ext) ⟩□
 
     (∀ b₁ b₂ p →
      subst (λ get → ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂)
@@ -746,7 +747,7 @@ coherent→ ⊠ l = _≃_.from Lens-as-Σ′
          (trans (cong (get ⊚ set a) get-a≡b₂)
             (get-set a b₂))                                   ≡⟨ cong (λ eq → trans (sym (eq (get a)))
                                                                                 (trans (cong (get ⊚ set a) get-a≡b₂) (eq b₂))) $ sym $
-                                                                 _≃_.left-inverse-of (Eq.extensionality-isomorphism bad-ext) _ ⟩
+                                                                 _≃_.left-inverse-of (Eq.extensionality-isomorphism ext) _ ⟩
        trans (sym (ext⁻¹ (⟨ext⟩ (get-set a)) (get a)))
          (trans (cong (get ⊚ set a) get-a≡b₂)
             (ext⁻¹ (⟨ext⟩ (get-set a)) b₂))                   ≡⟨ elim₁
@@ -836,8 +837,9 @@ traditional≃ {A = A} {B = B} b@⊠ A-set = Eq.↔→≃
               l″ = coherent→ b (_≃_.to (Traditional.≃coherent A-set) l′)
           in
           proj₁ (get⁻¹-const l″ b₁ b₂
-                   (subst (_⁻¹ b₁) (sym $ ⟨ext⟩ λ _ → refl _) p))         ≡⟨ cong (λ eq → proj₁ (get⁻¹-const l″ b₁ b₂ (subst (_⁻¹ b₁) (sym eq) p)))
-                                                                             ext-refl ⟩
+                   (subst (_⁻¹ b₁) (sym $ ⟨ext⟩ λ _ → refl _) p))         ≡⟨ cong (λ eq →
+                                                                                     proj₁ (get⁻¹-const l″ b₁ b₂ (subst (_⁻¹ b₁) (sym eq) p))) $
+                                                                             ext-refl ext ⟩
 
           proj₁ (get⁻¹-const l″ b₁ b₂ (subst (_⁻¹ b₁) (sym (refl _)) p))  ≡⟨ cong (λ eq → proj₁ (get⁻¹-const l″ b₁ b₂ (subst (_⁻¹ b₁) eq p)))
                                                                              sym-refl ⟩

@@ -15,6 +15,7 @@ open import Prelude as P hiding (id)
 open import Bijection equality-with-J as B using (_↔_)
 open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq using (_≃_)
+open import Extensionality equality-with-J
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
@@ -341,8 +342,8 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
      ∀ b p →
      subst (_$ ∣ b ∣) h
        (_≃_.to (get⁻¹-≃ l₁ b) (subst (_⁻¹ b) (sym g) p)) ≡
-     _≃_.to (get⁻¹-≃ l₂ b) p)                                       ↝⟨ (Σ-cong-contra (Eq.extensionality-isomorphism bad-ext) λ _ →
-                                                                        Σ-cong-contra (Eq.extensionality-isomorphism bad-ext) λ _ →
+     _≃_.to (get⁻¹-≃ l₂ b) p)                                       ↝⟨ (Σ-cong-contra (Eq.extensionality-isomorphism ext) λ _ →
+                                                                        Σ-cong-contra (Eq.extensionality-isomorphism ext) λ _ →
                                                                         F.id) ⟩
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
    ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
@@ -351,7 +352,7 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
        (_≃_.to (get⁻¹-≃ l₁ b) (subst (_⁻¹ b) (sym (⟨ext⟩ g)) p)) ≡
      _≃_.to (get⁻¹-≃ l₂ b) p)                                       ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
                                                                         ≡⇒↝ _ $ cong (_≡ _) $
-                                                                        subst-ext _ _) ⟩□
+                                                                        subst-ext ext) ⟩□
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
    ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
      ∀ b p →
@@ -547,7 +548,7 @@ Lens≃Higher-lens {A = A} {B = B} ⊠ univ =
               (subst (_⁻¹ b) (sym (⟨ext⟩ λ _ → refl _)) p))             ≡⟨ cong (_≃_.to (Σ∥B∥H≃H ∣ b ∣) ∘
                                                                                  _≃_.from (Higher.remainder≃get⁻¹ (to l) b)) $
                                                                            trans (cong (flip (subst (_⁻¹ b)) p) $
-                                                                                  trans (cong sym ext-refl) $
+                                                                                  trans (cong sym $ ext-refl ext) $
                                                                                   sym-refl) $
                                                                            subst-refl _ _ ⟩
          _≃_.to (Σ∥B∥H≃H ∣ b ∣)

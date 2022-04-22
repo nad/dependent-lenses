@@ -232,8 +232,8 @@ Coherently-constant≃ᴱCoherently-constant
    P-const x y ≡
    subst (_≃_.from (∥∥ᴱ→≃ bl univ′) (P , [ c ]))
      (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)))                        ↔⟨ (∃-cong λ _ → Erased-cong (∃-cong λ _ →
-                                                                            Eq.extensionality-isomorphism bad-ext F.∘
-                                                                            (∀-cong ext λ _ → Eq.extensionality-isomorphism bad-ext))) ⟩
+                                                                            Eq.extensionality-isomorphism ext F.∘
+                                                                            (∀-cong ext λ _ → Eq.extensionality-isomorphism ext))) ⟩
   (∃ λ (P-const : ∀ x y → P x → P y) →
    Erased (
    ∃ λ (c : C.Coherently-constant P) →

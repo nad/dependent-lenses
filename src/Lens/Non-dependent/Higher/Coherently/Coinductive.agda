@@ -21,11 +21,13 @@ open import Prelude
 open import Bijection equality-with-J as B using (_↔_)
 import Bijection P.equality-with-J as PB
 open import Container.Indexed equality-with-J
+open import Container.Indexed.Coalgebra equality-with-J
 open import Container.Indexed.M.Codata eq
 import Container.Indexed.M.Function equality-with-J as F
 open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq using (_≃_)
 import Equivalence P.equality-with-J as PEq
+import Extensionality P.equality-with-J as PExt
 open import Function-universe equality-with-J hiding (id; _∘_)
 import Function-universe P.equality-with-J as PF
 open import H-level equality-with-J
@@ -162,7 +164,7 @@ private
       (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) →
        EPU.≃⇒≡ (P₁≃P₂ f))
 
-      (P.implicit-extensionality P.ext λ A → P.⟨ext⟩ λ f →
+      (PExt.implicit-extensionality P.ext λ A → P.⟨ext⟩ λ f →
          P.subst (λ P → {A : Type a} (f : A → B) → P A f → ∥ A ∥¹ → B)
            (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) →
             EPU.≃⇒≡ (P₁≃P₂ f))

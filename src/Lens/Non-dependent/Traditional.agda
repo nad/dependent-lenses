@@ -17,6 +17,7 @@ open import Circle eq as Circle using (𝕊¹)
 open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
+open import Extensionality equality-with-J
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
@@ -1071,10 +1072,10 @@ abstract
         ext⁻¹ (ext⁻¹ s a) b₂                                                   ∎)
                                                                                (
         s                                                                      ≡⟨ sym $ _≃_.right-inverse-of
-                                                                                          (Eq.extensionality-isomorphism bad-ext) _ ⟩
+                                                                                          (Eq.extensionality-isomorphism ext) _ ⟩
         ⟨ext⟩ (ext⁻¹ s)                                                        ≡⟨ (cong ⟨ext⟩ $ ⟨ext⟩ λ _ → sym $
                                                                                    _≃_.right-inverse-of
-                                                                                     (Eq.extensionality-isomorphism bad-ext) _) ⟩∎
+                                                                                     (Eq.extensionality-isomorphism ext) _) ⟩∎
         ⟨ext⟩ (⟨ext⟩ ∘ ext⁻¹ ∘ ext⁻¹ s)                                        ∎)) ⟩□
 
     (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
@@ -1440,7 +1441,7 @@ lens-from-⊥≃⊤ = Eq.⇔→≃
          trans (sym (get-set a (get a)))
            (trans (cong (get ∘ set a) h)
               (get-set a b₀))                                ≡⟨ cong (λ f → trans (sym (f (get a))) (trans (cong (get ∘ set a) h) (f b₀))) $ sym $
-                                                                _≃_.left-inverse-of (Eq.extensionality-isomorphism bad-ext) (get-set a) ⟩
+                                                                _≃_.left-inverse-of (Eq.extensionality-isomorphism ext) (get-set a) ⟩
          trans (sym (ext⁻¹ (⟨ext⟩ (get-set a)) (get a)))
            (trans (cong (get ∘ set a) h)
               (ext⁻¹ (⟨ext⟩ (get-set a)) b₀))                ≡⟨ elim₁

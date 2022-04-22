@@ -21,6 +21,7 @@ open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq using (_≃_)
 import Equivalence P.equality-with-J as PEq
 open import Equivalence.Erased equality-with-J as EEq using (_≃ᴱ_)
+import Extensionality P.equality-with-J as PExt
 open import Function-universe equality-with-J hiding (_∘_)
 import Function-universe P.equality-with-J as PF
 open import H-level.Truncation.Propositional.One-step eq as O
@@ -126,7 +127,7 @@ private
       (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) →
        EPU.≃⇒≡ (P₁≃P₂ f))
 
-      (P.implicit-extensionality P.ext λ A → P.⟨ext⟩ λ f →
+      (PExt.implicit-extensionality P.ext λ A → P.⟨ext⟩ λ f →
          P.subst (λ P → {A : Type a} (f : A → B) → P A f → ∥ A ∥¹ᴱ → B)
            (P.⟨ext⟩ λ A → P.⟨ext⟩ λ (f : A → B) →
             EPU.≃⇒≡ (P₁≃P₂ f))

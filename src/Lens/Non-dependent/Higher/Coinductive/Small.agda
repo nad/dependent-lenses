@@ -20,6 +20,7 @@ open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
+open import Extensionality equality-with-J
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
@@ -504,9 +505,11 @@ Coherently-constant-Σ {p = p} {q = q} univ₁ univ₂ univ₃ =
                                                                                             eq)
                                                                                          q′)) $
                                                                             cong-ext
-                                                                              (λ p → trans (subst-→-domain P′ {f = λ p → ∣ x , p ∣}
-                                                                                              (O.∣∣-constant x y))
-                                                                                       (O.∣∣-constant _ (_ , p))) ⟩
+                                                                              {f≡g = λ p →
+                                                                                       trans (subst-→-domain P′ {f = λ p → ∣ x , p ∣}
+                                                                                                (O.∣∣-constant x y))
+                                                                                         (O.∣∣-constant _ (_ , p))}
+                                                                              ext ⟩
                subst (λ p → Q (y , p)) lemma₁
                  (subst (O.rec′ Q λ x y → ≃⇒≡ univ₂ (c₂ .property x y))
                     (trans

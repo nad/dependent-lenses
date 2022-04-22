@@ -19,6 +19,7 @@ import Circle eq as Circle
 open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
+open import Extensionality equality-with-J
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
@@ -386,7 +387,7 @@ open B public
   lemma₃ =
     ⊤                                                               ↔⟨ inverse $ _⇔_.to contractible⇔↔⊤ $
                                                                        propositional⇒inhabited⇒contractible
-                                                                         (Eq.propositional ext _)
+                                                                         (Is-equivalence-propositional ext)
                                                                          (_≃_.is-equivalence Eq.id) ⟩
 
     Is-equivalence P.id                                             ↔⟨ ≡⇒↝ equivalence $ cong Is-equivalence $
@@ -601,7 +602,7 @@ Is-bi-invertible≃Is-equivalence-get :
   Is-bi-invertible b l ≃ Is-equivalence (Lens.get l)
 Is-bi-invertible≃Is-equivalence-get b univ l = Eq.⇔→≃
   (BM.Is-bi-invertible-propositional b univ l)
-  (Eq.propositional ext _)
+  (Is-equivalence-propositional ext)
   (Is-bi-invertible→Is-equivalence-get b univ l)
   (λ is-equiv →
 

@@ -23,6 +23,7 @@ open import Equivalence.Erased.Cubical eq as EEq using (_≃ᴱ_)
 open import Equivalence.Erased.Contractible-preimages.Cubical eq as ECP
   using (_⁻¹ᴱ_)
 open import Erased.Cubical eq
+open import Extensionality equality-with-J
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J
 open import H-level.Closure equality-with-J
@@ -302,7 +303,7 @@ to-Constant-≃-get-⁻¹-≃-to-Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹-≡
     (lemma bl)
     ((Π-closure ext 1 λ _ →
       Π-closure ext 1 λ _ →
-      Eq.propositional ext _)
+      Is-equivalence-propositional ext)
        _ _)
   where
   lemma :
@@ -331,8 +332,8 @@ to-Constant-≃-get-⁻¹-≃-to-Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹-≡
                                                                              cong (_$ b) $ push-subst-application _ _ ⟩
        subst (λ set → get (set a b) ≡ b)
          (⟨ext⟩ λ _ → ⟨ext⟩ λ _ → cong proj₁ $ sym $ subst-refl _ _)
-         (erased (proj₂ (proj₁ (c (get a) b) (a , [ refl _ ]))))          ≡⟨ trans (subst-ext _ _) $
-                                                                             subst-ext _ _ ⟩
+         (erased (proj₂ (proj₁ (c (get a) b) (a , [ refl _ ]))))          ≡⟨ trans (subst-ext ext) $
+                                                                             subst-ext ext ⟩
        subst (λ s → get s ≡ b)
          (cong proj₁ $ sym $ subst-refl _ _)
          (erased (proj₂ (proj₁ (c (get a) b) (a , [ refl _ ]))))          ≡⟨ sym $ subst-∘ _ _ _ ⟩
@@ -522,7 +523,7 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
                                                                               propositional⇒inhabited⇒contractible
                                                                                 (Π-closure ext 1 λ _ →
                                                                                  Π-closure ext 1 λ _ →
-                                                                                 H-level-Erased 1 (Eq.propositional ext _))
+                                                                                 H-level-Erased 1 (Is-equivalence-propositional ext))
                                                                                 (λ x y →
                                                                                    [ Eq.respects-extensional-equality
                                                                                        (ext⁻¹ (sym (eq x y)))
@@ -581,7 +582,7 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
                                                                            cong (λ f → subst P.id
                                                                                          (trans (sym (f b₁))
                                                                                             (trans (c′ .property b₁ b₂) (f b₂)))) $
-                                                                           _≃_.left-inverse-of (Eq.extensionality-isomorphism bad-ext) _ ⟩
+                                                                           _≃_.left-inverse-of (Eq.extensionality-isomorphism ext) _ ⟩
     subst P.id
       (trans (sym (cong (_$ b₁) $ ⟨ext⟩ λ _ → ≃⇒≡ univ ECP.⁻¹≃⁻¹ᴱ))
          (trans (c′ .property b₁ b₂)
@@ -617,10 +618,10 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
                                                                          (∀-cong ext λ _ → ∀-cong ext λ _ → from-bijection $ inverse $
                                                                           ≡-comm F.∘
                                                                           ignore-propositional-component
-                                                                            (H-level-Erased 1 (Eq.propositional ext _))) F.∘
+                                                                            (H-level-Erased 1 (Is-equivalence-propositional ext))) F.∘
                                                                          inverse
-                                                                           (Eq.extensionality-isomorphism bad-ext F.∘
-                                                                            (∀-cong ext λ _ → Eq.extensionality-isomorphism bad-ext)) F.∘
+                                                                           (Eq.extensionality-isomorphism ext F.∘
+                                                                            (∀-cong ext λ _ → Eq.extensionality-isomorphism ext)) F.∘
                                                                          (≡⇒≃ $ cong (_ ≡_) $
                                                                           _≃_.left-inverse-of (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl univ) _) F.∘
                                                                          (inverse $

@@ -22,6 +22,7 @@ open import Equality.Path.Isomorphisms eq
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 import Equivalence.Half-adjoint equality-with-J as HA
+open import Extensionality equality-with-J
 open import Function-universe equality-with-J as F hiding (id; _∘_)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
@@ -891,7 +892,7 @@ private
           subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂)              ↝⟨ inverse $ Σ-cong (inverse $ ≡≃≃ univ) (λ _ → F.id) ⟩
 
        (∃ λ (p : R l₁ ≃ R l₂) →
-          subst (λ R → A ≃ (R × B)) (≃⇒≡ univ p) (equiv l₁) ≡ equiv l₂)   ↔⟨ (∃-cong λ _ → inverse $ ≃-to-≡≃≡ ext bad-ext) ⟩
+          subst (λ R → A ≃ (R × B)) (≃⇒≡ univ p) (equiv l₁) ≡ equiv l₂)   ↔⟨ (∃-cong λ _ → inverse $ ≃-to-≡≃≡ ext ext) ⟩
 
        (∃ λ (p : R l₁ ≃ R l₂) →
           ∀ a →
@@ -957,9 +958,9 @@ private
                  (q a))
           )                                                               ≡⟨ cong (λ eq → _↔_.from (equality-characterisation₀ b)
                                                                                             (≃⇒≡ univ p , Eq.lift-equality ext eq)) $
-                                                                             trans (ext-trans _ _) $
+                                                                             trans (ext-trans ext) $
                                                                              cong (flip trans _) $
-                                                                             _≃_.right-inverse-of (Eq.extensionality-isomorphism bad-ext) _ ⟩
+                                                                             _≃_.right-inverse-of (Eq.extensionality-isomorphism ext) _ ⟩
         _↔_.from (equality-characterisation₀ b)
           ( ≃⇒≡ univ p
           , Eq.lift-equality ext
@@ -1364,7 +1365,7 @@ lenses-equal-if-setters-equal′
   f≃ =
     HA.[inhabited→Is-equivalence]→Is-equivalence λ r →
     Trunc.rec
-      (Eq.propositional ext _)
+      (Is-equivalence-propositional ext)
       (Eq.drop-Σ-map-id _ id-f≃)
       (inhabited l₂ r)
 
@@ -1637,8 +1638,8 @@ get-equivalence≃inhabited-equivalence :
   Is-equivalence (Lens.get l) ≃ Is-equivalence (Lens.inhabited l)
 get-equivalence≃inhabited-equivalence {A = A} {B = B} l =
   Is-equivalence (get l)                  ↝⟨ Eq.⇔→≃
-                                               (Eq.propositional ext _)
-                                               (Eq.propositional ext _)
+                                               (Is-equivalence-propositional ext)
+                                               (Is-equivalence-propositional ext)
                                                (flip (Eq.Two-out-of-three.g∘f-f (Eq.two-out-of-three _ _))
                                                   (_≃_.is-equivalence (equiv l)))
                                                (Eq.Two-out-of-three.f-g (Eq.two-out-of-three _ _)
