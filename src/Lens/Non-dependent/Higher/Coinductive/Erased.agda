@@ -17,6 +17,8 @@ open import Prelude
 import Colimit.Sequential.Very-erased eq as CS
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq
+open import Equality.Path.Isomorphisms.Univalence eq
+  using () renaming (abstract-univ to univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Equivalence.Erased.Cubical eq as EEq using (_≃ᴱ_)
@@ -79,16 +81,15 @@ private
     sym $ O.∣∣≡∣,∣-in-^ (1 + n)
 
 -- Functions from ∥ A ∥ᴱ can be expressed as coherently constant
--- functions from A with erased "proofs" (assuming univalence).
+-- functions from A with erased "proofs".
 
 ∥∥ᴱ→≃ :
   Block "∥∥ᴱ→≃" →
   {A : Type a} {B : Type b} →
-  @0 Univalence (a ⊔ b) →
   (∥ A ∥ᴱ → B)
     ≃
   (∃ λ (f : A → B) → Erased (C.Coherently-constant f))
-∥∥ᴱ→≃ bl {A = A} {B = B} univ =
+∥∥ᴱ→≃ bl {A = A} {B = B} =
   (∥ A ∥ᴱ → B)                                                 ↝⟨ →-cong ext T.∥∥ᴱ≃∥∥ᴱ F.id ⟩
 
   (N.∥ A ∥ᴱ → B)                                               ↝⟨ CS.universal-property ⟩
@@ -113,14 +114,13 @@ private
 @0 cong-from-∥∥ᴱ→≃-truncation-is-proposition :
   (bl : Block "∥∥ᴱ→≃")
   {A : Type a} {B : Type b}
-  (univ : Univalence (a ⊔ b)) →
   {f : A → B} {c : C.Coherently-constant f}
   {x y : A} {p : ∣ x ∣ ≡ ∣ y ∣} →
-  cong (_≃_.from (∥∥ᴱ→≃ bl univ) (f , [ c ])) p ≡
+  cong (_≃_.from (∥∥ᴱ→≃ bl) (f , [ c ])) p ≡
   c .property x y
 cong-from-∥∥ᴱ→≃-truncation-is-proposition
-  bl {A = A} univ {f = f} {c = c} {x = x} {y = y} {p = p} =
-  cong (_≃_.from (∥∥ᴱ→≃ bl univ) (f , [ c ])) p                         ≡⟨⟩
+  bl {A = A} {f = f} {c = c} {x = x} {y = y} {p = p} =
+  cong (_≃_.from (∥∥ᴱ→≃ bl) (f , [ c ])) p                              ≡⟨⟩
 
   cong (_≃_.from CS.universal-property (f , [ g bl ]) ∘
         _≃_.to T.∥∥ᴱ≃∥∥ᴱ)
@@ -196,15 +196,13 @@ Coherently-constant P =
           ∀ x y → f x y ≡ subst id (c .property x y))
 
 -- Coherently-constant is pointwise equivalent (with erased proofs) to
--- V.Coherently-constant (assuming univalence).
+-- V.Coherently-constant.
 
 Coherently-constant≃ᴱCoherently-constant :
   {A : Type a} {P : A → Type p} →
-  @0 Univalence (a ⊔ lsuc p) →
-  @0 Univalence p →
   Coherently-constant P ≃ᴱ V.Coherently-constant P
 Coherently-constant≃ᴱCoherently-constant
-  {a = a} {p = p} {A = A} {P = P} univ′ univ =
+  {a = a} {p = p} {A = A} {P = P} =
   block λ bl →
 
   Coherently-constant P                                                 ↔⟨⟩
@@ -217,12 +215,12 @@ Coherently-constant≃ᴱCoherently-constant
                                                                             ∃-cong λ c → ∀-cong ext λ x → ∀-cong ext λ y →
                                                                             ≡⇒≃ $ cong (P-const x y ≡_) (
       subst id (c .property x y)                                            ≡⟨ cong (subst id) $ sym $
-                                                                                 cong-from-∥∥ᴱ→≃-truncation-is-proposition bl univ′ ⟩
+                                                                                 cong-from-∥∥ᴱ→≃-truncation-is-proposition bl ⟩
       subst id
-        (cong (_≃_.from (∥∥ᴱ→≃ bl univ′) (P , [ c ]))
+        (cong (_≃_.from (∥∥ᴱ→≃ bl) (P , [ c ]))
            (T.truncation-is-proposition ∣ x ∣ ∣ y ∣))                       ≡⟨ (⟨ext⟩ λ _ → sym $
                                                                                   subst-∘ _ _ _) ⟩∎
-      subst (_≃_.from (∥∥ᴱ→≃ bl univ′) (P , [ c ]))
+      subst (_≃_.from (∥∥ᴱ→≃ bl) (P , [ c ]))
         (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)                           ∎))) ⟩
 
   (∃ λ (P-const : ∀ x y → P x → P y) →
@@ -230,7 +228,7 @@ Coherently-constant≃ᴱCoherently-constant
    ∃ λ (c : C.Coherently-constant P) →
    ∀ x y →
    P-const x y ≡
-   subst (_≃_.from (∥∥ᴱ→≃ bl univ′) (P , [ c ]))
+   subst (_≃_.from (∥∥ᴱ→≃ bl) (P , [ c ]))
      (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)))                        ↔⟨ (∃-cong λ _ → Erased-cong (∃-cong λ _ →
                                                                             Eq.extensionality-isomorphism ext F.∘
                                                                             (∀-cong ext λ _ → Eq.extensionality-isomorphism ext))) ⟩
@@ -239,13 +237,13 @@ Coherently-constant≃ᴱCoherently-constant
    ∃ λ (c : C.Coherently-constant P) →
    P-const ≡
    λ x y →
-   subst (_≃_.from (∥∥ᴱ→≃ bl univ′) (P , [ c ]))
+   subst (_≃_.from (∥∥ᴱ→≃ bl) (P , [ c ]))
      (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)))                        ↔⟨ (∃-cong λ P-const → Erased-cong (
                                                                             ∃-cong λ c → ≡⇒≃ $ cong (P-const ≡_) $ sym $
                                                                             ⟨ext⟩ λ x → ⟨ext⟩ λ y →
                                                                             cong₂ (λ (f : P y → P y) (g : P x → P x) →
                                                                                      f ∘
-                                                                                     subst (_≃_.from (∥∥ᴱ→≃ bl univ′) (P , [ c ]))
+                                                                                     subst (_≃_.from (∥∥ᴱ→≃ bl) (P , [ c ]))
                                                                                        (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ∘
                                                                                      g)
                                                                               (cong _≃_.to $
@@ -260,7 +258,7 @@ Coherently-constant≃ᴱCoherently-constant
    P-const ≡
    λ x y →
    ≡⇒→ (cong (_$ y) (refl P)) ∘
-   subst (_≃_.from (∥∥ᴱ→≃ bl univ′) (P , [ c ]))
+   subst (_≃_.from (∥∥ᴱ→≃ bl) (P , [ c ]))
      (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ∘
    _≃_.from (≡⇒≃ (cong (_$ x) (refl P)))))                              ↝⟨ (∃-cong λ P-const → inverse $
                                                                             EEq.drop-⊤-left-Σ-≃ᴱ-Erased
@@ -272,7 +270,7 @@ Coherently-constant≃ᴱCoherently-constant
    P-const ≡
    λ x y →
    _≃ᴱ_.from (P≃ y) ∘
-   subst (_≃_.from (∥∥ᴱ→≃ bl univ′) (Q , [ c ]))
+   subst (_≃_.from (∥∥ᴱ→≃ bl) (Q , [ c ]))
      (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ∘
    _≃ᴱ_.to (P≃ x)))                                                     ↔⟨ (∃-cong λ _ →
                                                                             Σ-assoc F.∘
@@ -286,10 +284,10 @@ Coherently-constant≃ᴱCoherently-constant
    Erased (P-const ≡
            λ x y →
            _≃ᴱ_.from (P≃ y) ∘
-           subst (_≃_.from (∥∥ᴱ→≃ bl univ′) (Q , c))
+           subst (_≃_.from (∥∥ᴱ→≃ bl) (Q , c))
              (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ∘
            _≃ᴱ_.to (P≃ x)))                                             ↔⟨ (∃-cong λ _ →
-                                                                            Σ-cong (inverse $ ∥∥ᴱ→≃ bl univ′) λ _ → Eq.id) ⟩
+                                                                            Σ-cong (inverse $ ∥∥ᴱ→≃ bl) λ _ → Eq.id) ⟩
   (∃ λ (P-const : ∀ x y → P x → P y) →
    ∃ λ (Q : ∥ A ∥ᴱ → Type p) →
    ∃ λ (P≃ : ∀ x → P x ≃ᴱ Q ∣ x ∣) →
@@ -344,18 +342,14 @@ instance
     ; set = Lens.set
     }
 
--- Lens A B is equivalent to V.Lens A B (with erased proofs, assuming
--- univalence).
+-- Lens A B is equivalent to V.Lens A B (with erased proofs).
 
 Lens≃ᴱLens :
   Block "Lens≃ᴱLens" →
   {A : Type a} {B : Type b} →
-  @0 Univalence (lsuc (a ⊔ b)) →
-  @0 Univalence (a ⊔ b) →
   Lens A B ≃ᴱ V.Lens A B
-Lens≃ᴱLens ⊠ {A = A} {B = B} univ′ univ =
-  (∃ λ (get : A → B) → Coherently-constant (get ⁻¹ᴱ_))    ↝⟨ (∃-cong λ _ →
-                                                              Coherently-constant≃ᴱCoherently-constant univ′ univ) ⟩□
+Lens≃ᴱLens ⊠ {A = A} {B = B} =
+  (∃ λ (get : A → B) → Coherently-constant (get ⁻¹ᴱ_))    ↝⟨ (∃-cong λ _ → Coherently-constant≃ᴱCoherently-constant) ⟩□
   (∃ λ (get : A → B) → V.Coherently-constant (get ⁻¹ᴱ_))  □
 
 -- The right-to-left direction of the equivalence preserves getters
@@ -363,12 +357,9 @@ Lens≃ᴱLens ⊠ {A = A} {B = B} univ′ univ =
 
 from-Lens≃ᴱLens-preserves-getters-and-setters :
   (bl : Block "Lens≃ᴱLens")
-  {A : Type a} {B : Type b}
-  (@0 univ′ : Univalence (lsuc (a ⊔ b)))
-  (@0 univ : Univalence (a ⊔ b)) →
-  Preserves-getters-and-setters-→ A B
-    (_≃ᴱ_.from (Lens≃ᴱLens bl univ′ univ))
-from-Lens≃ᴱLens-preserves-getters-and-setters ⊠ _ _ l =
+  {A : Type a} {B : Type b} →
+  Preserves-getters-and-setters-→ A B (_≃ᴱ_.from (Lens≃ᴱLens bl))
+from-Lens≃ᴱLens-preserves-getters-and-setters ⊠ l =
     refl _
   , ⟨ext⟩ λ a → ⟨ext⟩ λ b →
     proj₁ (get⁻¹ᴱ-const (get a) b (a , [ refl (get a) ]))  ∎
@@ -382,63 +373,52 @@ from-Lens≃ᴱLens-preserves-getters-and-setters ⊠ _ _ l =
 
 @0 Lens≃ᴱLens-preserves-getters-and-setters :
   (bl : Block "Lens≃ᴱLens")
-  {A : Type a} {B : Type b}
-  (@0 univ′ : Univalence (lsuc (a ⊔ b)))
-  (@0 univ : Univalence (a ⊔ b)) →
+  {A : Type a} {B : Type b} →
   Preserves-getters-and-setters-⇔ A B
-    (_≃ᴱ_.logical-equivalence (Lens≃ᴱLens bl univ′ univ))
-Lens≃ᴱLens-preserves-getters-and-setters bl univ′ univ =
+    (_≃ᴱ_.logical-equivalence (Lens≃ᴱLens bl))
+Lens≃ᴱLens-preserves-getters-and-setters bl =
   Preserves-getters-and-setters-⇔-inverse
-    {f = _≃ᴱ_.logical-equivalence
-           (inverse $ Lens≃ᴱLens bl univ′ univ)} $
+    {f = _≃ᴱ_.logical-equivalence (inverse $ Lens≃ᴱLens bl)} $
   Preserves-getters-and-setters-→-↠-⇔
-    (_≃_.surjection (EEq.≃ᴱ→≃ $ inverse $ Lens≃ᴱLens bl univ′ univ))
-    (from-Lens≃ᴱLens-preserves-getters-and-setters bl univ′ univ)
+    (_≃_.surjection (EEq.≃ᴱ→≃ $ inverse $ Lens≃ᴱLens bl))
+    (from-Lens≃ᴱLens-preserves-getters-and-setters bl)
 
--- Lens A B is equivalent to Higher.Lens A B (with erased proofs,
--- assuming univalence).
+-- Lens A B is equivalent to Higher.Lens A B (with erased proofs).
 
 Lens≃ᴱHigher-lens :
   Block "Lens≃ᴱHigher-Lens" →
   {A : Type a} {B : Type b} →
-  @0 Univalence (lsuc (a ⊔ b)) →
-  @0 Univalence (a ⊔ b) →
   Lens A B ≃ᴱ Higher.Lens A B
-Lens≃ᴱHigher-lens bl {A = A} {B = B} univ′ univ =
-  Lens A B         ↝⟨ Lens≃ᴱLens bl univ′ univ ⟩
-  V.Lens A B       ↝⟨ V.Lens≃ᴱHigher-lens bl univ ⟩□
+Lens≃ᴱHigher-lens bl {A = A} {B = B} =
+  Lens A B         ↝⟨ Lens≃ᴱLens bl ⟩
+  V.Lens A B       ↝⟨ V.Lens≃ᴱHigher-lens bl ⟩□
   Higher.Lens A B  □
 
 -- In erased contexts the equivalence preserves getters and setters.
 
 @0 Lens≃ᴱHigher-lens-preserves-getters-and-setters :
   (bl : Block "Lens≃ᴱHigher-lens")
-  {A : Type a} {B : Type b}
-  (@0 univ′ : Univalence (lsuc (a ⊔ b)))
-  (@0 univ : Univalence (a ⊔ b)) →
+  {A : Type a} {B : Type b} →
   Preserves-getters-and-setters-⇔ A B
-    (_≃ᴱ_.logical-equivalence (Lens≃ᴱHigher-lens bl univ′ univ))
-Lens≃ᴱHigher-lens-preserves-getters-and-setters bl univ′ univ =
+    (_≃ᴱ_.logical-equivalence (Lens≃ᴱHigher-lens bl))
+Lens≃ᴱHigher-lens-preserves-getters-and-setters bl =
   Preserves-getters-and-setters-⇔-∘
-    {f = _≃ᴱ_.logical-equivalence $ V.Lens≃ᴱHigher-lens bl univ}
-    {g = _≃ᴱ_.logical-equivalence $ Lens≃ᴱLens bl univ′ univ}
-    (V.Lens≃ᴱHigher-lens-preserves-getters-and-setters bl univ)
-    (Lens≃ᴱLens-preserves-getters-and-setters bl univ′ univ)
+    {f = _≃ᴱ_.logical-equivalence $ V.Lens≃ᴱHigher-lens bl}
+    {g = _≃ᴱ_.logical-equivalence $ Lens≃ᴱLens bl}
+    (V.Lens≃ᴱHigher-lens-preserves-getters-and-setters bl)
+    (Lens≃ᴱLens-preserves-getters-and-setters bl)
 
 ------------------------------------------------------------------------
 -- H-levels
 
 -- If P has h-level n (pointwise), then Coherently-constant P has
--- h-level n (assuming univalence).
+-- h-level n.
 
 H-level-Coherently-constant :
   {A : Type a} {P : A → Type p} →
-  @0 Univalence (lsuc (a ⊔ p)) →
-  @0 Univalence (a ⊔ lsuc p) →
-  @0 Univalence p →
   ((a : A) → H-level n (P a)) →
   H-level n (Coherently-constant P)
-H-level-Coherently-constant {n = n} univ₁ univ₂ univ₃ h =
+H-level-Coherently-constant {n = n} h =
   Σ-closure n
     (Π-closure ext n λ _ →
      Π-closure ext n λ _ →
@@ -446,8 +426,7 @@ H-level-Coherently-constant {n = n} univ₁ univ₂ univ₃ h =
      h _) λ _ →
   H-level-Erased n (
   Σ-closure n
-    (S.H-level-Coinductive-Coherently-constant
-       univ₁ univ₂ univ₃ h) λ _ →
+    (S.H-level-Coinductive-Coherently-constant univ univ univ h) λ _ →
   Π-closure ext n λ _ →
   Π-closure ext n λ _ →
   H-level.⇒≡ n $
@@ -455,45 +434,38 @@ H-level-Coherently-constant {n = n} univ₁ univ₂ univ₃ h =
   h _)
 
 -- If A and B have h-level n given the assumption that the other type
--- is inhabited, then Lens A B has h-level n (assuming univalence).
+-- is inhabited, then Lens A B has h-level n.
 
 lens-preserves-h-level :
   {A : Type a} {B : Type b} →
-  @0 Univalence (lsuc (a ⊔ b)) →
-  @0 Univalence (a ⊔ b) →
   ∀ n → (B → H-level n A) → (A → H-level n B) →
   H-level n (Lens A B)
-lens-preserves-h-level univ₁ univ₂ n hA hB =
+lens-preserves-h-level n hA hB =
   Σ-closure n
     (Π-closure ext n λ a →
      hB a) λ _ →
-  H-level-Coherently-constant univ₁ univ₁ univ₂ λ b →
+  H-level-Coherently-constant λ b →
   Σ-closure n (hA b) λ a →
   H-level-Erased n (
   H-level.⇒≡ n (hB a))
 
 -- If the domain of a lens is inhabited and has h-level n, then the
--- codomain also has h-level n (in erased contexts, assuming
--- univalence).
+-- codomain also has h-level n (in erased contexts).
 
 @0 h-level-respects-lens-from-inhabited :
   {A : Type a} {B : Type b} →
-  Univalence (lsuc (a ⊔ b)) →
-  Univalence (a ⊔ b) →
   ∀ n → Lens A B → A → H-level n A → H-level n B
-h-level-respects-lens-from-inhabited univ′ univ n =
+h-level-respects-lens-from-inhabited n =
   Higher.h-level-respects-lens-from-inhabited n ∘
-  _≃ᴱ_.to (Lens≃ᴱHigher-lens ⊠ univ′ univ)
+  _≃ᴱ_.to (Lens≃ᴱHigher-lens ⊠)
 
 -- If A has positive h-level n, then Lens A B also has h-level n (in
--- erased contexts, assuming univalence).
+-- erased contexts).
 
 @0 lens-preserves-h-level-of-domain :
   {A : Type a} {B : Type b} →
-  Univalence (lsuc (a ⊔ b)) →
-  Univalence (a ⊔ b) →
   ∀ n → H-level (1 + n) A → H-level (1 + n) (Lens A B)
-lens-preserves-h-level-of-domain univ′ univ n hA =
+lens-preserves-h-level-of-domain n hA =
   H-level.[inhabited⇒+]⇒+ n λ l →
-  lens-preserves-h-level univ′ univ (1 + n) (λ _ → hA) λ a →
-  h-level-respects-lens-from-inhabited univ′ univ _ l a hA
+  lens-preserves-h-level (1 + n) (λ _ → hA) λ a →
+  h-level-respects-lens-from-inhabited _ l a hA

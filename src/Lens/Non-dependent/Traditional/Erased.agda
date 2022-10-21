@@ -17,6 +17,8 @@ open import Bijection equality-with-J as Bij using (_↔_)
 open import Circle eq using (𝕊¹)
 open import Circle.Erased eq as CE using (𝕊¹ᴱ)
 open import Equality.Path.Isomorphisms eq
+open import Equality.Path.Isomorphisms.Univalence eq
+  using () renaming (abstract-univ to univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Equivalence.Erased.Cubical eq as EEq
@@ -536,12 +538,10 @@ lens-preserves-h-level-of-domain {A = A} {B = B} n =
   H-level (1 + n) (T.Lens A B)  ↝⟨ H-level-cong _ (1 + n) (inverse Lens≃Traditional-lens) ⟩□
   H-level (1 + n) (Lens A B)    □
 
--- Lens 𝕊¹ᴱ ⊤ is not propositional (assuming univalence).
+-- Lens 𝕊¹ᴱ ⊤ is not propositional.
 
-¬-lens-to-⊤-propositional :
-  @0 Univalence (# 0) →
-  ¬ Is-proposition (Lens 𝕊¹ᴱ ⊤)
-¬-lens-to-⊤-propositional univ =
+¬-lens-to-⊤-propositional : ¬ Is-proposition (Lens 𝕊¹ᴱ ⊤)
+¬-lens-to-⊤-propositional =
   Stable-¬
     [ Is-proposition (Lens 𝕊¹ᴱ ⊤)   ↝⟨ H-level-cong _ 1 (Lens-cong (inverse CE.𝕊¹≃𝕊¹ᴱ) Eq.id) ⟩
       Is-proposition (Lens 𝕊¹ ⊤)    ↝⟨ H-level-cong _ 1 Lens≃Traditional-lens ⟩
@@ -2304,22 +2304,16 @@ no-first-projection-lens =
   Non-dependent.no-first-projection-lens
     Lens contractible-to-contractible
 
--- There are two lenses with equal setters that are not equal
--- (assuming univalence).
---
--- (The lemma does not actually use the univalence argument, but
--- univalence is used by CE.not-refl≢refl, which is only used in an
--- erased context.)
+-- There are two lenses with equal setters that are not equal.
 
 equal-setters-but-not-equal :
-  @0 Univalence lzero →
   ∃ λ (A : Type) →
   ∃ λ (B : Type) →
   ∃ λ (l₁ : Lens A B) →
   ∃ λ (l₂ : Lens A B) →
     Lens.set l₁ ≡ Lens.set l₂ ×
     l₁ ≢ l₂
-equal-setters-but-not-equal _ =
+equal-setters-but-not-equal =
   block λ b →
   𝕊¹ᴱ , ⊤ , l₁′ b , l₂′ , refl _ , l₁′≢l₂′ b
   where
@@ -2360,21 +2354,16 @@ bad a = record
 
 -- The lens bad a has a getter which is an equivalence, but it does
 -- not satisfy either of the coherence laws that Coherent-lens lenses
--- must satisfy (assuming univalence).
---
--- (The lemma does not actually use the univalence argument, but
--- univalence is used by CE.not-refl≢refl, which is only used in
--- erased contexts.)
+-- must satisfy.
 
 getter-equivalence-but-not-coherent :
-  @0 Univalence lzero →
   let open Lens (bad a) in
   Is-equivalence get ×
   ¬ (∀ a → cong get (set-get a) ≡ get-set a (get a)) ×
   ¬ (∀ a₁ a₂ a₃ →
      cong get (set-set a₁ a₂ a₃) ≡
      trans (get-set (set a₁ a₂) a₃) (sym (get-set a₁ a₃)))
-getter-equivalence-but-not-coherent {a = a} univ =
+getter-equivalence-but-not-coherent {a = a} =
     _≃_.is-equivalence F.id
   , Stable-¬
       [ ((x : ↑ a 𝕊¹ᴱ) → cong get (set-get x) ≡ get-set x (get x))    ↔⟨⟩
@@ -2431,11 +2420,10 @@ getter-equivalence-but-not-coherent {a = a} univ =
   open Lens (bad a)
 
 -- The lenses bad a and Lens-combinators.id {A = ↑ a 𝕊¹ᴱ} have equal
--- setters, and their getters are equivalences, but they are not equal
--- (assuming univalence).
+-- setters, and their getters are equivalences, but they are not
+-- equal.
 
 equal-setters-and-equivalences-as-getters-but-not-equal :
-  @0 Univalence lzero →
   let l₁ = bad a
       l₂ = Lens-combinators.id {A = ↑ a 𝕊¹ᴱ}
   in
@@ -2443,9 +2431,9 @@ equal-setters-and-equivalences-as-getters-but-not-equal :
   Is-equivalence (Lens.get l₂) ×
   Lens.set l₁ ≡ Lens.set l₂ ×
   l₁ ≢ l₂
-equal-setters-and-equivalences-as-getters-but-not-equal {a = ℓa} univ =
+equal-setters-and-equivalences-as-getters-but-not-equal {a = ℓa} =
   let is-equiv , not-coherent , _ =
-        getter-equivalence-but-not-coherent univ
+        getter-equivalence-but-not-coherent
   in
     is-equiv
   , _≃_.is-equivalence F.id
@@ -2466,19 +2454,17 @@ equal-setters-and-equivalences-as-getters-but-not-equal {a = ℓa} univ =
 -- There is in general no split surjection from equivalences with
 -- erased proofs to lenses with getters that are equivalences with
 -- erased proofs, if the right-to-left direction of the split
--- surjection is required to return the lens's getter plus some proof
--- (assuming univalence).
+-- surjection is required to return the lens's getter plus some proof.
 
 ¬-≃ᴱ-↠-Σ-Lens-Is-equivalenceᴱ-get :
-  @0 Univalence lzero →
   ¬ ∃ λ (f : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ↠
              (∃ λ (l : Lens (↑ a 𝕊¹ᴱ) (↑ a 𝕊¹ᴱ)) →
                 Is-equivalenceᴱ (Lens.get l))) →
       ∀ p → _≃ᴱ_.to (_↠_.from f p) ≡ Lens.get (proj₁ p)
-¬-≃ᴱ-↠-Σ-Lens-Is-equivalenceᴱ-get {a = a} univ =
+¬-≃ᴱ-↠-Σ-Lens-Is-equivalenceᴱ-get {a = a} =
   Stable-¬
     [ (let is-equiv₁′ , is-equiv₂′ , setters-equal , bad≢id =
-             equal-setters-and-equivalences-as-getters-but-not-equal univ
+             equal-setters-and-equivalences-as-getters-but-not-equal
 
            is-equiv₁ = EEq.Is-equivalence→Is-equivalenceᴱ is-equiv₁′
            is-equiv₂ = EEq.Is-equivalence→Is-equivalenceᴱ is-equiv₂′
@@ -2508,15 +2494,14 @@ equal-setters-and-equivalences-as-getters-but-not-equal {a = ℓa} univ =
 -- equivalences with erased proofs to lenses with getters that are
 -- equivalences with erased proofs, if the right-to-left direction of
 -- the equivalence is required to return the lens's getter plus some
--- proof (assuming univalence).
+-- proof.
 
 ¬-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalence-get :
-  @0 Univalence lzero →
   ¬ ∃ λ (f : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ≃ᴱ
              (∃ λ (l : Lens (↑ a 𝕊¹ᴱ) (↑ a 𝕊¹ᴱ)) →
                 Is-equivalenceᴱ (Lens.get l))) →
       ∀ p → _≃ᴱ_.to (_≃ᴱ_.from f p) ≡ Lens.get (proj₁ p)
-¬-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalence-get {a = a} univ =
+¬-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalence-get {a = a} =
   Stable-¬
     [ (∃ λ (f : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ≃ᴱ
            (∃ λ (l : Lens (↑ a 𝕊¹ᴱ) (↑ a 𝕊¹ᴱ)) →
@@ -2526,7 +2511,7 @@ equal-setters-and-equivalences-as-getters-but-not-equal {a = ℓa} univ =
       (∃ λ (f : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ↠
            (∃ λ (l : Lens (↑ a 𝕊¹ᴱ) (↑ a 𝕊¹ᴱ)) →
               Is-equivalenceᴱ (Lens.get l))) →
-         ∀ p → _≃ᴱ_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))   ↝⟨ ¬-≃ᴱ-↠-Σ-Lens-Is-equivalenceᴱ-get univ ⟩□
+         ∀ p → _≃ᴱ_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))   ↝⟨ ¬-≃ᴱ-↠-Σ-Lens-Is-equivalenceᴱ-get ⟩□
 
       ⊥                                                       □
     ]
@@ -2809,15 +2794,13 @@ equality-characterisation-for-sets-≅ᴱ
   proj₁ (_≃ᴱ_.to (≃ᴱ≃ᴱ≅ᴱ A-set) F.id) ≡ id
 ≃ᴱ≃ᴱ≅ᴱ-id≡id _ = ≃ᴱ⇔≅ᴱ-id≡id
 
--- The type Has-quasi-inverseᴱ id is not necessarily a proposition
--- (assuming univalence).
+-- The type Has-quasi-inverseᴱ id is not necessarily a proposition.
 
 Has-quasi-inverseᴱ-id-not-proposition :
-  @0 Univalence lzero →
   let open Lens-combinators in
   ∃ λ (A : Type a) →
     ¬ Is-proposition (Has-quasi-inverseᴱ (id {A = A}))
-Has-quasi-inverseᴱ-id-not-proposition univ =
+Has-quasi-inverseᴱ-id-not-proposition =
     _
   , Stable-¬
       [ Is-proposition (Has-quasi-inverseᴱ Lens-combinators.id)  ↝⟨ H-level-cong _ 1 $ Has-quasi-inverseᴱ≃Has-quasi-inverse TC.id ⟩
@@ -2827,14 +2810,13 @@ Has-quasi-inverseᴱ-id-not-proposition univ =
 
 -- There is not necessarily a split surjection from
 -- Is-equivalenceᴱ (Lens.get l) to Has-quasi-inverseᴱ l, if l is a
--- lens between types in the same universe (assuming univalence).
+-- lens between types in the same universe.
 
 ¬Is-equivalenceᴱ↠Has-quasi-inverseᴱ :
-  @0 Univalence lzero →
   ¬ ({A B : Type a}
      (l : Lens A B) →
      Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ l)
-¬Is-equivalenceᴱ↠Has-quasi-inverseᴱ {a = a} univ =
+¬Is-equivalenceᴱ↠Has-quasi-inverseᴱ {a = a} =
   Stable-¬
     [ ({A B : Type a}
        (l : Lens A B) →
@@ -2851,14 +2833,13 @@ Has-quasi-inverseᴱ-id-not-proposition univ =
 
 -- There is not necessarily an equivalence with erased proofs from
 -- Is-equivalenceᴱ (Lens.get l) to Has-quasi-inverseᴱ l, if l is a
--- lens between types in the same universe (assuming univalence).
+-- lens between types in the same universe.
 
 ¬Is-equivalenceᴱ≃Has-quasi-inverseᴱ :
-  @0 Univalence lzero →
   ¬ ({A B : Type a}
      (l : Lens A B) →
      Is-equivalenceᴱ (Lens.get l) ≃ᴱ Has-quasi-inverseᴱ l)
-¬Is-equivalenceᴱ≃Has-quasi-inverseᴱ {a = a} univ =
+¬Is-equivalenceᴱ≃Has-quasi-inverseᴱ {a = a} =
   Stable-¬
     [ ({A B : Type a}
        (l : Lens A B) →
@@ -2866,7 +2847,7 @@ Has-quasi-inverseᴱ-id-not-proposition univ =
 
       ({A B : Type a}
        (l : Lens A B) →
-       Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ l)   ↝⟨ ¬Is-equivalenceᴱ↠Has-quasi-inverseᴱ univ ⟩□
+       Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ l)   ↝⟨ ¬Is-equivalenceᴱ↠Has-quasi-inverseᴱ ⟩□
 
       ⊥                                                       □
     ]
@@ -3441,15 +3422,13 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
 -- There is in general no split surjection from equivalences (with
 -- erased proofs) to lenses that are bi-invertible (with erased
 -- proofs), if the right-to-left direction of the split surjection is
--- required to map bi-invertible lenses to their getter functions
--- (assuming univalence).
+-- required to map bi-invertible lenses to their getter functions.
 
 ¬≃ᴱ↠≊ᴱ :
-  @0 Univalence lzero →
   ¬ ∃ λ (≃ᴱ↠≊ᴱ : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ↠ (↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ)) →
       (x@(l , _) : ↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ) →
       _≃ᴱ_.to (_↠_.from ≃ᴱ↠≊ᴱ x) ≡ Lens.get l
-¬≃ᴱ↠≊ᴱ {a = a} univ =
+¬≃ᴱ↠≊ᴱ {a = a} =
   Stable-¬
     [ (∃ λ (≃ᴱ↠≊ᴱ : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ↠ (↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ)) →
          (x@(l , _) : ↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ) →
@@ -3459,7 +3438,7 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
       (∃ λ (f : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ↠
                 (∃ λ (l : Lens (↑ a 𝕊¹ᴱ) (↑ a 𝕊¹ᴱ)) →
                    Is-equivalenceᴱ (Lens.get l))) →
-         ∀ p → _≃ᴱ_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))         ↝⟨ ¬-≃ᴱ-↠-Σ-Lens-Is-equivalenceᴱ-get univ ⟩□
+         ∀ p → _≃ᴱ_.to (_↠_.from f p) ≡ Lens.get (proj₁ p))         ↝⟨ ¬-≃ᴱ-↠-Σ-Lens-Is-equivalenceᴱ-get ⟩□
 
       ⊥                                                             □
     ]
@@ -3468,14 +3447,13 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
 -- equivalences (with erased proofs) and lenses that are bi-invertible
 -- (with erased proofs), if the right-to-left direction of the
 -- equivalence is required to map bi-invertible lenses to their getter
--- functions (assuming univalence).
+-- functions.
 
 ¬≃ᴱ≃ᴱ≊ᴱ :
-  @0 Univalence lzero →
   ¬ ∃ λ (≃ᴱ≃ᴱ≊ᴱ : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ≃ᴱ (↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ)) →
       (x@(l , _) : ↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ) →
       _≃ᴱ_.to (_≃ᴱ_.from ≃ᴱ≃ᴱ≊ᴱ x) ≡ Lens.get l
-¬≃ᴱ≃ᴱ≊ᴱ {a = a} univ =
+¬≃ᴱ≃ᴱ≊ᴱ {a = a} =
   Stable-¬
     [ (∃ λ (≃ᴱ≃ᴱ≊ᴱ : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ≃ᴱ (↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ)) →
          (x@(l , _) : ↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ) →
@@ -3483,19 +3461,18 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
 
       (∃ λ (≃ᴱ↠≊ᴱ : (↑ a 𝕊¹ᴱ ≃ᴱ ↑ a 𝕊¹ᴱ) ↠ (↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ)) →
          (x@(l , _) : ↑ a 𝕊¹ᴱ ≊ᴱ ↑ a 𝕊¹ᴱ) →
-         _≃ᴱ_.to (_↠_.from ≃ᴱ↠≊ᴱ x) ≡ Lens.get l)                     ↝⟨ ¬≃ᴱ↠≊ᴱ univ ⟩□
+         _≃ᴱ_.to (_↠_.from ≃ᴱ↠≊ᴱ x) ≡ Lens.get l)                     ↝⟨ ¬≃ᴱ↠≊ᴱ ⟩□
 
       ⊥                                                               □
     ]
 
 -- The lemma ≃ᴱΣ∥set⁻¹ᴱ∥ᴱ× does not hold in general if the requirement
--- that A is a set is dropped (assuming univalence).
+-- that A is a set is dropped.
 
 ≄ᴱΣ∥set⁻¹ᴱ∥ᴱ× :
-  @0 Univalence lzero →
   ¬ ({A B : Type a} (l : Lens A B) →
      A ≃ᴱ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥ᴱ) × B))
-≄ᴱΣ∥set⁻¹ᴱ∥ᴱ× {a = a} univ =
+≄ᴱΣ∥set⁻¹ᴱ∥ᴱ× {a = a} =
   Stable-¬
     [ ({A B : Type a} (l : Lens A B) →
        A ≃ᴱ ((∃ λ (f : B → A) → ∥ Lens.set l ⁻¹ᴱ f ∥ᴱ) × B))  ↝⟨ EEq.≃ᴱ→≃ ⊚_ ⟩

@@ -29,14 +29,14 @@ private
 -- A static variant of one consequence of S.Lens≃ᴱLensᴱ. Applications
 -- of static functions are normalised by (at least) the GHC backend.
 
-Lens→Lens : E.Lens A B → S.Lens univ A B
-Lens→Lens = _≃ᴱ_.from (S.Lens≃ᴱLensᴱ ⊠ univ)
+Lens→Lens : E.Lens A B → S.Lens A B
+Lens→Lens = _≃ᴱ_.from (S.Lens≃ᴱLensᴱ ⊠)
 
 {-# STATIC Lens→Lens #-}
 
 -- A lens for the first projection.
 
-fst : S.Lens univ (A × B) A
+fst : S.Lens (A × B) A
 fst = Lens→Lens E.fst
 
 -- A lens for the second projection.
@@ -57,7 +57,7 @@ fst = Lens→Lens E.fst
 -- with Erased Univalence", this one (as well as the one below) takes
 -- two universe level arguments.
 
-snd-with-space-leak : S.Lens univ (A × B) B
+snd-with-space-leak : S.Lens (A × B) B
 snd-with-space-leak = Lens→Lens E.snd
 
 -- A lens for the second projection.
@@ -67,11 +67,11 @@ snd-with-space-leak = Lens→Lens E.snd
 --
 --   \p y -> case p of { Pair x _ -> Pair x y }.
 
-snd : S.Lens univ (A × B) B
+snd : S.Lens (A × B) B
 snd =
   S.with-other-setter
     (Lens→Lens E.snd)
     (λ { (x , _) y → (x , y) })
     ((λ (x , _) y → (x , y))       ≡⟨⟩
-     E.Lens.set E.snd              ≡⟨ sym $ proj₂ $ proj₂ (S.Lens≃ᴱLensᴱ-preserves-getters-and-setters ⊠ univ univ) E.snd ⟩∎
+     E.Lens.set E.snd              ≡⟨ sym $ proj₂ $ proj₂ (S.Lens≃ᴱLensᴱ-preserves-getters-and-setters ⊠) E.snd ⟩∎
      S.Lens.set (Lens→Lens E.snd)  ∎)

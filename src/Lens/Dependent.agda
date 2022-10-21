@@ -10,10 +10,10 @@
 -- squash types would provide a model for these things.
 --
 -- Note that the code that depends on UIP does not make use of
--- univalence, or at least it did not use to do this, library code may
--- have changed after the code was written. This development tracks
--- usage of univalence in types, but at the time of writing there is
--- some library code that does not do this.
+-- univalence, or at least it did not use to do this, things may have
+-- changed after this code was written. This module uses types to
+-- track uses of univalence, but imported code might contain "hidden"
+-- uses of univalence.
 
 module Lens.Dependent where
 

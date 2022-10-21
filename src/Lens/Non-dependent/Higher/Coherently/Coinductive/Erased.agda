@@ -18,6 +18,8 @@ open import Prelude
 open import Bijection equality-with-J as B using (_↔_)
 import Bijection P.equality-with-J as PB
 open import Equality.Path.Isomorphisms eq
+open import Equality.Path.Isomorphisms.Univalence eq
+  using () renaming (abstract-univ to univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
 import Equivalence P.equality-with-J as PEq
 open import Equivalence.Erased equality-with-J as EEq using (_≃ᴱ_)
@@ -63,10 +65,9 @@ open Coherentlyᴱ public
 @0 Coherentlyᴱ-cong′ :
   {P : {A : Type a} → (A → B) → Type p}
   {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ᴱ → B} →
-  Univalence a →
   (A₁≃A₂ : A₁ ≃ A₂) →
   Coherentlyᴱ P step (f ∘ _≃_.to A₁≃A₂) ≃ Coherentlyᴱ P step f
-Coherentlyᴱ-cong′ {f = f} {P = P} {step = step} univ A₁≃A₂ =
+Coherentlyᴱ-cong′ {f = f} {P = P} {step = step} A₁≃A₂ =
   ≃-elim₁ univ
     (λ A₁≃A₂ →
        Coherentlyᴱ P step (f ∘ _≃_.to A₁≃A₂) ≃
@@ -75,31 +76,27 @@ Coherentlyᴱ-cong′ {f = f} {P = P} {step = step} univ A₁≃A₂ =
     A₁≃A₂
 
 -- In erased contexts Coherently and Coherentlyᴱ are, in a certain
--- sense, logically equivalent (assuming univalence).
+-- sense, logically equivalent.
 
 @0 Coherentlyᴱ⇔Coherently :
   {P : {A : Type a} → (A → B) → Type p}
   {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B} →
-  Univalence a →
   Coherentlyᴱ P (λ f p → step f p ∘ ∥∥¹ᴱ→∥∥¹) f ⇔ Coherently P step f
-Coherentlyᴱ⇔Coherently univ ._⇔_.from c .property = c .C.property
-Coherentlyᴱ⇔Coherently univ ._⇔_.from c .coherent =
-  Coherentlyᴱ⇔Coherently univ ._⇔_.from
+Coherentlyᴱ⇔Coherently ._⇔_.from c .property = c .C.property
+Coherentlyᴱ⇔Coherently ._⇔_.from c .coherent =
+  Coherentlyᴱ⇔Coherently ._⇔_.from
     (_≃_.from (C.Coherently-cong′ univ O.∥∥¹ᴱ≃∥∥¹)
        (c .C.coherent))
 
-Coherentlyᴱ⇔Coherently univ ._⇔_.to c .C.property = c .property
-Coherentlyᴱ⇔Coherently univ ._⇔_.to c .C.coherent =
-  Coherentlyᴱ⇔Coherently univ ._⇔_.to
-    (_≃_.to (Coherentlyᴱ-cong′ univ O.∥∥¹ᴱ≃∥∥¹)
+Coherentlyᴱ⇔Coherently ._⇔_.to c .C.property = c .property
+Coherentlyᴱ⇔Coherently ._⇔_.to c .C.coherent =
+  Coherentlyᴱ⇔Coherently ._⇔_.to
+    (_≃_.to (Coherentlyᴱ-cong′ O.∥∥¹ᴱ≃∥∥¹)
        (c .coherent))
 
 private
 
   -- A preservation lemma for Coherentlyᴱ.
-  --
-  -- The lemma does not use the univalence argument, instead it uses
-  -- EPU.univ (and EPU.≃⇒≡) directly.
 
   @0 Coherentlyᴱ-cong-≡ :
     Block "Coherentlyᴱ-cong-≡" →
@@ -108,14 +105,13 @@ private
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
     {f : A → B} →
-    Univalence p →
     (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f) →
     ({A : Type a} (f : A → B) (x : P₂ f) →
      step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
     Coherentlyᴱ P₁ step₁ f P.≡ Coherentlyᴱ P₂ step₂ f
   Coherentlyᴱ-cong-≡
     {a = a} {B = B} {p = p} ⊠ {P₁ = P₁} {P₂ = P₂}
-    {step₁ = step₁} {step₂ = step₂} {f = f} _ P₁≃P₂′ step₁≡step₂ =
+    {step₁ = step₁} {step₂ = step₂} {f = f} P₁≃P₂′ step₁≡step₂ =
 
     P.cong (λ ((P , step) :
               ∃ λ (P : (A : Type a) → (A → B) → Type p) →
@@ -184,17 +180,16 @@ private
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
     {f : A → B}
-    (univ : Univalence p)
     (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f)
     (step₁≡step₂ :
        {A : Type a} (f : A → B) (x : P₂ f) →
        step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x)
     (c : Coherentlyᴱ P₁ step₁ f) →
-    PU.≡⇒→ (Coherentlyᴱ-cong-≡ bl univ P₁≃P₂ step₁≡step₂) c .property
+    PU.≡⇒→ (Coherentlyᴱ-cong-≡ bl P₁≃P₂ step₁≡step₂) c .property
       P.≡
     _≃_.to (P₁≃P₂ f) (c .property)
   to-Coherentlyᴱ-cong-≡-property
-    ⊠ {P₁ = P₁} {P₂ = P₂} {f = f} _ P₁≃P₂ step₁≡step₂ c =
+    ⊠ {P₁ = P₁} {P₂ = P₂} {f = f} P₁≃P₂ step₁≡step₂ c =
 
     P.transport (λ _ → P₂ f) P.0̲
       (_≃_.to (P₁≃P₂ f) (P.transport (λ _ → P₁ f) P.0̲ (c .property)))  P.≡⟨ P.cong (_$ _≃_.to (P₁≃P₂ f)
@@ -214,19 +209,17 @@ private
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
     {f : A → B}
-    (univ : Univalence p)
     (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f)
     (step₁≡step₂ :
        {A : Type a} (f : A → B) (x : P₂ f) →
        step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x)
     (c : Coherentlyᴱ P₂ step₂ f) →
     PEq._≃_.from
-      (PU.≡⇒≃ (Coherentlyᴱ-cong-≡ bl {step₁ = step₁} univ
-                 P₁≃P₂ step₁≡step₂))
+      (PU.≡⇒≃ (Coherentlyᴱ-cong-≡ bl {step₁ = step₁} P₁≃P₂ step₁≡step₂))
       c .property P.≡
     _≃_.from (P₁≃P₂ f) (c .property)
   from-Coherentlyᴱ-cong-≡-property
-    ⊠ {P₁ = P₁} {P₂ = P₂} {f = f} _ P₁≃P₂ step₁≡step₂ c =
+    ⊠ {P₁ = P₁} {P₂ = P₂} {f = f} P₁≃P₂ step₁≡step₂ c =
 
     P.transport (λ _ → P₁ f) P.0̲
       (_≃_.from (P₁≃P₂ f) (P.transport (λ _ → P₂ f) P.0̲ (c .property)))  P.≡⟨ P.cong (_$ _≃_.from (P₁≃P₂ f)
@@ -251,14 +244,13 @@ private
     {@0 step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
     {@0 step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
     {f : A → B} →
-    @0 Univalence p →
     (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ᴱ P₂ f) →
     @0 ({A : Type a} (f : A → B) (x : P₂ f) →
         step₁ f (_≃ᴱ_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
     Coherentlyᴱ P₁ step₁ f ≃ᴱ Coherentlyᴱ P₂ step₂ f
   Coherentlyᴱ-cong-≃ᴱ
     {P₁ = P₁} {P₂ = P₂} {step₁ = step₁} {step₂ = step₂} {f = f}
-    univ P₁≃P₂ step₁≡step₂ =
+    P₁≃P₂ step₁≡step₂ =
 
     block λ bl →
     EEq.[≃]→≃ᴱ
@@ -278,7 +270,7 @@ private
       Coherentlyᴱ P₁ step₁ f ≃ Coherentlyᴱ P₂ step₂ f
     equiv bl =
       _↔_.from ≃↔≃ $ PU.≡⇒≃ $
-      Coherentlyᴱ-cong-≡ bl univ (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂
+      Coherentlyᴱ-cong-≡ bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂
 
     to :
       Block "Coherentlyᴱ-cong-≡" →
@@ -289,25 +281,25 @@ private
         (Coherentlyᴱ P₂ step₂)
         (P.cong (step₂ f) $
          to-Coherentlyᴱ-cong-≡-property
-           bl univ (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c) $
+           bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c) $
       _≃_.to (equiv bl) c .coherent
 
     @0 ≡to : ∀ bl c → _≃_.to (equiv bl) c P.≡ to bl c
     ≡to bl c i .property = to-Coherentlyᴱ-cong-≡-property
-                             bl univ (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c i
+                             bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c i
     ≡to bl c i .coherent = lemma i
       where
       lemma :
         P.[ (λ i → Coherentlyᴱ P₂ step₂
                      (step₂ f (to-Coherentlyᴱ-cong-≡-property
-                                 bl univ (EEq.≃ᴱ→≃ ∘ P₁≃P₂)
+                                 bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂)
                                  step₁≡step₂ c i))) ]
           _≃_.to (equiv bl) c .coherent ≡
           P.subst
             (Coherentlyᴱ P₂ step₂)
             (P.cong (step₂ f) $
              to-Coherentlyᴱ-cong-≡-property
-               bl univ (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c)
+               bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c)
             (_≃_.to (equiv bl) c .coherent)
       lemma =
         PB._↔_.from (P.heterogeneous↔homogeneous _) P.refl
@@ -321,26 +313,26 @@ private
         (Coherentlyᴱ P₁ step₁)
         (P.cong (step₁ f) $
          from-Coherentlyᴱ-cong-≡-property
-           bl univ (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c) $
+           bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c) $
       _≃_.from (equiv bl) c .coherent
 
     @0 ≡from : ∀ bl c → _≃_.from (equiv bl) c P.≡ from bl c
     ≡from bl c i .property = from-Coherentlyᴱ-cong-≡-property
-                               bl univ (EEq.≃ᴱ→≃ ∘ P₁≃P₂)
+                               bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂)
                                step₁≡step₂ c i
     ≡from bl c i .coherent = lemma i
       where
       lemma :
         P.[ (λ i → Coherentlyᴱ P₁ step₁
                      (step₁ f (from-Coherentlyᴱ-cong-≡-property
-                                 bl univ (EEq.≃ᴱ→≃ ∘ P₁≃P₂)
+                                 bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂)
                                  step₁≡step₂ c i))) ]
           _≃_.from (equiv bl) c .coherent ≡
           P.subst
             (Coherentlyᴱ P₁ step₁)
             (P.cong (step₁ f) $
              from-Coherentlyᴱ-cong-≡-property
-               bl univ (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c)
+               bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c)
             (_≃_.from (equiv bl) c .coherent)
       lemma =
         PB._↔_.from (P.heterogeneous↔homogeneous _) P.refl
@@ -354,7 +346,6 @@ private
     {@0 step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
     {@0 step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
     {f : A → B}
-    {@0 univ : Univalence p}
     {P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ᴱ P₂ f}
     {@0 step₁≡step₂ :
        {A : Type a} (f : A → B) (x : P₂ f) →
@@ -363,14 +354,13 @@ private
 
     _ :
       {c : Coherentlyᴱ P₁ step₁ f} →
-      _≃ᴱ_.to (Coherentlyᴱ-cong-≃ᴱ univ P₁≃P₂ step₁≡step₂) c .property ≡
+      _≃ᴱ_.to (Coherentlyᴱ-cong-≃ᴱ P₁≃P₂ step₁≡step₂) c .property ≡
       _≃ᴱ_.to (P₁≃P₂ f) (c .property)
     _ = refl _
 
     _ :
       {c : Coherentlyᴱ P₂ step₂ f} →
-      _≃ᴱ_.from (Coherentlyᴱ-cong-≃ᴱ {step₁ = step₁} univ
-                   P₁≃P₂ step₁≡step₂)
+      _≃ᴱ_.from (Coherentlyᴱ-cong-≃ᴱ {step₁ = step₁} P₁≃P₂ step₁≡step₂)
         c .property ≡
       _≃ᴱ_.from (P₁≃P₂ f) (c .property)
     _ = refl _
@@ -427,7 +417,6 @@ Coherentlyᴱ-cong :
   {@0 step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
   {@0 step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
   {f : A → B} →
-  @0 Univalence (p₁ ⊔ p₂) →
   (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ᴱ P₂ f) →
   @0 ({A : Type a} (f : A → B) (x : P₂ f) →
       step₁ f (_≃ᴱ_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
@@ -435,12 +424,11 @@ Coherentlyᴱ-cong :
 Coherentlyᴱ-cong
   {p₁ = p₁} {p₂ = p₂}
   {P₁ = P₁} {P₂ = P₂} {step₁ = step₁} {step₂ = step₂} {f = f}
-  univ P₁≃P₂ step₁≡step₂ =
+  P₁≃P₂ step₁≡step₂ =
 
   Coherentlyᴱ P₁ step₁ f                          ↔⟨ inverse Coherentlyᴱ-↑ ⟩
 
   Coherentlyᴱ (↑ p₂ ∘ P₁) ((_∘ lower) ∘ step₁) f  ↝⟨ Coherentlyᴱ-cong-≃ᴱ
-                                                       univ
                                                        (λ f →
     ↑ p₂ (P₁ f)                                           ↔⟨ B.↑↔ ⟩
     P₁ f                                                  ↝⟨ P₁≃P₂ f ⟩
@@ -462,7 +450,6 @@ module _
   {@0 step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
   {@0 step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
   {f : A → B}
-  {@0 univ : Univalence (p₁ ⊔ p₂)}
   {P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ᴱ P₂ f}
   {@0 step₁≡step₂ :
      {A : Type a} (f : A → B) (x : P₂ f) →
@@ -471,13 +458,13 @@ module _
 
   _ :
     {c : Coherentlyᴱ P₁ step₁ f} →
-    _≃ᴱ_.to (Coherentlyᴱ-cong univ P₁≃P₂ step₁≡step₂) c .property ≡
+    _≃ᴱ_.to (Coherentlyᴱ-cong P₁≃P₂ step₁≡step₂) c .property ≡
     _≃ᴱ_.to (P₁≃P₂ f) (c .property)
   _ = refl _
 
   _ :
     {c : Coherentlyᴱ P₂ step₂ f} →
-    _≃ᴱ_.from (Coherentlyᴱ-cong {step₁ = step₁} univ P₁≃P₂ step₁≡step₂)
+    _≃ᴱ_.from (Coherentlyᴱ-cong {step₁ = step₁} P₁≃P₂ step₁≡step₂)
       c .property ≡
     _≃ᴱ_.from (P₁≃P₂ f) (c .property)
   _ = refl _

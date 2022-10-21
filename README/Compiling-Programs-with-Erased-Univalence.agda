@@ -18,18 +18,11 @@
 
 -- Note that the code does not follow the paper exactly. For instance,
 -- some definitions use bijections (functions with quasi-inverses)
--- instead of equivalences.
-
--- An attempt has been made to track uses of univalence by passing
--- around explicit proofs of the univalence axiom (except in certain
--- README modules). However, some library code that is used does not
--- adhere to this convention (note that univalence is provable in
--- Cubical Agda), so perhaps some use of univalence is not tracked in
--- this way. On the other hand some library code that is not defined
--- in Cubical Agda passes around explicit proofs of function
--- extensionality.
-
--- Some other differences are mentioned below.
+-- instead of equivalences. Some code is parametrised by assumptions
+-- of univalence instead of using proved univalence, and some library
+-- code that is not defined in Cubical Agda is parametrised by
+-- assumptions of function extensionality. Some other differences are
+-- mentioned below.
 
 -- Note that there is a known problem with guarded corecursion in
 -- Agda. Due to "quantifier inversion" (see "Termination Checking in

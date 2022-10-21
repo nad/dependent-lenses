@@ -20,8 +20,8 @@
 
 -- An attempt has also been made to track uses of univalence by
 -- passing around explicit proofs of the univalence axiom (except in
--- certain README modules). However, univalence is provable in Cubical
--- Agda, and some library code that is used does not adhere to this
+-- README.Not-a-set). However, univalence is provable in Cubical Agda,
+-- and some library code that is used does not adhere to this
 -- convention, so perhaps some use of univalence is not tracked in
 -- this way. On the other hand some library code that is not defined
 -- in Cubical Agda passes around explicit proofs of function

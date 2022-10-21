@@ -12,11 +12,13 @@ module Lens.Non-dependent.Higher.Coinductive.Small.Erased
 open P.Derived-definitions-and-properties eq
 
 open import Logical-equivalence using (_⇔_)
-open import Prelude as P hiding (id)
+open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 
 open import Bijection equality-with-J as B using (_↔_)
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq
+open import Equality.Path.Isomorphisms.Univalence eq
+  using () renaming (abstract-univ to univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Equivalence.Erased.Cubical eq as EEq using (_≃ᴱ_)
@@ -48,7 +50,6 @@ private
     l g p s : A
     P       : A → Type p
     f       : (x : A) → P x
-    univ    : Univalence a
 
 ------------------------------------------------------------------------
 -- Weakly constant functions
@@ -63,14 +64,12 @@ Constantᴱ :
   (A → Type p) → Type (a ⊔ p)
 Constantᴱ P = ∀ x y → ∃ λ (f : P x → P y) → Erased (Is-equivalence f)
 
--- In erased contexts Constantᴱ is pointwise equivalent to Constant
--- (assuming univalence).
+-- In erased contexts Constantᴱ is pointwise equivalent to Constant.
 
 @0 Constantᴱ≃Constant :
   {P : A → Type p} →
-  Univalence p →
   Constantᴱ P ≃ Constant P
-Constantᴱ≃Constant {P = P} univ =
+Constantᴱ≃Constant {P = P} =
   Constantᴱ P                                                ↔⟨⟩
   (∀ x y → ∃ λ (f : P x → P y) → Erased (Is-equivalence f))  ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ → ∃-cong λ _ → erased Erased↔) ⟩
   (∀ x y → ∃ λ (f : P x → P y) → Is-equivalence f)           ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ → inverse Eq.≃-as-Σ) ⟩
@@ -103,14 +102,13 @@ Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ {f = f} =
   S.Constant-≃ (f ⁻¹_)             □
 
 -- In erased contexts Constantᴱ (f ⁻¹ᴱ_) is pointwise equivalent to
--- Constant (f ⁻¹_) (assuming univalence).
+-- Constant (f ⁻¹_).
 
 @0 Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ :
   Block "Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹" →
   {A : Type a} {B : Type b} {f : A → B} →
-  Univalence (a ⊔ b) →
   Constantᴱ (f ⁻¹ᴱ_) ≃ Constant (f ⁻¹_)
-Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ ⊠ {f = f} univ =
+Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ ⊠ {f = f} =
   Constantᴱ (f ⁻¹ᴱ_)    ↝⟨ Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ ⟩
   S.Constant-≃ (f ⁻¹_)  ↝⟨ inverse $ S.Constant≃Constant-≃ univ ⟩□
   Constant (f ⁻¹_)      □
@@ -119,10 +117,10 @@ Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ ⊠ {f = f} univ =
 
 @0 proj₁-from-Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ :
   (bl : Block "Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹") →
-  ∀ {A : Type a} {B : Type b} {f : A → B} {univ : Univalence (a ⊔ b)}
+  ∀ {A : Type a} {B : Type b} {f : A → B}
     {c : Constant (f ⁻¹_)} {b₁ b₂} →
-  proj₁ (_≃_.from (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl univ) c b₁ b₂) ≡
-  ECP.⁻¹→⁻¹ᴱ ∘ subst P.id (c b₁ b₂) ∘ ECP.⁻¹ᴱ→⁻¹
+  proj₁ (_≃_.from (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl) c b₁ b₂) ≡
+  ECP.⁻¹→⁻¹ᴱ ⊚ subst P.id (c b₁ b₂) ⊚ ECP.⁻¹ᴱ→⁻¹
 proj₁-from-Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ ⊠ {c = c} {b₁ = b₁} {b₂ = b₂} =
   ⟨ext⟩ λ (a , [ eq ]) →
 
@@ -160,28 +158,28 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
                                                                                 {k = equivalence} ext)) ⟩
   (∀ b₁ b₂ →
    ∃ λ (f : get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
-   Erased (Is-equivalence (Σ-map P.id erased ∘ f)))                       ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ → ∃-cong λ f → Erased-cong (
+   Erased (Is-equivalence (Σ-map P.id erased ⊚ f)))                       ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ → ∃-cong λ f → Erased-cong (
                                                                               Is-equivalence≃Is-equivalence-∘ʳ
                                                                                 (_≃_.is-equivalence $ from-bijection $
                                                                                  ∃-cong λ _ → inverse $ erased Erased↔)
                                                                                 {k = equivalence} ext)) ⟩
   (∀ b₁ b₂ →
    ∃ λ (f : get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
-   Erased (Is-equivalence (Σ-map P.id erased ∘ f ∘ Σ-map P.id [_]→)))     ↔⟨ Π-comm ⟩
+   Erased (Is-equivalence (Σ-map P.id erased ⊚ f ⊚ Σ-map P.id [_]→)))     ↔⟨ Π-comm ⟩
 
   (∀ b₂ b₁ →
    ∃ λ (f : get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
-   Erased (Is-equivalence (Σ-map P.id erased ∘ f ∘ Σ-map P.id [_]→)))     ↔⟨ (∀-cong ext λ _ → ΠΣ-comm) ⟩
+   Erased (Is-equivalence (Σ-map P.id erased ⊚ f ⊚ Σ-map P.id [_]→)))     ↔⟨ (∀-cong ext λ _ → ΠΣ-comm) ⟩
 
   (∀ b₂ →
    ∃ λ (f : ∀ b₁ → get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
    ∀ b₁ →
-   Erased (Is-equivalence (Σ-map P.id erased ∘ f b₁ ∘ Σ-map P.id [_]→)))  ↔⟨ (∀-cong ext λ _ → ∃-cong λ _ → inverse Erased-Π↔Π) ⟩
+   Erased (Is-equivalence (Σ-map P.id erased ⊚ f b₁ ⊚ Σ-map P.id [_]→)))  ↔⟨ (∀-cong ext λ _ → ∃-cong λ _ → inverse Erased-Π↔Π) ⟩
 
   (∀ b₂ →
    ∃ λ (f : ∀ b₁ → get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
    Erased (∀ b₁ →
-           Is-equivalence (Σ-map P.id erased ∘ f b₁ ∘ Σ-map P.id [_]→)))  ↔⟨ (∀-cong ext λ _ →
+           Is-equivalence (Σ-map P.id erased ⊚ f b₁ ⊚ Σ-map P.id [_]→)))  ↔⟨ (∀-cong ext λ _ →
                                                                               Σ-cong {k₂ = equivalence}
                                                                                 (inverse (∀-cong ext λ _ → currying) F.∘
                                                                                  Π-comm F.∘
@@ -202,7 +200,7 @@ Constantᴱ-⁻¹ᴱ-≃ᴱ {A = A} {B = B} {get = get} ⊠ =
                                                                               Erased-cong (
                                                                               ∀-cong [ ext ] λ b₁ →
                                                                               Is-equivalence-cong [ ext ] λ (a , eq) →
-      Σ-map P.id erased (f a (b₁ , [ eq ]))                                     ≡⟨ cong (Σ-map P.id erased ∘ f a) $ sym $
+      Σ-map P.id erased (f a (b₁ , [ eq ]))                                     ≡⟨ cong (Σ-map P.id erased ⊚ f a) $ sym $
                                                                                    erased (proj₂ Contractibleᴱ-Erased-other-singleton) _ ⟩
 
       Σ-map P.id erased (f a (get a , [ refl _ ]))                              ≡⟨ cong (Σ-map P.id erased) $ sym $ subst-refl _ _ ⟩∎
@@ -354,14 +352,12 @@ to-Constant-≃-get-⁻¹-≃-to-Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹-≡
 ------------------------------------------------------------------------
 -- Coherently constant families of fibres
 
--- Coherently constant families of fibres (with erased proofs),
--- defined using univalence.
+-- Coherently constant families of fibres (with erased proofs).
 
 Coherently-constant-fibres :
   {A : Type a} {B : Type b} →
-  @0 Univalence (a ⊔ b) →
   (A → B) → Type (a ⊔ b)
-Coherently-constant-fibres {A = A} {B = B} univ get =
+Coherently-constant-fibres {A = A} {B = B} get =
   ∃ λ (set : A → B → A) →
     Erased
       (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
@@ -370,19 +366,17 @@ Coherently-constant-fibres {A = A} {B = B} univ get =
          (record { get⁻¹-coherently-constant = c }))
 
 -- Coherently-constant-fibres univ get is equivalent (with erased
--- proofs) to CE.Coherently-constant (get ⁻¹ᴱ_) (assuming univalence).
+-- proofs) to CE.Coherently-constant (get ⁻¹ᴱ_).
 
 Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ :
   {A : Type a} {B : Type b} {get : A → B} →
-  @0 Univalence (lsuc (a ⊔ b)) →
-  (@0 univ : Univalence (a ⊔ b)) →
-  Coherently-constant-fibres univ get ≃ᴱ
+  Coherently-constant-fibres get ≃ᴱ
   CE.Coherently-constant (get ⁻¹ᴱ_)
 Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
-  {a = a} {b = b} {A = A} {B = B} {get = get} univ′ univ =
+  {a = a} {b = b} {A = A} {B = B} {get = get} =
   block λ bl →
 
-  Coherently-constant-fibres univ get                                     ↔⟨⟩
+  Coherently-constant-fibres get                                          ↔⟨⟩
 
   (∃ λ (set : A → B → A) →
    Erased
@@ -502,12 +496,12 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
      (∃ λ (c′ : S.Coherently-constant univ (get ⁻¹_)) →
       c′ .property ≡ _≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c))             ↔⟨ (∃-cong λ c → Erased-cong (inverse $
                                                                               Σ-cong (S.Coinductive-coherently-constant≃Coherently-constant
-                                                                                        univ′ univ) λ c′ →
+                                                                                        univ univ) λ c′ →
                                                                               lemma₁ bl c (c′ .property))) ⟩
   (∃ λ (c : Constantᴱ (get ⁻¹ᴱ_)) →
    Erased
      (∃ λ (c′ : C.Coherently-constant (get ⁻¹_)) →
-      c′ .property ≡ _≃_.to (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl univ) c))     ↔⟨ (∃-cong λ c → Erased-cong (lemma₃ bl c)) ⟩
+      c′ .property ≡ _≃_.to (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl) c))          ↔⟨ (∃-cong λ c → Erased-cong (lemma₃ bl c)) ⟩
 
   (∃ λ (c : Constantᴱ (get ⁻¹ᴱ_)) →
    Erased (
@@ -539,40 +533,40 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
   where
   @0 lemma₁ : ∀ _ _ _ → _ ≃ _
   lemma₁ bl c c′ =
-    c′ ≡ _≃_.to (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl univ) c  ↝⟨ ≡⇒≃ $ cong (c′ ≡_) $
-                                                            unblock bl
-                                                              (λ bl → _≃_.to (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl univ) c ≡
-                                                                      _≃_.from (S.Constant≃Constant-≃ univ)
-                                                                        (_≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c))
-                                                              (refl _) ⟩
+    c′ ≡ _≃_.to (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl) c  ↝⟨ ≡⇒≃ $ cong (c′ ≡_) $
+                                                       unblock bl
+                                                         (λ bl → _≃_.to (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl) c ≡
+                                                                 _≃_.from (S.Constant≃Constant-≃ univ)
+                                                                   (_≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c))
+                                                         (refl _) ⟩
     c′ ≡
     _≃_.from (S.Constant≃Constant-≃ univ)
-      (_≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c)           ↝⟨ inverse $ Eq.≃-≡ (S.Constant≃Constant-≃ univ) ⟩
+      (_≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c)      ↝⟨ inverse $ Eq.≃-≡ (S.Constant≃Constant-≃ univ) ⟩
 
     _≃_.to (S.Constant≃Constant-≃ univ) c′ ≡
     _≃_.to (S.Constant≃Constant-≃ univ)
       (_≃_.from (S.Constant≃Constant-≃ univ)
-         (_≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c))       ↝⟨ ≡⇒≃ $
-                                                            cong (_≃_.to (S.Constant≃Constant-≃ univ) c′ ≡_) $
-                                                            _≃_.right-inverse-of (S.Constant≃Constant-≃ univ) _ ⟩□
+         (_≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c))  ↝⟨ ≡⇒≃ $
+                                                       cong (_≃_.to (S.Constant≃Constant-≃ univ) c′ ≡_) $
+                                                       _≃_.right-inverse-of (S.Constant≃Constant-≃ univ) _ ⟩□
     _≃_.to (S.Constant≃Constant-≃ univ) c′ ≡
-    _≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c               □
+    _≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c          □
 
   @0 lemma₂ : ∀ _ _ _ _ → _
   lemma₂ bl c′ b₁ b₂ =
-    proj₁ (_≃_.from (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl univ)
+    proj₁ (_≃_.from (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl)
              (c′ .property) b₁ b₂)                                      ≡⟨ proj₁-from-Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl ⟩
 
-    ECP.⁻¹→⁻¹ᴱ ∘ subst P.id (c′ .property b₁ b₂) ∘ ECP.⁻¹ᴱ→⁻¹           ≡⟨ sym $
-                                                                           cong₂ (λ f g → f ∘ subst P.id (c′ .property b₁ b₂) ∘ g)
+    ECP.⁻¹→⁻¹ᴱ ⊚ subst P.id (c′ .property b₁ b₂) ⊚ ECP.⁻¹ᴱ→⁻¹           ≡⟨ sym $
+                                                                           cong₂ (λ f g → f ⊚ subst P.id (c′ .property b₁ b₂) ⊚ g)
                                                                              (trans (⟨ext⟩ λ _ →
                                                                                      subst-id-in-terms-of-≡⇒↝ equivalence) $
                                                                               cong _≃_.to $ _≃_.right-inverse-of (≡≃≃ univ) _)
                                                                              (trans (⟨ext⟩ λ _ →
                                                                                      subst-id-in-terms-of-inverse∘≡⇒↝ equivalence) $
                                                                               cong _≃_.from $ _≃_.right-inverse-of (≡≃≃ univ) _) ⟩
-    subst P.id (≃⇒≡ univ ECP.⁻¹≃⁻¹ᴱ) ∘
-    subst P.id (c′ .property b₁ b₂) ∘
+    subst P.id (≃⇒≡ univ ECP.⁻¹≃⁻¹ᴱ) ⊚
+    subst P.id (c′ .property b₁ b₂) ⊚
     subst P.id (sym (≃⇒≡ univ ECP.⁻¹≃⁻¹ᴱ))                              ≡⟨ (⟨ext⟩ λ _ →
                                                                             trans (subst-subst _ _ _ _) $
                                                                             subst-subst _ _ _ _) ⟩
@@ -615,41 +609,40 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
   @0 lemma₃ : ∀ _ _ → _ ≃ _
   lemma₃ bl c =
     (∃ λ (c′ : C.Coherently-constant (get ⁻¹_)) →
-     c′ .property ≡ _≃_.to (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl univ) c)  ↝⟨ (∃-cong λ _ →
-                                                                         (∀-cong ext λ _ → ∀-cong ext λ _ → from-bijection $ inverse $
-                                                                          ≡-comm F.∘
-                                                                          ignore-propositional-component
-                                                                            (H-level-Erased 1 (Is-equivalence-propositional ext))) F.∘
-                                                                         inverse
-                                                                           (Eq.extensionality-isomorphism ext F.∘
-                                                                            (∀-cong ext λ _ → Eq.extensionality-isomorphism ext)) F.∘
-                                                                         (≡⇒≃ $ cong (_ ≡_) $
-                                                                          _≃_.left-inverse-of (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl univ) _) F.∘
-                                                                         (inverse $
-                                                                          Eq.≃-≡ $ inverse $ Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl univ)) ⟩
+     c′ .property ≡ _≃_.to (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl) c)     ↝⟨ (∃-cong λ _ →
+                                                                       (∀-cong ext λ _ → ∀-cong ext λ _ → from-bijection $ inverse $
+                                                                        ≡-comm F.∘
+                                                                        ignore-propositional-component
+                                                                          (H-level-Erased 1 (Is-equivalence-propositional ext))) F.∘
+                                                                       inverse
+                                                                         (Eq.extensionality-isomorphism ext F.∘
+                                                                          (∀-cong ext λ _ → Eq.extensionality-isomorphism ext)) F.∘
+                                                                       (≡⇒≃ $ cong (_ ≡_) $
+                                                                        _≃_.left-inverse-of (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl) _) F.∘
+                                                                       (inverse $
+                                                                        Eq.≃-≡ $ inverse $ Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl)) ⟩
     (∃ λ (c′ : C.Coherently-constant (get ⁻¹_)) →
      ∀ b₁ b₂ →
      proj₁ (c b₁ b₂) ≡
-     proj₁ (_≃_.from (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl univ)
-              (c′ .property) b₁ b₂))                                 ↝⟨ (Σ-cong (≡⇒≃ $ cong C.Coherently-constant $ ⟨ext⟩ λ _ →
-                                                                                 ≃⇒≡ univ ECP.⁻¹≃⁻¹ᴱ) λ c′ →
-                                                                         ∀-cong ext λ b₁ → ∀-cong ext λ b₂ →
-                                                                         ≡⇒≃ $ cong (proj₁ (c b₁ b₂) ≡_) (lemma₂ bl c′ b₁ b₂)) ⟩□
+     proj₁ (_≃_.from (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl)
+              (c′ .property) b₁ b₂))                               ↝⟨ (Σ-cong (≡⇒≃ $ cong C.Coherently-constant $ ⟨ext⟩ λ _ →
+                                                                               ≃⇒≡ univ ECP.⁻¹≃⁻¹ᴱ) λ c′ →
+                                                                       ∀-cong ext λ b₁ → ∀-cong ext λ b₂ →
+                                                                       ≡⇒≃ $ cong (proj₁ (c b₁ b₂) ≡_) (lemma₂ bl c′ b₁ b₂)) ⟩□
     (∃ λ (c′ : C.Coherently-constant (get ⁻¹ᴱ_)) →
-     ∀ b₁ b₂ → proj₁ (c b₁ b₂) ≡ subst P.id (c′ .property b₁ b₂))    □
+     ∀ b₁ b₂ → proj₁ (c b₁ b₂) ≡ subst P.id (c′ .property b₁ b₂))  □
 
--- In erased contexts Coherently-constant-fibres univ get is
--- equivalent to S.Coherently-constant univ (get ⁻¹_).
+-- In erased contexts Coherently-constant-fibres get is equivalent to
+-- S.Coherently-constant univ (get ⁻¹_).
 
 @0 Coherently-constant-fibres≃Coherently-constant-⁻¹ :
   (bl : Block "Constant-≃-get-⁻¹-≃")
   {A : Type a} {B : Type b} {get : A → B} →
-  (univ : Univalence (a ⊔ b)) →
-  Coherently-constant-fibres univ get ≃
+  Coherently-constant-fibres get ≃
   S.Coherently-constant univ (get ⁻¹_)
 Coherently-constant-fibres≃Coherently-constant-⁻¹
-  bl {A = A} {B = B} {get = get} univ =
-  Coherently-constant-fibres univ get                   ↔⟨⟩
+  bl {A = A} {B = B} {get = get} =
+  Coherently-constant-fibres get                        ↔⟨⟩
 
   (∃ λ (set : A → B → A) →
    Erased
@@ -678,15 +671,10 @@ Coherently-constant-fibres≃Coherently-constant-⁻¹
 
 -- Small coinductive lenses.
 --
--- The lens type is defined using (erased) univalence. The use of a
--- record type makes it easier for Agda to infer the argument univ
--- from a value of type Lens univ A B.
---
 -- Note that everything is erased, except for the getter and the
 -- setter.
 
-record Lens (@0 univ : Univalence (a ⊔ b))
-            (A : Type a) (B : Type b) : Type (a ⊔ b) where
+record Lens (A : Type a) (B : Type b) : Type (a ⊔ b) where
   field
 
     -- A getter.
@@ -718,7 +706,7 @@ record Lens (@0 univ : Univalence (a ⊔ b))
 
   -- The family of fibres of the getter is coherently constant.
 
-  coherently-constant-fibres-get : Coherently-constant-fibres univ get
+  coherently-constant-fibres-get : Coherently-constant-fibres get
   coherently-constant-fibres-get =
     set , [ (get⁻¹-coherently-constant , set≡set) ]
 
@@ -726,9 +714,7 @@ instance
 
   -- The lenses defined above have getters and setters.
 
-  has-getter-and-setter :
-    {@0 univ : Univalence (a ⊔ b)} →
-    Has-getter-and-setter (Lens {a = a} {b = b} univ)
+  has-getter-and-setter : Has-getter-and-setter (Lens {a = a} {b = b})
   has-getter-and-setter = record
     { get = Lens.get
     ; set = Lens.set
@@ -737,39 +723,33 @@ instance
 -- Lens can be expressed as a Σ-type.
 
 Lens-as-Σ :
-  {A : Type a} {B : Type b} {@0 univ : Univalence (a ⊔ b)} →
-  Lens univ A B ≃
-  ∃ λ (get : A → B) → Coherently-constant-fibres univ get
+  {A : Type a} {B : Type b} →
+  Lens A B ≃
+  ∃ λ (get : A → B) → Coherently-constant-fibres get
 Lens-as-Σ =
   Eq.↔→≃
     (λ l → Lens.get l , Lens.coherently-constant-fibres-get l)
     _ refl refl
 
--- Lens univ A B is equivalent to CE.Lens A B (with erased proofs,
--- assuming univalence).
+-- Lens A B is equivalent to CE.Lens A B (with erased proofs).
 
 Lens≃ᴱLens :
   Block "Lens≃ᴱLens" →
   {A : Type a} {B : Type b} →
-  @0 Univalence (lsuc (a ⊔ b)) →
-  (@0 univ : Univalence (a ⊔ b)) →
-  Lens univ A B ≃ᴱ CE.Lens A B
-Lens≃ᴱLens ⊠ {A = A} {B = B} univ′ univ =
-  Lens univ A B                                              ↔⟨ Lens-as-Σ ⟩
-  (∃ λ (get : A → B) → Coherently-constant-fibres univ get)  ↝⟨ (∃-cong λ _ →
-                                                                 Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ univ′ univ) ⟩□
-  (∃ λ (get : A → B) → CE.Coherently-constant (get ⁻¹ᴱ_))    □
+  Lens A B ≃ᴱ CE.Lens A B
+Lens≃ᴱLens ⊠ {A = A} {B = B} =
+  Lens A B                                                 ↔⟨ Lens-as-Σ ⟩
+  (∃ λ (get : A → B) → Coherently-constant-fibres get)     ↝⟨ (∃-cong λ _ → Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ) ⟩□
+  (∃ λ (get : A → B) → CE.Coherently-constant (get ⁻¹ᴱ_))  □
 
 -- The equivalence preserves getters and setters.
 
 Lens≃ᴱLens-preserves-getters-and-setters :
   (bl : Block "Lens≃ᴱLens")
-  {A : Type a} {B : Type b}
-  (@0 univ′ : Univalence (lsuc (a ⊔ b)))
-  (@0 univ : Univalence (a ⊔ b)) →
+  {A : Type a} {B : Type b} →
   Preserves-getters-and-setters-⇔ A B
-    (_≃ᴱ_.logical-equivalence (Lens≃ᴱLens bl univ′ univ))
-Lens≃ᴱLens-preserves-getters-and-setters ⊠ univ′ univ =
+    (_≃ᴱ_.logical-equivalence (Lens≃ᴱLens bl))
+Lens≃ᴱLens-preserves-getters-and-setters ⊠ =
     (λ _ → refl _ , refl _)
   , (λ l →
        let open CE.Lens l in
@@ -781,50 +761,45 @@ Lens≃ᴱLens-preserves-getters-and-setters ⊠ univ′ univ =
 
          proj₁ (get⁻¹ᴱ-const (get a) b (a , [ refl (get a) ]))  ∎)
 
--- Lens univ A B is equivalent to E.Lens A B (with erased proofs,
--- assuming univalence).
+-- Lens A B is equivalent to E.Lens A B (with erased proofs).
 
 Lens≃ᴱLensᴱ :
   Block "Lens≃ᴱLensᴱ" →
-  {A : Type a} {B : Type b}
-  {@0 univ : Univalence (a ⊔ b)} →
-  @0 Univalence (lsuc (a ⊔ b)) →
-  Lens univ A B ≃ᴱ E.Lens A B
-Lens≃ᴱLensᴱ bl {A = A} {B = B} {univ = univ} univ′ =
-  Lens univ A B  ↝⟨ Lens≃ᴱLens bl univ′ univ ⟩
-  CE.Lens A B    ↝⟨ CE.Lens≃ᴱLens bl univ′ univ ⟩
-  V.Lens A B     ↝⟨ V.Lens≃ᴱHigher-lens bl univ ⟩□
-  E.Lens A B     □
+  {A : Type a} {B : Type b} →
+  Lens A B ≃ᴱ E.Lens A B
+Lens≃ᴱLensᴱ bl {A = A} {B = B} =
+  Lens A B     ↝⟨ Lens≃ᴱLens bl ⟩
+  CE.Lens A B  ↝⟨ CE.Lens≃ᴱLens bl ⟩
+  V.Lens A B   ↝⟨ V.Lens≃ᴱHigher-lens bl ⟩□
+  E.Lens A B   □
 
 -- The equivalence preserves getters and setters (in erased contexts).
 
 @0 Lens≃ᴱLensᴱ-preserves-getters-and-setters :
   (bl : Block "Lens→Lens")
-  {A : Type a} {B : Type b}
-  (@0 univ′ : Univalence (lsuc (a ⊔ b)))
-  (@0 univ : Univalence (a ⊔ b)) →
+  {A : Type a} {B : Type b} →
   Preserves-getters-and-setters-⇔ A B
-    (_≃ᴱ_.logical-equivalence (Lens≃ᴱLensᴱ bl {univ = univ} univ′))
-Lens≃ᴱLensᴱ-preserves-getters-and-setters bl univ′ univ =
+    (_≃ᴱ_.logical-equivalence (Lens≃ᴱLensᴱ bl))
+Lens≃ᴱLensᴱ-preserves-getters-and-setters bl =
   Preserves-getters-and-setters-⇔-∘
-    {f = _≃ᴱ_.logical-equivalence (V.Lens≃ᴱHigher-lens bl univ) F.∘
-         _≃ᴱ_.logical-equivalence (CE.Lens≃ᴱLens bl univ′ univ)}
-    {g = _≃ᴱ_.logical-equivalence (Lens≃ᴱLens bl univ′ univ)}
+    {f = _≃ᴱ_.logical-equivalence (V.Lens≃ᴱHigher-lens bl) F.∘
+         _≃ᴱ_.logical-equivalence (CE.Lens≃ᴱLens bl)}
+    {g = _≃ᴱ_.logical-equivalence (Lens≃ᴱLens bl)}
     (Preserves-getters-and-setters-⇔-∘
-       {f = _≃ᴱ_.logical-equivalence (V.Lens≃ᴱHigher-lens bl univ)}
-       {g = _≃ᴱ_.logical-equivalence (CE.Lens≃ᴱLens bl univ′ univ)}
-       (V.Lens≃ᴱHigher-lens-preserves-getters-and-setters bl univ)
-       (CE.Lens≃ᴱLens-preserves-getters-and-setters bl univ′ univ))
-    (Lens≃ᴱLens-preserves-getters-and-setters bl univ′ univ)
+       {f = _≃ᴱ_.logical-equivalence (V.Lens≃ᴱHigher-lens bl)}
+       {g = _≃ᴱ_.logical-equivalence (CE.Lens≃ᴱLens bl)}
+       (V.Lens≃ᴱHigher-lens-preserves-getters-and-setters bl)
+       (CE.Lens≃ᴱLens-preserves-getters-and-setters bl))
+    (Lens≃ᴱLens-preserves-getters-and-setters bl)
 
--- In erased contexts Lens univ A B is equivalent to S.Lens univ A B.
+-- In erased contexts Lens A B is equivalent to S.Lens univ A B.
 
 @0 Lens≃Lens :
   (bl : Block "Constant-≃-get-⁻¹-≃") →
-  Lens univ A B ≃ S.Lens univ A B
-Lens≃Lens {univ = univ} {A = A} {B = B} bl =
-  Lens univ A B                                               ↝⟨ Lens-as-Σ ⟩
-  (∃ λ (get : A → B) → Coherently-constant-fibres univ get)   ↝⟨ (∃-cong λ _ → Coherently-constant-fibres≃Coherently-constant-⁻¹ bl univ) ⟩
+  Lens A B ≃ S.Lens univ A B
+Lens≃Lens {A = A} {B = B} bl =
+  Lens A B                                                    ↝⟨ Lens-as-Σ ⟩
+  (∃ λ (get : A → B) → Coherently-constant-fibres get)        ↝⟨ (∃-cong λ _ → Coherently-constant-fibres≃Coherently-constant-⁻¹ bl) ⟩
   (∃ λ (get : A → B) → S.Coherently-constant univ (get ⁻¹_))  ↝⟨ inverse S.Lens-as-Σ ⟩□
   S.Lens univ A B                                             □
 
@@ -832,10 +807,9 @@ Lens≃Lens {univ = univ} {A = A} {B = B} bl =
 
 @0 Lens≃Lens-preserves-getters-and-setters :
   (bl : Block "Lens≃Lens")
-  {A : Type a} {B : Type b}
-  {univ : Univalence (a ⊔ b)} →
+  {A : Type a} {B : Type b} →
   Preserves-getters-and-setters-⇔ A B
-    (_≃_.logical-equivalence (Lens≃Lens {univ = univ} bl))
+    (_≃_.logical-equivalence (Lens≃Lens bl))
 Lens≃Lens-preserves-getters-and-setters ⊠ =
     (λ l →
        let open Lens l in
@@ -845,24 +819,22 @@ Lens≃Lens-preserves-getters-and-setters ⊠ =
   , (λ _ → refl _ , refl _)
 
 -- Lenses with stable view types are equal if their setters are equal
--- (in erased contexts, assuming univalence).
+-- (in erased contexts).
 
 @0 lenses-equal-if-setters-equal :
   {A : Type a} {B : Type b} →
-  Univalence (lsuc (a ⊔ b)) →
-  (univ : Univalence (a ⊔ b)) →
-  (l₁ l₂ : Lens univ A B) →
+  (l₁ l₂ : Lens A B) →
   (∥ B ∥ → B) →
   Lens.set l₁ ≡ Lens.set l₂ →
   l₁ ≡ l₂
-lenses-equal-if-setters-equal univ′ univ l₁ l₂ stable =
+lenses-equal-if-setters-equal l₁ l₂ stable =
   block λ bl →
 
   Lens.set l₁ ≡ Lens.set l₂                            ↔⟨ ≡⇒≃ $ sym $ cong₂ _≡_
                                                             (proj₂ $ proj₁ (Lens≃Lens-preserves-getters-and-setters bl) l₁)
                                                             (proj₂ $ proj₁ (Lens≃Lens-preserves-getters-and-setters bl) l₂) ⟩
   S.Lens.set (_≃_.to (Lens≃Lens bl) l₁) ≡
-  S.Lens.set (_≃_.to (Lens≃Lens bl) l₂)                ↝⟨ S.lenses-equal-if-setters-equal univ′ _ _ _ stable ⟩
+  S.Lens.set (_≃_.to (Lens≃Lens bl) l₂)                ↝⟨ S.lenses-equal-if-setters-equal univ _ _ _ stable ⟩
 
   _≃_.to (Lens≃Lens bl) l₁ ≡ _≃_.to (Lens≃Lens bl) l₂  ↔⟨ Eq.≃-≡ $ Lens≃Lens bl ⟩□
 
@@ -876,15 +848,14 @@ lenses-equal-if-setters-equal univ′ univ l₁ l₂ stable =
 
 with-other-getter :
   {A : Type a} {B : Type b}
-  (@0 univ : Univalence (a ⊔ b))
-  (l : Lens univ A B)
+  (l : Lens A B)
   (get : A → B) →
   @0 get ≡ Lens.get l →
-  Lens univ A B
-with-other-getter {A = A} {B = B} univ l get p = record l
+  Lens A B
+with-other-getter {A = A} {B = B} l get p = record l
   { get                       = get
   ; get⁻¹-coherently-constant =
-      subst (S.Coherently-constant univ ∘ _⁻¹_)
+      subst (S.Coherently-constant univ ⊚ _⁻¹_)
         (sym p) L.get⁻¹-coherently-constant
   ; set≡set =
       L.set          ≡⟨ L.set≡set ⟩
@@ -904,23 +875,23 @@ with-other-getter {A = A} {B = B} univ l get p = record l
   l₂ = record
     { get                       = get
     ; get⁻¹-coherently-constant =
-        subst (S.Coherently-constant univ ∘ _⁻¹_) (sym p)
+        subst (S.Coherently-constant univ ⊚ _⁻¹_) (sym p)
           L.get⁻¹-coherently-constant
     }
 
   @0 l₂≡l₁ : l₂ ≡ l₁
   l₂≡l₁ =
     _≃_.to (Eq.≃-≡ S.Lens-as-Σ) $ Σ-≡,≡→≡ p
-      (subst (S.Coherently-constant univ ∘ _⁻¹_) p
-         (subst (S.Coherently-constant univ ∘ _⁻¹_) (sym p)
+      (subst (S.Coherently-constant univ ⊚ _⁻¹_) p
+         (subst (S.Coherently-constant univ ⊚ _⁻¹_) (sym p)
             L.get⁻¹-coherently-constant)                     ≡⟨ subst-subst-sym _ _ _ ⟩∎
 
        L.get⁻¹-coherently-constant                           ∎)
 
-_ : Lens.get (with-other-getter univ l g p) ≡ g
+_ : Lens.get (with-other-getter l g p) ≡ g
 _ = refl _
 
-_ : Lens.set (with-other-getter univ l g p) ≡ Lens.set l
+_ : Lens.set (with-other-getter l g p) ≡ Lens.set l
 _ = refl _
 
 -- The resulting lens is equal to the old one (if the equality proof
@@ -928,14 +899,13 @@ _ = refl _
 
 with-other-getter≡ :
   {A : Type a} {B : Type b}
-  (@0 univ : Univalence (a ⊔ b))
-  (l : Lens univ A B)
+  (l : Lens A B)
   (get : A → B)
   (p : get ≡ Lens.get l) →
-  with-other-getter univ l get p ≡ l
-with-other-getter≡ {A = A} {B = B} univ l get p =
+  with-other-getter l get p ≡ l
+with-other-getter≡ {A = A} {B = B} l get p =
   _≃_.to (Eq.≃-≡ Lens-as-Σ) $ Σ-≡,≡→≡ p
-    (subst (Coherently-constant-fibres univ) p
+    (subst Coherently-constant-fibres p
        L′.coherently-constant-fibres-get                             ≡⟨ push-subst-pair-× _ _ ⟩
 
      L.set ,
@@ -963,7 +933,7 @@ with-other-getter≡ {A = A} {B = B} univ l get p =
      L.set ,
      [ ( L.get⁻¹-coherently-constant
        , subst
-           (λ ((get , c) : ∃ (S.Coherently-constant univ ∘ _⁻¹_)) →
+           (λ ((get , c) : ∃ (S.Coherently-constant univ ⊚ _⁻¹_)) →
               L.set ≡
               S.Lens.set {univ = univ}
                 (record { get⁻¹-coherently-constant = c }))
@@ -979,7 +949,7 @@ with-other-getter≡ {A = A} {B = B} univ l get p =
                    (subst-subst-sym _ _ _)
          in
          subst
-           (λ ((get , c) : ∃ (S.Coherently-constant univ ∘ _⁻¹_)) →
+           (λ ((get , c) : ∃ (S.Coherently-constant univ ⊚ _⁻¹_)) →
               L.set ≡
               S.Lens.set {univ = univ}
                 (record { get⁻¹-coherently-constant = c }))
@@ -993,7 +963,7 @@ with-other-getter≡ {A = A} {B = B} univ l get p =
                                                                           elim₁
                                                                             (λ q →
                                                                                subst
-                                                                                 (λ ((get , c) : ∃ (S.Coherently-constant univ ∘ _⁻¹_)) →
+                                                                                 (λ ((get , c) : ∃ (S.Coherently-constant univ ⊚ _⁻¹_)) →
                                                                                     L.set ≡
                                                                                     S.Lens.set {univ = univ}
                                                                                       (record { get⁻¹-coherently-constant = c }))
@@ -1017,11 +987,11 @@ with-other-getter≡ {A = A} {B = B} univ l get p =
   where
   module L = Lens l
 
-  l′ : Lens univ A B
+  l′ : Lens A B
   l′ = record
     { get                       = get
     ; get⁻¹-coherently-constant =
-        subst (S.Coherently-constant univ ∘ _⁻¹_) (sym p)
+        subst (S.Coherently-constant univ ⊚ _⁻¹_) (sym p)
           L.get⁻¹-coherently-constant
     }
 
@@ -1032,11 +1002,10 @@ with-other-getter≡ {A = A} {B = B} univ l get p =
 
 with-other-setter :
   {A : Type a} {B : Type b}
-  {@0 univ : Univalence (a ⊔ b)}
-  (l : Lens univ A B)
+  (l : Lens A B)
   (set : A → B → A) →
   @0 set ≡ Lens.set l →
-  Lens univ A B
+  Lens A B
 with-other-setter l set p = record l
   { set     = set
   ; set≡set = trans p (Lens.set≡set l)
@@ -1053,12 +1022,11 @@ _ = refl _
 
 with-other-setter≡ :
   {A : Type a} {B : Type b}
-  {@0 univ : Univalence (a ⊔ b)}
-  (l : Lens univ A B)
+  (l : Lens A B)
   (set : A → B → A)
   (p : set ≡ Lens.set l) →
   with-other-setter l set p ≡ l
-with-other-setter≡ {univ = univ} l set p =
+with-other-setter≡ l set p =
   _≃_.to (Eq.≃-≡ Lens-as-Σ) $ cong (get ,_) $ Σ-≡,≡→≡ p
     (subst
        (λ set → Erased
@@ -1103,7 +1071,6 @@ with-other-setter≡ {univ = univ} l set p =
 
 record Erased-proofs
          {A : Type a} {B : Type b}
-         (univ : Univalence (a ⊔ b))
          (get : A → B) (set : A → B → A) : Type (a ⊔ b) where
   field
     @0 get⁻¹-coherently-constant : S.Coherently-constant univ (get ⁻¹_)
@@ -1121,8 +1088,8 @@ record Erased-proofs
 
 @0 Lens→Erased-proofs :
   (l : S.Lens univ A B) →
-  Erased-proofs univ (S.Lens.get l) (S.Lens.set l)
-Lens→Erased-proofs {univ = univ} l = proofs ⊠
+  Erased-proofs (S.Lens.get l) (S.Lens.set l)
+Lens→Erased-proofs l = proofs ⊠
   where
   module _ (bl : Unit) where
 
@@ -1130,7 +1097,7 @@ Lens→Erased-proofs {univ = univ} l = proofs ⊠
 
     l′ = _≃_.from (Lens≃Lens bl) l
 
-    proofs : Erased-proofs univ (Lens.get l′) (Lens.set l′)
+    proofs : Erased-proofs (Lens.get l′) (Lens.set l′)
     proofs .get⁻¹-coherently-constant =
       Lens.get⁻¹-coherently-constant l′
     proofs .set≡set = Lens.set≡set l′
@@ -1141,10 +1108,9 @@ Lens→Erased-proofs {univ = univ} l = proofs ⊠
 -- first explicit argument, see (for instance) id below.
 
 Erased-proofs→Lens :
-  {A : Type a} {B : Type b} {get : A → B} {set : A → B → A}
-  {@0 univ : Univalence (a ⊔ b)} →
-  @0 Erased-proofs univ get set →
-  Lens univ A B
+  {A : Type a} {B : Type b} {get : A → B} {set : A → B → A} →
+  @0 Erased-proofs get set →
+  Lens A B
 Erased-proofs→Lens {get = get} {set = set} ep = λ where
   .Lens.get                       → get
   .Lens.set                       → set
@@ -1157,33 +1123,26 @@ Erased-proofs→Lens {get = get} {set = set} ep = λ where
 
 -- An identity lens.
 
-id :
-  {A : Type a}
-  (@0 univ : Univalence a) →
-  Lens univ A A
-id univ = Erased-proofs→Lens (Lens→Erased-proofs (S.id univ))
+id : {A : Type a} → Lens A A
+id = Erased-proofs→Lens (Lens→Erased-proofs (S.id univ))
 
 -- Composition.
 
-infix 9 ⟨_,_⟩_∘_
+infixr 9 _∘_
 
-⟨_,_⟩_∘_ :
-  {A : Type a} {B : Type b} {C : Type c}
-  {@0 univ₁ : Univalence (b ⊔ c)}
-  {@0 univ₂ : Univalence (a ⊔ b)}
-  (@0 univ₃ : Univalence (a ⊔ c)) →
-  @0 Univalence (a ⊔ b ⊔ c) →
-  Lens univ₁ B C → Lens univ₂ A B → Lens univ₃ A C
-⟨ univ₃ , univ ⟩ l₁ ∘ l₂ =
+_∘_ :
+  {A : Type a} {B : Type b} {C : Type c} →
+  Lens B C → Lens A B → Lens A C
+l₁ ∘ l₂ =
   Erased-proofs→Lens
-    (subst (Erased-proofs _ _)
+    (subst (Erased-proofs _)
        (⟨ext⟩ λ a → ⟨ext⟩ λ c →
         S.Lens.set l₂′ a (S.Lens.set l₁′ (get l₂ a) c)  ≡⟨ cong (λ s → s a (S.Lens.set l₁′ (get l₂ a) c)) $
                                                            proj₂ $ proj₁ (Lens≃Lens-preserves-getters-and-setters ⊠) l₂ ⟩
         set l₂ a (S.Lens.set l₁′ (get l₂ a) c)          ≡⟨ cong (λ s → set l₂ a (s (get l₂ a) c)) $
                                                            proj₂ $ proj₁ (Lens≃Lens-preserves-getters-and-setters ⊠) l₁ ⟩∎
         set l₂ a (set l₁ (get l₂ a) c)                  ∎) $
-     Lens→Erased-proofs (S.⟨ univ₃ , univ ⟩ l₁′ ∘ l₂′))
+     Lens→Erased-proofs (S.⟨ univ , univ ⟩ l₁′ ∘ l₂′))
   where
   open Lens
 
@@ -1198,82 +1157,40 @@ infix 9 ⟨_,_⟩_∘_
 
 set-∘ :
   ∀ {A : Type a} {B : Type b} {C : Type c}
-    {@0 univ₁ : Univalence (b ⊔ c)}
-    {@0 univ₂ : Univalence (a ⊔ b)}
-  (@0 univ₃ : Univalence (a ⊔ c))
-  (@0 univ₄ : Univalence (a ⊔ b ⊔ c))
-  (l₁ : Lens univ₁ B C) (l₂ : Lens univ₂ A B) {a c} →
-  Lens.set (⟨ univ₃ , univ₄ ⟩ l₁ ∘ l₂) a c ≡
+  (l₁ : Lens B C) (l₂ : Lens A B) {a c} →
+  Lens.set (l₁ ∘ l₂) a c ≡
   Lens.set l₂ a (Lens.set l₁ (Lens.get l₂ a) c)
-set-∘ _ _ _ _ = refl _
+set-∘ _ _ = refl _
 
 -- Composition is associative if the view type of the resulting lens
--- is stable (in erased contexts, assuming univalence).
+-- is stable (in erased contexts).
 
 @0 associativity :
   {A : Type a} {B : Type b} {C : Type c} {D : Type d} →
   (∥ D ∥ → D) →
-  (univ₁  : Univalence (c ⊔ d))
-  (univ₂  : Univalence (b ⊔ c))
-  (univ₃  : Univalence (a ⊔ b))
-  (univ₄  : Univalence (a ⊔ d))
-  (univ₅  : Univalence (a ⊔ c ⊔ d))
-  (univ₆  : Univalence (a ⊔ c))
-  (univ₇  : Univalence (a ⊔ b ⊔ c))
-  (univ₈  : Univalence (a ⊔ b ⊔ d))
-  (univ₉  : Univalence (b ⊔ d))
-  (univ₁₀ : Univalence (b ⊔ c ⊔ d)) →
-  Univalence (lsuc (a ⊔ d)) →
-  (l₁ : Lens univ₁ C D) (l₂ : Lens univ₂ B C) (l₃ : Lens univ₃ A B) →
-  ⟨ univ₄ , univ₅ ⟩ l₁ ∘ (⟨ univ₆ , univ₇ ⟩ l₂ ∘ l₃) ≡
-  ⟨ univ₄ , univ₈ ⟩ (⟨ univ₉ , univ₁₀ ⟩ l₁ ∘ l₂) ∘ l₃
-associativity stable _ _ _ univ₄ _ _ _ _ _ _ univ₁₁ l₁ l₂ l₃ =
-  lenses-equal-if-setters-equal
-    univ₁₁
-    univ₄
-    _
-    _
-    stable
-    (refl _)
+  (l₁ : Lens C D) (l₂ : Lens B C) (l₃ : Lens A B) →
+  l₁ ∘ (l₂ ∘ l₃) ≡ (l₁ ∘ l₂) ∘ l₃
+associativity stable l₁ l₂ l₃ =
+  lenses-equal-if-setters-equal _ _ stable (refl _)
 
 -- The identity lens is a left identity of composition if the view
--- type of the resulting lens is stable (assuming univalence).
+-- type of the resulting lens is stable.
 
 @0 left-identity :
   {A : Type a} {B : Type b} →
   (∥ B ∥ → B) →
-  (univ₁ : Univalence (a ⊔ b))
-  (univ₂ : Univalence (a ⊔ b))
-  (univ₃ : Univalence b) →
-  Univalence (lsuc (a ⊔ b)) →
-  (l : Lens univ₁ A B) →
-  ⟨ univ₁ , univ₂ ⟩ id univ₃ ∘ l ≡ l
-left-identity stable univ₁ univ₂ univ₃ univ₄ l =
-  lenses-equal-if-setters-equal
-    univ₄
-    univ₁
-    _
-    _
-    stable
-    (refl _)
+  (l : Lens A B) →
+  id ∘ l ≡ l
+left-identity stable l =
+  lenses-equal-if-setters-equal _ _ stable (refl _)
 
 -- The identity lens is a right identity of composition if the view
--- type of the resulting lens is stable (assuming univalence).
+-- type of the resulting lens is stable.
 
 @0 right-identity :
   {A : Type a} {B : Type b} →
   (∥ B ∥ → B) →
-  (univ₁ : Univalence (a ⊔ b))
-  (univ₂ : Univalence (a ⊔ b))
-  (univ₃ : Univalence a) →
-  Univalence (lsuc (a ⊔ b)) →
-  (l : Lens univ₁ A B) →
-  ⟨ univ₁ , univ₂ ⟩ l ∘ id univ₃ ≡ l
-right-identity stable univ₁ univ₂ univ₃ univ₄ l =
-  lenses-equal-if-setters-equal
-    univ₄
-    univ₁
-    _
-    _
-    stable
-    (refl _)
+  (l : Lens A B) →
+  l ∘ id ≡ l
+right-identity stable l =
+  lenses-equal-if-setters-equal _ _ stable (refl _)

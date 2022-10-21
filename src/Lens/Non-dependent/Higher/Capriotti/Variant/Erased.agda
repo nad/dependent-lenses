@@ -15,6 +15,8 @@ open import Prelude
 
 open import Bijection equality-with-J using (_↔_)
 open import Equality.Path.Isomorphisms eq
+open import Equality.Path.Isomorphisms.Univalence eq
+  using () renaming (abstract-univ to univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
 open import Equivalence.Erased.Cubical eq as EEq using (_≃ᴱ_)
 open import Equivalence.Erased.Contractible-preimages.Cubical eq as ECP
@@ -304,7 +306,6 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
   {A : Type a} {B : Type b}
   {l₁ l₂ : Lens A B} →
   Block "equality-characterisation" →
-  Univalence (a ⊔ b) →
   let open Lens in
 
   (l₁ ≡ l₂)
@@ -315,7 +316,7 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
      _≃_.to (h ∣ b ∣)
        (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
      _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)
-equality-characterisation₃ {l₁ = l₁} {l₂ = l₂} ⊠ univ =
+equality-characterisation₃ {l₁ = l₁} {l₂ = l₂} ⊠ =
   l₁ ≡ l₂                                                               ↝⟨ equality-characterisation₂ ⊠ ⟩
 
   (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
@@ -442,15 +443,13 @@ Lens⇔Higher-lens-preserves-getters-and-setters bl@⊠ =
 
          Higher.Lens.set l a b                             ∎)
 
--- Lens A B is equivalent to Higher.Lens A B (with erased proofs,
--- assuming univalence).
+-- Lens A B is equivalent to Higher.Lens A B (with erased proofs).
 
 Lens≃ᴱHigher-lens :
   {A : Type a} {B : Type b} →
   Block "conversion" →
-  @0 Univalence (a ⊔ b) →
   Lens A B ≃ᴱ Higher.Lens A B
-Lens≃ᴱHigher-lens {A = A} {B = B} bl univ =
+Lens≃ᴱHigher-lens {A = A} {B = B} bl =
   EEq.↔→≃ᴱ
     (_⇔_.to (Lens⇔Higher-lens bl))
     (_⇔_.from (Lens⇔Higher-lens bl))
@@ -461,7 +460,7 @@ Lens≃ᴱHigher-lens {A = A} {B = B} bl univ =
     (bl : Block "conversion") →
     ∀ l →
     _⇔_.to (Lens⇔Higher-lens bl) (_⇔_.from (Lens⇔Higher-lens bl) l) ≡ l
-  to∘from ⊠ l = _↔_.from (Higher.equality-characterisation₂ univ)
+  to∘from ⊠ l = _↔_.from Higher.equality-characterisation₂
     ( (∥ B ∥ × R  ↔⟨ (drop-⊤-left-× λ r → _⇔_.to contractible⇔↔⊤ $
                       propositional⇒inhabited⇒contractible
                         T.truncation-is-proposition
@@ -483,7 +482,7 @@ Lens≃ᴱHigher-lens {A = A} {B = B} bl univ =
     (bl : Block "conversion") →
     ∀ l →
     _⇔_.from (Lens⇔Higher-lens bl) (_⇔_.to (Lens⇔Higher-lens bl) l) ≡ l
-  from∘to bl@⊠ l = _≃_.from (equality-characterisation₃ ⊠ univ)
+  from∘to bl@⊠ l = _≃_.from (equality-characterisation₃ ⊠)
     ( (λ _ → refl _)
     , Σ∥B∥H≃H
     , (λ b p@(a , [ get-a≡b ]) →
@@ -543,9 +542,8 @@ Lens≃ᴱHigher-lens {A = A} {B = B} bl univ =
 
 Lens≃ᴱHigher-lens-preserves-getters-and-setters :
   {A : Type a} {B : Type b}
-  (bl : Block "conversion")
-  (@0 univ : Univalence (a ⊔ b)) →
+  (bl : Block "conversion") →
   Preserves-getters-and-setters-⇔ A B
-    (_≃ᴱ_.logical-equivalence (Lens≃ᴱHigher-lens bl univ))
-Lens≃ᴱHigher-lens-preserves-getters-and-setters bl univ =
+    (_≃ᴱ_.logical-equivalence (Lens≃ᴱHigher-lens bl))
+Lens≃ᴱHigher-lens-preserves-getters-and-setters bl =
   Lens⇔Higher-lens-preserves-getters-and-setters bl

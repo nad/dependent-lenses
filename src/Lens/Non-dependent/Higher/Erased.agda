@@ -20,6 +20,8 @@ open import Circle.Erased eq as CE using (𝕊¹ᴱ)
 open import Equality.Decidable-UIP equality-with-J
 open import Equality.Decision-procedures equality-with-J
 open import Equality.Path.Isomorphisms eq
+open import Equality.Path.Isomorphisms.Univalence eq
+  using () renaming (abstract-univ to univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Equivalence.Erased equality-with-J as EEq
@@ -402,13 +404,12 @@ equality-characterisation₀ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
 @0 equality-characterisation₁ :
   {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
   let open Lens in
-  Univalence (a ⊔ b) →
   l₁ ≡ l₂
     ↔
   ∃ λ (eq : R l₁ ≃ R l₂) →
     ∀ x → (_≃_.to eq (remainder l₁ x) , get l₁ x) ≡
           _≃ᴱ_.to (equiv l₂) x
-equality-characterisation₁ {l₁ = l₁} {l₂ = l₂} univ =
+equality-characterisation₁ {l₁ = l₁} {l₂ = l₂} =
   l₁ ≡ l₂                                             ↔⟨ inverse $ Eq.≃-≡ Lens≃Higher-lens ⟩
 
   high l₁ ≡ high l₂                                   ↝⟨ H.equality-characterisation₁ ⊠ univ ⟩□
@@ -424,14 +425,13 @@ equality-characterisation₁ {l₁ = l₁} {l₂ = l₂} univ =
 @0 equality-characterisation₂ :
   {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
   let open Lens in
-  Univalence (a ⊔ b) →
   l₁ ≡ l₂
     ↔
   ∃ λ (eq : R l₁ ≃ R l₂) →
     (∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x)
       ×
     (∀ x → get l₁ x ≡ get l₂ x)
-equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} univ =
+equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} =
   l₁ ≡ l₂                                                 ↔⟨ inverse $ Eq.≃-≡ Lens≃Higher-lens ⟩
 
   high l₁ ≡ high l₂                                       ↝⟨ H.equality-characterisation₂ ⊠ univ ⟩□
@@ -448,13 +448,12 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} univ =
 @0 equality-characterisation₃ :
   {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
   let open Lens in
-  Univalence (a ⊔ b) →
   l₁ ≡ l₂
     ↔
   ∃ λ (eq : R l₁ ≃ R l₂) →
     ∀ p → _≃ᴱ_.from (equiv l₁) (_≃_.from eq (proj₁ p) , proj₂ p) ≡
           _≃ᴱ_.from (equiv l₂) p
-equality-characterisation₃ {l₁ = l₁} {l₂} univ =
+equality-characterisation₃ {l₁ = l₁} {l₂} =
   l₁ ≡ l₂                                                            ↔⟨ inverse $ Eq.≃-≡ Lens≃Higher-lens ⟩
 
   high l₁ ≡ high l₂                                                  ↝⟨ H.equality-characterisation₃ univ ⟩□
@@ -501,7 +500,6 @@ getters-equal-if-setters-equal l₁ l₂ =
 @0 lenses-equal-if-setters-equal′ :
   let open Lens in
   {A : Type a} {B : Type b}
-  (univ : Univalence (a ⊔ b))
   (l₁ l₂ : Lens A B)
   (f : R l₁ → R l₂) →
   (B → ∀ r →
@@ -510,7 +508,7 @@ getters-equal-if-setters-equal l₁ l₂ =
   Lens.set l₁ ≡ Lens.set l₂ →
   l₁ ≡ l₂
 lenses-equal-if-setters-equal′
-  univ l₁ l₂ f ∃≡f f-remainder≡remainder setters-equal =
+  l₁ l₂ f ∃≡f f-remainder≡remainder setters-equal =
                      $⟨ H.lenses-equal-if-setters-equal′
                           univ (high l₁) (high l₂) f ∃≡f
                           f-remainder≡remainder setters-equal ⟩
@@ -519,17 +517,15 @@ lenses-equal-if-setters-equal′
 
 -- If the codomain of a lens is inhabited when it is merely inhabited
 -- and the remainder type is inhabited, then this lens is equal to
--- another lens if their setters are equal (in erased contexts,
--- assuming univalence).
+-- another lens if their setters are equal (in erased contexts).
 
 @0 lenses-equal-if-setters-equal :
   {A : Type a} {B : Type b} →
-  Univalence (a ⊔ b) →
   (l₁ l₂ : Lens A B) →
   (Lens.R l₁ → ∥ B ∥ → B) →
   Lens.set l₁ ≡ Lens.set l₂ →
   l₁ ≡ l₂
-lenses-equal-if-setters-equal univ l₁ l₂ inh′ setters-equal =
+lenses-equal-if-setters-equal l₁ l₂ inh′ setters-equal =
                      $⟨ H.lenses-equal-if-setters-equal
                           univ (high l₁) (high l₂) inh′ setters-equal ⟩
   high l₁ ≡ high l₂  ↝⟨ Eq.≃-≡ Lens≃Higher-lens {x = l₁} {y = l₂} ⟩□
@@ -537,17 +533,16 @@ lenses-equal-if-setters-equal univ l₁ l₂ inh′ setters-equal =
 
 -- If a lens has a propositional remainder type, then this lens is
 -- equal to another lens if their setters are equal (in erased
--- contexts, assuming univalence).
+-- contexts).
 
 @0 lenses-equal-if-setters-equal-and-remainder-propositional :
   {A : Type a} {B : Type b} →
-  Univalence (a ⊔ b) →
   (l₁ l₂ : Lens A B) →
   Is-proposition (Lens.R l₂) →
   Lens.set l₁ ≡ Lens.set l₂ →
   l₁ ≡ l₂
 lenses-equal-if-setters-equal-and-remainder-propositional
-  univ l₁ l₂ R₂-prop setters-equal =
+  l₁ l₂ R₂-prop setters-equal =
                      $⟨ H.lenses-equal-if-setters-equal-and-remainder-propositional
                           univ (high l₁) (high l₂) R₂-prop setters-equal ⟩
   high l₁ ≡ high l₂  ↝⟨ Eq.≃-≡ Lens≃Higher-lens {x = l₁} {y = l₂} ⟩□
@@ -555,34 +550,32 @@ lenses-equal-if-setters-equal-and-remainder-propositional
 
 -- A generalisation of the previous result: If a lens has a remainder
 -- type that is a set, then this lens is equal to another lens if
--- their setters are equal (assuming univalence).
+-- their setters are equal.
 --
 -- The corresponding result in Lens.Non-dependent.Higher is due to
 -- Andrea Vezzosi.
 
 @0 lenses-equal-if-setters-equal-and-remainder-set :
   {A : Type a} {B : Type b} →
-  Univalence (a ⊔ b) →
   (l₁ l₂ : Lens A B) →
   Is-set (Lens.R l₂) →
   Lens.set l₁ ≡ Lens.set l₂ →
   l₁ ≡ l₂
 lenses-equal-if-setters-equal-and-remainder-set
-  univ l₁ l₂ R₂-prop setters-equal =
+  l₁ l₂ R₂-prop setters-equal =
                      $⟨ H.lenses-equal-if-setters-equal-and-remainder-set
                           univ (high l₁) (high l₂) R₂-prop setters-equal ⟩
   high l₁ ≡ high l₂  ↝⟨ Eq.≃-≡ Lens≃Higher-lens {x = l₁} {y = l₂} ⟩□
   l₁ ≡ l₂            □
 
 -- The functions ≃ᴱ→Lens and ≃ᴱ→Lens′ are pointwise equal (when
--- applicable, in erased contexts, assuming univalence).
+-- applicable, in erased contexts).
 
 @0 ≃ᴱ→Lens≡≃ᴱ→Lens′ :
   {A B : Type a} →
-  Univalence a →
   (A≃B : A ≃ᴱ B) → ≃ᴱ→Lens A≃B ≡ ≃ᴱ→Lens′ A≃B
-≃ᴱ→Lens≡≃ᴱ→Lens′ {B = B} univ A≃B =
-  _↔_.from (equality-characterisation₂ univ)
+≃ᴱ→Lens≡≃ᴱ→Lens′ {B = B} A≃B =
+  _↔_.from equality-characterisation₂
     ( (Erased ∥ ↑ _ B ∥  ↔⟨ Erased-cong (∥∥-cong Bijection.↑↔) ⟩□
        Erased ∥ B ∥      □)
     , (λ _ → refl _)
@@ -591,17 +584,16 @@ lenses-equal-if-setters-equal-and-remainder-set
 
 -- If the getter of a lens is an equivalence with erased proofs, then
 -- the lens formed using the equivalence (using ≃ᴱ→Lens) is equal to
--- the lens (in erased contexts, assuming univalence).
+-- the lens (in erased contexts).
 
 @0 get-equivalence→≡≃ᴱ→Lens :
   {A : Type a} {B : Type b} →
-  Univalence (a ⊔ b) →
   (l : Lens A B) →
   (eq : Is-equivalenceᴱ (Lens.get l)) →
   l ≡ ≃ᴱ→Lens EEq.⟨ Lens.get l , eq ⟩
-get-equivalence→≡≃ᴱ→Lens {A = A} {B = B} univ l eq =
+get-equivalence→≡≃ᴱ→Lens {A = A} {B = B} l eq =
   lenses-equal-if-setters-equal-and-remainder-propositional
-    univ l (≃ᴱ→Lens EEq.⟨ Lens.get l , eq ⟩)
+    l (≃ᴱ→Lens EEq.⟨ Lens.get l , eq ⟩)
     (H-level-Erased 1 truncation-is-proposition)
     (⟨ext⟩ λ a → ⟨ext⟩ λ b →
      set l a b              ≡⟨ sym $ from≡set l eq a b ⟩
@@ -617,13 +609,12 @@ get-equivalence→≡≃ᴱ→Lens {A = A} {B = B} univ l eq =
 
 @0 get-equivalence→≡≃ᴱ→Lens′ :
   {A B : Type a} →
-  Univalence a →
   (l : Lens A B) →
   (eq : Is-equivalenceᴱ (Lens.get l)) →
   l ≡ ≃ᴱ→Lens′ EEq.⟨ Lens.get l , eq ⟩
-get-equivalence→≡≃ᴱ→Lens′ {A = A} {B = B} univ l eq =
-  l             ≡⟨ get-equivalence→≡≃ᴱ→Lens univ l eq ⟩
-  ≃ᴱ→Lens A≃B   ≡⟨ ≃ᴱ→Lens≡≃ᴱ→Lens′ univ A≃B ⟩∎
+get-equivalence→≡≃ᴱ→Lens′ {A = A} {B = B} l eq =
+  l             ≡⟨ get-equivalence→≡≃ᴱ→Lens l eq ⟩
+  ≃ᴱ→Lens A≃B   ≡⟨ ≃ᴱ→Lens≡≃ᴱ→Lens′ A≃B ⟩∎
   ≃ᴱ→Lens′ A≃B  ∎
   where
   A≃B = EEq.⟨ Lens.get l , eq ⟩
@@ -680,14 +671,13 @@ Lens-cong {A₁ = A₁} {A₂ = A₂} {B₁ = B₁} {B₂ = B₂} A₁≃A₂ B�
   Lens A₂ B₂                                      □
 
 -- If B is a proposition (when A is inhabited), then Lens A B is
--- equivalent (with erased proofs) to A → B (assuming univalence).
+-- equivalent (with erased proofs) to A → B.
 
 lens-to-proposition≃ᴱget :
   {A : Type a} {B : Type b} →
-  @0 Univalence (a ⊔ b) →
   @0 (A → Is-proposition B) →
   Lens A B ≃ᴱ (A → B)
-lens-to-proposition≃ᴱget {b = b} {A = A} {B = B} univ prop = EEq.↔→≃ᴱ
+lens-to-proposition≃ᴱget {b = b} {A = A} {B = B} prop = EEq.↔→≃ᴱ
   get
   from
   refl
@@ -704,7 +694,7 @@ lens-to-proposition≃ᴱget {b = b} {A = A} {B = B} univ prop = EEq.↔→≃�
                           (inhabited l r)) ⟩□
            R l      □
      in
-     _↔_.from (equality-characterisation₁ univ)
+     _↔_.from equality-characterisation₁
         (lemma , λ _ → refl _))
   where
   open Lens
@@ -720,49 +710,42 @@ lens-to-proposition≃ᴱget {b = b} {A = A} {B = B} univ prop = EEq.↔→≃�
 
 _ :
   {A : Type a} {B : Type b}
-  (@0 univ : Univalence (a ⊔ b))
   (@0 prop : A → Is-proposition B)
   (l : Lens A B) →
-  _≃ᴱ_.to (lens-to-proposition≃ᴱget univ prop) l ≡ Lens.get l
-_ = λ _ _ _ → refl _
+  _≃ᴱ_.to (lens-to-proposition≃ᴱget prop) l ≡ Lens.get l
+_ = λ _ _ → refl _
 
 -- If B is contractible (with an erased proof, assuming that A is
--- inhabited), then Lens A B is equivalent (with erased proofs) to ⊤
--- (assuming univalence).
+-- inhabited), then Lens A B is equivalent (with erased proofs) to ⊤.
 
 lens-to-contractible≃ᴱ⊤ :
   {A : Type a} {B : Type b} →
-  @0 Univalence (a ⊔ b) →
   (A → Contractibleᴱ B) →
   Lens A B ≃ᴱ ⊤
-lens-to-contractible≃ᴱ⊤ {A = A} {B} univ cB =
-  Lens A B  ↝⟨ lens-to-proposition≃ᴱget univ (λ a → mono₁ 0 (ECP.Contractibleᴱ→Contractible (cB a))) ⟩
+lens-to-contractible≃ᴱ⊤ {A = A} {B} cB =
+  Lens A B  ↝⟨ lens-to-proposition≃ᴱget (λ a → mono₁ 0 (ECP.Contractibleᴱ→Contractible (cB a))) ⟩
   (A → B)   ↝⟨ ∀-cong [ ext ] (_⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ ⊚ cB) ⟩
   (A → ⊤)   ↔⟨ →-right-zero ⟩□
   ⊤         □
 
--- Lens A ⊥ is equivalent (with erased proofs) to ¬ A (assuming
--- univalence).
+-- Lens A ⊥ is equivalent (with erased proofs) to ¬ A.
 
 lens-to-⊥≃ᴱ¬ :
   {A : Type a} →
-  @0 Univalence (a ⊔ b) →
   Lens A (⊥ {ℓ = b}) ≃ᴱ (¬ A)
-lens-to-⊥≃ᴱ¬ {A = A} univ =
-  Lens A ⊥  ↝⟨ lens-to-proposition≃ᴱget univ (λ _ → ⊥-propositional) ⟩
+lens-to-⊥≃ᴱ¬ {A = A} =
+  Lens A ⊥  ↝⟨ lens-to-proposition≃ᴱget (λ _ → ⊥-propositional) ⟩
   (A → ⊥)   ↝⟨ inverse $ ¬↔→⊥ [ ext ] ⟩□
   ¬ A       □
 
 -- If A is contractible (with an erased proof), then Lens A B is
--- equivalent (with erased proofs) to Contractibleᴱ B (assuming
--- univalence).
+-- equivalent (with erased proofs) to Contractibleᴱ B.
 
 lens-from-contractible≃ᴱcodomain-contractible :
   {A : Type a} {B : Type b} →
-  @0 Univalence (a ⊔ b) →
   Contractibleᴱ A →
   Lens A B ≃ᴱ Contractibleᴱ B
-lens-from-contractible≃ᴱcodomain-contractible {A = A} {B} univ cA =
+lens-from-contractible≃ᴱcodomain-contractible {A = A} {B} cA =
   Lens A B                                                            ↔⟨ Lens-as-Σ ⟩
   (∃ λ R → A ≃ᴱ (R × B) × Erased (R → ∥ B ∥))                         ↝⟨ (∃-cong λ _ → ×-cong₁ λ _ →
                                                                           EEq.≃ᴱ-cong ext (_⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ cA) F.id) ⟩
@@ -780,19 +763,17 @@ lens-from-contractible≃ᴱcodomain-contractible {A = A} {B} univ cA =
   Contractibleᴱ B × Erased ⊤                                          ↔⟨ (drop-⊤-right λ _ → Erased-⊤↔⊤) ⟩□
   Contractibleᴱ B                                                     □
 
--- Lens ⊥ B is equivalent (with erased proofs) to the unit type
--- (assuming univalence).
+-- Lens ⊥ B is equivalent (with erased proofs) to the unit type.
 
 lens-from-⊥↔⊤ :
   {B : Type b} →
-  @0 Univalence (a ⊔ b) →
   Lens (⊥ {ℓ = a}) B ≃ᴱ ⊤
-lens-from-⊥↔⊤ {B = B} univ =
+lens-from-⊥↔⊤ {B = B} =
   _⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ $
       ≃ᴱ×→Lens
         (⊥      ↔⟨ inverse ×-left-zero ⟩□
          ⊥ × B  □)
-    , [ (λ l → _↔_.from (equality-characterisation₁ univ)
+    , [ (λ l → _↔_.from equality-characterisation₁
                  ( (⊥ × Erased ∥ B ∥  ↔⟨ ×-left-zero ⟩
                     ⊥₀                ↝⟨ lemma l ⟩□
                     R l               □)
@@ -812,20 +793,18 @@ lens-from-⊥↔⊤ {B = B} univ =
       (inhabited l r)
 
 -- There is an equivalence with erased proofs between A ≃ᴱ B and
--- ∃ λ (l : Lens A B) → Is-equivalenceᴱ (Lens.get l) (assuming
--- univalence).
+-- ∃ λ (l : Lens A B) → Is-equivalenceᴱ (Lens.get l).
 --
 -- See also ≃≃≊ below.
 
 ≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get :
   {A : Type a} {B : Type b} →
-  @0 Univalence (a ⊔ b) →
   (A ≃ᴱ B) ≃ᴱ (∃ λ (l : Lens A B) → Is-equivalenceᴱ (Lens.get l))
-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get univ = EEq.↔→≃ᴱ
+≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get = EEq.↔→≃ᴱ
   (λ A≃B → ≃ᴱ→Lens A≃B , _≃ᴱ_.is-equivalence A≃B)
   (λ (l , eq) → EEq.⟨ Lens.get l , eq ⟩)
   (λ (l , eq) → Σ-≡,≡→≡
-     (sym $ get-equivalence→≡≃ᴱ→Lens univ l eq)
+     (sym $ get-equivalence→≡≃ᴱ→Lens l eq)
      (EEq.Is-equivalenceᴱ-propositional ext _ _ _))
   (λ _ → EEq.to≡to→≡ ext (refl _))
 
@@ -834,22 +813,19 @@ lens-from-⊥↔⊤ {B = B} univ =
 
 to-from-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get≡get :
   {A : Type a} {B : Type b} →
-  (@0 univ : Univalence (a ⊔ b))
   (p@(l , _) : ∃ λ (l : Lens A B) → Is-equivalenceᴱ (Lens.get l)) →
-  _≃ᴱ_.to (_≃ᴱ_.from (≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get univ) p) ≡
+  _≃ᴱ_.to (_≃ᴱ_.from ≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get p) ≡
   Lens.get l
-to-from-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get≡get _ _ = refl _
+to-from-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get≡get _ = refl _
 
 ------------------------------------------------------------------------
 -- Results relating different kinds of lenses
 
 -- In general there is no split surjection from Lens A B to
--- Traditionalᴱ.Lens A B (assuming univalence).
+-- Traditionalᴱ.Lens A B.
 
-¬Lens↠Traditional-lens :
-  @0 Univalence lzero →
-  ¬ (Lens 𝕊¹ᴱ ⊤ ↠ Traditionalᴱ.Lens 𝕊¹ᴱ ⊤)
-¬Lens↠Traditional-lens univ =
+¬Lens↠Traditional-lens : ¬ (Lens 𝕊¹ᴱ ⊤ ↠ Traditionalᴱ.Lens 𝕊¹ᴱ ⊤)
+¬Lens↠Traditional-lens =
   Stable-¬
     [ (Lens 𝕊¹ᴱ ⊤ ↠ Traditionalᴱ.Lens 𝕊¹ᴱ ⊤)  ↔⟨ ≡⇒≃ $ cong (λ A → Lens A ⊤ ↠ Traditionalᴱ.Lens A ⊤) $ ≃⇒≡ univ $ inverse
                                                  CE.𝕊¹≃𝕊¹ᴱ ⟩
@@ -861,15 +837,13 @@ to-from-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get≡get _ _ = refl _
     ]
 
 -- In general there is no equivalence with erased proofs between
--- Lens A B and Traditionalᴱ.Lens A B (assuming univalence).
+-- Lens A B and Traditionalᴱ.Lens A B.
 
-¬Lens≃ᴱTraditional-lens :
-  @0 Univalence lzero →
-  ¬ (Lens 𝕊¹ᴱ ⊤ ≃ᴱ Traditionalᴱ.Lens 𝕊¹ᴱ ⊤)
-¬Lens≃ᴱTraditional-lens univ =
+¬Lens≃ᴱTraditional-lens : ¬ (Lens 𝕊¹ᴱ ⊤ ≃ᴱ Traditionalᴱ.Lens 𝕊¹ᴱ ⊤)
+¬Lens≃ᴱTraditional-lens =
   Stable-¬
     [ (Lens 𝕊¹ᴱ ⊤ ≃ᴱ Traditionalᴱ.Lens 𝕊¹ᴱ ⊤)  ↝⟨ from-equivalence ⊚ EEq.≃ᴱ→≃ ⟩
-      (Lens 𝕊¹ᴱ ⊤ ↠ Traditionalᴱ.Lens 𝕊¹ᴱ ⊤)   ↝⟨ ¬Lens↠Traditional-lens univ ⟩□
+      (Lens 𝕊¹ᴱ ⊤ ↠ Traditionalᴱ.Lens 𝕊¹ᴱ ⊤)   ↝⟨ ¬Lens↠Traditional-lens ⟩□
       ⊥                                        □
     ]
 
@@ -903,10 +877,9 @@ private
         Traditionalᴱ.h-level-respects-lens-from-inhabited 2 l a A-set
 
     @0 from∘to :
-      Univalence (a ⊔ b) →
       ∀ bc l → from bc (Lens.traditional-lens l) ≡ l
-    from∘to univ ⊠ l′ =
-      _↔_.from (equality-characterisation₃ univ)
+    from∘to ⊠ l′ =
+      _↔_.from equality-characterisation₃
         ( ((∃ λ (f : B → A) → ∥ set ⁻¹ᴱ f ∥ᴱ) × Erased ∥ B ∥  ↔⟨ (∃-cong λ _ → PT.∥∥ᴱ≃∥∥) ×-cong from-bijection (erased Erased↔) ⟩
            (∃ λ (f : B → A) → ∥ set ⁻¹ᴱ f ∥) × ∥ B ∥          ↝⟨ (×-cong₁ lemma₃) ⟩
            (∥ B ∥ → R) × ∥ B ∥                                ↝⟨ lemma₂ ⟩□
@@ -1007,13 +980,12 @@ private
 
     equiv :
       Block "conversion" →
-      @0 Univalence (a ⊔ b) →
       Lens A B ≃ᴱ Traditionalᴱ.Lens A B
-    equiv bc univ = EEq.↔→≃ᴱ
+    equiv bc = EEq.↔→≃ᴱ
       _
       (from bc)
       (to∘from bc)
-      (from∘to univ bc)
+      (from∘to bc)
 
 -- If the domain A is a set, then there is a split surjection from
 -- Lens A B to Traditionalᴱ.Lens A B.
@@ -1042,28 +1014,25 @@ Lens↠Traditional-lens-preserves-getters-and-setters ⊠ _ =
   (λ _ → refl _ , refl _) , (λ _ → refl _ , refl _)
 
 -- If the domain A is a set, then there is an equivalence with erased
--- proofs between Traditionalᴱ.Lens A B and Lens A B (assuming
--- univalence).
+-- proofs between Traditionalᴱ.Lens A B and Lens A B.
 
 Lens≃ᴱTraditional-lens :
   {A : Type a} {B : Type b} →
   Block "conversion" →
-  @0 Univalence (a ⊔ b) →
   @0 Is-set A →
   Lens A B ≃ᴱ Traditionalᴱ.Lens A B
-Lens≃ᴱTraditional-lens bc univ A-set =
-  Lens≃ᴱTraditional-lens.equiv A-set bc univ
+Lens≃ᴱTraditional-lens bc A-set =
+  Lens≃ᴱTraditional-lens.equiv A-set bc
 
 -- The equivalence preserves getters and setters.
 
 Lens≃ᴱTraditional-lens-preserves-getters-and-setters :
   {A : Type a} {B : Type b}
   (bc : Block "conversion")
-  (@0 univ : Univalence (a ⊔ b))
   (@0 s : Is-set A) →
   Preserves-getters-and-setters-⇔ A B
-    (_≃ᴱ_.logical-equivalence (Lens≃ᴱTraditional-lens bc univ s))
-Lens≃ᴱTraditional-lens-preserves-getters-and-setters bc _ =
+    (_≃ᴱ_.logical-equivalence (Lens≃ᴱTraditional-lens bc s))
+Lens≃ᴱTraditional-lens-preserves-getters-and-setters bc =
   Lens↠Traditional-lens-preserves-getters-and-setters bc
 
 -- If the codomain B is an inhabited set, then Lens A B and
@@ -1116,13 +1085,11 @@ Lens⇔Traditional-lens-preserves-getters-and-setters _ b₀ =
 h-level-respects-lens-from-inhabited n l =
   H.h-level-respects-lens-from-inhabited n (high l)
 
--- This is not necessarily true for arbitrary domains (assuming
--- univalence).
+-- This is not necessarily true for arbitrary domains.
 
 ¬-h-level-respects-lens :
-  @0 Univalence lzero →
   ¬ (∀ n → Lens ⊥₀ Bool → H-level n ⊥₀ → H-level n Bool)
-¬-h-level-respects-lens univ =
+¬-h-level-respects-lens =
   Stable-¬
     [ (∀ n → Lens ⊥ Bool → H-level n ⊥ → H-level n Bool)    ↝⟨ (λ hyp n l → hyp n (Higher-lens→Lens l)) ⟩
       (∀ n → H.Lens ⊥ Bool → H-level n ⊥ → H-level n Bool)  ↝⟨ H.¬-h-level-respects-lens univ ⟩□
@@ -1130,13 +1097,12 @@ h-level-respects-lens-from-inhabited n l =
     ]
 
 -- In fact, there is a lens with a proposition as its domain and a
--- non-set as its codomain (assuming univalence).
+-- non-set as its codomain.
 
 lens-from-proposition-to-non-set :
-  @0 Univalence (# 0) →
   ∃ λ (A : Type a) → ∃ λ (B : Type b) →
   Lens A B × Is-proposition A × ¬ Is-set B
-lens-from-proposition-to-non-set {a = a} {b = b} univ =
+lens-from-proposition-to-non-set {a = a} {b = b} =
     ⊥
   , ↑ b 𝕊¹ᴱ
   , record
@@ -1211,89 +1177,80 @@ get≡id→remainder-propositional =
   H.get≡id→remainder-propositional ⊚ high
 
 -- It is not necessarily the case that contractibility of A implies
--- contractibility of Lens A B (assuming univalence).
+-- contractibility of Lens A B.
 
 ¬-Contractible-closed-domain :
   ∀ {a b} →
-  @0 Univalence (a ⊔ b) →
   ¬ ({A : Type a} {B : Type b} →
      Contractible A → Contractible (Lens A B))
-¬-Contractible-closed-domain univ =
+¬-Contractible-closed-domain =
   Stable-¬
     [ (∀ {A B} → Contractible A → Contractible (Lens A B))    ↝⟨ (λ hyp c → H-level-cong _ 0 Lens≃Higher-lens (hyp c)) ⟩
       (∀ {A B} → Contractible A → Contractible (H.Lens A B))  ↝⟨ H.¬-Contractible-closed-domain univ ⟩□
       ⊥                                                       □
     ]
 
--- Contractibleᴱ is closed under Lens A (assuming univalence).
+-- Contractibleᴱ is closed under Lens A.
 
 Contractibleᴱ-closed-codomain :
   {A : Type a} {B : Type b} →
-  @0 Univalence (a ⊔ b) →
   Contractibleᴱ B → Contractibleᴱ (Lens A B)
-Contractibleᴱ-closed-codomain {A = A} {B} univ cB =
-                            $⟨ lens-to-contractible≃ᴱ⊤ univ (λ _ → cB) ⟩
+Contractibleᴱ-closed-codomain {A = A} {B} cB =
+                            $⟨ lens-to-contractible≃ᴱ⊤ (λ _ → cB) ⟩
   Lens A B ≃ᴱ ⊤             ↝⟨ _⇔_.from EEq.Contractibleᴱ⇔≃ᴱ⊤ ⟩□
   Contractibleᴱ (Lens A B)  □
 
--- If B is a proposition, then Lens A B is also a proposition
--- (in erased contexts, assuming univalence).
+-- If B is a proposition, then Lens A B is also a proposition (in
+-- erased contexts).
 
 @0 Is-proposition-closed-codomain :
   {A : Type a} {B : Type b} →
-  Univalence (a ⊔ b) →
   Is-proposition B → Is-proposition (Lens A B)
-Is-proposition-closed-codomain {A = A} {B = B} univ =
+Is-proposition-closed-codomain {A = A} {B = B} =
   Is-proposition B             ↝⟨ H.Is-proposition-closed-codomain univ ⟩
   Is-proposition (H.Lens A B)  ↝⟨ H-level-cong _ 1 (inverse Lens≃Higher-lens) ⟩□
   Is-proposition (Lens A B)    □
 
--- If A is a proposition, then Lens A B is also a proposition
--- (in erased contexts, assuming univalence).
+-- If A is a proposition, then Lens A B is also a proposition (in
+-- erased contexts).
 
 @0 Is-proposition-closed-domain :
   {A : Type a} {B : Type b} →
-  Univalence (a ⊔ b) →
   Is-proposition A → Is-proposition (Lens A B)
-Is-proposition-closed-domain {A = A} {B = B} univ =
+Is-proposition-closed-domain {A = A} {B = B} =
   Is-proposition A             ↝⟨ H.Is-proposition-closed-domain univ ⟩
   Is-proposition (H.Lens A B)  ↝⟨ H-level-cong _ 1 (inverse Lens≃Higher-lens) ⟩□
   Is-proposition (Lens A B)    □
 
--- If A is a set, then Lens A B is also a set (in erased contexts,
--- assuming univalence).
+-- If A is a set, then Lens A B is also a set (in erased contexts).
 
 @0 Is-set-closed-domain :
   {A : Type a} {B : Type b} →
-  Univalence (a ⊔ b) →
   Is-set A → Is-set (Lens A B)
-Is-set-closed-domain {A = A} {B = B} univ =
+Is-set-closed-domain {A = A} {B = B} =
   Is-set A             ↝⟨ H.Is-set-closed-domain univ ⟩
   Is-set (H.Lens A B)  ↝⟨ H-level-cong _ 2 (inverse Lens≃Higher-lens) ⟩□
   Is-set (Lens A B)    □
 
 -- If A has h-level n, then Lens A B has h-level 1 + n (in erased
--- contexts, assuming univalence).
+-- contexts).
 
 @0 domain-0+⇒lens-1+ :
   {A : Type a} {B : Type b} →
-  Univalence (a ⊔ b) →
   ∀ n → H-level n A → H-level (1 + n) (Lens A B)
-domain-0+⇒lens-1+ {A = A} {B = B} univ n =
+domain-0+⇒lens-1+ {A = A} {B = B} n =
   H-level n A                   ↝⟨ H.domain-0+⇒lens-1+ univ n ⟩
   H-level (1 + n) (H.Lens A B)  ↝⟨ H-level-cong _ (1 + n) (inverse Lens≃Higher-lens) ⟩□
   H-level (1 + n) (Lens A B)    □
 
 -- If B is inhabited when it is merely inhabited and A has positive
--- h-level n, then Lens A B also has h-level n (in erased contexts,
--- assuming univalence).
+-- h-level n, then Lens A B also has h-level n (in erased contexts).
 
 @0 lens-preserves-h-level-of-domain :
   {A : Type a} {B : Type b} →
-  Univalence (a ⊔ b) →
   (∥ B ∥ → B) →
   ∀ n → H-level (1 + n) A → H-level (1 + n) (Lens A B)
-lens-preserves-h-level-of-domain {A = A} {B = B} univ ∥B∥→B n =
+lens-preserves-h-level-of-domain {A = A} {B = B} ∥B∥→B n =
   H-level (1 + n) A             ↝⟨ EP.higher-lens-preserves-h-level-of-domain univ ∥B∥→B n ⟩
   H-level (1 + n) (H.Lens A B)  ↝⟨ H-level-cong _ (1 + n) (inverse Lens≃Higher-lens) ⟩□
   H-level (1 + n) (Lens A B)    □
@@ -1558,20 +1515,17 @@ get⁻¹ᴱ-const-not-coherent =
 remainder≃∃get⁻¹ = H.remainder≃∃get⁻¹ ⊚ high
 
 -- Two lenses of type Lens A B are equal if B is inhabited and the
--- lenses' setters are equal (in erased contexts, assuming
--- univalence).
+-- lenses' setters are equal (in erased contexts).
 --
 -- Note that some results above are more general than this one.
 
 @0 lenses-with-inhabited-codomains-equal-if-setters-equal :
   {A : Type a} {B : Type b} →
-  Univalence (a ⊔ b) →
   (l₁ l₂ : Lens A B) →
   B →
   Lens.set l₁ ≡ Lens.set l₂ →
   l₁ ≡ l₂
-lenses-with-inhabited-codomains-equal-if-setters-equal
-  univ l₁ l₂ b =
+lenses-with-inhabited-codomains-equal-if-setters-equal l₁ l₂ b =
   Lens.set l₁ ≡ Lens.set l₂  ↝⟨ H.lenses-with-inhabited-codomains-equal-if-setters-equal univ (high l₁) (high l₂) b ⟩
   high l₁ ≡ high l₂          ↔⟨ Eq.≃-≡ Lens≃Higher-lens ⟩□
   l₁ ≡ l₂                    □
@@ -1607,15 +1561,13 @@ grenrus-example₂ = grenrus-example (if_then Bool.swap else F.id)
 set-grenrus-example₁≡set-grenrus-example₂ =
   H.set-grenrus-example₁≡set-grenrus-example₂
 
--- Thus the lenses are equal (in erased contexts, assuming
--- univalence).
+-- Thus the lenses are equal (in erased contexts).
 
 @0 grenrus-example₁≡grenrus-example₂ :
-  Univalence lzero →
   grenrus-example₁ ≡ grenrus-example₂
-grenrus-example₁≡grenrus-example₂ univ =
+grenrus-example₁≡grenrus-example₂ =
   lenses-with-inhabited-codomains-equal-if-setters-equal
-    univ _ _ true
+    _ _ true
     set-grenrus-example₁≡set-grenrus-example₂
 
 -- However, in a certain sense the lenses are "observably different".
@@ -1634,17 +1586,15 @@ grenrus-example₂-false = refl _
 module Lens-combinators where
 
   -- The definition of the identity lens is unique (in erased
-  -- contexts), if the get function is required to be the identity
-  -- (assuming univalence).
+  -- contexts), if the get function is required to be the identity.
 
   @0 id-unique :
     {A : Type a} →
-    Univalence a →
     (l₁ l₂ : Lens A A) →
     Lens.get l₁ ≡ P.id →
     Lens.get l₂ ≡ P.id →
     l₁ ≡ l₂
-  id-unique {A = A} univ l₁ l₂ g₁ g₂ =
+  id-unique {A = A} l₁ l₂ g₁ g₂ =
                        $⟨ HC.id-unique univ (high l₁) (high l₂) g₁ g₂ ⟩
     high l₁ ≡ high l₂  ↝⟨ Eq.≃-≡ Lens≃Higher-lens {x = l₁} {y = l₂} ⟩□
     l₁ ≡ l₂            □
@@ -1652,22 +1602,21 @@ module Lens-combinators where
   -- The result of composing two lenses is unique (in erased contexts)
   -- if the codomain type is inhabited whenever it is merely
   -- inhabited, and we require that the resulting setter function is
-  -- defined in a certain way (assuming univalence).
+  -- defined in a certain way.
 
   @0 ∘-unique :
     let open Lens in
     {A : Type a} {C : Type c} →
-    Univalence (a ⊔ c) →
     (∥ C ∥ → C) →
     ((comp₁ , _) (comp₂ , _) :
        ∃ λ (comp : Lens B C → Lens A B → Lens A C) →
          ∀ l₁ l₂ a c →
            set (comp l₁ l₂) a c ≡ set l₂ a (set l₁ (get l₂ a) c)) →
     comp₁ ≡ comp₂
-  ∘-unique {A = A} {C = C} univ ∥C∥→C
+  ∘-unique {A = A} {C = C} ∥C∥→C
            (comp₁ , set₁) (comp₂ , set₂) =
     ⟨ext⟩ λ l₁ → ⟨ext⟩ λ l₂ →
-      lenses-equal-if-setters-equal univ
+      lenses-equal-if-setters-equal
         (comp₁ l₁ l₂) (comp₂ l₁ l₂) (λ _ → ∥C∥→C) $
         ⟨ext⟩ λ a → ⟨ext⟩ λ c →
           set (comp₁ l₁ l₂) a c           ≡⟨ set₁ _ _ _ _ ⟩
@@ -1688,15 +1637,14 @@ module Lens-combinators where
 
   -- The identity lens is equal to the one obtained from the identity
   -- lens for higher lenses without erased proofs (in erased
-  -- contexts, assuming univalence).
+  -- contexts).
 
   @0 Higher-lens-id≡id :
     {A : Type a}
-    (b : Block "id")
-    (univ : Univalence a) →
+    (b : Block "id") →
     Higher-lens→Lens (HC.id b) ≡ id {A = A} b
-  Higher-lens-id≡id {A = A} ⊠ univ =
-    _↔_.from (equality-characterisation₁ univ)
+  Higher-lens-id≡id {A = A} ⊠ =
+    _↔_.from equality-characterisation₁
       ( (∥ A ∥         ↔⟨ inverse $ erased Erased↔ ⟩□
          Erased ∥ A ∥  □)
       , λ _ → refl _
@@ -1736,17 +1684,15 @@ module Lens-combinators where
     set (⟨ ℓa , ℓb ⟩ l₁ ∘ l₂) a c ≡ set l₂ a (set l₁ (get l₂ a) c)
   ∘-set _ _ ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ _ _ = refl _
 
-  -- Higher-lens→Lens commutes with composition (in erased contexts,
-  -- assuming univalence).
+  -- Higher-lens→Lens commutes with composition (in erased contexts).
 
   @0 Higher-lens-∘≡∘ :
     ∀ a b {A : Type (a ⊔ b ⊔ c)} {B : Type (b ⊔ c)} {C : Type c} →
-    Univalence (a ⊔ b ⊔ c) →
     (l₁ : H.Lens B C) (l₂ : H.Lens A B) →
     Higher-lens→Lens (HC.⟨ a , b ⟩ l₁ ∘ l₂) ≡
     ⟨ a , b ⟩ Higher-lens→Lens l₁ ∘ Higher-lens→Lens l₂
-  Higher-lens-∘≡∘ _ _ univ (H.⟨ _ , _ , _ ⟩) (H.⟨ _ , _ , _ ⟩) =
-    _↔_.from (equality-characterisation₁ univ)
+  Higher-lens-∘≡∘ _ _ (H.⟨ _ , _ , _ ⟩) (H.⟨ _ , _ , _ ⟩) =
+    _↔_.from equality-characterisation₁
       ( F.id
       , λ _ → refl _
       )
@@ -1764,43 +1710,40 @@ module Lens-combinators where
   -- Other definitions of composition match ⟨_,_⟩_∘_ (in erased
   -- contexts), if the codomain type is inhabited whenever it is
   -- merely inhabited, and the resulting setter function is defined in
-  -- a certain way (assuming univalence).
+  -- a certain way.
 
   @0 composition≡∘ :
     let open Lens in
     {A : Type (a ⊔ b ⊔ c)} {B : Type (b ⊔ c)} {C : Type c} →
-    Univalence (a ⊔ b ⊔ c) →
     (∥ C ∥ → C) →
     (comp : Lens B C → Lens A B → Lens A C) →
     (∀ l₁ l₂ a c →
        set (comp l₁ l₂) a c ≡ set l₂ a (set l₁ (get l₂ a) c)) →
     comp ≡ ⟨ a , b ⟩_∘_
-  composition≡∘ univ ∥C∥→C comp set-comp =
-    ∘-unique univ ∥C∥→C (comp , set-comp)
+  composition≡∘ ∥C∥→C comp set-comp =
+    ∘-unique ∥C∥→C (comp , set-comp)
       (_ , λ { ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ _ _ → refl _ })
 
   -- Identity and composition form a kind of precategory (in erased
-  -- contexts, assuming univalence).
+  -- contexts).
 
   @0 associativity :
     ∀ a b c
       {A : Type (a ⊔ b ⊔ c ⊔ d)} {B : Type (b ⊔ c ⊔ d)}
       {C : Type (c ⊔ d)} {D : Type d} →
-    Univalence (a ⊔ b ⊔ c ⊔ d) →
     (l₁ : Lens C D) (l₂ : Lens B C) (l₃ : Lens A B) →
     ⟨ a ⊔ b , c ⟩ l₁ ∘ (⟨ a , b ⟩ l₂ ∘ l₃) ≡
     ⟨ a , b ⊔ c ⟩ (⟨ b , c ⟩ l₁ ∘ l₂) ∘ l₃
-  associativity _ _ _ univ ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ =
-    _↔_.from (equality-characterisation₁ univ)
+  associativity _ _ _ ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ ⟨ _ , _ , _ ⟩ =
+    _↔_.from equality-characterisation₁
              (Eq.↔⇒≃ (inverse ×-assoc) , λ _ → refl _)
 
   @0 left-identity :
     ∀ bi a {A : Type (a ⊔ b)} {B : Type b} →
-    Univalence (a ⊔ b) →
     (l : Lens A B) →
     ⟨ a , lzero ⟩ id bi ∘ l ≡ l
-  left-identity ⊠ _ {B = B} univ l@(⟨ _ , _ , _ ⟩) =
-    _↔_.from (equality-characterisation₁ univ)
+  left-identity ⊠ _ {B = B} l@(⟨ _ , _ , _ ⟩) =
+    _↔_.from equality-characterisation₁
       ( (R × Erased ∥ B ∥  ↔⟨ lemma ⟩□
          R                 □)
       , λ _ → refl _
@@ -1823,11 +1766,10 @@ module Lens-combinators where
 
   @0 right-identity :
     ∀ bi a {A : Type (a ⊔ b)} {B : Type b} →
-    Univalence (a ⊔ b) →
     (l : Lens A B) →
     ⟨ lzero , a ⟩ l ∘ id bi ≡ l
-  right-identity ⊠ _ {A = A} univ l@(⟨ _ , _ , _ ⟩) =
-    _↔_.from (equality-characterisation₁ univ)
+  right-identity ⊠ _ {A = A} l@(⟨ _ , _ , _ ⟩) =
+    _↔_.from equality-characterisation₁
       ( (Erased ∥ A ∥ × R  ↔⟨ lemma ⟩□
          R                 □)
       , λ _ → refl _
@@ -1859,11 +1801,12 @@ open Lens-combinators
 private
   module B {a} (b : Block "id") =
     Bi-invertibility.Erased equality-with-J (Type a) Lens (id b) _∘_
-  module BM {a} (b : Block "id") (@0 univ : Univalence a) = B.More
+  module BM {a} (b : Block "id") = B.More
+    {a = a}
     b
-    (left-identity b _ univ)
-    (right-identity b _ univ)
-    (associativity _ _ _ univ)
+    (left-identity b _)
+    (right-identity b _)
+    (associativity _ _ _)
 
 -- A form of isomorphism between types, expressed using lenses.
 
@@ -1879,73 +1822,65 @@ private
   @0 ∘≡id→∘≡id :
     {A B : Type a}
     (b : Block "id") →
-    Univalence a →
     (l₁ : H.Lens B A) (l₂ : H.Lens A B) →
     l₁ HC.∘ l₂ ≡ HC.id b →
     Higher-lens→Lens l₁ ∘ Higher-lens→Lens l₂ ≡ id b
-  ∘≡id→∘≡id b univ l₁ l₂ hyp =
-    Higher-lens→Lens l₁ ∘ Higher-lens→Lens l₂  ≡⟨ sym $ Higher-lens-∘≡∘ lzero lzero univ l₁ l₂ ⟩
+  ∘≡id→∘≡id b l₁ l₂ hyp =
+    Higher-lens→Lens l₁ ∘ Higher-lens→Lens l₂  ≡⟨ sym $ Higher-lens-∘≡∘ lzero lzero l₁ l₂ ⟩
     Higher-lens→Lens (l₁ HC.∘ l₂)              ≡⟨ cong Higher-lens→Lens hyp ⟩
-    Higher-lens→Lens (HC.id b)                 ≡⟨ Higher-lens-id≡id b univ ⟩∎
+    Higher-lens→Lens (HC.id b)                 ≡⟨ Higher-lens-id≡id b ⟩∎
     id b                                       ∎
 
   @0 l∘l⁻¹≡l∘l⁻¹ :
     {A B : Type a} →
-    Univalence a →
     (l : H.Lens B A) (l⁻¹ : Lens A B) →
     Higher-lens→Lens (l HC.∘ high l⁻¹) ≡ Higher-lens→Lens l ∘ l⁻¹
-  l∘l⁻¹≡l∘l⁻¹ univ l l⁻¹ =
-    Higher-lens→Lens (l HC.∘ high l⁻¹)                ≡⟨ Higher-lens-∘≡∘ lzero lzero univ l (high l⁻¹) ⟩
+  l∘l⁻¹≡l∘l⁻¹ l l⁻¹ =
+    Higher-lens→Lens (l HC.∘ high l⁻¹)                ≡⟨ Higher-lens-∘≡∘ lzero lzero l (high l⁻¹) ⟩
     Higher-lens→Lens l ∘ Higher-lens→Lens (high l⁻¹)  ≡⟨ cong (Higher-lens→Lens l ∘_) $
                                                          _≃_.left-inverse-of Lens≃Higher-lens l⁻¹ ⟩∎
     Higher-lens→Lens l ∘ l⁻¹                          ∎
 
   @0 l⁻¹∘l≡l⁻¹∘l :
     {A B : Type a} →
-    Univalence a →
     (l⁻¹ : Lens B A) (l : H.Lens A B) →
     Higher-lens→Lens (high l⁻¹ HC.∘ l) ≡ l⁻¹ ∘ Higher-lens→Lens l
-  l⁻¹∘l≡l⁻¹∘l univ l⁻¹ l =
-    Higher-lens→Lens (high l⁻¹ HC.∘ l)                ≡⟨ Higher-lens-∘≡∘ lzero lzero univ (high l⁻¹) l ⟩
+  l⁻¹∘l≡l⁻¹∘l l⁻¹ l =
+    Higher-lens→Lens (high l⁻¹ HC.∘ l)                ≡⟨ Higher-lens-∘≡∘ lzero lzero (high l⁻¹) l ⟩
     Higher-lens→Lens (high l⁻¹) ∘ Higher-lens→Lens l  ≡⟨ cong (_∘ Higher-lens→Lens l) $
                                                          _≃_.left-inverse-of Lens≃Higher-lens l⁻¹ ⟩∎
     l⁻¹ ∘ Higher-lens→Lens l                          ∎
 
 -- In erased contexts Has-quasi-inverseᴱ b (Higher-lens→Lens l) is
--- equivalent to HC.Has-quasi-inverse b l (assuming univalence).
+-- equivalent to HC.Has-quasi-inverse b l.
 
 @0 Has-quasi-inverseᴱ≃Has-quasi-inverse :
   {A B : Type a}
   (b : Block "id") →
-  Univalence a →
   (l : H.Lens A B) →
   Has-quasi-inverseᴱ b (Higher-lens→Lens l) ≃ HC.Has-quasi-inverse b l
-Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
+Has-quasi-inverseᴱ≃Has-quasi-inverse b l =
   (∃ λ l⁻¹ → Erased (l′    ∘ l⁻¹ ≡    id b × l⁻¹    ∘ l′ ≡    id b))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
   (∃ λ l⁻¹ →         l′    ∘ l⁻¹ ≡    id b × l⁻¹    ∘ l′ ≡    id b )  ↝⟨ (inverse $
                                                                           Σ-cong-contra Lens≃Higher-lens λ l⁻¹ →
-                                                                          (≡⇒↝ _ (cong₂ _≡_ (l∘l⁻¹≡l∘l⁻¹ univ l l⁻¹)
-                                                                                            (Higher-lens-id≡id b univ)) F.∘
+                                                                          (≡⇒↝ _ (cong₂ _≡_ (l∘l⁻¹≡l∘l⁻¹ l l⁻¹) (Higher-lens-id≡id b)) F.∘
                                                                            inverse (Eq.≃-≡ $ inverse Lens≃Higher-lens))
                                                                             ×-cong
-                                                                          (≡⇒↝ _ (cong₂ _≡_ (l⁻¹∘l≡l⁻¹∘l univ l⁻¹ l)
-                                                                                            (Higher-lens-id≡id b univ)) F.∘
+                                                                          (≡⇒↝ _ (cong₂ _≡_ (l⁻¹∘l≡l⁻¹∘l l⁻¹ l) (Higher-lens-id≡id b)) F.∘
                                                                            inverse (Eq.≃-≡ $ inverse Lens≃Higher-lens))) ⟩□
   (∃ λ l⁻¹ →         l  HC.∘ l⁻¹ ≡ HC.id b × l⁻¹ HC.∘ l  ≡ HC.id b )  □
   where
   l′ = Higher-lens→Lens l
 
--- In erased contexts [ b ] A ≅ᴱ B is equivalent to HC.[ b ] A ≅ B
--- (assuming univalence).
+-- In erased contexts [ b ] A ≅ᴱ B is equivalent to HC.[ b ] A ≅ B.
 
 @0 ≅ᴱ≃≅ :
   {A B : Type a}
   (b : Block "id") →
-  Univalence a →
   ([ b ] A ≅ᴱ B) ≃ (HC.[ b ] A ≅ B)
-≅ᴱ≃≅ {A = A} {B = B} b univ =
+≅ᴱ≃≅ {A = A} {B = B} b =
   (∃ λ (l : Lens A B) → Has-quasi-inverseᴱ b l)      ↝⟨ Σ-cong-contra (inverse Lens≃Higher-lens) $
-                                                        Has-quasi-inverseᴱ≃Has-quasi-inverse b univ ⟩□
+                                                        Has-quasi-inverseᴱ≃Has-quasi-inverse b ⟩□
   (∃ λ (l : H.Lens A B) → HC.Has-quasi-inverse b l)  □
 
 -- Lenses with quasi-inverses can be converted to equivalences with
@@ -1963,15 +1898,13 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
   where
   open Lens
 
--- There is a logical equivalence between [ b ] A ≅ᴱ B and A ≃ᴱ B
--- (assuming univalence).
+-- There is a logical equivalence between [ b ] A ≅ᴱ B and A ≃ᴱ B.
 
 ≅ᴱ⇔≃ᴱ :
   {A B : Type a}
   (b : Block "id") →
-  @0 Univalence a →
   ([ b ] A ≅ᴱ B) ⇔ (A ≃ᴱ B)
-≅ᴱ⇔≃ᴱ {A = A} {B = B} b univ = record
+≅ᴱ⇔≃ᴱ {A = A} {B = B} b = record
   { to   = ≅ᴱ→≃ᴱ b
   ; from = from b
   }
@@ -1983,7 +1916,7 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
     l⁻¹ = ≃ᴱ→Lens′ (inverse A≃B)
 
     @0 l∘l⁻¹≡id : ∀ b → l ∘ l⁻¹ ≡ id b
-    l∘l⁻¹≡id ⊠ = _↔_.from (equality-characterisation₁ univ)
+    l∘l⁻¹≡id ⊠ = _↔_.from equality-characterisation₁
       ( (Erased ∥ A ∥ × Erased ∥ B ∥  ↔⟨ inverse Erased-Σ↔Σ ⟩
          Erased (∥ A ∥ × ∥ B ∥)       ↔⟨ Erased-cong (
                                          drop-⊤-left-× λ b →
@@ -1995,7 +1928,7 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
       )
 
     @0 l⁻¹∘l≡id : ∀ b → l⁻¹ ∘ l ≡ id b
-    l⁻¹∘l≡id ⊠ = _↔_.from (equality-characterisation₁ univ)
+    l⁻¹∘l≡id ⊠ = _↔_.from equality-characterisation₁
       ( (Erased ∥ B ∥ × Erased ∥ A ∥  ↔⟨ inverse Erased-Σ↔Σ ⟩
          Erased (∥ B ∥ × ∥ A ∥)       ↔⟨ Erased-cong (
                                          drop-⊤-left-× λ a →
@@ -2012,22 +1945,20 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
 @0 ≅ᴱ⇔≃ᴱ∘≅ᴱ⇔≃ᴱ :
   {A B : Type a}
   (b : Block "id")
-  (@0 univ : Univalence a)
   (A≃B : A ≃ᴱ B) →
-  _⇔_.to (≅ᴱ⇔≃ᴱ b univ) (_⇔_.from (≅ᴱ⇔≃ᴱ b univ) A≃B) ≡ A≃B
-≅ᴱ⇔≃ᴱ∘≅ᴱ⇔≃ᴱ ⊠ _ _ = EEq.to≡to→≡ ext (refl _)
+  _⇔_.to (≅ᴱ⇔≃ᴱ b) (_⇔_.from (≅ᴱ⇔≃ᴱ b) A≃B) ≡ A≃B
+≅ᴱ⇔≃ᴱ∘≅ᴱ⇔≃ᴱ ⊠ _ = EEq.to≡to→≡ ext (refl _)
 
 -- There is not necessarily a split surjection from
 -- Is-equivalenceᴱ (Lens.get l) to Has-quasi-inverseᴱ l, if l is a
--- lens between types in the same universe (assuming univalence).
+-- lens between types in the same universe.
 
 ¬Is-equivalenceᴱ-get↠Has-quasi-inverseᴱ :
   (b : Block "id") →
-  @0 Univalence a →
   ¬ ({A B : Type a}
      (l : Lens A B) →
      Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ b l)
-¬Is-equivalenceᴱ-get↠Has-quasi-inverseᴱ {a = a} b univ =
+¬Is-equivalenceᴱ-get↠Has-quasi-inverseᴱ {a = a} b =
   Stable-¬
     [ ({A B : Type a}
        (l : Lens A B) →
@@ -2044,20 +1975,19 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
   lemma hyp l@(H.⟨ _ , _ , _ ⟩) =
     Is-equivalence (Lens.get (Higher-lens→Lens l))   ↔⟨ EEq.Is-equivalence≃Is-equivalenceᴱ ⟩
     Is-equivalenceᴱ (Lens.get (Higher-lens→Lens l))  ↝⟨ hyp (Higher-lens→Lens l) ⟩
-    Has-quasi-inverseᴱ b (Higher-lens→Lens l)        ↔⟨ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l ⟩□
+    Has-quasi-inverseᴱ b (Higher-lens→Lens l)        ↔⟨ Has-quasi-inverseᴱ≃Has-quasi-inverse b l ⟩□
     HC.Has-quasi-inverse b l                         □
 
 -- There is not necessarily an equivalence with erased proofs from
 -- Is-equivalenceᴱ (Lens.get l) to Has-quasi-inverseᴱ l, if l is a
--- lens between types in the same universe (assuming univalence).
+-- lens between types in the same universe.
 
 ¬Is-equivalenceᴱ-get≃ᴱHas-quasi-inverseᴱ :
   (b : Block "id") →
-  @0 Univalence a →
   ¬ ({A B : Type a}
      (l : Lens A B) →
      Is-equivalenceᴱ (Lens.get l) ≃ᴱ Has-quasi-inverseᴱ b l)
-¬Is-equivalenceᴱ-get≃ᴱHas-quasi-inverseᴱ {a = a} b univ =
+¬Is-equivalenceᴱ-get≃ᴱHas-quasi-inverseᴱ {a = a} b =
   Stable-¬
     [ ({A B : Type a}
        (l : Lens A B) →
@@ -2065,7 +1995,7 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse b univ l =
 
       ({A B : Type a}
        (l : Lens A B) →
-       Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ b l)   ↝⟨ ¬Is-equivalenceᴱ-get↠Has-quasi-inverseᴱ b univ ⟩□
+       Is-equivalenceᴱ (Lens.get l) ↠ Has-quasi-inverseᴱ b l)   ↝⟨ ¬Is-equivalenceᴱ-get↠Has-quasi-inverseᴱ b ⟩□
 
       ⊥                                                         □
     ]
@@ -2089,75 +2019,68 @@ open BM public
             equality-characterisation-≊ᴱ)
 
 -- In erased contexts Has-left-inverseᴱ b (Higher-lens→Lens l) is
--- equivalent to HC.Has-left-inverse b l (assuming univalence).
+-- equivalent to HC.Has-left-inverse b l.
 
 @0 Has-left-inverseᴱ≃Has-left-inverse :
   {A B : Type a}
   (b : Block "id") →
-  Univalence a →
   (l : H.Lens A B) →
   Has-left-inverseᴱ b (Higher-lens→Lens l) ≃ HC.Has-left-inverse b l
-Has-left-inverseᴱ≃Has-left-inverse b univ l =
+Has-left-inverseᴱ≃Has-left-inverse b l =
   (∃ λ l⁻¹ → Erased (l⁻¹    ∘ l′ ≡    id b))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
   (∃ λ l⁻¹ →         l⁻¹    ∘ l′ ≡    id b )  ↝⟨ (inverse $
                                                   Σ-cong-contra Lens≃Higher-lens λ l⁻¹ →
-                                                  ≡⇒↝ _ (cong₂ _≡_ (l⁻¹∘l≡l⁻¹∘l univ l⁻¹ l)
-                                                                   (Higher-lens-id≡id b univ)) F.∘
+                                                  ≡⇒↝ _ (cong₂ _≡_ (l⁻¹∘l≡l⁻¹∘l l⁻¹ l) (Higher-lens-id≡id b)) F.∘
                                                   inverse (Eq.≃-≡ $ inverse Lens≃Higher-lens)) ⟩□
   (∃ λ l⁻¹ →         l⁻¹ HC.∘ l  ≡ HC.id b )  □
   where
   l′ = Higher-lens→Lens l
 
 -- In erased contexts Has-right-inverseᴱ b (Higher-lens→Lens l) is
--- equivalent to HC.Has-right-inverse b l (assuming univalence).
+-- equivalent to HC.Has-right-inverse b l.
 
 @0 Has-right-inverseᴱ≃Has-right-inverse :
   {A B : Type a}
   (b : Block "id") →
-  Univalence a →
   (l : H.Lens A B) →
   Has-right-inverseᴱ b (Higher-lens→Lens l) ≃ HC.Has-right-inverse b l
-Has-right-inverseᴱ≃Has-right-inverse b univ l =
+Has-right-inverseᴱ≃Has-right-inverse b l =
   (∃ λ l⁻¹ → Erased (l′    ∘ l⁻¹ ≡    id b))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
   (∃ λ l⁻¹ →         l′    ∘ l⁻¹ ≡    id b )  ↝⟨ (inverse $
                                                   Σ-cong-contra Lens≃Higher-lens λ l⁻¹ →
-                                                  ≡⇒↝ _ (cong₂ _≡_ (l∘l⁻¹≡l∘l⁻¹ univ l l⁻¹)
-                                                                   (Higher-lens-id≡id b univ)) F.∘
+                                                  ≡⇒↝ _ (cong₂ _≡_ (l∘l⁻¹≡l∘l⁻¹ l l⁻¹) (Higher-lens-id≡id b)) F.∘
                                                   inverse (Eq.≃-≡ $ inverse Lens≃Higher-lens)) ⟩□
   (∃ λ l⁻¹ →         l  HC.∘ l⁻¹ ≡ HC.id b )  □
   where
   l′ = Higher-lens→Lens l
 
 -- In erased contexts Is-bi-invertibleᴱ b (Higher-lens→Lens l) is
--- equivalent to HC.Is-bi-invertible b l (assuming univalence).
+-- equivalent to HC.Is-bi-invertible b l.
 
 @0 Is-bi-invertibleᴱ≃Is-bi-invertible :
   {A B : Type a}
   (b : Block "id") →
-  Univalence a →
   (l : H.Lens A B) →
   Is-bi-invertibleᴱ b (Higher-lens→Lens l) ≃ HC.Is-bi-invertible b l
-Is-bi-invertibleᴱ≃Is-bi-invertible b univ l =
+Is-bi-invertibleᴱ≃Is-bi-invertible b l =
   Is-bi-invertibleᴱ b l′                              ↔⟨⟩
-  Has-left-inverseᴱ b l′ × Has-right-inverseᴱ b l′    ↝⟨ Has-left-inverseᴱ≃Has-left-inverse b univ l
+  Has-left-inverseᴱ b l′ × Has-right-inverseᴱ b l′    ↝⟨ Has-left-inverseᴱ≃Has-left-inverse b l
                                                            ×-cong
-                                                         Has-right-inverseᴱ≃Has-right-inverse b univ l ⟩
+                                                         Has-right-inverseᴱ≃Has-right-inverse b l ⟩
   HC.Has-left-inverse b l × HC.Has-right-inverse b l  ↔⟨⟩
   HC.Is-bi-invertible b l                             □
   where
   l′ = Higher-lens→Lens l
 
--- In erased contexts [ b ] A ≊ᴱ B is equivalent to HC.[ b ] A ≊ B
--- (assuming univalence).
+-- In erased contexts [ b ] A ≊ᴱ B is equivalent to HC.[ b ] A ≊ B.
 
 @0 ≊ᴱ≃≊ :
   {A B : Type a}
   (b : Block "id") →
-  Univalence a →
   ([ b ] A ≊ᴱ B) ≃ (HC.[ b ] A ≊ B)
-≊ᴱ≃≊ {A = A} {B = B} b univ =
+≊ᴱ≃≊ {A = A} {B = B} b =
   (∃ λ (l : Lens A B) → Is-bi-invertibleᴱ b l)      ↝⟨ Σ-cong-contra (inverse Lens≃Higher-lens) $
-                                                       Is-bi-invertibleᴱ≃Is-bi-invertible b univ ⟩□
+                                                       Is-bi-invertibleᴱ≃Is-bi-invertible b ⟩□
   (∃ λ (l : H.Lens A B) → HC.Is-bi-invertible b l)  □
 
 -- Lenses with left inverses have propositional remainder types (in
@@ -2199,28 +2122,27 @@ Has-right-inverseᴱ→remainder-propositional
   open Lens
 
 -- There is an equivalence with erased proofs between A ≃ᴱ B and
--- [ b ] A ≊ᴱ B (assuming univalence).
+-- [ b ] A ≊ᴱ B.
 
 ≃ᴱ≃ᴱ≊ᴱ :
   {A B : Type a}
   (b : Block "id") →
-  @0 Univalence a →
   (A ≃ᴱ B) ≃ᴱ ([ b ] A ≊ᴱ B)
-≃ᴱ≃ᴱ≊ᴱ {A = A} {B = B} b univ =
+≃ᴱ≃ᴱ≊ᴱ {A = A} {B = B} b =
   EEq.↔→≃ᴱ (to b) (from b) (to∘from b) (from∘to b)
   where
   open Lens
 
   to : ∀ b → A ≃ᴱ B → [ b ] A ≊ᴱ B
-  to b = B.≅ᴱ→≊ᴱ b ⊚ _⇔_.from (≅ᴱ⇔≃ᴱ b univ)
+  to b = B.≅ᴱ→≊ᴱ b ⊚ _⇔_.from (≅ᴱ⇔≃ᴱ b)
 
   from : ∀ b → [ b ] A ≊ᴱ B → A ≃ᴱ B
-  from b = _⇔_.to (≅ᴱ⇔≃ᴱ b univ) ⊚ _⇔_.from (BM.≅ᴱ⇔≊ᴱ b univ)
+  from b = _⇔_.to (≅ᴱ⇔≃ᴱ b) ⊚ _⇔_.from (BM.≅ᴱ⇔≊ᴱ b)
 
   @0 to∘from : ∀ b A≊ᴱB → to b (from b A≊ᴱB) ≡ A≊ᴱB
   to∘from b A≊ᴱB =
-    _≃_.from (equality-characterisation-≊ᴱ b univ _ _) $
-    _↔_.from (equality-characterisation₂ univ)
+    _≃_.from (equality-characterisation-≊ᴱ b _ _) $
+    _↔_.from equality-characterisation₂
       ( ∥B∥≃R  b A≊ᴱB
       , lemma₁ b A≊ᴱB
       , lemma₂ b A≊ᴱB
@@ -2261,8 +2183,8 @@ Has-right-inverseᴱ→remainder-propositional
 
   @0 from∘to :
     ∀ b A≃B →
-    _⇔_.to (≅ᴱ⇔≃ᴱ b univ) (_⇔_.from (BM.≅ᴱ⇔≊ᴱ b univ)
-      (B.≅ᴱ→≊ᴱ b (_⇔_.from (≅ᴱ⇔≃ᴱ b univ) A≃B))) ≡
+    _⇔_.to (≅ᴱ⇔≃ᴱ b) (_⇔_.from (BM.≅ᴱ⇔≊ᴱ b)
+      (B.≅ᴱ→≊ᴱ b (_⇔_.from (≅ᴱ⇔≃ᴱ b) A≃B))) ≡
     A≃B
   from∘to ⊠ _ = EEq.to≡to→≡ ext (refl _)
 
@@ -2271,11 +2193,10 @@ Has-right-inverseᴱ→remainder-propositional
 
 to-from-≃ᴱ≃ᴱ≊ᴱ≡get :
   (b : Block "id")
-  (@0 univ : Univalence a)
   (A≊ᴱB@(l , _) : [ b ] A ≊ᴱ B) →
-  _≃ᴱ_.to (_≃ᴱ_.from (≃ᴱ≃ᴱ≊ᴱ b univ) A≊ᴱB) ≡ Lens.get l
+  _≃ᴱ_.to (_≃ᴱ_.from (≃ᴱ≃ᴱ≊ᴱ b) A≊ᴱB) ≡ Lens.get l
 to-from-≃ᴱ≃ᴱ≊ᴱ≡get
-  ⊠ _ (⟨ _ , _ , _ ⟩ , (⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
+  ⊠ (⟨ _ , _ , _ ⟩ , (⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
   refl _
 
 -- A variant of ≃ᴱ≃ᴱ≊ᴱ that works even if A and B live in different
@@ -2286,12 +2207,11 @@ to-from-≃ᴱ≃ᴱ≊ᴱ≡get
 ≃ᴱ≃ᴱ≊ᴱ′ :
   {A : Type a} {B : Type b}
   (b-id : Block "id") →
-  @0 Univalence (a ⊔ b) →
   (A ≃ᴱ B) ≃ᴱ ([ b-id ] ↑ b A ≊ᴱ ↑ a B)
-≃ᴱ≃ᴱ≊ᴱ′ {a = a} {b = b} {A = A} {B = B} b-id univ =
+≃ᴱ≃ᴱ≊ᴱ′ {a = a} {b = b} {A = A} {B = B} b-id =
   A ≃ᴱ B                   ↝⟨ inverse $ EEq.≃ᴱ-cong ext (from-isomorphism Bijection.↑↔)
                                                         (from-isomorphism Bijection.↑↔) ⟩
-  ↑ b A ≃ᴱ ↑ a B           ↝⟨ ≃ᴱ≃ᴱ≊ᴱ b-id univ ⟩□
+  ↑ b A ≃ᴱ ↑ a B           ↝⟨ ≃ᴱ≃ᴱ≊ᴱ b-id ⟩□
   [ b-id ] ↑ b A ≊ᴱ ↑ a B  □
 
 -- The right-to-left direction of ≃ᴱ≃ᴱ≊ᴱ′ maps bi-invertible lenses to a
@@ -2300,81 +2220,75 @@ to-from-≃ᴱ≃ᴱ≊ᴱ≡get
 to-from-≃ᴱ≃ᴱ≊ᴱ′≡get :
   {A : Type a} {B : Type b}
   (b-id : Block "id")
-  (@0 univ : Univalence (a ⊔ b)) →
   (A≊ᴱB@(l , _) : [ b-id ] ↑ b A ≊ᴱ ↑ a B) →
-  _≃ᴱ_.to (_≃ᴱ_.from (≃ᴱ≃ᴱ≊ᴱ′ b-id univ) A≊ᴱB) ≡
+  _≃ᴱ_.to (_≃ᴱ_.from (≃ᴱ≃ᴱ≊ᴱ′ b-id) A≊ᴱB) ≡
   lower ⊚ Lens.get l ⊚ lift
 to-from-≃ᴱ≃ᴱ≊ᴱ′≡get
-  ⊠ _ (⟨ _ , _ , _ ⟩ , (⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
+  ⊠ (⟨ _ , _ , _ ⟩ , (⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
   refl _
 
 -- The getter function of a bi-invertible lens is an equivalence with
--- erased proofs (assuming univalence).
+-- erased proofs.
 
 Is-bi-invertibleᴱ→Is-equivalenceᴱ-get :
   {A : Type a}
   (b : Block "id") →
-  @0 Univalence a →
   (l : Lens A B) →
   Is-bi-invertibleᴱ b l → Is-equivalenceᴱ (Lens.get l)
 Is-bi-invertibleᴱ→Is-equivalenceᴱ-get
-  b@⊠ univ l@(⟨ _ , _ , _ ⟩)
+  b@⊠ l@(⟨ _ , _ , _ ⟩)
   is-bi-inv@((⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
-  _≃ᴱ_.is-equivalence (_≃ᴱ_.from (≃ᴱ≃ᴱ≊ᴱ b univ) (l , is-bi-inv))
+  _≃ᴱ_.is-equivalence (_≃ᴱ_.from (≃ᴱ≃ᴱ≊ᴱ b) (l , is-bi-inv))
 
 -- If l is a lens between types in the same universe, then there is an
 -- equivalence with erased proofs between "l is bi-invertible (with
 -- erased proofs)" and "the getter of l is an equivalence (with erased
--- proofs)" (assuming univalence).
+-- proofs)".
 
 Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get :
   {A B : Type a}
   (b : Block "id") →
-  @0 Univalence a →
   (l : Lens A B) →
   Is-bi-invertibleᴱ b l ≃ᴱ Is-equivalenceᴱ (Lens.get l)
-Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get b univ l = EEq.⇔→≃ᴱ
-  (BM.Is-bi-invertibleᴱ-propositional b univ l)
+Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get b l = EEq.⇔→≃ᴱ
+  (BM.Is-bi-invertibleᴱ-propositional b l)
   (EEq.Is-equivalenceᴱ-propositional ext _)
-  (Is-bi-invertibleᴱ→Is-equivalenceᴱ-get b univ l)
+  (Is-bi-invertibleᴱ→Is-equivalenceᴱ-get b l)
   (λ is-equiv →
 
      let l′ = ≃ᴱ→Lens′ EEq.⟨ get l , is-equiv ⟩ in
 
-                             $⟨ proj₂ (_≃ᴱ_.to (≃ᴱ≃ᴱ≊ᴱ b univ) EEq.⟨ _ , is-equiv ⟩) ⟩
+                             $⟨ proj₂ (_≃ᴱ_.to (≃ᴱ≃ᴱ≊ᴱ b) EEq.⟨ _ , is-equiv ⟩) ⟩
      Is-bi-invertibleᴱ b l′  ↝⟨ subst (λ ([ l ]) → Is-bi-invertibleᴱ b l) $ sym $
-                                []-cong [ get-equivalence→≡≃ᴱ→Lens′ univ l is-equiv ] ⟩□
+                                []-cong [ get-equivalence→≡≃ᴱ→Lens′ l is-equiv ] ⟩□
      Is-bi-invertibleᴱ b l   □)
   where
   open Lens
 
 -- If A is a set, then there is an equivalence with erased proofs
--- between [ b ] A ≊ᴱ B and [ b ] A ≅ᴱ B (assuming univalence).
+-- between [ b ] A ≊ᴱ B and [ b ] A ≅ᴱ B.
 
 ≊ᴱ≃ᴱ≅ᴱ :
   {A B : Type a}
   (b : Block "id") →
-  @0 Univalence a →
   @0 Is-set A →
   ([ b ] A ≊ᴱ B) ≃ᴱ ([ b ] A ≅ᴱ B)
-≊ᴱ≃ᴱ≅ᴱ b univ A-set =
+≊ᴱ≃ᴱ≅ᴱ b A-set =
   ∃-cong λ _ →
     BM.Is-bi-invertibleᴱ≃ᴱHas-quasi-inverseᴱ-domain
-      b univ
-      (Is-set-closed-domain univ A-set)
+      b (Is-set-closed-domain A-set)
 
 -- If A is a set, then there is an equivalence with erased proofs
--- between A ≃ᴱ B and [ b ] A ≅ᴱ B (assuming univalence).
+-- between A ≃ᴱ B and [ b ] A ≅ᴱ B.
 
 ≃ᴱ≃ᴱ≅ᴱ :
   {A B : Type a}
   (b : Block "≃ᴱ≃ᴱ≅ᴱ") →
-  @0 Univalence a →
   @0 Is-set A →
   (A ≃ᴱ B) ≃ᴱ ([ b ] A ≅ᴱ B)
-≃ᴱ≃ᴱ≅ᴱ {A = A} {B = B} b@⊠ univ A-set =
-  A ≃ᴱ B        ↝⟨ ≃ᴱ≃ᴱ≊ᴱ b univ ⟩
-  [ b ] A ≊ᴱ B  ↝⟨ ≊ᴱ≃ᴱ≅ᴱ b univ A-set ⟩□
+≃ᴱ≃ᴱ≅ᴱ {A = A} {B = B} b@⊠ A-set =
+  A ≃ᴱ B        ↝⟨ ≃ᴱ≃ᴱ≊ᴱ b ⟩
+  [ b ] A ≊ᴱ B  ↝⟨ ≊ᴱ≃ᴱ≅ᴱ b A-set ⟩□
   [ b ] A ≅ᴱ B  □
 
 -- In erased contexts one can prove that ≃ᴱ≃ᴱ≅ᴱ maps identity to
@@ -2383,9 +2297,8 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get b univ l = EEq.⇔→≃ᴱ
 @0 ≃ᴱ≃ᴱ≅ᴱ-id≡id :
   {A : Type a}
   (b : Block "≃ᴱ≃ᴱ≅ᴱ")
-  (univ : Univalence a)
   (A-set : Is-set A) →
-  proj₁ (_≃ᴱ_.to (≃ᴱ≃ᴱ≅ᴱ b univ A-set) F.id) ≡ id b
-≃ᴱ≃ᴱ≅ᴱ-id≡id ⊠ univ _ =
-  _↔_.from (equality-characterisation₁ univ)
+  proj₁ (_≃ᴱ_.to (≃ᴱ≃ᴱ≅ᴱ b A-set) F.id) ≡ id b
+≃ᴱ≃ᴱ≅ᴱ-id≡id ⊠ _ =
+  _↔_.from equality-characterisation₁
     (F.id , λ _ → refl _)
