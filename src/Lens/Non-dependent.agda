@@ -84,10 +84,10 @@ record Has-getter-and-setter
          Type (lsuc (a ⊔ b ⊔ c)) where
   field
     -- Getter.
-    get : {A : Type a} {B : Type b} → Lens A B → A → B
+    get : Lens A B → A → B
 
     -- Typeter.
-    set : {A : Type a} {B : Type b} → Lens A B → A → B → A
+    set : Lens A B → A → B → A
 
 -- A statement of what it means for two lenses to have the same getter
 -- and setter.
@@ -96,8 +96,7 @@ Same-getter-and-setter :
   {Lens₁ : Type a → Type b → Type c₁}
   {Lens₂ : Type a → Type b → Type c₂}
   ⦃ L₁ : Has-getter-and-setter Lens₁ ⦄
-  ⦃ L₂ : Has-getter-and-setter Lens₂ ⦄
-  {A : Type a} {B : Type b} →
+  ⦃ L₂ : Has-getter-and-setter Lens₂ ⦄ →
   Lens₁ A B → Lens₂ A B → Type (a ⊔ b)
 Same-getter-and-setter ⦃ L₁ = L₁ ⦄ ⦃ L₂ = L₂ ⦄ l₁ l₂ =
   get L₁ l₁ ≡ get L₂ l₂ ×

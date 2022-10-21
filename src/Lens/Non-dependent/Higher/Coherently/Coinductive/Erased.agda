@@ -40,6 +40,7 @@ private
   variable
     a b ℓ p p₁ p₂ : Level
     A A₁ A₂ B C   : Type a
+    P             : A → Type p
     x y           : A
     f             : A → B
 
@@ -99,18 +100,16 @@ private
 
   @0 Coherentlyᴱ-cong-≡ :
     Block "Coherentlyᴱ-cong-≡" →
-    {A : Type a}
     {P₁ P₂ : {A : Type a} → (A → B) → Type p}
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
-    {f : A → B} →
     (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f) →
     ({A : Type a} (f : A → B) (x : P₂ f) →
      step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
     Coherentlyᴱ P₁ step₁ f P.≡ Coherentlyᴱ P₂ step₂ f
   Coherentlyᴱ-cong-≡
-    {a = a} {B = B} {p = p} ⊠ {P₁ = P₁} {P₂ = P₂}
-    {step₁ = step₁} {step₂ = step₂} {f = f} P₁≃P₂′ step₁≡step₂ =
+    {a = a} {B = B} {p = p} {f = f} ⊠ {P₁ = P₁} {P₂ = P₂}
+    {step₁ = step₁} {step₂ = step₂} P₁≃P₂′ step₁≡step₂ =
 
     P.cong (λ ((P , step) :
               ∃ λ (P : (A : Type a) → (A → B) → Type p) →
@@ -156,11 +155,11 @@ private
 
          step₂ f                                                         ∎)
     where
-    P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f PEq.≃ P₂ f
+    P₁≃P₂ : (f : A → B) → P₁ f PEq.≃ P₂ f
     P₁≃P₂ f = _↔_.to ≃↔≃ (P₁≃P₂′ f)
 
     Σ-≡,≡→≡′ :
-      {P : A → Type b} {p₁ p₂ : Σ A P} →
+      {p₁ p₂ : Σ A P} →
       (p : proj₁ p₁ P.≡ proj₁ p₂) →
       P.subst P p (proj₂ p₁) P.≡ proj₂ p₂ →
       p₁ P.≡ p₂
@@ -174,11 +173,9 @@ private
 
   to-Coherentlyᴱ-cong-≡-property :
     (bl : Block "Coherentlyᴱ-cong-≡")
-    {A : Type a} {B : Type b}
     {P₁ P₂ : {A : Type a} → (A → B) → Type p}
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
-    {f : A → B}
     (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f)
     (step₁≡step₂ :
        {A : Type a} (f : A → B) (x : P₂ f) →
@@ -188,7 +185,7 @@ private
       P.≡
     _≃_.to (P₁≃P₂ f) (c .property)
   to-Coherentlyᴱ-cong-≡-property
-    ⊠ {P₁ = P₁} {P₂ = P₂} {f = f} P₁≃P₂ step₁≡step₂ c =
+    {f = f} ⊠ {P₁ = P₁} {P₂ = P₂} P₁≃P₂ step₁≡step₂ c =
 
     P.transport (λ _ → P₂ f) P.0̲
       (_≃_.to (P₁≃P₂ f) (P.transport (λ _ → P₁ f) P.0̲ (c .property)))  P.≡⟨ P.cong (_$ _≃_.to (P₁≃P₂ f)
@@ -203,11 +200,9 @@ private
 
   from-Coherentlyᴱ-cong-≡-property :
     (bl : Block "Coherentlyᴱ-cong-≡")
-    {A : Type a} {B : Type b}
     {P₁ P₂ : {A : Type a} → (A → B) → Type p}
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
-    {f : A → B}
     (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f)
     (step₁≡step₂ :
        {A : Type a} (f : A → B) (x : P₂ f) →
@@ -218,7 +213,7 @@ private
       c .property P.≡
     _≃_.from (P₁≃P₂ f) (c .property)
   from-Coherentlyᴱ-cong-≡-property
-    ⊠ {P₁ = P₁} {P₂ = P₂} {f = f} P₁≃P₂ step₁≡step₂ c =
+    {f = f} ⊠ {P₁ = P₁} {P₂ = P₂} P₁≃P₂ step₁≡step₂ c =
 
     P.transport (λ _ → P₁ f) P.0̲
       (_≃_.from (P₁≃P₂ f) (P.transport (λ _ → P₂ f) P.0̲ (c .property)))  P.≡⟨ P.cong (_$ _≃_.from (P₁≃P₂ f)
@@ -238,17 +233,15 @@ private
   -- general result is given below (Coherentlyᴱ-cong).
 
   Coherentlyᴱ-cong-≃ᴱ :
-    {A : Type a}
     {P₁ P₂ : {A : Type a} → (A → B) → Type p}
     {@0 step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
     {@0 step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
-    {f : A → B} →
     (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ᴱ P₂ f) →
     @0 ({A : Type a} (f : A → B) (x : P₂ f) →
         step₁ f (_≃ᴱ_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
     Coherentlyᴱ P₁ step₁ f ≃ᴱ Coherentlyᴱ P₂ step₂ f
   Coherentlyᴱ-cong-≃ᴱ
-    {P₁ = P₁} {P₂ = P₂} {step₁ = step₁} {step₂ = step₂} {f = f}
+    {f = f} {P₁ = P₁} {P₂ = P₂} {step₁ = step₁} {step₂ = step₂}
     P₁≃P₂ step₁≡step₂ =
 
     block λ bl →
@@ -340,11 +333,9 @@ private
   -- property fields in certain ways.
 
   module _
-    {A : Type a}
     {P₁ P₂ : {A : Type a} → (A → B) → Type p}
     {@0 step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
     {@0 step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
-    {f : A → B}
     {P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ᴱ P₂ f}
     {@0 step₁≡step₂ :
        {A : Type a} (f : A → B) (x : P₂ f) →
@@ -367,10 +358,8 @@ private
   -- A lemma involving Coherentlyᴱ and ↑.
 
   Coherentlyᴱ-↑ :
-    {A : Type a}
     {P : {A : Type a} → (A → B) → Type p}
-    {@0 step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ᴱ → B}
-    {f : A → B} →
+    {@0 step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ᴱ → B} →
     Coherentlyᴱ (↑ ℓ ∘ P) ((_∘ lower) ∘ step) f ≃
     Coherentlyᴱ P step f
   Coherentlyᴱ-↑ {ℓ = ℓ} {P = P} {step = step} =
@@ -410,19 +399,17 @@ private
 -- fields in certain ways, see the "unit tests" below.
 
 Coherentlyᴱ-cong :
-  {A : Type a}
   {P₁ : {A : Type a} → (A → B) → Type p₁}
   {P₂ : {A : Type a} → (A → B) → Type p₂}
   {@0 step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
   {@0 step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
-  {f : A → B} →
   (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ᴱ P₂ f) →
   @0 ({A : Type a} (f : A → B) (x : P₂ f) →
       step₁ f (_≃ᴱ_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
   Coherentlyᴱ P₁ step₁ f ≃ᴱ Coherentlyᴱ P₂ step₂ f
 Coherentlyᴱ-cong
-  {p₁ = p₁} {p₂ = p₂}
-  {P₁ = P₁} {P₂ = P₂} {step₁ = step₁} {step₂ = step₂} {f = f}
+  {p₁ = p₁} {p₂ = p₂} {f = f}
+  {P₁ = P₁} {P₂ = P₂} {step₁ = step₁} {step₂ = step₂}
   P₁≃P₂ step₁≡step₂ =
 
   Coherentlyᴱ P₁ step₁ f                          ↔⟨ inverse Coherentlyᴱ-↑ ⟩
@@ -443,12 +430,10 @@ Coherentlyᴱ-cong
 -- fields in certain ways.
 
 module _
-  {A : Type a}
   {P₁ : {A : Type a} → (A → B) → Type p₁}
   {P₂ : {A : Type a} → (A → B) → Type p₂}
   {@0 step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
   {@0 step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
-  {f : A → B}
   {P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ᴱ P₂ f}
   {@0 step₁≡step₂ :
      {A : Type a} (f : A → B) (x : P₂ f) →
@@ -471,7 +456,7 @@ module _
 -- A "computation rule".
 
 subst-Coherentlyᴱ-property :
-  ∀ {B : Type b} {P : C → {A : Type a} → (A → B) → Type p}
+  ∀ {P : C → {A : Type a} → (A → B) → Type p}
     {@0 step : (c : C) {A : Type a} (f : A → B) → P c f → ∥ A ∥¹ᴱ → B}
     {f : C → A → B} {eq : x ≡ y} {c} →
   subst (λ x → Coherentlyᴱ (P x) (step x) (f x)) eq c .property ≡

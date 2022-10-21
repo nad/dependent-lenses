@@ -603,7 +603,7 @@ Lens≃Higher-lens-preserves-getters-and-setters ⊠ _ =
 
 -- An identity lens.
 
-id : {A : Type a} → Lens A A
+id : Lens A A
 id =
     P.id
   , (λ _ → ↑ _ ⊤)

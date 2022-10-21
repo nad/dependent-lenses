@@ -136,18 +136,16 @@ private
 
   Coherently-cong-≡ :
     Block "Coherently-cong-≡" →
-    {A : Type a}
     {P₁ P₂ : {A : Type a} → (A → B) → Type p}
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
-    {f : A → B} →
     (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f) →
     ({A : Type a} (f : A → B) (x : P₂ f) →
      step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
     Coherently P₁ step₁ f P.≡ Coherently P₂ step₂ f
   Coherently-cong-≡
-    {a = a} {B = B} {p = p} ⊠ {P₁ = P₁} {P₂ = P₂}
-    {step₁ = step₁} {step₂ = step₂} {f = f} P₁≃P₂′ step₁≡step₂ =
+    {a = a} {B = B} {p = p} {f = f} ⊠ {P₁ = P₁} {P₂ = P₂}
+    {step₁ = step₁} {step₂ = step₂} P₁≃P₂′ step₁≡step₂ =
 
     P.cong (λ ((P , step) :
               ∃ λ (P : (A : Type a) → (A → B) → Type p) →
@@ -193,18 +191,16 @@ private
 
          step₂ f                                                        ∎)
     where
-    P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f PEq.≃ P₂ f
+    P₁≃P₂ : (f : A → B) → P₁ f PEq.≃ P₂ f
     P₁≃P₂ f = _↔_.to ≃↔≃ (P₁≃P₂′ f)
 
   -- A "computation rule".
 
   to-Coherently-cong-≡-property :
     (bl : Block "Coherently-cong-≡")
-    {A : Type a} {B : Type b}
     {P₁ P₂ : {A : Type a} → (A → B) → Type p}
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
-    {f : A → B}
     (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f)
     (step₁≡step₂ :
        {A : Type a} (f : A → B) (x : P₂ f) →
@@ -213,7 +209,7 @@ private
     PU.≡⇒→ (Coherently-cong-≡ bl P₁≃P₂ step₁≡step₂) c .property P.≡
     _≃_.to (P₁≃P₂ f) (c .property)
   to-Coherently-cong-≡-property
-    ⊠ {P₁ = P₁} {P₂ = P₂} {f = f} P₁≃P₂ step₁≡step₂ c =
+    {f = f} ⊠ {P₁ = P₁} {P₂ = P₂} P₁≃P₂ step₁≡step₂ c =
 
     P.transport (λ _ → P₂ f) P.0̲
       (_≃_.to (P₁≃P₂ f) (P.transport (λ _ → P₁ f) P.0̲ (c .property)))  P.≡⟨ P.cong (_$ _≃_.to (P₁≃P₂ f)
@@ -228,11 +224,9 @@ private
 
   from-Coherently-cong-≡-property :
     (bl : Block "Coherently-cong-≡")
-    {A : Type a} {B : Type b}
     {P₁ P₂ : {A : Type a} → (A → B) → Type p}
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
-    {f : A → B}
     (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f)
     (step₁≡step₂ :
        {A : Type a} (f : A → B) (x : P₂ f) →
@@ -243,7 +237,7 @@ private
       c .property P.≡
     _≃_.from (P₁≃P₂ f) (c .property)
   from-Coherently-cong-≡-property
-    ⊠ {P₁ = P₁} {P₂ = P₂} {f = f} P₁≃P₂ step₁≡step₂ c =
+    {f = f} ⊠ {P₁ = P₁} {P₂ = P₂} P₁≃P₂ step₁≡step₂ c =
 
     P.transport (λ _ → P₁ f) P.0̲
       (_≃_.from (P₁≃P₂ f) (P.transport (λ _ → P₂ f) P.0̲ (c .property)))  P.≡⟨ P.cong (_$ _≃_.from (P₁≃P₂ f)
@@ -263,17 +257,15 @@ private
   -- general result is given below (Coherently-cong).
 
   Coherently-cong-≃ :
-    {A : Type a}
     {P₁ P₂ : {A : Type a} → (A → B) → Type p}
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
-    {f : A → B} →
     (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f) →
     ({A : Type a} (f : A → B) (x : P₂ f) →
      step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
     Coherently P₁ step₁ f ≃ Coherently P₂ step₂ f
   Coherently-cong-≃
-    {P₁ = P₁} {P₂ = P₂} {step₁ = step₁} {step₂ = step₂} {f = f}
+    {f = f} {P₁ = P₁} {P₂ = P₂} {step₁ = step₁} {step₂ = step₂}
     P₁≃P₂ step₁≡step₂ =
 
     block λ bl →
@@ -358,11 +350,9 @@ private
   -- property fields in certain ways.
 
   module _
-    {A : Type a}
     {P₁ P₂ : {A : Type a} → (A → B) → Type p}
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
-    {f : A → B}
     {P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f}
     {step₁≡step₂ :
        {A : Type a} (f : A → B) (x : P₂ f) →
@@ -385,10 +375,8 @@ private
   -- A lemma involving Coherently and ↑.
 
   Coherently-↑ :
-    {A : Type a}
     {P : {A : Type a} → (A → B) → Type p}
-    {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B}
-    {f : A → B} →
+    {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B} →
     Coherently (↑ ℓ ∘ P) ((_∘ lower) ∘ step) f ≃
     Coherently P step f
   Coherently-↑ {ℓ = ℓ} {P = P} {step = step} =
@@ -428,19 +416,17 @@ private
 -- fields in certain ways, see the "unit tests" below.
 
 Coherently-cong :
-  {A : Type a}
   {P₁ : {A : Type a} → (A → B) → Type p₁}
   {P₂ : {A : Type a} → (A → B) → Type p₂}
   {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
   {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
-  {f : A → B} →
   (P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f) →
   ({A : Type a} (f : A → B) (x : P₂ f) →
    step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
   Coherently P₁ step₁ f ≃ Coherently P₂ step₂ f
 Coherently-cong
-  {p₁ = p₁} {p₂ = p₂}
-  {P₁ = P₁} {P₂ = P₂} {step₁ = step₁} {step₂ = step₂} {f = f}
+  {p₁ = p₁} {p₂ = p₂} {f = f}
+  {P₁ = P₁} {P₂ = P₂} {step₁ = step₁} {step₂ = step₂}
   P₁≃P₂ step₁≡step₂ =
 
   Coherently P₁ step₁ f                          ↝⟨ inverse Coherently-↑ ⟩
@@ -461,12 +447,10 @@ Coherently-cong
 -- property fields in certain ways.
 
 module _
-  {A : Type a}
   {P₁ : {A : Type a} → (A → B) → Type p₁}
   {P₂ : {A : Type a} → (A → B) → Type p₂}
   {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ → B}
   {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ → B}
-  {f : A → B}
   {P₁≃P₂ : {A : Type a} (f : A → B) → P₁ f ≃ P₂ f}
   {step₁≡step₂ :
      {A : Type a} (f : A → B) (x : P₂ f) →
@@ -555,7 +539,6 @@ open Coherently-with-restriction public
 Coherently≃Coherently-with-restriction :
   {P : {A : Type a} → (A → B) → Type p}
   {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B}
-  {f : A → B}
   {Q : {A : Type a} → (A → B) → Type q}
   {pres : {A : Type a} {f : A → B} {p : P f} → Q f → Q (step f p)}
   {q : Q f} →
@@ -624,7 +607,6 @@ Coherently-with-restriction′ P step f Q pres q =
 Coherently-with-restriction≃Coherently-with-restriction′ :
   {P : {A : Type a} → (A → B) → Type p}
   {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B}
-  {f : A → B}
   {Q : {A : Type a} → (A → B) → Type q}
   {pres : {A : Type a} {f : A → B} {p : P f} → Q f → Q (step f p)}
   {q : Q f} →
@@ -675,17 +657,15 @@ Coherently-with-restriction≃Coherently-with-restriction′
 -- Coherently-with-restriction P step f Q pres q has h-level n.
 
 H-level-Coherently-with-restriction :
-  {B : Type b}
   {P : {A : Type a} → (A → B) → Type p}
   {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B}
-  {f : A → B}
   {Q : {A : Type a} → (A → B) → Type q}
   {pres : {A : Type a} {f : A → B} {p : P f} → Q f → Q (step f p)}
   {q : Q f} →
   ({A : Type a} {f : A → B} → Q f → H-level n (P f)) →
   H-level n (Coherently-with-restriction P step f Q pres q)
 H-level-Coherently-with-restriction
-  {n = n} {B = B} {P = P} {step = step} {f = f} {Q = Q}
+  {B = B} {f = f} {n = n} {P = P} {step = step} {Q = Q}
   {pres = pres} {q = q} =
 
   (∀ {A} {f : A → B} → Q f → H-level n (P f))                        ↝⟨ (λ h (_ , _ , q) → h q) ⟩
@@ -699,15 +679,13 @@ H-level-Coherently-with-restriction
 -- h-level n.
 
 H-level-Coherently :
-  {B : Type b}
   {P : {A : Type a} → (A → B) → Type p}
-  {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B}
-  {f : A → B} →
+  {step : {A : Type a} (f : A → B) → P f → ∥ A ∥¹ → B} →
   H-level n (P f) →
   ({A : Type a} {f : A → B} {p : P f} →
    H-level n (P f) → H-level n (P (step f p))) →
   H-level n (Coherently P step f)
-H-level-Coherently {n = n} {P = P} {step = step} {f = f} h₁ h₂ =
+H-level-Coherently {n = n} {f = f} {P = P} {step = step} h₁ h₂ =
                                             $⟨ H-level-Coherently-with-restriction id ⟩
   H-level n
     (Coherently-with-restriction P step f
@@ -738,7 +716,7 @@ H-level-Coherently-→Type
   H-level n (Coherently P step F)             □
   where
   h₃′ :
-    {A : Type a} {F : A → Type f} {p : P F} →
+    {F : A → Type f} {p : P F} →
     ((a : A) → H-level n (F a)) →
     (a : ∥ A ∥¹) → H-level n (step F p a)
   h₃′ h = O.elim λ where

@@ -590,7 +590,7 @@ equality-characterisation₀ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} ⊠ =
 
 from-equality-characterisation₀ :
   let open Lens in
-  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B}
+  {l₁ l₂ : Lens A B}
   (b : Block "equality-characterisation") →
   {p : R l₁ ≡ R l₂}
   {q : subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂} →
@@ -670,7 +670,7 @@ from-equality-characterisation₀ ⊠ {p = p} {q = q} =
 
 cong-set-from-equality-characterisation₀ :
   let open Lens in
-  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B}
+  {l₁ l₂ : Lens A B}
   (b : Block "equality-characterisation") →
   {p : R l₁ ≡ R l₂}
   {q : subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂} →

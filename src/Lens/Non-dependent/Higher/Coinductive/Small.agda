@@ -43,11 +43,11 @@ import Lens.Non-dependent.Higher.Coherently.Not-coinductive eq as NC
 
 private
   variable
-    a b c d p q : Level
-    A B C       : Type a
-    P           : A → Type p
-    z           : A
-    n           : ℕ
+    b d ℓ p q : Level
+    A B C D   : Type ℓ
+    P Q       : A → Type p
+    a c x y z : A
+    n         : ℕ
 
 ------------------------------------------------------------------------
 -- Constant-≃
@@ -61,9 +61,7 @@ Constant-≃ P = ∀ x y → P x ≃ P y
 
 -- Constant and Constant-≃ are pointwise equivalent.
 
-Constant≃Constant-≃ :
-  {P : A → Type p} →
-  Constant P ≃ Constant-≃ P
+Constant≃Constant-≃ : Constant P ≃ Constant-≃ P
 Constant≃Constant-≃ =
   ∀-cong ext λ _ →
   ∀-cong ext λ _ →
@@ -95,7 +93,7 @@ Constant-≃-get-⁻¹-≃⁻¹ (_ , _ , eq) b₁ b₂ = Eq.⟨ _ , eq b₁ b₂
 
 Constant-≃-get-⁻¹-≃ :
   Block "Constant-≃-get-⁻¹-≃" →
-  {A : Type a} {B : Type b} {get : A → B} →
+  {get : A → B} →
   Constant-≃ (get ⁻¹_) ≃
   (∃ λ (set : A → B → A) →
    ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
@@ -104,7 +102,7 @@ Constant-≃-get-⁻¹-≃ :
        f = λ (a , _) → set a b₂ , get-set a b₂
    in
    Is-equivalence f)
-Constant-≃-get-⁻¹-≃ bl {A = A} {B = B} {get = get} =
+Constant-≃-get-⁻¹-≃ {A = A} {B = B} bl {get = get} =
   inverse (equiv₃ bl)
   where
   equiv₁ =
@@ -208,7 +206,6 @@ Coherently-constant =
 -- applicable).
 
 Coinductive-coherently-constant≃Coherently-constant :
-  {A : Type a} {P : A → Type p} →
   Coinductive.Coherently-constant P ≃ Coherently-constant P
 Coinductive-coherently-constant≃Coherently-constant =
   Coherently-cong
@@ -219,7 +216,6 @@ Coinductive-coherently-constant≃Coherently-constant =
 -- applicable).
 
 Coherently-constant≃Coherently-constant :
-  {A : Type a} {P : A → Type p} →
   CC.Coherently-constant P ≃ Coherently-constant P
 Coherently-constant≃Coherently-constant {P = P} =
   CC.Coherently-constant P           ↝⟨ Coinductive.Coherently-constant≃Coherently-constant ⟩
@@ -229,7 +225,6 @@ Coherently-constant≃Coherently-constant {P = P} =
 -- A map lemma for Coherently-constant.
 
 Coherently-constant-map :
-  {P : A → Type p} {Q : B → Type q}
   (f : B → A) →
   (∀ x → P (f x) ≃ Q x) →
   Coherently-constant P → Coherently-constant Q
@@ -423,7 +418,6 @@ private
 -- TODO: Can the ".coherent" clause be simplified?
 
 Coherently-constant-Σ :
-  {P : A → Type p} {Q : ∃ P → Type q} →
   Coherently-constant P →
   Coherently-constant Q →
   Coherently-constant (λ x → ∃ λ (y : P x) → Q (x , y))
@@ -666,10 +660,7 @@ private
   -- certain definitional equality.
 
   _ :
-    ∀ {P : A → Type p} {Q : ∃ P → Type q}
-      {c₁ : Coherently-constant P}
-      {c₂ : Coherently-constant Q}
-      {x y} →
+    {c₁ : Coherently-constant P} {c₂ : Coherently-constant Q} →
     _≃_.to (Coherently-constant-Σ c₁ c₂ .property x y) ≡
     Σ-map (_≃_.to (c₁ .property _ _)) (_≃_.to (c₂ .property _ _))
   _ = refl _
@@ -680,7 +671,6 @@ private
 -- definitional equality above (rephrased in an obvious way).
 
 Coherently-constant-Σ′ :
-  {A : Type a} {P : A → Type p} {Q : ∃ P → Type q} →
   Coherently-constant P →
   Coherently-constant Q →
   Coherently-constant (λ x → ∃ λ (y : P x) → Q (x , y))
@@ -741,7 +731,6 @@ instance
 -- Lens can be expressed as a Σ-type.
 
 Lens-as-Σ :
-  {A : Type a} {B : Type b} →
   Lens A B ≃ (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))
 Lens-as-Σ = Eq.↔→≃
   (λ l → Lens.get l , Lens.get⁻¹-coherently-constant l)
@@ -753,9 +742,8 @@ Lens-as-Σ = Eq.↔→≃
 
 Coinductive-lens≃Lens :
   Block "Coinductive-lens≃Lens" →
-  {A : Type a} {B : Type b} →
   Coinductive.Lens A B ≃ Lens A B
-Coinductive-lens≃Lens ⊠ {A = A} {B = B} =
+Coinductive-lens≃Lens {A = A} {B = B} ⊠ =
   Coinductive.Lens A B                                             ↔⟨⟩
   (∃ λ (get : A → B) → Coinductive.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ → Coinductive-coherently-constant≃Coherently-constant) ⟩
   (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))              ↝⟨ inverse Lens-as-Σ ⟩□
@@ -764,8 +752,7 @@ Coinductive-lens≃Lens ⊠ {A = A} {B = B} =
 -- The equivalence preserves getters and setters.
 
 Coinductive-lens≃Lens-preserves-getters-and-setters :
-  (bl : Block "Coinductive-lens≃Lens")
-  {A : Type a} {B : Type b} →
+  (bl : Block "Coinductive-lens≃Lens") →
   Preserves-getters-and-setters-⇔ A B
     (_≃_.logical-equivalence (Coinductive-lens≃Lens bl))
 Coinductive-lens≃Lens-preserves-getters-and-setters ⊠ =
@@ -812,7 +799,6 @@ private
 
 Higher-lens≃Lens :
   Block "Higher-lens≃Lens" →
-  {A : Type a} {B : Type b} →
   Higher.Lens A B ≃ Lens A B
 Higher-lens≃Lens b =
   proj₁ $ Higher-lens≃Lens′ b
@@ -821,7 +807,6 @@ Higher-lens≃Lens b =
 
 Higher-lens≃Lens-preserves-getters-and-setters :
   (bl : Block "Higher-lens≃Lens") →
-  {A : Type a} {B : Type b} →
   Preserves-getters-and-setters-⇔ A B
     (_≃_.logical-equivalence (Higher-lens≃Lens bl))
 Higher-lens≃Lens-preserves-getters-and-setters b =
@@ -830,7 +815,6 @@ Higher-lens≃Lens-preserves-getters-and-setters b =
 -- Lenses with stable view types are equal if their setters are equal.
 
 lenses-equal-if-setters-equal :
-  {A : Type a} {B : Type b}
   (l₁ l₂ : Lens A B) →
   (∥ B ∥ → B) →
   Lens.set l₁ ≡ Lens.set l₂ →
@@ -854,9 +838,7 @@ lenses-equal-if-setters-equal l₁ l₂ stable =
 
 -- An identity lens.
 
-id :
-  {A : Type a} →
-  Lens A A
+id : Lens A A
 id .Lens.get                       = P.id
 id .Lens.get⁻¹-coherently-constant =
   coherently-constant λ x →
@@ -890,13 +872,11 @@ id .Lens.get⁻¹-coherently-constant =
 
 infixr 9 _∘_
 
-_∘_ :
-  {A : Type a} {B : Type b} {C : Type c} →
-  Lens B C → Lens A B → Lens A C
+_∘_ : Lens B C → Lens A B → Lens A C
 (l₁ ∘ l₂) .Lens.get = get l₁ ⊚ get l₂
   where
   open Lens
-_∘_ {b = ℓb} l₁ l₂ .Lens.get⁻¹-coherently-constant =
+(l₁ ∘ l₂) .Lens.get⁻¹-coherently-constant =
                                                        $⟨ Coherently-constant-Σ
                                                             {P = get l₁ ⁻¹_}
                                                             {Q = λ (_ , b , _) → get l₂ ⁻¹ b}
@@ -915,8 +895,7 @@ _∘_ {b = ℓb} l₁ l₂ .Lens.get⁻¹-coherently-constant =
 -- "right" way.
 
 set-∘ :
-  ∀ {A : Type a} {B : Type b} {C : Type c}
-  (l₁ : Lens B C) (l₂ : Lens A B) {a c} →
+  (l₁ : Lens B C) (l₂ : Lens A B) →
   Lens.set (l₁ ∘ l₂) a c ≡
   Lens.set l₂ a (Lens.set l₁ (Lens.get l₂ a) c)
 set-∘ _ _ = refl _
@@ -925,7 +904,6 @@ set-∘ _ _ = refl _
 -- is stable.
 
 associativity :
-  {A : Type a} {B : Type b} {C : Type c} {D : Type d} →
   (∥ D ∥ → D) →
   (l₁ : Lens C D) (l₂ : Lens B C) (l₃ : Lens A B) →
   l₁ ∘ (l₂ ∘ l₃) ≡ (l₁ ∘ l₂) ∘ l₃
@@ -936,7 +914,6 @@ associativity stable l₁ l₂ l₃ =
 -- type of the resulting lens is stable.
 
 left-identity :
-  {A : Type a} {B : Type b} →
   (∥ B ∥ → B) →
   (l : Lens A B) →
   id ∘ l ≡ l
@@ -947,7 +924,6 @@ left-identity stable l =
 -- type of the resulting lens is stable.
 
 right-identity :
-  {A : Type a} {B : Type b} →
   (∥ B ∥ → B) →
   (l : Lens A B) →
   l ∘ id ≡ l
@@ -959,7 +935,6 @@ right-identity stable l =
 infix 9 ⟨_⟩_⊚_
 
 ⟨_⟩_⊚_ :
-  {A : Type a} {B : Type b} {C : Type c} →
   Block "Higher-lens≃Lens" →
   Higher.Lens B C → Higher.Lens A B → Higher.Lens A C
 ⟨_⟩_⊚_ b l₁ l₂ =
@@ -971,7 +946,6 @@ infix 9 ⟨_⟩_⊚_
 -- "right" way.
 
 set-⊚ :
-  {A : Type a} {B : Type b} {C : Type c}
   (b : Block "Higher-lens≃Lens") →
   ∀ (l₁ : Higher.Lens B C) (l₂ : Higher.Lens A B) a c →
   Higher.Lens.set (⟨ b ⟩ l₁ ⊚ l₂) a c ≡
@@ -1039,9 +1013,7 @@ Not-coinductive-lens A B =
 
 -- Not-coinductive-lens is pointwise equivalent to Lens.
 
-Not-coinductive-lens≃Lens :
-  {A : Type a} {B : Type b} →
-  Not-coinductive-lens A B ≃ Lens A B
+Not-coinductive-lens≃Lens : Not-coinductive-lens A B ≃ Lens A B
 Not-coinductive-lens≃Lens {A = A} {B = B} =
   Not-coinductive-lens A B                             ↝⟨ (∃-cong λ _ → inverse $ Coherently≃Not-coinductive-coherently) ⟩
   (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))  ↝⟨ inverse Lens-as-Σ ⟩□
@@ -1060,17 +1032,15 @@ Not-coinductive-lens≃Lens {A = A} {B = B} =
 -- h-level n.
 
 H-level-Coherently-constant :
-  {A : Type a} {P : A → Type p} →
   ((a : A) → H-level n (P a)) →
   H-level n (Coherently-constant P)
-H-level-Coherently-constant {a = a} {p = p} {n = n} h =
+H-level-Coherently-constant h =
   H-level-Coherently-→Type h lemma P.id
   where
   lemma :
-    {A : Type a} {P : A → Type p} →
     ((a : A) → H-level n (P a)) →
     H-level n (Constant-≃ P)
-  lemma h =
+  lemma {n = n} h =
     Π-closure ext n λ _ →
     Π-closure ext n λ _ →
     Eq.h-level-closure ext n (h _) (h _)
@@ -1079,7 +1049,6 @@ H-level-Coherently-constant {a = a} {p = p} {n = n} h =
 -- Coinductive.Coherently-constant P has h-level n.
 
 H-level-Coinductive-Coherently-constant :
-  {A : Type a} {P : A → Type p} →
   ((a : A) → H-level n (P a)) →
   H-level n (Coinductive.Coherently-constant P)
 H-level-Coinductive-Coherently-constant {n = n} {P = P} =
@@ -1096,7 +1065,6 @@ H-level-Coinductive-Coherently-constant {n = n} {P = P} =
 -- Andrea Vezzosi.
 
 lens-preserves-h-level :
-  {A : Type a} {B : Type b} →
   ∀ n → (B → H-level n A) → (A → H-level n B) →
   H-level n (Lens A B)
 lens-preserves-h-level n hA hB =
@@ -1112,7 +1080,6 @@ lens-preserves-h-level n hA hB =
 -- codomain also has h-level n.
 
 h-level-respects-lens-from-inhabited :
-  {A : Type a} {B : Type b} →
   ∀ n → Lens A B → A → H-level n A → H-level n B
 h-level-respects-lens-from-inhabited n =
   Higher.h-level-respects-lens-from-inhabited n ⊚
@@ -1121,7 +1088,6 @@ h-level-respects-lens-from-inhabited n =
 -- If A has positive h-level n, then Lens A B also has h-level n.
 
 lens-preserves-h-level-of-domain :
-  {A : Type a} {B : Type b} →
   ∀ n → H-level (1 + n) A → H-level (1 + n) (Lens A B)
 lens-preserves-h-level-of-domain n hA =
   H-level.[inhabited⇒+]⇒+ n λ l →

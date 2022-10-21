@@ -43,9 +43,7 @@ private
 
 -- If two types are isomorphic, then there is a lens between them.
 
-↔→lens :
-  {A : Type a} {B : Type b} →
-  A ↔ B → Lens A B
+↔→lens : A ↔ B → Lens A B
 ↔→lens A↔B = record
   { get     = to
   ; set     = const from
@@ -58,9 +56,7 @@ private
 
 -- If two types are equivalent, then there is a lens between them.
 
-≃→lens :
-  {A : Type a} {B : Type b} →
-  A ≃ B → Lens A B
+≃→lens : A ≃ B → Lens A B
 ≃→lens = ↔→lens ⊚ _≃_.bijection
 
 -- Identity lens.

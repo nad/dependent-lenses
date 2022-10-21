@@ -47,6 +47,7 @@ private
   variable
     a b p : Level
     A B   : Type a
+    P     : A → Type p
     n     : ℕ
 
 ------------------------------------------------------------------------
@@ -85,11 +86,10 @@ private
 
 ∥∥ᴱ→≃ :
   Block "∥∥ᴱ→≃" →
-  {A : Type a} {B : Type b} →
   (∥ A ∥ᴱ → B)
     ≃
   (∃ λ (f : A → B) → Erased (C.Coherently-constant f))
-∥∥ᴱ→≃ bl {A = A} {B = B} =
+∥∥ᴱ→≃ {A = A} {B = B} bl =
   (∥ A ∥ᴱ → B)                                                 ↝⟨ →-cong ext T.∥∥ᴱ≃∥∥ᴱ F.id ⟩
 
   (N.∥ A ∥ᴱ → B)                                               ↝⟨ CS.universal-property ⟩
@@ -113,13 +113,12 @@ private
 
 @0 cong-from-∥∥ᴱ→≃-truncation-is-proposition :
   (bl : Block "∥∥ᴱ→≃")
-  {A : Type a} {B : Type b}
   {f : A → B} {c : C.Coherently-constant f}
   {x y : A} {p : ∣ x ∣ ≡ ∣ y ∣} →
   cong (_≃_.from (∥∥ᴱ→≃ bl) (f , [ c ])) p ≡
   c .property x y
 cong-from-∥∥ᴱ→≃-truncation-is-proposition
-  bl {A = A} {f = f} {c = c} {x = x} {y = y} {p = p} =
+  {A = A} bl {f = f} {c = c} {x = x} {y = y} {p = p} =
   cong (_≃_.from (∥∥ᴱ→≃ bl) (f , [ c ])) p                              ≡⟨⟩
 
   cong (_≃_.from CS.universal-property (f , [ g bl ]) ∘
@@ -199,10 +198,9 @@ Coherently-constant P =
 -- V.Coherently-constant.
 
 Coherently-constant≃ᴱCoherently-constant :
-  {A : Type a} {P : A → Type p} →
+  {P : A → Type p} →
   Coherently-constant P ≃ᴱ V.Coherently-constant P
-Coherently-constant≃ᴱCoherently-constant
-  {a = a} {p = p} {A = A} {P = P} =
+Coherently-constant≃ᴱCoherently-constant {A = A} {p = p} {P = P} =
   block λ bl →
 
   Coherently-constant P                                                 ↔⟨⟩
@@ -311,7 +309,7 @@ Lens A B = ∃ λ (get : A → B) → Coherently-constant (get ⁻¹ᴱ_)
 
 -- Some derived definitions.
 
-module Lens {A : Type a} {B : Type b} (l : Lens A B) where
+module Lens (l : Lens A B) where
 
   -- A getter.
 
@@ -346,9 +344,8 @@ instance
 
 Lens≃ᴱLens :
   Block "Lens≃ᴱLens" →
-  {A : Type a} {B : Type b} →
   Lens A B ≃ᴱ V.Lens A B
-Lens≃ᴱLens ⊠ {A = A} {B = B} =
+Lens≃ᴱLens {A = A} {B = B} ⊠ =
   (∃ λ (get : A → B) → Coherently-constant (get ⁻¹ᴱ_))    ↝⟨ (∃-cong λ _ → Coherently-constant≃ᴱCoherently-constant) ⟩□
   (∃ λ (get : A → B) → V.Coherently-constant (get ⁻¹ᴱ_))  □
 
@@ -356,8 +353,7 @@ Lens≃ᴱLens ⊠ {A = A} {B = B} =
 -- and setters.
 
 from-Lens≃ᴱLens-preserves-getters-and-setters :
-  (bl : Block "Lens≃ᴱLens")
-  {A : Type a} {B : Type b} →
+  (bl : Block "Lens≃ᴱLens") →
   Preserves-getters-and-setters-→ A B (_≃ᴱ_.from (Lens≃ᴱLens bl))
 from-Lens≃ᴱLens-preserves-getters-and-setters ⊠ l =
     refl _
@@ -372,8 +368,7 @@ from-Lens≃ᴱLens-preserves-getters-and-setters ⊠ l =
 -- contexts.)
 
 @0 Lens≃ᴱLens-preserves-getters-and-setters :
-  (bl : Block "Lens≃ᴱLens")
-  {A : Type a} {B : Type b} →
+  (bl : Block "Lens≃ᴱLens") →
   Preserves-getters-and-setters-⇔ A B
     (_≃ᴱ_.logical-equivalence (Lens≃ᴱLens bl))
 Lens≃ᴱLens-preserves-getters-and-setters bl =
@@ -387,9 +382,8 @@ Lens≃ᴱLens-preserves-getters-and-setters bl =
 
 Lens≃ᴱHigher-lens :
   Block "Lens≃ᴱHigher-Lens" →
-  {A : Type a} {B : Type b} →
   Lens A B ≃ᴱ Higher.Lens A B
-Lens≃ᴱHigher-lens bl {A = A} {B = B} =
+Lens≃ᴱHigher-lens {A = A} {B = B} bl =
   Lens A B         ↝⟨ Lens≃ᴱLens bl ⟩
   V.Lens A B       ↝⟨ V.Lens≃ᴱHigher-lens bl ⟩□
   Higher.Lens A B  □
@@ -397,8 +391,7 @@ Lens≃ᴱHigher-lens bl {A = A} {B = B} =
 -- In erased contexts the equivalence preserves getters and setters.
 
 @0 Lens≃ᴱHigher-lens-preserves-getters-and-setters :
-  (bl : Block "Lens≃ᴱHigher-lens")
-  {A : Type a} {B : Type b} →
+  (bl : Block "Lens≃ᴱHigher-lens") →
   Preserves-getters-and-setters-⇔ A B
     (_≃ᴱ_.logical-equivalence (Lens≃ᴱHigher-lens bl))
 Lens≃ᴱHigher-lens-preserves-getters-and-setters bl =
@@ -415,7 +408,6 @@ Lens≃ᴱHigher-lens-preserves-getters-and-setters bl =
 -- h-level n.
 
 H-level-Coherently-constant :
-  {A : Type a} {P : A → Type p} →
   ((a : A) → H-level n (P a)) →
   H-level n (Coherently-constant P)
 H-level-Coherently-constant {n = n} h =
@@ -436,7 +428,6 @@ H-level-Coherently-constant {n = n} h =
 -- is inhabited, then Lens A B has h-level n.
 
 lens-preserves-h-level :
-  {A : Type a} {B : Type b} →
   ∀ n → (B → H-level n A) → (A → H-level n B) →
   H-level n (Lens A B)
 lens-preserves-h-level n hA hB =
@@ -452,7 +443,6 @@ lens-preserves-h-level n hA hB =
 -- codomain also has h-level n (in erased contexts).
 
 @0 h-level-respects-lens-from-inhabited :
-  {A : Type a} {B : Type b} →
   ∀ n → Lens A B → A → H-level n A → H-level n B
 h-level-respects-lens-from-inhabited n =
   Higher.h-level-respects-lens-from-inhabited n ∘
@@ -462,7 +452,6 @@ h-level-respects-lens-from-inhabited n =
 -- erased contexts).
 
 @0 lens-preserves-h-level-of-domain :
-  {A : Type a} {B : Type b} →
   ∀ n → H-level (1 + n) A → H-level (1 + n) (Lens A B)
 lens-preserves-h-level-of-domain n hA =
   H-level.[inhabited⇒+]⇒+ n λ l →

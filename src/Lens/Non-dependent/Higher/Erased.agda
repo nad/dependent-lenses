@@ -49,11 +49,11 @@ import Lens.Non-dependent.Traditional.Erased eq as Traditionalᴱ
 
 private
   variable
-    a b c d p r     : Level
-    A A₁ A₂ B B₁ B₂ : Type a
-    P               : A → Type p
-    x x′ y y′       : A
-    n               : ℕ
+    a b c d p r       : Level
+    A A₁ A₂ B B₁ B₂ C : Type a
+    P                 : A → Type p
+    x x′ y y′         : A
+    n                 : ℕ
 
 ------------------------------------------------------------------------
 -- Higher lenses
@@ -402,7 +402,7 @@ equality-characterisation₀ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
 -- Another equality characterisation lemma.
 
 @0 equality-characterisation₁ :
-  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
+  {l₁ l₂ : Lens A B} →
   let open Lens in
   l₁ ≡ l₂
     ↔
@@ -423,7 +423,7 @@ equality-characterisation₁ {l₁ = l₁} {l₂ = l₂} =
 -- And another one.
 
 @0 equality-characterisation₂ :
-  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
+  {l₁ l₂ : Lens A B} →
   let open Lens in
   l₁ ≡ l₂
     ↔
@@ -446,7 +446,7 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} =
 -- And a final one.
 
 @0 equality-characterisation₃ :
-  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
+  {l₁ l₂ : Lens A B} →
   let open Lens in
   l₁ ≡ l₂
     ↔
@@ -499,7 +499,6 @@ getters-equal-if-setters-equal l₁ l₂ =
 
 @0 lenses-equal-if-setters-equal′ :
   let open Lens in
-  {A : Type a} {B : Type b}
   (l₁ l₂ : Lens A B)
   (f : R l₁ → R l₂) →
   (B → ∀ r →
@@ -520,7 +519,6 @@ lenses-equal-if-setters-equal′
 -- another lens if their setters are equal (in erased contexts).
 
 @0 lenses-equal-if-setters-equal :
-  {A : Type a} {B : Type b} →
   (l₁ l₂ : Lens A B) →
   (Lens.R l₁ → ∥ B ∥ → B) →
   Lens.set l₁ ≡ Lens.set l₂ →
@@ -536,7 +534,6 @@ lenses-equal-if-setters-equal l₁ l₂ inh′ setters-equal =
 -- contexts).
 
 @0 lenses-equal-if-setters-equal-and-remainder-propositional :
-  {A : Type a} {B : Type b} →
   (l₁ l₂ : Lens A B) →
   Is-proposition (Lens.R l₂) →
   Lens.set l₁ ≡ Lens.set l₂ →
@@ -556,7 +553,6 @@ lenses-equal-if-setters-equal-and-remainder-propositional
 -- Andrea Vezzosi.
 
 @0 lenses-equal-if-setters-equal-and-remainder-set :
-  {A : Type a} {B : Type b} →
   (l₁ l₂ : Lens A B) →
   Is-set (Lens.R l₂) →
   Lens.set l₁ ≡ Lens.set l₂ →
@@ -709,7 +705,6 @@ lens-to-proposition≃ᴱget {b = b} {A = A} {B = B} prop = EEq.↔→≃ᴱ
     }
 
 _ :
-  {A : Type a} {B : Type b}
   (@0 prop : A → Is-proposition B)
   (l : Lens A B) →
   _≃ᴱ_.to (lens-to-proposition≃ᴱget prop) l ≡ Lens.get l
@@ -719,10 +714,9 @@ _ = λ _ _ → refl _
 -- inhabited), then Lens A B is equivalent (with erased proofs) to ⊤.
 
 lens-to-contractible≃ᴱ⊤ :
-  {A : Type a} {B : Type b} →
   (A → Contractibleᴱ B) →
   Lens A B ≃ᴱ ⊤
-lens-to-contractible≃ᴱ⊤ {A = A} {B} cB =
+lens-to-contractible≃ᴱ⊤ {A = A} {B = B} cB =
   Lens A B  ↝⟨ lens-to-proposition≃ᴱget (λ a → mono₁ 0 (ECP.Contractibleᴱ→Contractible (cB a))) ⟩
   (A → B)   ↝⟨ ∀-cong [ ext ] (_⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ ⊚ cB) ⟩
   (A → ⊤)   ↔⟨ →-right-zero ⟩□
@@ -730,9 +724,7 @@ lens-to-contractible≃ᴱ⊤ {A = A} {B} cB =
 
 -- Lens A ⊥ is equivalent (with erased proofs) to ¬ A.
 
-lens-to-⊥≃ᴱ¬ :
-  {A : Type a} →
-  Lens A (⊥ {ℓ = b}) ≃ᴱ (¬ A)
+lens-to-⊥≃ᴱ¬ : Lens A (⊥ {ℓ = b}) ≃ᴱ (¬ A)
 lens-to-⊥≃ᴱ¬ {A = A} =
   Lens A ⊥  ↝⟨ lens-to-proposition≃ᴱget (λ _ → ⊥-propositional) ⟩
   (A → ⊥)   ↝⟨ inverse $ ¬↔→⊥ [ ext ] ⟩□
@@ -742,10 +734,9 @@ lens-to-⊥≃ᴱ¬ {A = A} =
 -- equivalent (with erased proofs) to Contractibleᴱ B.
 
 lens-from-contractible≃ᴱcodomain-contractible :
-  {A : Type a} {B : Type b} →
   Contractibleᴱ A →
   Lens A B ≃ᴱ Contractibleᴱ B
-lens-from-contractible≃ᴱcodomain-contractible {A = A} {B} cA =
+lens-from-contractible≃ᴱcodomain-contractible {A = A} {B = B} cA =
   Lens A B                                                            ↔⟨ Lens-as-Σ ⟩
   (∃ λ R → A ≃ᴱ (R × B) × Erased (R → ∥ B ∥))                         ↝⟨ (∃-cong λ _ → ×-cong₁ λ _ →
                                                                           EEq.≃ᴱ-cong ext (_⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ cA) F.id) ⟩
@@ -765,9 +756,7 @@ lens-from-contractible≃ᴱcodomain-contractible {A = A} {B} cA =
 
 -- Lens ⊥ B is equivalent (with erased proofs) to the unit type.
 
-lens-from-⊥↔⊤ :
-  {B : Type b} →
-  Lens (⊥ {ℓ = a}) B ≃ᴱ ⊤
+lens-from-⊥↔⊤ : Lens (⊥ {ℓ = a}) B ≃ᴱ ⊤
 lens-from-⊥↔⊤ {B = B} =
   _⇔_.to EEq.Contractibleᴱ⇔≃ᴱ⊤ $
       ≃ᴱ×→Lens
@@ -798,7 +787,6 @@ lens-from-⊥↔⊤ {B = B} =
 -- See also ≃≃≊ below.
 
 ≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get :
-  {A : Type a} {B : Type b} →
   (A ≃ᴱ B) ≃ᴱ (∃ λ (l : Lens A B) → Is-equivalenceᴱ (Lens.get l))
 ≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get = EEq.↔→≃ᴱ
   (λ A≃B → ≃ᴱ→Lens A≃B , _≃ᴱ_.is-equivalence A≃B)
@@ -812,7 +800,6 @@ lens-from-⊥↔⊤ {B = B} =
 -- returns the lens's getter (and some proof).
 
 to-from-≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get≡get :
-  {A : Type a} {B : Type b} →
   (p@(l , _) : ∃ λ (l : Lens A B) → Is-equivalenceᴱ (Lens.get l)) →
   _≃ᴱ_.to (_≃ᴱ_.from ≃ᴱ-≃ᴱ-Σ-Lens-Is-equivalenceᴱ-get p) ≡
   Lens.get l
@@ -1017,7 +1004,6 @@ Lens↠Traditional-lens-preserves-getters-and-setters ⊠ _ =
 -- proofs between Traditionalᴱ.Lens A B and Lens A B.
 
 Lens≃ᴱTraditional-lens :
-  {A : Type a} {B : Type b} →
   Block "conversion" →
   @0 Is-set A →
   Lens A B ≃ᴱ Traditionalᴱ.Lens A B
@@ -1193,9 +1179,8 @@ get≡id→remainder-propositional =
 -- Contractibleᴱ is closed under Lens A.
 
 Contractibleᴱ-closed-codomain :
-  {A : Type a} {B : Type b} →
   Contractibleᴱ B → Contractibleᴱ (Lens A B)
-Contractibleᴱ-closed-codomain {A = A} {B} cB =
+Contractibleᴱ-closed-codomain {B = B} {A = A} cB =
                             $⟨ lens-to-contractible≃ᴱ⊤ (λ _ → cB) ⟩
   Lens A B ≃ᴱ ⊤             ↝⟨ _⇔_.from EEq.Contractibleᴱ⇔≃ᴱ⊤ ⟩□
   Contractibleᴱ (Lens A B)  □
@@ -1204,9 +1189,8 @@ Contractibleᴱ-closed-codomain {A = A} {B} cB =
 -- erased contexts).
 
 @0 Is-proposition-closed-codomain :
-  {A : Type a} {B : Type b} →
   Is-proposition B → Is-proposition (Lens A B)
-Is-proposition-closed-codomain {A = A} {B = B} =
+Is-proposition-closed-codomain {B = B} {A = A} =
   Is-proposition B             ↝⟨ H.Is-proposition-closed-codomain univ ⟩
   Is-proposition (H.Lens A B)  ↝⟨ H-level-cong _ 1 (inverse Lens≃Higher-lens) ⟩□
   Is-proposition (Lens A B)    □
@@ -1215,7 +1199,6 @@ Is-proposition-closed-codomain {A = A} {B = B} =
 -- erased contexts).
 
 @0 Is-proposition-closed-domain :
-  {A : Type a} {B : Type b} →
   Is-proposition A → Is-proposition (Lens A B)
 Is-proposition-closed-domain {A = A} {B = B} =
   Is-proposition A             ↝⟨ H.Is-proposition-closed-domain univ ⟩
@@ -1225,7 +1208,6 @@ Is-proposition-closed-domain {A = A} {B = B} =
 -- If A is a set, then Lens A B is also a set (in erased contexts).
 
 @0 Is-set-closed-domain :
-  {A : Type a} {B : Type b} →
   Is-set A → Is-set (Lens A B)
 Is-set-closed-domain {A = A} {B = B} =
   Is-set A             ↝⟨ H.Is-set-closed-domain univ ⟩
@@ -1236,7 +1218,6 @@ Is-set-closed-domain {A = A} {B = B} =
 -- contexts).
 
 @0 domain-0+⇒lens-1+ :
-  {A : Type a} {B : Type b} →
   ∀ n → H-level n A → H-level (1 + n) (Lens A B)
 domain-0+⇒lens-1+ {A = A} {B = B} n =
   H-level n A                   ↝⟨ H.domain-0+⇒lens-1+ univ n ⟩
@@ -1247,10 +1228,9 @@ domain-0+⇒lens-1+ {A = A} {B = B} n =
 -- h-level n, then Lens A B also has h-level n (in erased contexts).
 
 @0 lens-preserves-h-level-of-domain :
-  {A : Type a} {B : Type b} →
   (∥ B ∥ → B) →
   ∀ n → H-level (1 + n) A → H-level (1 + n) (Lens A B)
-lens-preserves-h-level-of-domain {A = A} {B = B} ∥B∥→B n =
+lens-preserves-h-level-of-domain {B = B} {A = A} ∥B∥→B n =
   H-level (1 + n) A             ↝⟨ EP.higher-lens-preserves-h-level-of-domain univ ∥B∥→B n ⟩
   H-level (1 + n) (H.Lens A B)  ↝⟨ H-level-cong _ (1 + n) (inverse Lens≃Higher-lens) ⟩□
   H-level (1 + n) (Lens A B)    □
@@ -1520,7 +1500,6 @@ remainder≃∃get⁻¹ = H.remainder≃∃get⁻¹ ⊚ high
 -- Note that some results above are more general than this one.
 
 @0 lenses-with-inhabited-codomains-equal-if-setters-equal :
-  {A : Type a} {B : Type b} →
   (l₁ l₂ : Lens A B) →
   B →
   Lens.set l₁ ≡ Lens.set l₂ →
@@ -1589,7 +1568,6 @@ module Lens-combinators where
   -- contexts), if the get function is required to be the identity.
 
   @0 id-unique :
-    {A : Type a} →
     (l₁ l₂ : Lens A A) →
     Lens.get l₁ ≡ P.id →
     Lens.get l₂ ≡ P.id →
@@ -1606,14 +1584,13 @@ module Lens-combinators where
 
   @0 ∘-unique :
     let open Lens in
-    {A : Type a} {C : Type c} →
     (∥ C ∥ → C) →
     ((comp₁ , _) (comp₂ , _) :
        ∃ λ (comp : Lens B C → Lens A B → Lens A C) →
          ∀ l₁ l₂ a c →
            set (comp l₁ l₂) a c ≡ set l₂ a (set l₁ (get l₂ a) c)) →
     comp₁ ≡ comp₂
-  ∘-unique {A = A} {C = C} ∥C∥→C
+  ∘-unique {C = C} {A = A} ∥C∥→C
            (comp₁ , set₁) (comp₂ , set₂) =
     ⟨ext⟩ λ l₁ → ⟨ext⟩ λ l₂ →
       lenses-equal-if-setters-equal
@@ -1640,7 +1617,6 @@ module Lens-combinators where
   -- contexts).
 
   @0 Higher-lens-id≡id :
-    {A : Type a}
     (b : Block "id") →
     Higher-lens→Lens (HC.id b) ≡ id {A = A} b
   Higher-lens-id≡id {A = A} ⊠ =
@@ -2218,7 +2194,6 @@ to-from-≃ᴱ≃ᴱ≊ᴱ≡get
 -- variant of their getter functions.
 
 to-from-≃ᴱ≃ᴱ≊ᴱ′≡get :
-  {A : Type a} {B : Type b}
   (b-id : Block "id")
   (A≊ᴱB@(l , _) : [ b-id ] ↑ b A ≊ᴱ ↑ a B) →
   _≃ᴱ_.to (_≃ᴱ_.from (≃ᴱ≃ᴱ≊ᴱ′ b-id) A≊ᴱB) ≡
@@ -2231,7 +2206,6 @@ to-from-≃ᴱ≃ᴱ≊ᴱ′≡get
 -- erased proofs.
 
 Is-bi-invertibleᴱ→Is-equivalenceᴱ-get :
-  {A : Type a}
   (b : Block "id") →
   (l : Lens A B) →
   Is-bi-invertibleᴱ b l → Is-equivalenceᴱ (Lens.get l)
@@ -2295,7 +2269,6 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get b l = EEq.⇔→≃ᴱ
 -- identity.
 
 @0 ≃ᴱ≃ᴱ≅ᴱ-id≡id :
-  {A : Type a}
   (b : Block "≃ᴱ≃ᴱ≅ᴱ")
   (A-set : Is-set A) →
   proj₁ (_≃ᴱ_.to (≃ᴱ≃ᴱ≅ᴱ b A-set) F.id) ≡ id b

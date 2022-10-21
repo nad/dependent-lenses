@@ -45,11 +45,11 @@ import Lens.Non-dependent.Higher.Erased eq as E
 
 private
   variable
-    a b c d : Level
-    A B     : Type a
-    l g p s : A
-    P       : A → Type p
-    f       : (x : A) → P x
+    a b c d       : Level
+    A B           : Type a
+    b₁ b₂ l g p s : A
+    P             : A → Type p
+    f             : (x : A) → P x
 
 ------------------------------------------------------------------------
 -- Weakly constant functions
@@ -66,9 +66,7 @@ Constantᴱ P = ∀ x y → ∃ λ (f : P x → P y) → Erased (Is-equivalence 
 
 -- In erased contexts Constantᴱ is pointwise equivalent to Constant.
 
-@0 Constantᴱ≃Constant :
-  {P : A → Type p} →
-  Constantᴱ P ≃ Constant P
+@0 Constantᴱ≃Constant : Constantᴱ P ≃ Constant P
 Constantᴱ≃Constant {P = P} =
   Constantᴱ P                                                ↔⟨⟩
   (∀ x y → ∃ λ (f : P x → P y) → Erased (Is-equivalence f))  ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ → ∃-cong λ _ → erased Erased↔) ⟩
@@ -106,9 +104,8 @@ Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ {f = f} =
 
 @0 Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ :
   Block "Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹" →
-  {A : Type a} {B : Type b} {f : A → B} →
   Constantᴱ (f ⁻¹ᴱ_) ≃ Constant (f ⁻¹_)
-Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ ⊠ {f = f} =
+Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ {f = f} ⊠ =
   Constantᴱ (f ⁻¹ᴱ_)    ↝⟨ Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ ⟩
   S.Constant-≃ (f ⁻¹_)  ↝⟨ inverse S.Constant≃Constant-≃ ⟩□
   Constant (f ⁻¹_)      □
@@ -116,12 +113,11 @@ Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ ⊠ {f = f} =
 -- A "computation" rule for Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹.
 
 @0 proj₁-from-Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ :
-  (bl : Block "Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹") →
-  ∀ {A : Type a} {B : Type b} {f : A → B}
-    {c : Constant (f ⁻¹_)} {b₁ b₂} →
+  (bl : Block "Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹")
+  {c : Constant (f ⁻¹_)} →
   proj₁ (_≃_.from (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl) c b₁ b₂) ≡
   ECP.⁻¹→⁻¹ᴱ ⊚ subst P.id (c b₁ b₂) ⊚ ECP.⁻¹ᴱ→⁻¹
-proj₁-from-Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ ⊠ {c = c} {b₁ = b₁} {b₂ = b₂} =
+proj₁-from-Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ {b₁ = b₁} {b₂ = b₂} ⊠ {c = c} =
   ⟨ext⟩ λ (a , [ eq ]) →
 
   ECP.⁻¹→⁻¹ᴱ (≡⇒→ (c b₁ b₂) (a , eq))         ≡⟨ cong ECP.⁻¹→⁻¹ᴱ $ sym $
@@ -136,7 +132,7 @@ proj₁-from-Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ ⊠ {c = c} {b₁ = b₁} {
 -- S.Constant-≃-get-⁻¹-≃.
 
 Constantᴱ-⁻¹ᴱ-≃ᴱ :
-  {A : Type a} {B : Type b} {get : A → B} →
+  {get : A → B} →
   Block "Constantᴱ-⁻¹ᴱ-≃ᴱ" →
   Constantᴱ (get ⁻¹ᴱ_) ≃ᴱ
   (∃ λ (set : A → B → A) →
@@ -368,11 +364,11 @@ Coherently-constant-fibres {A = A} {B = B} get =
 -- to CE.Coherently-constant (get ⁻¹ᴱ_).
 
 Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ :
-  {A : Type a} {B : Type b} {get : A → B} →
+  {get : A → B} →
   Coherently-constant-fibres get ≃ᴱ
   CE.Coherently-constant (get ⁻¹ᴱ_)
 Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
-  {a = a} {b = b} {A = A} {B = B} {get = get} =
+  {A = A} {B = B} {get = get} =
   block λ bl →
 
   Coherently-constant-fibres get                                          ↔⟨⟩
@@ -632,11 +628,11 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
 
 @0 Coherently-constant-fibres≃Coherently-constant-⁻¹ :
   (bl : Block "Constant-≃-get-⁻¹-≃")
-  {A : Type a} {B : Type b} {get : A → B} →
+  {get : A → B} →
   Coherently-constant-fibres get ≃
   S.Coherently-constant (get ⁻¹_)
 Coherently-constant-fibres≃Coherently-constant-⁻¹
-  bl {A = A} {B = B} {get = get} =
+  {A = A} {B = B} bl {get = get} =
   Coherently-constant-fibres get                               ↔⟨⟩
 
   (∃ λ (set : A → B → A) →
@@ -715,7 +711,6 @@ instance
 -- Lens can be expressed as a Σ-type.
 
 Lens-as-Σ :
-  {A : Type a} {B : Type b} →
   Lens A B ≃
   ∃ λ (get : A → B) → Coherently-constant-fibres get
 Lens-as-Σ =
@@ -727,9 +722,8 @@ Lens-as-Σ =
 
 Lens≃ᴱLens :
   Block "Lens≃ᴱLens" →
-  {A : Type a} {B : Type b} →
   Lens A B ≃ᴱ CE.Lens A B
-Lens≃ᴱLens ⊠ {A = A} {B = B} =
+Lens≃ᴱLens {A = A} {B = B} ⊠ =
   Lens A B                                                 ↔⟨ Lens-as-Σ ⟩
   (∃ λ (get : A → B) → Coherently-constant-fibres get)     ↝⟨ (∃-cong λ _ → Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ) ⟩□
   (∃ λ (get : A → B) → CE.Coherently-constant (get ⁻¹ᴱ_))  □
@@ -737,8 +731,7 @@ Lens≃ᴱLens ⊠ {A = A} {B = B} =
 -- The equivalence preserves getters and setters.
 
 Lens≃ᴱLens-preserves-getters-and-setters :
-  (bl : Block "Lens≃ᴱLens")
-  {A : Type a} {B : Type b} →
+  (bl : Block "Lens≃ᴱLens") →
   Preserves-getters-and-setters-⇔ A B
     (_≃ᴱ_.logical-equivalence (Lens≃ᴱLens bl))
 Lens≃ᴱLens-preserves-getters-and-setters ⊠ =
@@ -757,9 +750,8 @@ Lens≃ᴱLens-preserves-getters-and-setters ⊠ =
 
 Lens≃ᴱLensᴱ :
   Block "Lens≃ᴱLensᴱ" →
-  {A : Type a} {B : Type b} →
   Lens A B ≃ᴱ E.Lens A B
-Lens≃ᴱLensᴱ bl {A = A} {B = B} =
+Lens≃ᴱLensᴱ {A = A} {B = B} bl =
   Lens A B     ↝⟨ Lens≃ᴱLens bl ⟩
   CE.Lens A B  ↝⟨ CE.Lens≃ᴱLens bl ⟩
   V.Lens A B   ↝⟨ V.Lens≃ᴱHigher-lens bl ⟩□
@@ -768,8 +760,7 @@ Lens≃ᴱLensᴱ bl {A = A} {B = B} =
 -- The equivalence preserves getters and setters (in erased contexts).
 
 @0 Lens≃ᴱLensᴱ-preserves-getters-and-setters :
-  (bl : Block "Lens→Lens")
-  {A : Type a} {B : Type b} →
+  (bl : Block "Lens→Lens") →
   Preserves-getters-and-setters-⇔ A B
     (_≃ᴱ_.logical-equivalence (Lens≃ᴱLensᴱ bl))
 Lens≃ᴱLensᴱ-preserves-getters-and-setters bl =
@@ -798,8 +789,7 @@ Lens≃Lens {A = A} {B = B} bl =
 -- Lens≃Lens preserves getters and setters.
 
 @0 Lens≃Lens-preserves-getters-and-setters :
-  (bl : Block "Lens≃Lens")
-  {A : Type a} {B : Type b} →
+  (bl : Block "Lens≃Lens") →
   Preserves-getters-and-setters-⇔ A B
     (_≃_.logical-equivalence (Lens≃Lens bl))
 Lens≃Lens-preserves-getters-and-setters ⊠ =
@@ -814,7 +804,6 @@ Lens≃Lens-preserves-getters-and-setters ⊠ =
 -- (in erased contexts).
 
 @0 lenses-equal-if-setters-equal :
-  {A : Type a} {B : Type b} →
   (l₁ l₂ : Lens A B) →
   (∥ B ∥ → B) →
   Lens.set l₁ ≡ Lens.set l₂ →
@@ -839,7 +828,6 @@ lenses-equal-if-setters-equal l₁ l₂ stable =
 -- implementation is extensionally equal to the old one.
 
 with-other-getter :
-  {A : Type a} {B : Type b}
   (l : Lens A B)
   (get : A → B) →
   @0 get ≡ Lens.get l →
@@ -890,7 +878,6 @@ _ = refl _
 -- is not erased).
 
 with-other-getter≡ :
-  {A : Type a} {B : Type b}
   (l : Lens A B)
   (get : A → B)
   (p : get ≡ Lens.get l) →

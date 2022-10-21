@@ -200,7 +200,7 @@ instance
 -- An equality characterisation lemma.
 
 @0 equality-characterisation₁ :
-  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
+  {l₁ l₂ : Lens A B} →
   Block "equality-characterisation" →
   let open Lens in
 
@@ -212,7 +212,7 @@ instance
      subst (_$ ∣ b ∣) h
        (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym g) p)) ≡
      _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)
-equality-characterisation₁ {a = a} {l₁ = l₁} {l₂ = l₂} ⊠ =
+equality-characterisation₁ {l₁ = l₁} {l₂ = l₂} ⊠ =
   l₁ ≡ l₂                                                           ↝⟨ inverse $ Eq.≃-≡ Lens≃Variant-lens ⟩
 
   l₁′ ≡ l₂′                                                         ↝⟨ V.equality-characterisation₁ ⊠ ⟩
@@ -303,7 +303,6 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
 -- Yet another equality characterisation lemma.
 
 @0 equality-characterisation₃ :
-  {A : Type a} {B : Type b}
   {l₁ l₂ : Lens A B} →
   Block "equality-characterisation" →
   let open Lens in
@@ -446,7 +445,6 @@ Lens⇔Higher-lens-preserves-getters-and-setters bl@⊠ =
 -- Lens A B is equivalent to Higher.Lens A B (with erased proofs).
 
 Lens≃ᴱHigher-lens :
-  {A : Type a} {B : Type b} →
   Block "conversion" →
   Lens A B ≃ᴱ Higher.Lens A B
 Lens≃ᴱHigher-lens {A = A} {B = B} bl =
@@ -541,7 +539,6 @@ Lens≃ᴱHigher-lens {A = A} {B = B} bl =
 -- The equivalence preserves getters and setters.
 
 Lens≃ᴱHigher-lens-preserves-getters-and-setters :
-  {A : Type a} {B : Type b}
   (bl : Block "conversion") →
   Preserves-getters-and-setters-⇔ A B
     (_≃ᴱ_.logical-equivalence (Lens≃ᴱHigher-lens bl))

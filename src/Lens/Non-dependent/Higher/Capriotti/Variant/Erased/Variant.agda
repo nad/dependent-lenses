@@ -550,7 +550,6 @@ equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
 -- Yet another equality characterisation lemma.
 
 @0 equality-characterisation₃ :
-  {A : Type a} {B : Type b}
   {l₁ l₂ : Lens A B} →
   Block "equality-characterisation" →
   let open Lens in
@@ -661,7 +660,6 @@ Lens⇔Higher-lens-preserves-getters-and-setters ⊠ =
 -- Lens A B is equivalent to Higher.Lens A B (with erased proofs).
 
 Lens≃ᴱHigher-lens :
-  {A : Type a} {B : Type b} →
   Block "conversion" →
   Lens A B ≃ᴱ Higher.Lens A B
 Lens≃ᴱHigher-lens {A = A} {B = B} bl =
@@ -741,7 +739,6 @@ Lens≃ᴱHigher-lens {A = A} {B = B} bl =
 -- The equivalence preserves getters and setters.
 
 Lens≃ᴱHigher-lens-preserves-getters-and-setters :
-  {A : Type a} {B : Type b}
   (bl : Block "conversion") →
   Preserves-getters-and-setters-⇔ A B
     (_≃ᴱ_.logical-equivalence (Lens≃ᴱHigher-lens bl))

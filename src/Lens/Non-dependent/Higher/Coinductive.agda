@@ -48,6 +48,7 @@ private
     a b p : Level
     A B   : Type a
     P     : A → Type p
+    x y   : A
     f     : (x : A) → P x
 
 ------------------------------------------------------------------------
@@ -152,7 +153,6 @@ Coherently-constant′ = Coherently Constant′ (λ _ → proj₁)
 
 Coherently-constant≃Coherently-constant′ :
   Block "Coherently-constant≃Coherently-constant′" →
-  {A : Type a} {B : Type b} {f : A → B} →
   Coherently-constant f ≃ Coherently-constant′ f
 Coherently-constant≃Coherently-constant′ ⊠ =
   Coherently-cong
@@ -501,7 +501,6 @@ from-Coherently-constant′≃-property
 -- functions from A.
 
 ∥∥→≃ :
-  ∀ {A : Type a} {B : Type b} →
   (∥ A ∥ → B)
     ≃
   (∃ λ (f : A → B) → Coherently-constant f)
@@ -528,7 +527,6 @@ from-Coherently-constant′≃-property
 -- A function used in the statement of proj₂-to-∥∥→≃-property≡.
 
 proj₁-to-∥∥→≃-constant :
-  {A : Type a} {B : Type b}
   (f : ∥ A ∥ → B) →
   Constant (proj₁ (_≃_.to ∥∥→≃ f))
 proj₁-to-∥∥→≃-constant f x y =
@@ -538,7 +536,6 @@ proj₁-to-∥∥→≃-constant f x y =
 -- A "computation rule" for ∥∥→≃.
 
 proj₂-to-∥∥→≃-property≡ :
-  {A : Type a} {B : Type b} {f : ∥ A ∥ → B} →
   proj₂ (_≃_.to ∥∥→≃ f) .property ≡ proj₁-to-∥∥→≃-constant f
 proj₂-to-∥∥→≃-property≡ {f = f} = ⟨ext⟩ λ x → ⟨ext⟩ λ y →
 
@@ -617,7 +614,7 @@ proj₂-to-∥∥→≃-property≡ {f = f} = ⟨ext⟩ λ x → ⟨ext⟩ λ y 
 -- Two variants of Coherently-constant are pointwise equivalent.
 
 Coherently-constant≃Coherently-constant :
-  {A : Type a} {B : Type b} {f : A → B} →
+  {f : A → B} →
   CC.Coherently-constant f ≃ Coherently-constant f
 Coherently-constant≃Coherently-constant {A = A} {B = B} {f = f} =
   CC.Coherently-constant f                                           ↔⟨⟩
@@ -638,14 +635,13 @@ Coherently-constant≃Coherently-constant {A = A} {B = B} {f = f} =
 -- A "computation rule" for Coherently-constant≃Coherently-constant.
 
 to-Coherently-constant≃Coherently-constant-property :
-  ∀ {A : Type a} {B : Type b} {f : A → B}
-    {c : CC.Coherently-constant f} {x y} →
+  {c : CC.Coherently-constant f} →
   _≃_.to Coherently-constant≃Coherently-constant c .property x y ≡
   trans (cong (_$ x) (proj₂ c))
      (trans (proj₁-to-∥∥→≃-constant (proj₁ c) _ _)
         (cong (_$ y) (sym (proj₂ c))))
 to-Coherently-constant≃Coherently-constant-property
-  {f = f} {c = c} {x = x} {y = y} =
+  {f = f} {x = x} {y = y} {c = c} =
   _≃_.to Coherently-constant≃Coherently-constant c .property x y  ≡⟨⟩
 
   ≡⇒→ (cong Coherently-constant $ sym (proj₂ c))
@@ -682,7 +678,7 @@ Lens A B = ∃ λ (get : A → B) → Coherently-constant (get ⁻¹_)
 
 -- Some derived definitions.
 
-module Lens {A : Type a} {B : Type b} (l : Lens A B) where
+module Lens (l : Lens A B) where
 
   -- A getter.
 
@@ -722,7 +718,6 @@ instance
 -- Lens is pointwise equivalent to Higher.Lens.
 
 Higher-lens≃Lens :
-  {A : Type a} {B : Type b} →
   Block "Higher-lens≃Lens" →
   Higher.Lens A B ≃ Lens A B
 Higher-lens≃Lens {A = A} {B = B} ⊠ =
@@ -733,7 +728,6 @@ Higher-lens≃Lens {A = A} {B = B} ⊠ =
 -- The equivalence preserves getters and setters.
 
 Higher-lens≃Lens-preserves-getters-and-setters :
-  {A : Type a} {B : Type b}
   (bl : Block "Higher-lens≃Lens") →
   Preserves-getters-and-setters-⇔ A B
     (_≃_.logical-equivalence (Higher-lens≃Lens bl))
