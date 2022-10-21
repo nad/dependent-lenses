@@ -16,18 +16,9 @@
 
 -- Note that the code does not follow the paper exactly. For instance,
 -- some definitions use bijections (functions with quasi-inverses)
--- instead of equivalences.
-
--- An attempt has also been made to track uses of univalence by
--- passing around explicit proofs of the univalence axiom (except in
--- README.Not-a-set). However, univalence is provable in Cubical Agda,
--- and some library code that is used does not adhere to this
--- convention, so perhaps some use of univalence is not tracked in
--- this way. On the other hand some library code that is not defined
--- in Cubical Agda passes around explicit proofs of function
--- extensionality.
-
--- Some other differences are mentioned below.
+-- instead of equivalences. Some code that is not defined in Cubical
+-- Agda is parametrised by assumptions of univalence and/or function
+-- extensionality. Some other differences are mentioned below.
 
 -- Note that there is a known problem with guarded corecursion in
 -- Agda. Due to "quantifier inversion" (see "Termination Checking in
@@ -591,7 +582,7 @@ lemma-94 = S.Coherently-constant-Σ
 
 -- Composition.
 
-∘-most-general = S.⟨_,_⟩_∘_
+∘-most-general = S._∘_
 
 -- Lemma 96.
 
@@ -605,7 +596,7 @@ right-identity-stable = S.right-identity
 
 -- An unrestricted composition operator for Lensᴱ.
 
-∘-most-general′ = S.⟨_,_,_,_,_,_,_,_⟩_⊚_
+∘-most-general′ = S.⟨_⟩_⊚_
 
 -- This operator matches "∘-more-general" when all types have the same
 -- universe level and the view type of the resulting lens is stable.

@@ -12,12 +12,14 @@ module Lens.Non-dependent.Higher.Coinductive.Small
 open P.Derived-definitions-and-properties eq
 
 open import Logical-equivalence using (_⇔_)
-open import Prelude as P hiding (id)
+open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 
 open import Bijection equality-with-J as B using (_↔_)
 import Coherently-constant eq as CC
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq
+open import Equality.Path.Isomorphisms.Univalence eq
+  using () renaming (abstract-univ to univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Extensionality equality-with-J
@@ -57,13 +59,12 @@ Constant-≃ :
   (A → Type p) → Type (a ⊔ p)
 Constant-≃ P = ∀ x y → P x ≃ P y
 
--- Constant and Constant-≃ are pointwise equivalent (assuming
--- univalence).
+-- Constant and Constant-≃ are pointwise equivalent.
 
 Constant≃Constant-≃ :
   {P : A → Type p} →
-  Univalence p → Constant P ≃ Constant-≃ P
-Constant≃Constant-≃ univ =
+  Constant P ≃ Constant-≃ P
+Constant≃Constant-≃ =
   ∀-cong ext λ _ →
   ∀-cong ext λ _ →
   ≡≃≃ univ
@@ -139,16 +140,16 @@ Constant-≃-get-⁻¹-≃ bl {A = A} {B = B} {get = get} =
 
     (∀ b₂ →
      ∃ λ (f : A → get ⁻¹ b₂) →
-     ∀ b₁ → Is-equivalence (f ∘ proj₁))                             ↔⟨ ΠΣ-comm ⟩
+     ∀ b₁ → Is-equivalence (f ⊚ proj₁))                             ↔⟨ ΠΣ-comm ⟩
 
     (∃ λ (f : (b : B) → A → get ⁻¹ b) →
-     ∀ b₂ b₁ → Is-equivalence (f b₂ ∘ proj₁))                       ↝⟨ Σ-cong-refl Π-comm (λ _ → Π-comm) ⟩
+     ∀ b₂ b₁ → Is-equivalence (f b₂ ⊚ proj₁))                       ↝⟨ Σ-cong-refl Π-comm (λ _ → Π-comm) ⟩
 
     (∃ λ (f : A → (b : B) → get ⁻¹ b) →
-     ∀ b₁ b₂ → Is-equivalence ((_$ b₂) ∘ f ∘ proj₁))                ↝⟨ Σ-cong-refl (∀-cong ext λ _ → ΠΣ-comm) (λ _ → Eq.id) ⟩
+     ∀ b₁ b₂ → Is-equivalence ((_$ b₂) ⊚ f ⊚ proj₁))                ↝⟨ Σ-cong-refl (∀-cong ext λ _ → ΠΣ-comm) (λ _ → Eq.id) ⟩
 
     (∃ λ (f : A → ∃ λ (set : B → A) → (b : B) → get (set b) ≡ b) →
-     ∀ b₁ b₂ → Is-equivalence (Σ-map (_$ b₂) (_$ b₂) ∘ f ∘ proj₁))  ↝⟨ Σ-cong-id ΠΣ-comm ⟩
+     ∀ b₁ b₂ → Is-equivalence (Σ-map (_$ b₂) (_$ b₂) ⊚ f ⊚ proj₁))  ↝⟨ Σ-cong-id ΠΣ-comm ⟩
 
     (∃ λ ((set , get-set) :
           ∃ λ (set : A → B → A) →
@@ -197,56 +198,48 @@ _ = refl _
 -- Coherently constant type-valued functions.
 
 Coherently-constant :
-  Univalence p →
   {A : Type a} → (A → Type p) → Type (a ⊔ p)
-Coherently-constant univ =
+Coherently-constant =
   Coherently
     Constant-≃
     (λ P c → O.rec′ P (λ x y → ≃⇒≡ univ (c x y)))
 
--- Two variants of Coherently-constant are pointwise equivalent
--- (when applicable, assuming univalence).
+-- Two variants of Coherently-constant are pointwise equivalent (when
+-- applicable).
 
 Coinductive-coherently-constant≃Coherently-constant :
   {A : Type a} {P : A → Type p} →
-  Univalence (a ⊔ lsuc p) →
-  (univ : Univalence p) →
-  Coinductive.Coherently-constant P ≃ Coherently-constant univ P
-Coinductive-coherently-constant≃Coherently-constant univ′ univ =
+  Coinductive.Coherently-constant P ≃ Coherently-constant P
+Coinductive-coherently-constant≃Coherently-constant =
   Coherently-cong
-    univ′
-    (λ _ → Constant≃Constant-≃ univ)
+    (λ _ → Constant≃Constant-≃)
     (λ _ _ → refl _)
 
--- Two variants of Coherently-constant are pointwise equivalent
--- (when applicable, assuming univalence).
+-- Two variants of Coherently-constant are pointwise equivalent (when
+-- applicable).
 
 Coherently-constant≃Coherently-constant :
   {A : Type a} {P : A → Type p} →
-  Univalence (a ⊔ lsuc p) →
-  (univ : Univalence p) →
-  CC.Coherently-constant P ≃ Coherently-constant univ P
-Coherently-constant≃Coherently-constant {P = P} univ′ univ =
-  CC.Coherently-constant P           ↝⟨ Coinductive.Coherently-constant≃Coherently-constant univ′ ⟩
-  Coinductive.Coherently-constant P  ↝⟨ Coinductive-coherently-constant≃Coherently-constant univ′ univ ⟩□
-  Coherently-constant univ P         □
+  CC.Coherently-constant P ≃ Coherently-constant P
+Coherently-constant≃Coherently-constant {P = P} =
+  CC.Coherently-constant P           ↝⟨ Coinductive.Coherently-constant≃Coherently-constant ⟩
+  Coinductive.Coherently-constant P  ↝⟨ Coinductive-coherently-constant≃Coherently-constant ⟩□
+  Coherently-constant P              □
 
 -- A map lemma for Coherently-constant.
 
 Coherently-constant-map :
   {P : A → Type p} {Q : B → Type q}
-  (univ₁ : Univalence p) →
-  (univ₂ : Univalence q) →
   (f : B → A) →
   (∀ x → P (f x) ≃ Q x) →
-  Coherently-constant univ₁ P → Coherently-constant univ₂ Q
-Coherently-constant-map {P = P} {Q = Q} _ _ f P≃Q c .property x y =
+  Coherently-constant P → Coherently-constant Q
+Coherently-constant-map {P = P} {Q = Q} f P≃Q c .property x y =
   Q x      ↝⟨ inverse $ P≃Q x ⟩
   P (f x)  ↝⟨ c .property (f x) (f y) ⟩
   P (f y)  ↝⟨ P≃Q y ⟩□
   Q y      □
-Coherently-constant-map {P = P} {Q = Q} univ₁ univ₂ f P≃Q c .coherent =
-  Coherently-constant-map univ₁ univ₂ (O.∥∥¹-map f)
+Coherently-constant-map {P = P} {Q = Q} f P≃Q c .coherent =
+  Coherently-constant-map (O.∥∥¹-map f)
     (O.elim λ where
        .O.Elim.∣∣ʳ → P≃Q
        .O.Elim.∣∣-constantʳ x y → Eq.lift-equality ext
@@ -257,47 +250,47 @@ Coherently-constant-map {P = P} {Q = Q} univ₁ univ₂ f P≃Q c .coherent =
           subst (λ z → O.rec′ P g (O.∥∥¹-map f z) → O.rec′ Q h z)
             (O.∣∣-constant x y) (_≃_.to (P≃Q x))                         ≡⟨ (⟨ext⟩ λ _ → subst-→) ⟩
 
-          subst (O.rec′ Q h) (O.∣∣-constant x y) ∘
-          _≃_.to (P≃Q x) ∘
-          subst (O.rec′ P g ∘ O.∥∥¹-map f) (sym (O.∣∣-constant x y))     ≡⟨ cong₂ (λ f g → f ∘ _≃_.to (P≃Q x) ∘ g)
+          subst (O.rec′ Q h) (O.∣∣-constant x y) ⊚
+          _≃_.to (P≃Q x) ⊚
+          subst (O.rec′ P g ⊚ O.∥∥¹-map f) (sym (O.∣∣-constant x y))     ≡⟨ cong₂ (λ f g → f ⊚ _≃_.to (P≃Q x) ⊚ g)
                                                                               (⟨ext⟩ λ q → subst-∘ P.id (O.rec′ Q h) (O.∣∣-constant x y) {p = q})
                                                                               (⟨ext⟩ λ p →
-                                                                               trans (subst-∘ P.id (O.rec′ P g ∘ O.∥∥¹-map f)
+                                                                               trans (subst-∘ P.id (O.rec′ P g ⊚ O.∥∥¹-map f)
                                                                                         (sym (O.∣∣-constant x y)) {p = p}) $
                                                                                cong (λ eq → subst P.id eq p) $
                                                                                trans (cong-sym _ _) $
                                                                                cong sym $ sym $ cong-∘ _ _ _) ⟩
-          subst P.id (cong (O.rec′ Q h) (O.∣∣-constant x y)) ∘
-          _≃_.to (P≃Q x) ∘
+          subst P.id (cong (O.rec′ Q h) (O.∣∣-constant x y)) ⊚
+          _≃_.to (P≃Q x) ⊚
           subst P.id (sym (cong (O.rec′ P g)
-                             (cong (O.∥∥¹-map f) (O.∣∣-constant x y))))  ≡⟨ cong₂ (λ p q → subst P.id p ∘ _≃_.to (P≃Q x) ∘ subst P.id (sym q))
+                             (cong (O.∥∥¹-map f) (O.∣∣-constant x y))))  ≡⟨ cong₂ (λ p q → subst P.id p ⊚ _≃_.to (P≃Q x) ⊚ subst P.id (sym q))
                                                                               O.rec-∣∣-constant
                                                                               (trans (cong (cong (O.rec′ P g)) O.rec-∣∣-constant) $
                                                                                O.rec-∣∣-constant) ⟩
 
-          subst P.id (h x y) ∘
-          _≃_.to (P≃Q x) ∘
-          subst P.id (sym (g (f x) (f y)))                               ≡⟨ cong₂ (λ p q → p ∘ _≃_.to (P≃Q x) ∘ q)
+          subst P.id (h x y) ⊚
+          _≃_.to (P≃Q x) ⊚
+          subst P.id (sym (g (f x) (f y)))                               ≡⟨ cong₂ (λ p q → p ⊚ _≃_.to (P≃Q x) ⊚ q)
                                                                               (trans (⟨ext⟩ λ _ → subst-id-in-terms-of-≡⇒↝ equivalence) $
-                                                                               cong _≃_.to $ _≃_.right-inverse-of (≡≃≃ univ₂) _)
+                                                                               cong _≃_.to $ _≃_.right-inverse-of (≡≃≃ univ) _)
                                                                               (trans (⟨ext⟩ λ _ → subst-id-in-terms-of-inverse∘≡⇒↝ equivalence) $
-                                                                               cong _≃_.from $ _≃_.right-inverse-of (≡≃≃ univ₁) _) ⟩
-          _≃_.to (P≃Q y) ∘
-          _≃_.to (c .property (f x) (f y)) ∘
-          _≃_.from (P≃Q x) ∘
-          _≃_.to (P≃Q x) ∘
-          _≃_.from (c .property (f x) (f y))                             ≡⟨ (⟨ext⟩ λ _ → cong (_≃_.to (P≃Q y) ∘ _≃_.to (c .property (f x) (f y))) $
+                                                                               cong _≃_.from $ _≃_.right-inverse-of (≡≃≃ univ) _) ⟩
+          _≃_.to (P≃Q y) ⊚
+          _≃_.to (c .property (f x) (f y)) ⊚
+          _≃_.from (P≃Q x) ⊚
+          _≃_.to (P≃Q x) ⊚
+          _≃_.from (c .property (f x) (f y))                             ≡⟨ (⟨ext⟩ λ _ → cong (_≃_.to (P≃Q y) ⊚ _≃_.to (c .property (f x) (f y))) $
                                                                             _≃_.left-inverse-of (P≃Q x) _) ⟩
-          _≃_.to (P≃Q y) ∘
-          _≃_.to (c .property (f x) (f y)) ∘
+          _≃_.to (P≃Q y) ⊚
+          _≃_.to (c .property (f x) (f y)) ⊚
           _≃_.from (c .property (f x) (f y))                             ≡⟨ (⟨ext⟩ λ _ → cong (_≃_.to (P≃Q y)) $
                                                                              _≃_.right-inverse-of (c .property (f x) (f y)) _) ⟩∎
           _≃_.to (P≃Q y)                                                 ∎))
     (c .coherent)
   where
-  g = λ x y → ≃⇒≡ univ₁ (c .property x y)
-  h = λ x y → ≃⇒≡ univ₂ ((P≃Q y F.∘ c .property (f x) (f y)) F.∘
-                         inverse (P≃Q x))
+  g = λ x y → ≃⇒≡ univ (c .property x y)
+  h = λ x y → ≃⇒≡ univ ((P≃Q y F.∘ c .property (f x) (f y)) F.∘
+                        inverse (P≃Q x))
 
 private
 
@@ -391,7 +384,7 @@ private
                      (subst-refl _ _))
               (trans (cong (O.∣∣ʳ e x)
                         (sym (subst-refl _ _)))
-                 (cong (O.∣∣ʳ e x ∘ flip (subst P) _)
+                 (cong (O.∣∣ʳ e x ⊚ flip (subst P) _)
                     (sym sym-refl)))))
         (cong (_$ subst P (refl _) p) (subst-refl _ _))            ≡⟨ sym $
                                                                       cong₂ (λ eq₁ eq₂ → trans
@@ -430,22 +423,19 @@ private
 -- TODO: Can the ".coherent" clause be simplified?
 
 Coherently-constant-Σ :
-  {P : A → Type p} {Q : ∃ P → Type q}
-  (univ₁ : Univalence p)
-  (univ₂ : Univalence q)
-  (univ₃ : Univalence (p ⊔ q)) →
-  Coherently-constant univ₁ P →
-  Coherently-constant univ₂ Q →
-  Coherently-constant univ₃ (λ x → ∃ λ (y : P x) → Q (x , y))
-Coherently-constant-Σ {p = p} {q = q} univ₁ univ₂ univ₃ =
+  {P : A → Type p} {Q : ∃ P → Type q} →
+  Coherently-constant P →
+  Coherently-constant Q →
+  Coherently-constant (λ x → ∃ λ (y : P x) → Q (x , y))
+Coherently-constant-Σ =
   Coherently-constant-Σ′ (λ _ → F.id)
   where
   Coherently-constant-Σ′ :
     {P : A → Type p} {Q : ∃ P → Type q} {R : A → Type (p ⊔ q)} →
     (∀ x → R x ≃ ∃ λ (p : P x) → Q (x , p)) →
-    Coherently-constant univ₁ P →
-    Coherently-constant univ₂ Q →
-    Coherently-constant univ₃ R
+    Coherently-constant P →
+    Coherently-constant Q →
+    Coherently-constant R
   Coherently-constant-Σ′
     {P = P} {Q = Q} {R = R} R≃ c₁ c₂ .property x y =
 
@@ -467,25 +457,25 @@ Coherently-constant-Σ {p = p} {q = q} univ₁ univ₂ univ₃ =
                                 (_≃_.to (R≃ y) r)
 
              lemma₁ =
-               subst P′ (O.∣∣-constant x y) p′               ≡⟨ subst-∘ _ _ _ ⟩
-               subst P.id (cong P′ (O.∣∣-constant x y)) p′   ≡⟨ cong (λ eq → subst P.id eq _) O.rec-∣∣-constant ⟩
-               subst P.id (≃⇒≡ univ₁ (c₁ .property x y)) p′  ≡⟨ subst-id-in-terms-of-≡⇒↝ equivalence ⟩
-               ≡⇒→ (≃⇒≡ univ₁ (c₁ .property x y)) p′         ≡⟨ cong (λ eq → _≃_.to eq p′) $ _≃_.right-inverse-of (≡≃≃ univ₁) _ ⟩∎
-               _≃_.to (c₁ .property x y) p′                  ∎
+               subst P′ (O.∣∣-constant x y) p′              ≡⟨ subst-∘ _ _ _ ⟩
+               subst P.id (cong P′ (O.∣∣-constant x y)) p′  ≡⟨ cong (λ eq → subst P.id eq _) O.rec-∣∣-constant ⟩
+               subst P.id (≃⇒≡ univ (c₁ .property x y)) p′  ≡⟨ subst-id-in-terms-of-≡⇒↝ equivalence ⟩
+               ≡⇒→ (≃⇒≡ univ (c₁ .property x y)) p′         ≡⟨ cong (λ eq → _≃_.to eq p′) $ _≃_.right-inverse-of (≡≃≃ univ) _ ⟩∎
+               _≃_.to (c₁ .property x y) p′                 ∎
 
              lemma₂ =
                subst (λ p → Q (y , p)) lemma₁
                  (subst Q′ (Σ-≡,≡→≡ (O.∣∣-constant x y) (refl _)) q′)    ≡⟨ cong (subst (λ p → Q (y , p)) lemma₁) $
                                                                             subst-∘ _ _ _ ⟩
                subst (λ p → Q (y , p)) lemma₁
-                 (subst (O.rec′ Q λ x y → ≃⇒≡ univ₂ (c₂ .property x y))
+                 (subst (O.rec′ Q λ x y → ≃⇒≡ univ (c₂ .property x y))
                     (cong f (Σ-≡,≡→≡ (O.∣∣-constant x y) (refl _))) q′)  ≡⟨ cong (λ eq →
                                                                                     subst (λ p → Q (y , p)) lemma₁
-                                                                                      (subst (O.rec′ Q λ x y → ≃⇒≡ univ₂ (c₂ .property x y))
+                                                                                      (subst (O.rec′ Q λ x y → ≃⇒≡ univ (c₂ .property x y))
                                                                                              eq q′)) $
                                                                             elim-Σ-≡,≡→≡-∣∣-constant e ⟩
                subst (λ p → Q (y , p)) lemma₁
-                 (subst (O.rec′ Q λ x y → ≃⇒≡ univ₂ (c₂ .property x y))
+                 (subst (O.rec′ Q λ x y → ≃⇒≡ univ (c₂ .property x y))
                     (trans
                        (trans (cong (λ p → ∣ x , p ∣)
                                  (sym (subst-sym-subst _)))
@@ -497,7 +487,7 @@ Coherently-constant-Σ {p = p} {q = q} univ₁ univ₂ univ₃ =
                     q′)                                                  ≡⟨ cong (λ eq →
                                                                                     subst (λ p → Q (y , p))
                                                                                       lemma₁
-                                                                                      (subst (O.rec′ Q λ x y → ≃⇒≡ univ₂ (c₂ .property x y))
+                                                                                      (subst (O.rec′ Q λ x y → ≃⇒≡ univ (c₂ .property x y))
                                                                                          (trans
                                                                                             (trans (cong (λ p → ∣ x , p ∣)
                                                                                                       (sym (subst-sym-subst _)))
@@ -511,7 +501,7 @@ Coherently-constant-Σ {p = p} {q = q} univ₁ univ₂ univ₃ =
                                                                                          (O.∣∣-constant _ (_ , p))}
                                                                               ext ⟩
                subst (λ p → Q (y , p)) lemma₁
-                 (subst (O.rec′ Q λ x y → ≃⇒≡ univ₂ (c₂ .property x y))
+                 (subst (O.rec′ Q λ x y → ≃⇒≡ univ (c₂ .property x y))
                     (trans
                        (trans (cong (λ p → ∣ x , p ∣)
                                  (sym (subst-sym-subst _)))
@@ -520,13 +510,13 @@ Coherently-constant-Σ {p = p} {q = q} univ₁ univ₂ univ₃ =
                           (O.∣∣-constant _ _)))
                     q′)                                                  ≡⟨ cong (λ eq → subst (λ p → Q (y , p))
                                                                                            lemma₁
-                                                                                           (subst (O.rec′ Q λ x y → ≃⇒≡ univ₂ (c₂ .property x y))
+                                                                                           (subst (O.rec′ Q λ x y → ≃⇒≡ univ (c₂ .property x y))
                                                                                               eq q′)) $
                                                                             trans (trans-assoc _ _ _) $
                                                                             cong (trans (cong (λ p → ∣ x , p ∣) $ sym $ subst-sym-subst _)) $
                                                                             trans-sym-[trans] _ (O.∣∣-constant _ _) ⟩
                subst (λ p → Q (y , p)) lemma₁
-                 (subst (O.rec′ Q λ x y → ≃⇒≡ univ₂ (c₂ .property x y))
+                 (subst (O.rec′ Q λ x y → ≃⇒≡ univ (c₂ .property x y))
                     (trans (cong (λ p → ∣ x , p ∣)
                               (sym (subst-sym-subst _)))
                        (O.∣∣-constant _ _))
@@ -542,14 +532,14 @@ Coherently-constant-Σ {p = p} {q = q} univ₁ univ₂ univ₃ =
                     (trans
                        (cong (λ p → Q (x , p))
                           (sym (subst-sym-subst _)))
-                       (≃⇒≡ univ₂ (c₂ .property _ _)))
+                       (≃⇒≡ univ (c₂ .property _ _)))
                     q′)                                                  ≡⟨ cong (subst (λ p → Q (y , p)) lemma₁) $
                                                                             trans (subst-id-in-terms-of-≡⇒↝ equivalence) $
                                                                             trans (cong (_$ q′) $ ≡⇒↝-trans equivalence) $
                                                                             trans (cong (λ eq → _≃_.to eq (≡⇒→ (cong (λ p → Q (x , p))
                                                                                                                   (sym (subst-sym-subst _)))
                                                                                                              q′)) $
-                                                                                   _≃_.right-inverse-of (≡≃≃ univ₂) _) $
+                                                                                   _≃_.right-inverse-of (≡≃≃ univ) _) $
                                                                             cong (_≃_.to (c₂ .property _ _)) $ sym $
                                                                             subst-in-terms-of-≡⇒↝ equivalence _ _ _ ⟩
                subst (λ p → Q (y , p)) lemma₁
@@ -589,18 +579,18 @@ Coherently-constant-Σ {p = p} {q = q} univ₁ univ₂ univ₃ =
                          (y , _≃_.to (c₁ .property x y) p′)) q′          ∎
            in
            _≃_.to (subst (λ x →
-                            O.rec′ R (λ x y → ≃⇒≡ univ₃ (pr x y)) x ≃
+                            O.rec′ R (λ x y → ≃⇒≡ univ (pr x y)) x ≃
                             ∃ λ (p : P′ x) → Q′ (x , p))
                      (O.∣∣-constant x y) (R≃ x))
                   r                                                       ≡⟨ cong (_$ r) Eq.to-subst ⟩
 
-           subst (λ x → O.rec′ R (λ x y → ≃⇒≡ univ₃ (pr x y)) x →
+           subst (λ x → O.rec′ R (λ x y → ≃⇒≡ univ (pr x y)) x →
                         ∃ λ (p : P′ x) → Q′ (x , p))
              (O.∣∣-constant x y) (_≃_.to (R≃ x)) r                        ≡⟨ subst-→ ⟩
 
            subst (λ x → ∃ λ (p : P′ x) → Q′ (x , p)) (O.∣∣-constant x y)
              (_≃_.to (R≃ x)
-                (subst (O.rec′ R (λ x y → ≃⇒≡ univ₃ (pr x y)))
+                (subst (O.rec′ R (λ x y → ≃⇒≡ univ (pr x y)))
                    (sym (O.∣∣-constant x y)) r))                          ≡⟨ cong (subst (λ x → ∃ λ p → Q′ (x , p)) (O.∣∣-constant x y)) $
                                                                              cong (_≃_.to (R≃ x)) $
                                                                              trans (subst-∘ _ _ _) $
@@ -608,10 +598,10 @@ Coherently-constant-Σ {p = p} {q = q} univ₁ univ₂ univ₃ =
                                                                              trans (cong-sym _ _) $
                                                                              cong sym O.rec-∣∣-constant ⟩
            subst (λ x → ∃ λ (p : P′ x) → Q′ (x , p)) (O.∣∣-constant x y)
-             (_≃_.to (R≃ x) (subst P.id (sym (≃⇒≡ univ₃ (pr x y))) r))    ≡⟨ cong (subst (λ x → ∃ λ p → Q′ (x , p)) (O.∣∣-constant x y)) $
+             (_≃_.to (R≃ x) (subst P.id (sym (≃⇒≡ univ (pr x y))) r))     ≡⟨ cong (subst (λ x → ∃ λ p → Q′ (x , p)) (O.∣∣-constant x y)) $
                                                                              cong (_≃_.to (R≃ x)) $
                                                                              trans (subst-id-in-terms-of-inverse∘≡⇒↝ equivalence) $
-                                                                             cong (λ eq → _≃_.from eq r) $ _≃_.right-inverse-of (≡≃≃ univ₃) _ ⟩
+                                                                             cong (λ eq → _≃_.from eq r) $ _≃_.right-inverse-of (≡≃≃ univ) _ ⟩
            subst (λ x → ∃ λ (p : P′ x) → Q′ (x , p)) (O.∣∣-constant x y)
              (_≃_.to (R≃ x) (_≃_.from (pr x y) r))                        ≡⟨⟩
 
@@ -643,16 +633,14 @@ Coherently-constant-Σ {p = p} {q = q} univ₁ univ₂ univ₃ =
                                                                                _ ⟩∎
            _≃_.to (R≃ y) r                                                ∎)
       (c₁ .coherent)
-      (Coherently-constant-map
-         univ₂ univ₂ f (λ _ → F.id)
-         (c₂ .coherent))
+      (Coherently-constant-map f (λ _ → F.id) (c₂ .coherent))
 
     where
 
     mutual
 
-      P′ = O.rec′ P (λ x y → ≃⇒≡ univ₁ (c₁ .property x y))
-      Q′ = O.rec′ Q (λ x y → ≃⇒≡ univ₂ (c₂ .property x y)) ∘ f
+      P′ = O.rec′ P (λ x y → ≃⇒≡ univ (c₁ .property x y))
+      Q′ = O.rec′ Q (λ x y → ≃⇒≡ univ (c₂ .property x y)) ⊚ f
 
       e = λ where
         .O.Elim.∣∣ʳ x p → ∣ x , p ∣
@@ -679,61 +667,45 @@ private
 
   _ :
     ∀ {P : A → Type p} {Q : ∃ P → Type q}
-      {univ₁ : Univalence p}
-      {univ₂ : Univalence q}
-      {univ₃ : Univalence (p ⊔ q)}
-      {c₁ : Coherently-constant univ₁ P}
-      {c₂ : Coherently-constant univ₂ Q}
+      {c₁ : Coherently-constant P}
+      {c₂ : Coherently-constant Q}
       {x y} →
-    _≃_.to (Coherently-constant-Σ
-              univ₁ univ₂ univ₃ c₁ c₂ .property x y) ≡
+    _≃_.to (Coherently-constant-Σ c₁ c₂ .property x y) ≡
     Σ-map (_≃_.to (c₁ .property _ _)) (_≃_.to (c₂ .property _ _))
   _ = refl _
 
--- A different proof of Coherently-constant-Σ, with three extra
--- univalence assumptions.
+-- A different proof of Coherently-constant-Σ.
 --
 -- This proof does not, at the time of writing, satisfy the
 -- definitional equality above (rephrased in an obvious way).
 
 Coherently-constant-Σ′ :
-  {A : Type a} {P : A → Type p} {Q : ∃ P → Type q}
-  (univ₁ : Univalence p)
-  (univ₂ : Univalence q)
-  (univ₃ : Univalence (p ⊔ q)) →
-  Univalence (a ⊔ lsuc p) →
-  Univalence (a ⊔ p ⊔ lsuc q) →
-  Univalence (a ⊔ lsuc (p ⊔ q)) →
-  Coherently-constant univ₁ P →
-  Coherently-constant univ₂ Q →
-  Coherently-constant univ₃ (λ x → ∃ λ (y : P x) → Q (x , y))
-Coherently-constant-Σ′ {P = P} {Q = Q}
-  univ₁ univ₂ univ₃ univ₄ univ₅ univ₆ =
+  {A : Type a} {P : A → Type p} {Q : ∃ P → Type q} →
+  Coherently-constant P →
+  Coherently-constant Q →
+  Coherently-constant (λ x → ∃ λ (y : P x) → Q (x , y))
+Coherently-constant-Σ′ {P = P} {Q = Q} =
   curry
-    (Coherently-constant univ₁ P × Coherently-constant univ₂ Q    ↔⟨ inverse
-                                                                       (Coherently-constant≃Coherently-constant univ₄ univ₁ ×-cong
-                                                                        Coherently-constant≃Coherently-constant univ₅ univ₂) ⟩
-     CC.Coherently-constant P × CC.Coherently-constant Q          ↝⟨ uncurry Capriotti.Coherently-constant-Σ ⟩
-     CC.Coherently-constant (λ x → ∃ λ (y : P x) → Q (x , y))     ↔⟨ Coherently-constant≃Coherently-constant univ₆ univ₃ ⟩□
-     Coherently-constant univ₃ (λ x → ∃ λ (y : P x) → Q (x , y))  □)
+    (Coherently-constant P × Coherently-constant Q             ↔⟨ inverse
+                                                                    (Coherently-constant≃Coherently-constant ×-cong
+                                                                     Coherently-constant≃Coherently-constant) ⟩
+     CC.Coherently-constant P × CC.Coherently-constant Q       ↝⟨ uncurry Capriotti.Coherently-constant-Σ ⟩
+     CC.Coherently-constant (λ x → ∃ λ (y : P x) → Q (x , y))  ↔⟨ Coherently-constant≃Coherently-constant ⟩□
+     Coherently-constant (λ x → ∃ λ (y : P x) → Q (x , y))     □)
 
 ------------------------------------------------------------------------
 -- The lens type family
 
 -- Small coinductive lenses, based on an idea due to Paolo Capriotti.
---
--- The lenses are defined as a record type to make it easier for Agda
--- to infer the argument univ from a value of type Lens univ A B.
 
-record Lens (univ : Univalence (a ⊔ b)) (A : Type a) (B : Type b) :
-            Type (a ⊔ b) where
+record Lens (A : Type a) (B : Type b) : Type (a ⊔ b) where
   field
 
     -- A getter.
     get : A → B
 
     -- The family of fibres of the getter is coherently constant.
-    get⁻¹-coherently-constant : Coherently-constant univ (get ⁻¹_)
+    get⁻¹-coherently-constant : Coherently-constant (get ⁻¹_)
 
   -- All the getter's fibres are equivalent.
 
@@ -760,8 +732,7 @@ instance
   -- The lenses defined above have getters and setters.
 
   has-getter-and-setter :
-    {univ : Univalence (a ⊔ b)} →
-    Has-getter-and-setter (Lens {a = a} {b = b} univ)
+    Has-getter-and-setter (Lens {a = a} {b = b})
   has-getter-and-setter = record
     { get = Lens.get
     ; set = Lens.set
@@ -770,43 +741,36 @@ instance
 -- Lens can be expressed as a Σ-type.
 
 Lens-as-Σ :
-  {A : Type a} {B : Type b} {univ : Univalence (a ⊔ b)} →
-  Lens univ A B ≃
-  (∃ λ (get : A → B) → Coherently-constant univ (get ⁻¹_))
+  {A : Type a} {B : Type b} →
+  Lens A B ≃ (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))
 Lens-as-Σ = Eq.↔→≃
   (λ l → Lens.get l , Lens.get⁻¹-coherently-constant l)
   (λ (g , c) → record { get = g; get⁻¹-coherently-constant = c })
   refl
   refl
 
--- Lens is pointwise equivalent to Coinductive.Lens (assuming
--- univalence).
+-- Lens is pointwise equivalent to Coinductive.Lens.
 
 Coinductive-lens≃Lens :
   Block "Coinductive-lens≃Lens" →
   {A : Type a} {B : Type b} →
-  Univalence (lsuc (a ⊔ b)) →
-  (univ : Univalence (a ⊔ b)) →
-  Coinductive.Lens A B ≃ Lens univ A B
-Coinductive-lens≃Lens ⊠ {A = A} {B = B} univ₁ univ₂ =
+  Coinductive.Lens A B ≃ Lens A B
+Coinductive-lens≃Lens ⊠ {A = A} {B = B} =
   Coinductive.Lens A B                                             ↔⟨⟩
-  (∃ λ (get : A → B) → Coinductive.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ →
-                                                                       Coinductive-coherently-constant≃Coherently-constant univ₁ univ₂) ⟩
-  (∃ λ (get : A → B) → Coherently-constant univ₂ (get ⁻¹_))        ↝⟨ inverse Lens-as-Σ ⟩□
-  Lens univ₂ A B                                                   □
+  (∃ λ (get : A → B) → Coinductive.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ → Coinductive-coherently-constant≃Coherently-constant) ⟩
+  (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))              ↝⟨ inverse Lens-as-Σ ⟩□
+  Lens A B                                                         □
 
 -- The equivalence preserves getters and setters.
 
 Coinductive-lens≃Lens-preserves-getters-and-setters :
   (bl : Block "Coinductive-lens≃Lens")
-  {A : Type a} {B : Type b}
-  (univ₁ : Univalence (lsuc (a ⊔ b)))
-  (univ₂ : Univalence (a ⊔ b)) →
+  {A : Type a} {B : Type b} →
   Preserves-getters-and-setters-⇔ A B
-    (_≃_.logical-equivalence (Coinductive-lens≃Lens bl univ₁ univ₂))
-Coinductive-lens≃Lens-preserves-getters-and-setters ⊠ univ₁ univ₂ =
+    (_≃_.logical-equivalence (Coinductive-lens≃Lens bl))
+Coinductive-lens≃Lens-preserves-getters-and-setters ⊠ =
   Preserves-getters-and-setters-→-↠-⇔
-    (_≃_.surjection (Coinductive-lens≃Lens ⊠ univ₁ univ₂))
+    (_≃_.surjection (Coinductive-lens≃Lens ⊠))
     (λ _ → refl _ , refl _)
 
 private
@@ -817,80 +781,67 @@ private
   Higher-lens≃Lens′ :
     Block "Higher-lens≃Lens" →
     {A : Type a} {B : Type b} →
-    Univalence (lsuc (a ⊔ b)) →
-    (univ : Univalence (a ⊔ b)) →
-    ∃ λ (eq : Higher.Lens A B ≃ Lens univ A B) →
+    ∃ λ (eq : Higher.Lens A B ≃ Lens A B) →
     Preserves-getters-and-setters-⇔ A B (_≃_.logical-equivalence eq)
-  Higher-lens≃Lens′ ⊠ {A = A} {B = B} univ₁ univ₂ =
+  Higher-lens≃Lens′ ⊠ {A = A} {B = B} =
     block λ b →
 
-      (Higher.Lens A B       ↝⟨ inverse $ Capriotti.Lens≃Higher-lens b univ₂ ⟩
-       Capriotti.Lens A B    ↝⟨ Coinductive.Higher-lens≃Lens b univ₁ ⟩
-       Coinductive.Lens A B  ↝⟨ Coinductive-lens≃Lens b univ₁ univ₂ ⟩□
-       Lens univ₂ A B        □)
+      (Higher.Lens A B       ↝⟨ inverse $ Capriotti.Lens≃Higher-lens b univ ⟩
+       Capriotti.Lens A B    ↝⟨ Coinductive.Higher-lens≃Lens b ⟩
+       Coinductive.Lens A B  ↝⟨ Coinductive-lens≃Lens b ⟩□
+       Lens A B              □)
     , Preserves-getters-and-setters-⇔-∘
-        {f = _≃_.logical-equivalence
-               (Coinductive-lens≃Lens b univ₁ univ₂) F.∘
-             _≃_.logical-equivalence
-               (Coinductive.Higher-lens≃Lens b univ₁)}
+        {f = _≃_.logical-equivalence (Coinductive-lens≃Lens b) F.∘
+             _≃_.logical-equivalence (Coinductive.Higher-lens≃Lens b)}
         {g = inverse $ _≃_.logical-equivalence $
-             Capriotti.Lens≃Higher-lens b univ₂}
+             Capriotti.Lens≃Higher-lens b univ}
         (Preserves-getters-and-setters-⇔-∘
-           {f = _≃_.logical-equivalence
-                  (Coinductive-lens≃Lens b univ₁ univ₂)}
+           {f = _≃_.logical-equivalence (Coinductive-lens≃Lens b)}
            {g = _≃_.logical-equivalence
-                  (Coinductive.Higher-lens≃Lens b univ₁)}
-           (Coinductive-lens≃Lens-preserves-getters-and-setters
-              b univ₁ univ₂)
+                  (Coinductive.Higher-lens≃Lens b)}
+           (Coinductive-lens≃Lens-preserves-getters-and-setters b)
            (Coinductive.Higher-lens≃Lens-preserves-getters-and-setters
-              b univ₁))
+              b))
         (Preserves-getters-and-setters-⇔-inverse
            {f = _≃_.logical-equivalence
-                  (Capriotti.Lens≃Higher-lens b univ₂)} $
+                  (Capriotti.Lens≃Higher-lens b univ)} $
          Capriotti.Lens≃Higher-lens-preserves-getters-and-setters
-           b univ₂)
+           b univ)
 
--- Lens is pointwise equivalent to Higher.Lens (assuming univalence).
+-- Lens is pointwise equivalent to Higher.Lens.
 
 Higher-lens≃Lens :
   Block "Higher-lens≃Lens" →
   {A : Type a} {B : Type b} →
-  Univalence (lsuc (a ⊔ b)) →
-  (univ : Univalence (a ⊔ b)) →
-  Higher.Lens A B ≃ Lens univ A B
-Higher-lens≃Lens b univ₁ univ₂ =
-  proj₁ $ Higher-lens≃Lens′ b univ₁ univ₂
+  Higher.Lens A B ≃ Lens A B
+Higher-lens≃Lens b =
+  proj₁ $ Higher-lens≃Lens′ b
 
 -- The equivalence preserves getters and setters.
 
 Higher-lens≃Lens-preserves-getters-and-setters :
-  (bl : Block "Higher-lens≃Lens")
-  {A : Type a} {B : Type b}
-  (univ₁ : Univalence (lsuc (a ⊔ b)))
-  (univ₂ : Univalence (a ⊔ b)) →
+  (bl : Block "Higher-lens≃Lens") →
+  {A : Type a} {B : Type b} →
   Preserves-getters-and-setters-⇔ A B
-    (_≃_.logical-equivalence (Higher-lens≃Lens bl univ₁ univ₂))
-Higher-lens≃Lens-preserves-getters-and-setters b univ₁ univ₂ =
-  proj₂ $ Higher-lens≃Lens′ b univ₁ univ₂
+    (_≃_.logical-equivalence (Higher-lens≃Lens bl))
+Higher-lens≃Lens-preserves-getters-and-setters b =
+  proj₂ $ Higher-lens≃Lens′ b
 
--- Lenses with stable view types are equal if their setters are equal
--- (assuming univalence).
+-- Lenses with stable view types are equal if their setters are equal.
 
 lenses-equal-if-setters-equal :
-  {A : Type a} {B : Type b} →
-  Univalence (lsuc (a ⊔ b)) →
-  (univ : Univalence (a ⊔ b)) →
-  (l₁ l₂ : Lens univ A B) →
+  {A : Type a} {B : Type b}
+  (l₁ l₂ : Lens A B) →
   (∥ B ∥ → B) →
   Lens.set l₁ ≡ Lens.set l₂ →
   l₁ ≡ l₂
-lenses-equal-if-setters-equal univ′ univ l₁ l₂ stable =
+lenses-equal-if-setters-equal l₁ l₂ stable =
   block λ bl →
-  let equiv = Higher-lens≃Lens bl univ′ univ in
+  let equiv = Higher-lens≃Lens bl in
 
   Lens.set l₁ ≡ Lens.set l₂              ↔⟨ ≡⇒≃ $ sym $ cong₂ _≡_
-                                              (proj₂ $ proj₂ (Higher-lens≃Lens-preserves-getters-and-setters bl univ′ univ) l₁)
-                                              (proj₂ $ proj₂ (Higher-lens≃Lens-preserves-getters-and-setters bl univ′ univ) l₂) ⟩
+                                              (proj₂ $ proj₂ (Higher-lens≃Lens-preserves-getters-and-setters bl) l₁)
+                                              (proj₂ $ proj₂ (Higher-lens≃Lens-preserves-getters-and-setters bl) l₂) ⟩
   Higher.Lens.set (_≃_.from equiv l₁) ≡
   Higher.Lens.set (_≃_.from equiv l₂)    ↝⟨ Higher.lenses-equal-if-setters-equal univ _ _ (λ _ → stable) ⟩
 
@@ -904,19 +855,18 @@ lenses-equal-if-setters-equal univ′ univ l₁ l₂ stable =
 -- An identity lens.
 
 id :
-  {A : Type a}
-  (univ : Univalence a) →
-  Lens univ A A
-id univ .Lens.get                       = P.id
-id univ .Lens.get⁻¹-coherently-constant =
+  {A : Type a} →
+  Lens A A
+id .Lens.get                       = P.id
+id .Lens.get⁻¹-coherently-constant =
   coherently-constant λ x →
                               $⟨ Preimage.id⁻¹-contractible x ⟩
-    Contractible (P.id ⁻¹ x)  ↝⟨ Eq.↔⇒≃ ∘ _⇔_.to contractible⇔↔⊤ ⟩□
+    Contractible (P.id ⁻¹ x)  ↝⟨ Eq.↔⇒≃ ⊚ _⇔_.to contractible⇔↔⊤ ⟩□
     P.id ⁻¹ x ≃ ⊤             □
   where
   coherently-constant :
     (∀ x → P x ≃ ⊤) →
-    Coherently-constant univ P
+    Coherently-constant P
   coherently-constant {P = P} P≃⊤ .property x y =
     P x  ↝⟨ P≃⊤ x ⟩
     ⊤    ↝⟨ inverse $ P≃⊤ y ⟩□
@@ -938,32 +888,26 @@ id univ .Lens.get⁻¹-coherently-constant =
 -- Vezzosi came up with a first workaround (involving lifting), and
 -- later I found a more direct solution.
 
-infix 9 ⟨_,_⟩_∘_
+infixr 9 _∘_
 
-⟨_,_⟩_∘_ :
-  {A : Type a} {B : Type b} {C : Type c}
-  {univ₁ : Univalence (b ⊔ c)}
-  {univ₂ : Univalence (a ⊔ b)}
-  (univ₃ : Univalence (a ⊔ c)) →
-  Univalence (a ⊔ b ⊔ c) →
-  Lens univ₁ B C → Lens univ₂ A B → Lens univ₃ A C
-(⟨ _ , _ ⟩ l₁ ∘ l₂) .Lens.get = get l₁ ∘ get l₂
+_∘_ :
+  {A : Type a} {B : Type b} {C : Type c} →
+  Lens B C → Lens A B → Lens A C
+(l₁ ∘ l₂) .Lens.get = get l₁ ⊚ get l₂
   where
   open Lens
-⟨_,_⟩_∘_ {b = ℓb} {univ₁ = univ₁} {univ₂ = univ₂} univ₃ univ₄ l₁ l₂
-  .Lens.get⁻¹-coherently-constant =
+_∘_ {b = ℓb} l₁ l₂ .Lens.get⁻¹-coherently-constant =
                                                        $⟨ Coherently-constant-Σ
                                                             {P = get l₁ ⁻¹_}
                                                             {Q = λ (_ , b , _) → get l₂ ⁻¹ b}
-                                                            univ₁ univ₂ univ₄
                                                             (get⁻¹-coherently-constant l₁)
-                                                            (Coherently-constant-map univ₂ univ₂
-                                                               (proj₁ ∘ proj₂) (λ _ → F.id)
+                                                            (Coherently-constant-map
+                                                               (proj₁ ⊚ proj₂) (λ _ → F.id)
                                                                (get⁻¹-coherently-constant l₂)) ⟩
-  Coherently-constant univ₄
-    (λ c → ∃ λ ((b , _) : get l₁ ⁻¹ c) → get l₂ ⁻¹ b)  ↝⟨ Coherently-constant-map univ₄ univ₃ P.id
+  Coherently-constant
+    (λ c → ∃ λ ((b , _) : get l₁ ⁻¹ c) → get l₂ ⁻¹ b)  ↝⟨ Coherently-constant-map P.id
                                                             (λ _ → inverse $ ∘⁻¹≃ (get l₁) (get l₂)) ⟩□
-  Coherently-constant univ₃ ((get l₁ ∘ get l₂) ⁻¹_)    □
+  Coherently-constant ((get l₁ ⊚ get l₂) ⁻¹_)          □
   where
   open Lens
 
@@ -972,161 +916,96 @@ infix 9 ⟨_,_⟩_∘_
 
 set-∘ :
   ∀ {A : Type a} {B : Type b} {C : Type c}
-    {univ₁ : Univalence (b ⊔ c)}
-    {univ₂ : Univalence (a ⊔ b)}
-  (univ₃ : Univalence (a ⊔ c))
-  (univ₄ : Univalence (a ⊔ b ⊔ c))
-  (l₁ : Lens univ₁ B C) (l₂ : Lens univ₂ A B) {a c} →
-  Lens.set (⟨ univ₃ , univ₄ ⟩ l₁ ∘ l₂) a c ≡
+  (l₁ : Lens B C) (l₂ : Lens A B) {a c} →
+  Lens.set (l₁ ∘ l₂) a c ≡
   Lens.set l₂ a (Lens.set l₁ (Lens.get l₂ a) c)
-set-∘ _ _ _ _ = refl _
+set-∘ _ _ = refl _
 
 -- Composition is associative if the view type of the resulting lens
--- is stable (assuming univalence).
+-- is stable.
 
 associativity :
   {A : Type a} {B : Type b} {C : Type c} {D : Type d} →
   (∥ D ∥ → D) →
-  (univ₁  : Univalence (c ⊔ d))
-  (univ₂  : Univalence (b ⊔ c))
-  (univ₃  : Univalence (a ⊔ b))
-  (univ₄  : Univalence (a ⊔ d))
-  (univ₅  : Univalence (a ⊔ c ⊔ d))
-  (univ₆  : Univalence (a ⊔ c))
-  (univ₇  : Univalence (a ⊔ b ⊔ c))
-  (univ₈  : Univalence (a ⊔ b ⊔ d))
-  (univ₉  : Univalence (b ⊔ d))
-  (univ₁₀ : Univalence (b ⊔ c ⊔ d)) →
-  Univalence (lsuc (a ⊔ d)) →
-  (l₁ : Lens univ₁ C D) (l₂ : Lens univ₂ B C) (l₃ : Lens univ₃ A B) →
-  ⟨ univ₄ , univ₅ ⟩ l₁ ∘ (⟨ univ₆ , univ₇ ⟩ l₂ ∘ l₃) ≡
-  ⟨ univ₄ , univ₈ ⟩ (⟨ univ₉ , univ₁₀ ⟩ l₁ ∘ l₂) ∘ l₃
-associativity stable _ _ _ univ₄ _ _ _ _ _ _ univ₁₁ l₁ l₂ l₃ =
-  lenses-equal-if-setters-equal
-    univ₁₁
-    univ₄
-    _
-    _
-    stable
-    (refl _)
+  (l₁ : Lens C D) (l₂ : Lens B C) (l₃ : Lens A B) →
+  l₁ ∘ (l₂ ∘ l₃) ≡ (l₁ ∘ l₂) ∘ l₃
+associativity stable l₁ l₂ l₃ =
+  lenses-equal-if-setters-equal _ _ stable (refl _)
 
 -- The identity lens is a left identity of composition if the view
--- type of the resulting lens is stable (assuming univalence).
+-- type of the resulting lens is stable.
 
 left-identity :
   {A : Type a} {B : Type b} →
   (∥ B ∥ → B) →
-  (univ₁ : Univalence (a ⊔ b))
-  (univ₂ : Univalence (a ⊔ b))
-  (univ₃ : Univalence b) →
-  Univalence (lsuc (a ⊔ b)) →
-  (l : Lens univ₁ A B) →
-  ⟨ univ₁ , univ₂ ⟩ id univ₃ ∘ l ≡ l
-left-identity stable univ₁ univ₂ univ₃ univ₄ l =
-  lenses-equal-if-setters-equal
-    univ₄
-    univ₁
-    _
-    _
-    stable
-    (refl _)
+  (l : Lens A B) →
+  id ∘ l ≡ l
+left-identity stable l =
+  lenses-equal-if-setters-equal _ _ stable (refl _)
 
 -- The identity lens is a right identity of composition if the view
--- type of the resulting lens is stable (assuming univalence).
+-- type of the resulting lens is stable.
 
 right-identity :
   {A : Type a} {B : Type b} →
   (∥ B ∥ → B) →
-  (univ₁ : Univalence (a ⊔ b))
-  (univ₂ : Univalence (a ⊔ b))
-  (univ₃ : Univalence a) →
-  Univalence (lsuc (a ⊔ b)) →
-  (l : Lens univ₁ A B) →
-  ⟨ univ₁ , univ₂ ⟩ l ∘ id univ₃ ≡ l
-right-identity stable univ₁ univ₂ univ₃ univ₄ l =
-  lenses-equal-if-setters-equal
-    univ₄
-    univ₁
-    _
-    _
-    stable
-    (refl _)
+  (l : Lens A B) →
+  l ∘ id ≡ l
+right-identity stable l =
+  lenses-equal-if-setters-equal _ _ stable (refl _)
 
--- The definitions in the following module use seven instances of
--- univalence.
+-- An unrestricted composition operator for Higher.Lens.
 
-module _
+infix 9 ⟨_⟩_⊚_
+
+⟨_⟩_⊚_ :
+  {A : Type a} {B : Type b} {C : Type c} →
+  Block "Higher-lens≃Lens" →
+  Higher.Lens B C → Higher.Lens A B → Higher.Lens A C
+⟨_⟩_⊚_ b l₁ l₂ =
+  _≃_.from (Higher-lens≃Lens b)
+    (_≃_.to (Higher-lens≃Lens b) l₁ ∘
+     _≃_.to (Higher-lens≃Lens b) l₂)
+
+-- The setter of a lens formed using composition is defined in the
+-- "right" way.
+
+set-⊚ :
   {A : Type a} {B : Type b} {C : Type c}
-  (univ₁ : Univalence (b ⊔ c))
-  (univ₂ : Univalence (lsuc (b ⊔ c)))
-  (univ₃ : Univalence (a ⊔ b))
-  (univ₄ : Univalence (lsuc (a ⊔ b)))
-  (univ₅ : Univalence (a ⊔ c))
-  (univ₆ : Univalence (lsuc (a ⊔ c)))
-  (univ₇ : Univalence (a ⊔ b ⊔ c))
-  where
+  (b : Block "Higher-lens≃Lens") →
+  ∀ (l₁ : Higher.Lens B C) (l₂ : Higher.Lens A B) a c →
+  Higher.Lens.set (⟨ b ⟩ l₁ ⊚ l₂) a c ≡
+  Higher.Lens.set l₂ a (Higher.Lens.set l₁ (Higher.Lens.get l₂ a) c)
+set-⊚ b l₁ l₂ a c =
+  Higher.Lens.set
+    (_≃_.from (Higher-lens≃Lens b)
+       (_≃_.to (Higher-lens≃Lens b) l₁ ∘
+        _≃_.to (Higher-lens≃Lens b) l₂))
+    a c                                                                ≡⟨ cong (λ f → f a c) $
+                                                                          proj₂ $
+                                                                          proj₂ (Higher-lens≃Lens-preserves-getters-and-setters b)
+                                                                            (_≃_.to (Higher-lens≃Lens b) l₁ ∘
+                                                                             _≃_.to (Higher-lens≃Lens b) l₂) ⟩
+  Lens.set
+    (_≃_.to (Higher-lens≃Lens b) l₁ ∘ _≃_.to (Higher-lens≃Lens b) l₂)
+    a c                                                                ≡⟨⟩
 
-  -- An unrestricted composition operator for Higher.Lens (defined using
-  -- univalence).
-
-  infix 9 ⟨_,_,_,_,_,_,_,_⟩_⊚_
-
-  ⟨_,_,_,_,_,_,_,_⟩_⊚_ :
-    Block "Higher-lens≃Lens" →
-    Higher.Lens B C → Higher.Lens A B → Higher.Lens A C
-  ⟨_,_,_,_,_,_,_,_⟩_⊚_ b l₁ l₂ =
-    _≃_.from (Higher-lens≃Lens b univ₆ univ₅)
-      (⟨ univ₅ , univ₇ ⟩
-         _≃_.to (Higher-lens≃Lens b univ₂ univ₁) l₁ ∘
-         _≃_.to (Higher-lens≃Lens b univ₄ univ₃) l₂)
-
-  -- The setter of a lens formed using composition is defined in the
-  -- "right" way.
-
-  set-⊚ :
-    (b : Block "Higher-lens≃Lens") →
-    ∀ (l₁ : Higher.Lens B C) (l₂ : Higher.Lens A B) a c →
-    Higher.Lens.set (⟨_,_,_,_,_,_,_,_⟩_⊚_ b l₁ l₂) a c ≡
-    Higher.Lens.set l₂ a (Higher.Lens.set l₁ (Higher.Lens.get l₂ a) c)
-  set-⊚ b l₁ l₂ a c =
-    Higher.Lens.set
-      (_≃_.from (Higher-lens≃Lens b univ₆ univ₅)
-         (⟨ univ₅ , univ₇ ⟩
-            _≃_.to (Higher-lens≃Lens b univ₂ univ₁) l₁ ∘
-            _≃_.to (Higher-lens≃Lens b univ₄ univ₃) l₂))
-      a c                                                               ≡⟨ cong (λ f → f a c) $
-                                                                           proj₂ $
-                                                                           proj₂ (Higher-lens≃Lens-preserves-getters-and-setters b univ₆ univ₅)
-                                                                             (⟨ univ₅ , univ₇ ⟩
-                                                                                _≃_.to (Higher-lens≃Lens b univ₂ univ₁) l₁ ∘
-                                                                                _≃_.to (Higher-lens≃Lens b univ₄ univ₃) l₂) ⟩
-    Lens.set
-      (⟨ univ₅ , univ₇ ⟩
-         _≃_.to (Higher-lens≃Lens b univ₂ univ₁) l₁ ∘
-         _≃_.to (Higher-lens≃Lens b univ₄ univ₃) l₂)
-      a c                                                               ≡⟨⟩
-
-    Lens.set (_≃_.to (Higher-lens≃Lens b univ₄ univ₃) l₂)
-      a
-      (Lens.set (_≃_.to (Higher-lens≃Lens b univ₂ univ₁) l₁)
-         (Lens.get (_≃_.to (Higher-lens≃Lens b univ₄ univ₃) l₂) a) c)   ≡⟨ cong (λ f →
-                                                                                   f a (Lens.set (_≃_.to (Higher-lens≃Lens b univ₂ univ₁) l₁)
-                                                                                          (Lens.get (_≃_.to (Higher-lens≃Lens b univ₄ univ₃) l₂) a)
-                                                                                          c)) $
-                                                                           proj₂ $
-                                                                           proj₁ (Higher-lens≃Lens-preserves-getters-and-setters b univ₄ univ₃) l₂ ⟩
-    Higher.Lens.set l₂
-      a
-      (Lens.set (_≃_.to (Higher-lens≃Lens b univ₂ univ₁) l₁)
-         (Lens.get (_≃_.to (Higher-lens≃Lens b univ₄ univ₃) l₂) a) c)   ≡⟨ cong (Higher.Lens.set l₂ a) $
-                                                                           cong₂ (λ f g → f (g a) c)
-                                                                             (proj₂ $
-                                                                              proj₁ (Higher-lens≃Lens-preserves-getters-and-setters b univ₂ univ₁)
-                                                                                l₁)
-                                                                             (proj₁ $
-                                                                              proj₁ (Higher-lens≃Lens-preserves-getters-and-setters b univ₄ univ₃)
-                                                                                l₂) ⟩∎
-    Higher.Lens.set l₂ a (Higher.Lens.set l₁ (Higher.Lens.get l₂ a) c)  ∎
+  Lens.set (_≃_.to (Higher-lens≃Lens b) l₂)
+    a
+    (Lens.set (_≃_.to (Higher-lens≃Lens b) l₁)
+       (Lens.get (_≃_.to (Higher-lens≃Lens b) l₂) a) c)                ≡⟨ cong (λ f →
+                                                                                  f a (Lens.set (_≃_.to (Higher-lens≃Lens b) l₁)
+                                                                                         (Lens.get (_≃_.to (Higher-lens≃Lens b) l₂) a)
+                                                                                         c)) $
+                                                                          proj₂ $ proj₁ (Higher-lens≃Lens-preserves-getters-and-setters b) l₂ ⟩
+  Higher.Lens.set l₂
+    a
+    (Lens.set (_≃_.to (Higher-lens≃Lens b) l₁)
+       (Lens.get (_≃_.to (Higher-lens≃Lens b) l₂) a) c)                ≡⟨ cong (Higher.Lens.set l₂ a) $
+                                                                          cong₂ (λ f g → f (g a) c)
+                                                                            (proj₂ $ proj₁ (Higher-lens≃Lens-preserves-getters-and-setters b) l₁)
+                                                                            (proj₁ $ proj₁ (Higher-lens≃Lens-preserves-getters-and-setters b) l₂) ⟩∎
+  Higher.Lens.set l₂ a (Higher.Lens.set l₁ (Higher.Lens.get l₂ a) c)   ∎
 
 -- If the view type of the resulting lens is stable, then the
 -- definition of composition above matches the one in higher (when
@@ -1135,23 +1014,12 @@ module _
 ⊚≡∘ :
   (bl : Block "Higher-lens≃Lens") →
   ∀ a b {A : Type (a ⊔ b ⊔ c)} {B : Type (b ⊔ c)} {C : Type c}
-  (univ₁ : Univalence (b ⊔ c))
-  (univ₂ : Univalence (lsuc (b ⊔ c)))
-  (univ₃ : Univalence (a ⊔ b ⊔ c))
-  (univ₄ : Univalence (lsuc (a ⊔ b ⊔ c)))
-  (univ₅ : Univalence (a ⊔ b ⊔ c))
-  (univ₆ : Univalence (lsuc (a ⊔ b ⊔ c)))
-  (univ₇ : Univalence (a ⊔ b ⊔ c))
   (l₁ : Higher.Lens B C) (l₂ : Higher.Lens A B) →
   (∥ C ∥ → C) →
-  ⟨ univ₁ , univ₂ , univ₃ , univ₄ , univ₅ , univ₆ , univ₇ , bl ⟩
-    l₁ ⊚ l₂ ≡
-  HC.⟨ a , b ⟩ l₁ ∘ l₂
-⊚≡∘ bl a b univ₁ univ₂ univ₃ univ₄ univ₅ univ₆ univ₇ l₁ l₂ stable =
+  ⟨ bl ⟩ l₁ ⊚ l₂ ≡ HC.⟨ a , b ⟩ l₁ ∘ l₂
+⊚≡∘ bl a b l₁ l₂ stable =
   cong (λ f → f l₁ l₂) $
-  HC.composition≡∘ a b univ₇ stable
-    ⟨ univ₁ , univ₂ , univ₃ , univ₄ , univ₅ , univ₆ , univ₇ , bl ⟩_⊚_
-    (set-⊚ univ₁ univ₂ univ₃ univ₄ univ₅ univ₆ univ₇ bl)
+  HC.composition≡∘ a b univ stable ⟨ bl ⟩_⊚_ (set-⊚ bl)
 
 ------------------------------------------------------------------------
 -- An alternative definition that does not make use of coinduction
@@ -1161,32 +1029,29 @@ module _
 -- This definition does not make use of coinduction, but it is not
 -- small.
 
-Not-coinductive-lens :
-  Univalence (a ⊔ b) → Type a → Type b → Type (lsuc (a ⊔ b))
-Not-coinductive-lens univ A B =
+Not-coinductive-lens : Type a → Type b → Type (lsuc (a ⊔ b))
+Not-coinductive-lens A B =
   ∃ λ (get : A → B) →
     NC.Coherently
       Constant-≃
       (λ P c → O.rec′ P (λ x y → ≃⇒≡ univ (c x y)))
       (get ⁻¹_)
 
--- Not-coinductive-lens is pointwise equivalent to Lens (assuming
--- univalence).
+-- Not-coinductive-lens is pointwise equivalent to Lens.
 
 Not-coinductive-lens≃Lens :
-  {univ : Univalence (a ⊔ b)} {A : Type a} {B : Type b} →
-  Univalence (lsuc (a ⊔ b)) →
-  Not-coinductive-lens univ A B ≃ Lens univ A B
-Not-coinductive-lens≃Lens {univ = univ} {A = A} {B = B} univ′ =
-  Not-coinductive-lens univ A B                             ↝⟨ (∃-cong λ _ → inverse $ Coherently≃Not-coinductive-coherently univ′ univ′) ⟩
-  (∃ λ (get : A → B) → Coherently-constant univ (get ⁻¹_))  ↝⟨ inverse Lens-as-Σ ⟩□
-  Lens univ A B                                             □
+  {A : Type a} {B : Type b} →
+  Not-coinductive-lens A B ≃ Lens A B
+Not-coinductive-lens≃Lens {A = A} {B = B} =
+  Not-coinductive-lens A B                             ↝⟨ (∃-cong λ _ → inverse $ Coherently≃Not-coinductive-coherently) ⟩
+  (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))  ↝⟨ inverse Lens-as-Σ ⟩□
+  Lens A B                                             □
 
 ------------------------------------------------------------------------
 -- H-levels
 
--- If P has h-level n (pointwise), then Coherently-constant univ P has
--- h-level n (assuming univalence).
+-- If P has h-level n (pointwise), then Coherently-constant P has
+-- h-level n.
 --
 -- I think that Paolo Capriotti suggested that something like this
 -- could be proved by using the result (due to Ahrens, Capriotti and
@@ -1196,12 +1061,10 @@ Not-coinductive-lens≃Lens {univ = univ} {A = A} {B = B} univ′ =
 
 H-level-Coherently-constant :
   {A : Type a} {P : A → Type p} →
-  Univalence (lsuc (a ⊔ p)) →
-  (univ : Univalence p) →
   ((a : A) → H-level n (P a)) →
-  H-level n (Coherently-constant univ P)
-H-level-Coherently-constant {a = a} {p = p} {n = n} univ _ h =
-  H-level-Coherently-→Type univ univ h lemma P.id
+  H-level n (Coherently-constant P)
+H-level-Coherently-constant {a = a} {p = p} {n = n} h =
+  H-level-Coherently-→Type h lemma P.id
   where
   lemma :
     {A : Type a} {P : A → Type p} →
@@ -1213,24 +1076,19 @@ H-level-Coherently-constant {a = a} {p = p} {n = n} univ _ h =
     Eq.h-level-closure ext n (h _) (h _)
 
 -- If P has h-level n (pointwise), then
--- Coinductive.Coherently-constant P has h-level n (assuming
--- univalence).
+-- Coinductive.Coherently-constant P has h-level n.
 
 H-level-Coinductive-Coherently-constant :
   {A : Type a} {P : A → Type p} →
-  Univalence (lsuc (a ⊔ p)) →
-  Univalence (a ⊔ lsuc p) →
-  Univalence p →
   ((a : A) → H-level n (P a)) →
   H-level n (Coinductive.Coherently-constant P)
-H-level-Coinductive-Coherently-constant {n = n} {P = P} univ₁ univ₂ univ₃ =
-  (∀ a → H-level n (P a))                        ↝⟨ H-level-Coherently-constant univ₁ univ₃ ⟩
-  H-level n (Coherently-constant univ₃ P)        ↝⟨ H-level-cong _ n (inverse $ Coinductive-coherently-constant≃Coherently-constant univ₂ univ₃) ⟩□
+H-level-Coinductive-Coherently-constant {n = n} {P = P} =
+  (∀ a → H-level n (P a))                        ↝⟨ H-level-Coherently-constant ⟩
+  H-level n (Coherently-constant P)              ↝⟨ H-level-cong _ n (inverse $ Coinductive-coherently-constant≃Coherently-constant) ⟩□
   H-level n (Coinductive.Coherently-constant P)  □
 
 -- If A and B have h-level n given the assumption that the other type
--- is inhabited, then Lens univ A B has h-level n (assuming
--- univalence).
+-- is inhabited, then Lens A B has h-level n.
 --
 -- I do not remember who came up with the idea to prove this for the
 -- coinductive lenses (rather than the ones in
@@ -1239,40 +1097,33 @@ H-level-Coinductive-Coherently-constant {n = n} {P = P} univ₁ univ₂ univ₃ 
 
 lens-preserves-h-level :
   {A : Type a} {B : Type b} →
-  Univalence (lsuc (a ⊔ b)) →
-  (univ : Univalence (a ⊔ b)) →
   ∀ n → (B → H-level n A) → (A → H-level n B) →
-  H-level n (Lens univ A B)
-lens-preserves-h-level univ′ univ n hA hB =
+  H-level n (Lens A B)
+lens-preserves-h-level n hA hB =
   H-level-cong _ n (inverse Lens-as-Σ) $
   Σ-closure n
     (Π-closure ext n λ a →
      hB a) λ _ →
-  H-level-Coherently-constant univ′ univ λ b →
+  H-level-Coherently-constant λ b →
   Σ-closure n (hA b) λ a →
   H-level.⇒≡ n (hB a)
 
 -- If the domain of a lens is inhabited and has h-level n, then the
--- codomain also has h-level n (assuming univalence).
+-- codomain also has h-level n.
 
 h-level-respects-lens-from-inhabited :
   {A : Type a} {B : Type b} →
-  Univalence (lsuc (a ⊔ b)) →
-  (univ : Univalence (a ⊔ b)) →
-  ∀ n → Lens univ A B → A → H-level n A → H-level n B
-h-level-respects-lens-from-inhabited univ′ univ n =
-  Higher.h-level-respects-lens-from-inhabited n ∘
-  _≃_.from (Higher-lens≃Lens ⊠ univ′ univ)
+  ∀ n → Lens A B → A → H-level n A → H-level n B
+h-level-respects-lens-from-inhabited n =
+  Higher.h-level-respects-lens-from-inhabited n ⊚
+  _≃_.from (Higher-lens≃Lens ⊠)
 
--- If A has positive h-level n, then Lens univ A B also has h-level n
--- (assuming univalence).
+-- If A has positive h-level n, then Lens A B also has h-level n.
 
 lens-preserves-h-level-of-domain :
   {A : Type a} {B : Type b} →
-  Univalence (lsuc (a ⊔ b)) →
-  (univ : Univalence (a ⊔ b)) →
-  ∀ n → H-level (1 + n) A → H-level (1 + n) (Lens univ A B)
-lens-preserves-h-level-of-domain univ′ univ n hA =
+  ∀ n → H-level (1 + n) A → H-level (1 + n) (Lens A B)
+lens-preserves-h-level-of-domain n hA =
   H-level.[inhabited⇒+]⇒+ n λ l →
-  lens-preserves-h-level univ′ univ (1 + n) (λ _ → hA) λ a →
-  h-level-respects-lens-from-inhabited univ′ univ _ l a hA
+  lens-preserves-h-level (1 + n) (λ _ → hA) λ a →
+  h-level-respects-lens-from-inhabited _ l a hA

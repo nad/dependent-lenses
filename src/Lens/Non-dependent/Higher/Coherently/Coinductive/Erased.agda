@@ -85,8 +85,7 @@ Coherentlyᴱ-cong′ {f = f} {P = P} {step = step} A₁≃A₂ =
 Coherentlyᴱ⇔Coherently ._⇔_.from c .property = c .C.property
 Coherentlyᴱ⇔Coherently ._⇔_.from c .coherent =
   Coherentlyᴱ⇔Coherently ._⇔_.from
-    (_≃_.from (C.Coherently-cong′ univ O.∥∥¹ᴱ≃∥∥¹)
-       (c .C.coherent))
+    (_≃_.from (C.Coherently-cong′ O.∥∥¹ᴱ≃∥∥¹) (c .C.coherent))
 
 Coherentlyᴱ⇔Coherently ._⇔_.to c .C.property = c .property
 Coherentlyᴱ⇔Coherently ._⇔_.to c .C.coherent =

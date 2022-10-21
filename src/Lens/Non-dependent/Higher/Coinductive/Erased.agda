@@ -106,7 +106,7 @@ private
                                                                   C.Coherently-constant′≃ bl)) ⟩
 
   (∃ λ (f : A → B) → Erased (C.Coherently-constant′ f))        ↝⟨ ∃-cong (λ f → Erased-cong (inverse $
-                                                                  C.Coherently-constant≃Coherently-constant′ bl univ)) ⟩□
+                                                                  C.Coherently-constant≃Coherently-constant′ bl)) ⟩□
   (∃ λ (f : A → B) → Erased (C.Coherently-constant f))         □
 
 -- A "computation" rule for ∥∥ᴱ→≃.
@@ -161,7 +161,7 @@ cong-from-∥∥ᴱ→≃-truncation-is-proposition
   g bl =
     _≃_.from (∥∥ᴱ→≃-lemma bl _) $
     _≃_.to (C.Coherently-constant′≃ bl) $
-    _≃_.to (C.Coherently-constant≃Coherently-constant′ bl univ) c
+    _≃_.to (C.Coherently-constant≃Coherently-constant′ bl) c
 
   lemma :
     ∀ bl →
@@ -425,8 +425,7 @@ H-level-Coherently-constant {n = n} h =
      Π-closure ext n λ _ →
      h _) λ _ →
   H-level-Erased n (
-  Σ-closure n
-    (S.H-level-Coinductive-Coherently-constant univ univ univ h) λ _ →
+  Σ-closure n (S.H-level-Coinductive-Coherently-constant h) λ _ →
   Π-closure ext n λ _ →
   Π-closure ext n λ _ →
   H-level.⇒≡ n $

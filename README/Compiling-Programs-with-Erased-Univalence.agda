@@ -18,11 +18,9 @@
 
 -- Note that the code does not follow the paper exactly. For instance,
 -- some definitions use bijections (functions with quasi-inverses)
--- instead of equivalences. Some code is parametrised by assumptions
--- of univalence instead of using proved univalence, and some library
--- code that is not defined in Cubical Agda is parametrised by
--- assumptions of function extensionality. Some other differences are
--- mentioned below.
+-- instead of equivalences. Some code that is not defined in Cubical
+-- Agda is parametrised by assumptions of univalence and/or function
+-- extensionality. Some other differences are mentioned below.
 
 -- Note that there is a known problem with guarded corecursion in
 -- Agda. Due to "quantifier inversion" (see "Termination Checking in

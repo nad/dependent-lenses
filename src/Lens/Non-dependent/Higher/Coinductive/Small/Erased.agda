@@ -110,7 +110,7 @@ Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ {f = f} =
   Constantᴱ (f ⁻¹ᴱ_) ≃ Constant (f ⁻¹_)
 Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ ⊠ {f = f} =
   Constantᴱ (f ⁻¹ᴱ_)    ↝⟨ Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ ⟩
-  S.Constant-≃ (f ⁻¹_)  ↝⟨ inverse $ S.Constant≃Constant-≃ univ ⟩□
+  S.Constant-≃ (f ⁻¹_)  ↝⟨ inverse S.Constant≃Constant-≃ ⟩□
   Constant (f ⁻¹_)      □
 
 -- A "computation" rule for Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹.
@@ -360,13 +360,12 @@ Coherently-constant-fibres :
 Coherently-constant-fibres {A = A} {B = B} get =
   ∃ λ (set : A → B → A) →
     Erased
-      (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+      (∃ λ (c : S.Coherently-constant (get ⁻¹_)) →
        set ≡
-       S.Lens.set {univ = univ}
-         (record { get⁻¹-coherently-constant = c }))
+       S.Lens.set (record { get⁻¹-coherently-constant = c }))
 
--- Coherently-constant-fibres univ get is equivalent (with erased
--- proofs) to CE.Coherently-constant (get ⁻¹ᴱ_).
+-- Coherently-constant-fibres get is equivalent (with erased proofs)
+-- to CE.Coherently-constant (get ⁻¹ᴱ_).
 
 Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ :
   {A : Type a} {B : Type b} {get : A → B} →
@@ -380,17 +379,14 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
 
   (∃ λ (set : A → B → A) →
    Erased
-     (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+     (∃ λ (c : S.Coherently-constant (get ⁻¹_)) →
       set ≡
-      S.Lens.set {univ = univ}
-        (record { get⁻¹-coherently-constant = c })))                      ↔⟨ (∃-cong λ _ → Erased-cong (∃-cong λ c →
+      S.Lens.set (record { get⁻¹-coherently-constant = c })))             ↔⟨ (∃-cong λ _ → Erased-cong (∃-cong λ c →
                                                                               ≡⇒≃ $ cong (_ ≡_) $
-                                                                              S.Lens.set≡ {univ = univ}
-                                                                                (record { get⁻¹-coherently-constant = c })
-                                                                                bl)) ⟩
+                                                                              S.Lens.set≡ (record { get⁻¹-coherently-constant = c }) bl)) ⟩
   (∃ λ (set : A → B → A) →
    Erased
-     (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+     (∃ λ (c : S.Coherently-constant (get ⁻¹_)) →
       set ≡ proj₁ (_≃_.to (S.Constant-≃-get-⁻¹-≃ bl) (c .property))))     ↔⟨ (∃-cong λ _ → Erased-cong (∃-cong λ _ → inverse $
                                                                               ≡-comm F.∘
                                                                               drop-⊤-right λ _ →
@@ -398,7 +394,7 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
                                                                               other-singleton-contractible _)) ⟩
   (∃ λ (set : A → B → A) →
    Erased
-     (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+     (∃ λ (c : S.Coherently-constant (get ⁻¹_)) →
       ∃ λ (p : proj₁ (_≃_.to (S.Constant-≃-get-⁻¹-≃ bl) (c .property)) ≡
                set) →
       ∃ λ (q : ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
@@ -422,7 +418,7 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
                                                                               (∃-cong λ _ → inverse Σ-assoc))) ⟩
   (∃ λ (set : A → B → A) →
    Erased
-     (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+     (∃ λ (c : S.Coherently-constant (get ⁻¹_)) →
       ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
       ∃ λ (eq : ∀ b₁ b₂ →
                 let f : get ⁻¹ b₁ → get ⁻¹ b₂
@@ -444,7 +440,7 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
                                                                               B.Σ-≡,≡↔≡)) ⟩
   (∃ λ (set : A → B → A) →
    Erased
-     (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+     (∃ λ (c : S.Coherently-constant (get ⁻¹_)) →
       ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
       ∃ λ (eq : ∀ b₁ b₂ →
                 let f : get ⁻¹ b₁ → get ⁻¹ b₂
@@ -457,7 +453,7 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
                                                                               inverse (Eq.≃-≡ $ inverse $ S.Constant-≃-get-⁻¹-≃ bl))) ⟩
   (∃ λ (set : A → B → A) →
    Erased
-     (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+     (∃ λ (c : S.Coherently-constant (get ⁻¹_)) →
       ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
       ∃ λ (eq : ∀ b₁ b₂ →
                 let f : get ⁻¹ b₁ → get ⁻¹ b₂
@@ -480,7 +476,7 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
            in
            Is-equivalence f)) →
    Erased
-     (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+     (∃ λ (c : S.Coherently-constant (get ⁻¹_)) →
       c .property ≡ S.Constant-≃-get-⁻¹-≃⁻¹ (set , get-set , eq)))        ↝⟨ (inverse $
                                                                               EEq.Σ-cong-≃ᴱ-Erased (Constantᴱ-⁻¹ᴱ-≃ᴱ bl) λ c →
                                                                               Erased-cong (∃-cong λ c′ →
@@ -493,10 +489,9 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
 
   (∃ λ (c : Constantᴱ (get ⁻¹ᴱ_)) →
    Erased
-     (∃ λ (c′ : S.Coherently-constant univ (get ⁻¹_)) →
+     (∃ λ (c′ : S.Coherently-constant (get ⁻¹_)) →
       c′ .property ≡ _≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c))             ↔⟨ (∃-cong λ c → Erased-cong (inverse $
-                                                                              Σ-cong (S.Coinductive-coherently-constant≃Coherently-constant
-                                                                                        univ univ) λ c′ →
+                                                                              Σ-cong S.Coinductive-coherently-constant≃Coherently-constant λ c′ →
                                                                               lemma₁ bl c (c′ .property))) ⟩
   (∃ λ (c : Constantᴱ (get ⁻¹ᴱ_)) →
    Erased
@@ -536,20 +531,20 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
     c′ ≡ _≃_.to (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl) c  ↝⟨ ≡⇒≃ $ cong (c′ ≡_) $
                                                        unblock bl
                                                          (λ bl → _≃_.to (Constantᴱ-⁻¹ᴱ-≃-Constant-⁻¹ bl) c ≡
-                                                                 _≃_.from (S.Constant≃Constant-≃ univ)
+                                                                 _≃_.from S.Constant≃Constant-≃
                                                                    (_≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c))
                                                          (refl _) ⟩
     c′ ≡
-    _≃_.from (S.Constant≃Constant-≃ univ)
-      (_≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c)      ↝⟨ inverse $ Eq.≃-≡ (S.Constant≃Constant-≃ univ) ⟩
+    _≃_.from S.Constant≃Constant-≃
+      (_≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c)      ↝⟨ inverse $ Eq.≃-≡ S.Constant≃Constant-≃ ⟩
 
-    _≃_.to (S.Constant≃Constant-≃ univ) c′ ≡
-    _≃_.to (S.Constant≃Constant-≃ univ)
-      (_≃_.from (S.Constant≃Constant-≃ univ)
+    _≃_.to S.Constant≃Constant-≃ c′ ≡
+    _≃_.to S.Constant≃Constant-≃
+      (_≃_.from S.Constant≃Constant-≃
          (_≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c))  ↝⟨ ≡⇒≃ $
-                                                       cong (_≃_.to (S.Constant≃Constant-≃ univ) c′ ≡_) $
-                                                       _≃_.right-inverse-of (S.Constant≃Constant-≃ univ) _ ⟩□
-    _≃_.to (S.Constant≃Constant-≃ univ) c′ ≡
+                                                       cong (_≃_.to S.Constant≃Constant-≃ c′ ≡_) $
+                                                       _≃_.right-inverse-of S.Constant≃Constant-≃ _ ⟩□
+    _≃_.to S.Constant≃Constant-≃ c′ ≡
     _≃_.to Constantᴱ-⁻¹ᴱ-≃-Constant-≃-⁻¹ c          □
 
   @0 lemma₂ : ∀ _ _ _ _ → _
@@ -633,38 +628,35 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
      ∀ b₁ b₂ → proj₁ (c b₁ b₂) ≡ subst P.id (c′ .property b₁ b₂))  □
 
 -- In erased contexts Coherently-constant-fibres get is equivalent to
--- S.Coherently-constant univ (get ⁻¹_).
+-- S.Coherently-constant (get ⁻¹_).
 
 @0 Coherently-constant-fibres≃Coherently-constant-⁻¹ :
   (bl : Block "Constant-≃-get-⁻¹-≃")
   {A : Type a} {B : Type b} {get : A → B} →
   Coherently-constant-fibres get ≃
-  S.Coherently-constant univ (get ⁻¹_)
+  S.Coherently-constant (get ⁻¹_)
 Coherently-constant-fibres≃Coherently-constant-⁻¹
   bl {A = A} {B = B} {get = get} =
-  Coherently-constant-fibres get                        ↔⟨⟩
+  Coherently-constant-fibres get                               ↔⟨⟩
 
   (∃ λ (set : A → B → A) →
    Erased
-     (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+     (∃ λ (c : S.Coherently-constant (get ⁻¹_)) →
       set ≡
-      S.Lens.set {univ = univ}
-        (record { get⁻¹-coherently-constant = c })))    ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
+      S.Lens.set (record { get⁻¹-coherently-constant = c })))  ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
 
   (∃ λ (set : A → B → A) →
-   ∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+   ∃ λ (c : S.Coherently-constant (get ⁻¹_)) →
    set ≡
-   S.Lens.set {univ = univ}
-     (record { get⁻¹-coherently-constant = c }))        ↔⟨ ∃-comm ⟩
+   S.Lens.set (record { get⁻¹-coherently-constant = c }))      ↔⟨ ∃-comm ⟩
 
-  (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+  (∃ λ (c : S.Coherently-constant (get ⁻¹_)) →
    ∃ λ (set : A → B → A) →
    set ≡
-   S.Lens.set {univ = univ}
-     (record { get⁻¹-coherently-constant = c }))        ↔⟨ (drop-⊤-right λ _ →
-                                                            _⇔_.to contractible⇔↔⊤ $
-                                                            singleton-contractible _) ⟩□
-  S.Coherently-constant univ (get ⁻¹_)                  □
+   S.Lens.set (record { get⁻¹-coherently-constant = c }))      ↔⟨ (drop-⊤-right λ _ →
+                                                                   _⇔_.to contractible⇔↔⊤ $
+                                                                   singleton-contractible _) ⟩□
+  S.Coherently-constant (get ⁻¹_)                              □
 
 ------------------------------------------------------------------------
 -- The lens type family
@@ -687,12 +679,12 @@ record Lens (A : Type a) (B : Type b) : Type (a ⊔ b) where
 
     -- The family get ⁻¹_ is coherently constant (in erased contexts).
 
-    @0 get⁻¹-coherently-constant : S.Coherently-constant univ (get ⁻¹_)
+    @0 get⁻¹-coherently-constant : S.Coherently-constant (get ⁻¹_)
 
   -- Using get and get⁻¹-coherently-constant we can construct an
   -- erased lens.
 
-  @0 erased-lens : S.Lens univ A B
+  @0 erased-lens : S.Lens A B
   erased-lens = record
     { get                       = get
     ; get⁻¹-coherently-constant = get⁻¹-coherently-constant
@@ -792,16 +784,16 @@ Lens≃ᴱLensᴱ-preserves-getters-and-setters bl =
        (CE.Lens≃ᴱLens-preserves-getters-and-setters bl))
     (Lens≃ᴱLens-preserves-getters-and-setters bl)
 
--- In erased contexts Lens A B is equivalent to S.Lens univ A B.
+-- In erased contexts Lens A B is equivalent to S.Lens A B.
 
 @0 Lens≃Lens :
   (bl : Block "Constant-≃-get-⁻¹-≃") →
-  Lens A B ≃ S.Lens univ A B
+  Lens A B ≃ S.Lens A B
 Lens≃Lens {A = A} {B = B} bl =
-  Lens A B                                                    ↝⟨ Lens-as-Σ ⟩
-  (∃ λ (get : A → B) → Coherently-constant-fibres get)        ↝⟨ (∃-cong λ _ → Coherently-constant-fibres≃Coherently-constant-⁻¹ bl) ⟩
-  (∃ λ (get : A → B) → S.Coherently-constant univ (get ⁻¹_))  ↝⟨ inverse S.Lens-as-Σ ⟩□
-  S.Lens univ A B                                             □
+  Lens A B                                               ↝⟨ Lens-as-Σ ⟩
+  (∃ λ (get : A → B) → Coherently-constant-fibres get)   ↝⟨ (∃-cong λ _ → Coherently-constant-fibres≃Coherently-constant-⁻¹ bl) ⟩
+  (∃ λ (get : A → B) → S.Coherently-constant (get ⁻¹_))  ↝⟨ inverse S.Lens-as-Σ ⟩□
+  S.Lens A B                                             □
 
 -- Lens≃Lens preserves getters and setters.
 
@@ -834,7 +826,7 @@ lenses-equal-if-setters-equal l₁ l₂ stable =
                                                             (proj₂ $ proj₁ (Lens≃Lens-preserves-getters-and-setters bl) l₁)
                                                             (proj₂ $ proj₁ (Lens≃Lens-preserves-getters-and-setters bl) l₂) ⟩
   S.Lens.set (_≃_.to (Lens≃Lens bl) l₁) ≡
-  S.Lens.set (_≃_.to (Lens≃Lens bl) l₂)                ↝⟨ S.lenses-equal-if-setters-equal univ _ _ _ stable ⟩
+  S.Lens.set (_≃_.to (Lens≃Lens bl) l₂)                ↝⟨ S.lenses-equal-if-setters-equal _ _ stable ⟩
 
   _≃_.to (Lens≃Lens bl) l₁ ≡ _≃_.to (Lens≃Lens bl) l₂  ↔⟨ Eq.≃-≡ $ Lens≃Lens bl ⟩□
 
@@ -855,7 +847,7 @@ with-other-getter :
 with-other-getter {A = A} {B = B} l get p = record l
   { get                       = get
   ; get⁻¹-coherently-constant =
-      subst (S.Coherently-constant univ ⊚ _⁻¹_)
+      subst (S.Coherently-constant ⊚ _⁻¹_)
         (sym p) L.get⁻¹-coherently-constant
   ; set≡set =
       L.set          ≡⟨ L.set≡set ⟩
@@ -865,7 +857,7 @@ with-other-getter {A = A} {B = B} l get p = record l
   where
   module L = Lens l
 
-  @0 l₁ l₂ : S.Lens univ A B
+  @0 l₁ l₂ : S.Lens A B
 
   l₁ = record
     { get                       = L.get
@@ -875,18 +867,18 @@ with-other-getter {A = A} {B = B} l get p = record l
   l₂ = record
     { get                       = get
     ; get⁻¹-coherently-constant =
-        subst (S.Coherently-constant univ ⊚ _⁻¹_) (sym p)
+        subst (S.Coherently-constant ⊚ _⁻¹_) (sym p)
           L.get⁻¹-coherently-constant
     }
 
   @0 l₂≡l₁ : l₂ ≡ l₁
   l₂≡l₁ =
     _≃_.to (Eq.≃-≡ S.Lens-as-Σ) $ Σ-≡,≡→≡ p
-      (subst (S.Coherently-constant univ ⊚ _⁻¹_) p
-         (subst (S.Coherently-constant univ ⊚ _⁻¹_) (sym p)
-            L.get⁻¹-coherently-constant)                     ≡⟨ subst-subst-sym _ _ _ ⟩∎
+      (subst (S.Coherently-constant ⊚ _⁻¹_) p
+         (subst (S.Coherently-constant ⊚ _⁻¹_) (sym p)
+            L.get⁻¹-coherently-constant)                ≡⟨ subst-subst-sym _ _ _ ⟩∎
 
-       L.get⁻¹-coherently-constant                           ∎)
+       L.get⁻¹-coherently-constant                      ∎)
 
 _ : Lens.get (with-other-getter l g p) ≡ g
 _ = refl _
@@ -906,41 +898,38 @@ with-other-getter≡ :
 with-other-getter≡ {A = A} {B = B} l get p =
   _≃_.to (Eq.≃-≡ Lens-as-Σ) $ Σ-≡,≡→≡ p
     (subst Coherently-constant-fibres p
-       L′.coherently-constant-fibres-get                             ≡⟨ push-subst-pair-× _ _ ⟩
+       L′.coherently-constant-fibres-get                              ≡⟨ push-subst-pair-× _ _ ⟩
 
      L.set ,
      subst
        (λ get →
           Erased
-            (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+            (∃ λ (c : S.Coherently-constant (get ⁻¹_)) →
              L.set ≡
-             S.Lens.set {univ = univ}
-               (record { get⁻¹-coherently-constant = c })))
+             S.Lens.set (record { get⁻¹-coherently-constant = c })))
        p
-       [ (L′.get⁻¹-coherently-constant , L′.set≡set) ]               ≡⟨ cong (L.set ,_) push-subst-[] ⟩
+       [ (L′.get⁻¹-coherently-constant , L′.set≡set) ]                ≡⟨ cong (L.set ,_) push-subst-[] ⟩
 
      L.set ,
      [ subst
          (λ get →
-            ∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+            ∃ λ (c : S.Coherently-constant (get ⁻¹_)) →
             L.set ≡
-            S.Lens.set {univ = univ}
-              (record { get⁻¹-coherently-constant = c }))
+            S.Lens.set (record { get⁻¹-coherently-constant = c }))
          p
          (L′.get⁻¹-coherently-constant , L′.set≡set)
-     ]                                                               ≡⟨ cong (L.set ,_) $ []-cong [ push-subst-pair′ _ _ _ ] ⟩
+     ]                                                                ≡⟨ cong (L.set ,_) $ []-cong [ push-subst-pair′ _ _ _ ] ⟩
 
      L.set ,
      [ ( L.get⁻¹-coherently-constant
        , subst
-           (λ ((get , c) : ∃ (S.Coherently-constant univ ⊚ _⁻¹_)) →
+           (λ ((get , c) : ∃ (S.Coherently-constant ⊚ _⁻¹_)) →
               L.set ≡
-              S.Lens.set {univ = univ}
-                (record { get⁻¹-coherently-constant = c }))
+              S.Lens.set (record { get⁻¹-coherently-constant = c }))
            (Σ-≡,≡→≡ p (subst-subst-sym _ _ _))
            L′.set≡set
        )
-     ]                                                               ≡⟨⟩
+     ]                                                                ≡⟨⟩
 
      L.set ,
      [ ( L.get⁻¹-coherently-constant
@@ -949,41 +938,39 @@ with-other-getter≡ {A = A} {B = B} l get p =
                    (subst-subst-sym _ _ _)
          in
          subst
-           (λ ((get , c) : ∃ (S.Coherently-constant univ ⊚ _⁻¹_)) →
+           (λ ((get , c) : ∃ (S.Coherently-constant ⊚ _⁻¹_)) →
               L.set ≡
-              S.Lens.set {univ = univ}
-                (record { get⁻¹-coherently-constant = c }))
+              S.Lens.set (record { get⁻¹-coherently-constant = c }))
            q
            (trans L.set≡set
-              (cong (S.Lens.set {univ = univ}) $ sym $
+              (cong S.Lens.set $ sym $
                _≃_.to (Eq.≃-≡ S.Lens-as-Σ) q))
        )
-     ]                                                               ≡⟨ cong (L.set ,_) $ []-cong
-                                                                        [ cong (L.get⁻¹-coherently-constant ,_) $
-                                                                          elim₁
-                                                                            (λ q →
-                                                                               subst
-                                                                                 (λ ((get , c) : ∃ (S.Coherently-constant univ ⊚ _⁻¹_)) →
-                                                                                    L.set ≡
-                                                                                    S.Lens.set {univ = univ}
-                                                                                      (record { get⁻¹-coherently-constant = c }))
-                                                                                 q
-                                                                                 (trans L.set≡set
-                                                                                    (cong (S.Lens.set {univ = univ}) $ sym $
-                                                                                     _≃_.to (Eq.≃-≡ S.Lens-as-Σ) q)) ≡
-                                                                               L.set≡set)
-                                                                            (trans (subst-refl _ _) $
-                                                                             trans (cong (trans _) $
-                                                                                    trans (cong (cong _) $
-                                                                                           trans (cong sym (Eq.to-≃-≡-refl S.Lens-as-Σ))
-                                                                                           sym-refl) $
-                                                                                    cong-refl _) $
-                                                                             trans-reflʳ _)
-                                                                            _
-                                                                        ] ⟩
-     L.set , [ (L.get⁻¹-coherently-constant , L.set≡set) ]           ≡⟨⟩
+     ]                                                                ≡⟨ cong (L.set ,_) $ []-cong
+                                                                         [ cong (L.get⁻¹-coherently-constant ,_) $
+                                                                           elim₁
+                                                                             (λ q →
+                                                                                subst
+                                                                                  (λ ((get , c) : ∃ (S.Coherently-constant ⊚ _⁻¹_)) →
+                                                                                     L.set ≡
+                                                                                     S.Lens.set (record { get⁻¹-coherently-constant = c }))
+                                                                                  q
+                                                                                  (trans L.set≡set
+                                                                                     (cong S.Lens.set $ sym $
+                                                                                      _≃_.to (Eq.≃-≡ S.Lens-as-Σ) q)) ≡
+                                                                                L.set≡set)
+                                                                             (trans (subst-refl _ _) $
+                                                                              trans (cong (trans _) $
+                                                                                     trans (cong (cong _) $
+                                                                                            trans (cong sym (Eq.to-≃-≡-refl S.Lens-as-Σ))
+                                                                                            sym-refl) $
+                                                                                     cong-refl _) $
+                                                                              trans-reflʳ _)
+                                                                             _
+                                                                         ] ⟩
+     L.set , [ (L.get⁻¹-coherently-constant , L.set≡set) ]            ≡⟨⟩
 
-     L.coherently-constant-fibres-get                                ∎)
+     L.coherently-constant-fibres-get                                 ∎)
   where
   module L = Lens l
 
@@ -991,7 +978,7 @@ with-other-getter≡ {A = A} {B = B} l get p =
   l′ = record
     { get                       = get
     ; get⁻¹-coherently-constant =
-        subst (S.Coherently-constant univ ⊚ _⁻¹_) (sym p)
+        subst (S.Coherently-constant ⊚ _⁻¹_) (sym p)
           L.get⁻¹-coherently-constant
     }
 
@@ -1030,24 +1017,24 @@ with-other-setter≡ l set p =
   _≃_.to (Eq.≃-≡ Lens-as-Σ) $ cong (get ,_) $ Σ-≡,≡→≡ p
     (subst
        (λ set → Erased
-                  (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+                  (∃ λ (c : S.Coherently-constant (get ⁻¹_)) →
                    set ≡
-                   S.Lens.set {univ = univ}
+                   S.Lens.set
                      (record { get⁻¹-coherently-constant = c })))
        p
        [ (get⁻¹-coherently-constant , trans p set≡set) ]             ≡⟨ push-subst-[] ⟩
 
      [ subst
-         (λ set → ∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
+         (λ set → ∃ λ (c : S.Coherently-constant (get ⁻¹_)) →
                   set ≡
-                  S.Lens.set {univ = univ}
+                  S.Lens.set
                     (record { get⁻¹-coherently-constant = c }))
          p
          (get⁻¹-coherently-constant , trans p set≡set)
      ]                                                               ≡⟨ []-cong [ push-subst-pair-× _ _ ] ⟩
 
      [ ( get⁻¹-coherently-constant
-       , subst (_≡ S.Lens.set {univ = univ}
+       , subst (_≡ S.Lens.set
                      (record { get⁻¹-coherently-constant =
                                  get⁻¹-coherently-constant }))
            p
@@ -1073,9 +1060,9 @@ record Erased-proofs
          {A : Type a} {B : Type b}
          (get : A → B) (set : A → B → A) : Type (a ⊔ b) where
   field
-    @0 get⁻¹-coherently-constant : S.Coherently-constant univ (get ⁻¹_)
+    @0 get⁻¹-coherently-constant : S.Coherently-constant (get ⁻¹_)
 
-  @0 erased-lens : S.Lens univ A B
+  @0 erased-lens : S.Lens A B
   erased-lens = record
     { get                       = get
     ; get⁻¹-coherently-constant = get⁻¹-coherently-constant
@@ -1087,7 +1074,7 @@ record Erased-proofs
 -- Extracts "erased proofs" from a lens (in erased contexts).
 
 @0 Lens→Erased-proofs :
-  (l : S.Lens univ A B) →
+  (l : S.Lens A B) →
   Erased-proofs (S.Lens.get l) (S.Lens.set l)
 Lens→Erased-proofs l = proofs ⊠
   where
@@ -1124,7 +1111,7 @@ Erased-proofs→Lens {get = get} {set = set} ep = λ where
 -- An identity lens.
 
 id : {A : Type a} → Lens A A
-id = Erased-proofs→Lens (Lens→Erased-proofs (S.id univ))
+id = Erased-proofs→Lens (Lens→Erased-proofs S.id)
 
 -- Composition.
 
@@ -1142,7 +1129,7 @@ l₁ ∘ l₂ =
         set l₂ a (S.Lens.set l₁′ (get l₂ a) c)          ≡⟨ cong (λ s → set l₂ a (s (get l₂ a) c)) $
                                                            proj₂ $ proj₁ (Lens≃Lens-preserves-getters-and-setters ⊠) l₁ ⟩∎
         set l₂ a (set l₁ (get l₂ a) c)                  ∎) $
-     Lens→Erased-proofs (S.⟨ univ , univ ⟩ l₁′ ∘ l₂′))
+     Lens→Erased-proofs (l₁′ S.∘ l₂′))
   where
   open Lens
 
