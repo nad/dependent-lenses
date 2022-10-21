@@ -458,7 +458,8 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
                 in Is-equivalence f) →
       _≃_.to (S.Constant-≃-get-⁻¹-≃ bl) (c .property) ≡
       (set , get-set , eq)))                                              ↔⟨ (∃-cong λ _ → Erased-cong (∃-cong λ _ → ∃-cong λ _ → ∃-cong λ _ →
-                                                                              ≡⇒≃ (cong (_≡ _) $ _≃_.left-inverse-of (S.Constant-≃-get-⁻¹-≃ bl) _) F.∘
+                                                                              ≡⇒≃ (cong (_≡ _) $
+                                                                                   _≃_.left-inverse-of (S.Constant-≃-get-⁻¹-≃ bl) _) F.∘
                                                                               inverse (Eq.≃-≡ $ inverse $ S.Constant-≃-get-⁻¹-≃ bl))) ⟩
   (∃ λ (set : A → B → A) →
    Erased
@@ -648,29 +649,29 @@ Coherently-constant-fibres≃ᴱCoherently-constant-⁻¹ᴱ
   S.Coherently-constant univ (get ⁻¹_)
 Coherently-constant-fibres≃Coherently-constant-⁻¹
   bl {A = A} {B = B} {get = get} univ =
-  Coherently-constant-fibres univ get                               ↔⟨⟩
+  Coherently-constant-fibres univ get                   ↔⟨⟩
 
   (∃ λ (set : A → B → A) →
    Erased
      (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
       set ≡
       S.Lens.set {univ = univ}
-        (record { get⁻¹-coherently-constant = c })))                ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
+        (record { get⁻¹-coherently-constant = c })))    ↔⟨ (∃-cong λ _ → erased Erased↔) ⟩
 
   (∃ λ (set : A → B → A) →
    ∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
    set ≡
    S.Lens.set {univ = univ}
-     (record { get⁻¹-coherently-constant = c }))                    ↔⟨ ∃-comm ⟩
+     (record { get⁻¹-coherently-constant = c }))        ↔⟨ ∃-comm ⟩
 
   (∃ λ (c : S.Coherently-constant univ (get ⁻¹_)) →
    ∃ λ (set : A → B → A) →
    set ≡
    S.Lens.set {univ = univ}
-     (record { get⁻¹-coherently-constant = c }))                    ↔⟨ (drop-⊤-right λ _ →
-                                                                        _⇔_.to contractible⇔↔⊤ $
-                                                                        singleton-contractible _) ⟩□
-  S.Coherently-constant univ (get ⁻¹_)                              □
+     (record { get⁻¹-coherently-constant = c }))        ↔⟨ (drop-⊤-right λ _ →
+                                                            _⇔_.to contractible⇔↔⊤ $
+                                                            singleton-contractible _) ⟩□
+  S.Coherently-constant univ (get ⁻¹_)                  □
 
 ------------------------------------------------------------------------
 -- The lens type family

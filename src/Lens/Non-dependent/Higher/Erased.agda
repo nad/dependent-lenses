@@ -2363,8 +2363,8 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get b univ l = EEq.⇔→≃ᴱ
       b univ
       (Is-set-closed-domain univ A-set)
 
--- If A is a set, then there is an equivalence with erased proofs between A ≃ᴱ B and
--- [ b ] A ≅ᴱ B (assuming univalence).
+-- If A is a set, then there is an equivalence with erased proofs
+-- between A ≃ᴱ B and [ b ] A ≅ᴱ B (assuming univalence).
 
 ≃ᴱ≃ᴱ≅ᴱ :
   {A B : Type a}
