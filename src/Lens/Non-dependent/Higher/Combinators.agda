@@ -122,7 +122,8 @@ id {A = A} ⊠ = record
 -- The composition operation matches on the lenses to ensure that it
 -- does not unfold when applied to neutral lenses.
 --
--- See also Lens.Non-dependent.Equivalent-preimages.⟨_⟩_⊚_.
+-- See also Lens.Non-dependent.Higher.Coinductive.Small.⟨_⟩_⊚_ and
+-- Lens.Non-dependent.Equivalent-preimages.⟨_⟩_⊚_.
 
 infix 9 ⟨_,_⟩_∘_
 
