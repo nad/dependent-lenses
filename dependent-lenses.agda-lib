@@ -5,3 +5,4 @@ flags:
   --erased-cubical
   --safe
   --no-import-sorts
+  --erasure
