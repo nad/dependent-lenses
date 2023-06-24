@@ -162,9 +162,12 @@ Preserves-getters-and-setters-⇔-∘ :
   Preserves-getters-and-setters-⇔ A B f →
   Preserves-getters-and-setters-⇔ A B g →
   Preserves-getters-and-setters-⇔ A B (f F.∘ g)
-Preserves-getters-and-setters-⇔-∘ p-f p-g =
-    Preserves-getters-and-setters-→-∘ (proj₁ p-f) (proj₁ p-g)
-  , Preserves-getters-and-setters-→-∘ (proj₂ p-g) (proj₂ p-f)
+Preserves-getters-and-setters-⇔-∘
+  {Lens₁ = Lens₁} {Lens₃ = Lens₃} p-f p-g =
+    Preserves-getters-and-setters-→-∘
+      {Lens₃ = Lens₃} (proj₁ p-f) (proj₁ p-g)
+  , Preserves-getters-and-setters-→-∘
+      {Lens₃ = Lens₁} (proj₂ p-g) (proj₂ p-f)
 
 -- The function inverse preserves Preserves-getters-and-setters-⇔.
 
