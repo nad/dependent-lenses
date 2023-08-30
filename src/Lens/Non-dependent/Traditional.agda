@@ -466,7 +466,7 @@ lens-preserves-h-level-of-domain n hA =
 ------------------------------------------------------------------------
 -- Some equality characterisation lemmas
 
-abstract
+opaque
 
   -- An equality characterisation lemma.
 
@@ -697,7 +697,7 @@ abstract
     where
     open Lens
 
-    abstract
+    opaque
 
       lemma₁ :
         ∀ (C : A → B → Type c) (eq : u ≡ v) {f g} →

@@ -331,8 +331,7 @@ module Lens {A : Type a} {B : A → Type b} (l : Lens A B) where
            (B-set : ∀ a → Is-set (B a))
            where
 
-    private
-     abstract
+    private opaque
 
       B̲-triple : (r : R) → ∃ λ (X : Set b) → B′ r ≡ proj₁ X
       B̲-triple r =

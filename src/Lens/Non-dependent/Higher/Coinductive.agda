@@ -316,7 +316,7 @@ private
       (Σ-cong (inverse $ Πℕ≃ {k = equivalence} ext) λ _ → F.id) F.∘
       Σ-assoc
 
-    abstract
+    opaque
 
       lemma :
         (p@(f , eq) : ∃ λ (f : ∀ n → ∥ A ∥¹-in-^ n → B) →

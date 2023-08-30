@@ -524,7 +524,7 @@ Lens≃Higher-lens′ {a = a} {b = b} {A = A} {B = B} univ =
     ; left-inverse-of = refl
     }
 
-  abstract
+  opaque
 
     lemma₂ : (A → B) ↔ ∃ λ (P : Pow a B) → A ≃ ∃ P
     lemma₂ = →↔Σ≃Σ ℓ ext univ
