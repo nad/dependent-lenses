@@ -19,7 +19,7 @@ open import Bijection equality-with-J as B using (_↔_)
 import Bijection P.equality-with-J as PB
 open import Equality.Path.Isomorphisms eq
 open import Equality.Path.Isomorphisms.Univalence eq
-  using () renaming (abstract-univ to univ)
+  using () renaming (opaque-univ to univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
 import Equivalence P.equality-with-J as PEq
 open import Equivalence.Erased equality-with-J as EEq using (_≃ᴱ_)
