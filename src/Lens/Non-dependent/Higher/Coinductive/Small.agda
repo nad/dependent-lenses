@@ -88,7 +88,7 @@ Constant-≃-get-⁻¹-≃⁻¹ (_ , _ , eq) b₁ b₂ = Eq.⟨ _ , eq b₁ b₂
 -- This lemma was suggested by Andrea Vezzosi when we discussed
 -- coinductive lenses with erased "proofs".
 --
--- The left-to-right direction of the lemma is not blocked, but the
+-- The right-to-left direction of the lemma is not blocked, but the
 -- rest is.
 
 Constant-≃-get-⁻¹-≃ :
