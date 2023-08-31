@@ -2190,8 +2190,8 @@ to-from-≃ᴱ≃ᴱ≊ᴱ≡get
   ↑ b A ≃ᴱ ↑ a B           ↝⟨ ≃ᴱ≃ᴱ≊ᴱ b-id ⟩□
   [ b-id ] ↑ b A ≊ᴱ ↑ a B  □
 
--- The right-to-left direction of ≃ᴱ≃ᴱ≊ᴱ′ maps bi-invertible lenses to a
--- variant of their getter functions.
+-- The right-to-left direction of ≃ᴱ≃ᴱ≊ᴱ′ maps bi-invertible lenses to
+-- variants of their getter functions.
 
 to-from-≃ᴱ≃ᴱ≊ᴱ′≡get :
   (b-id : Block "id")

@@ -564,8 +564,8 @@ to-from-≃≃≊≡get
   ↑ b A ≃ ↑ a B           ↝⟨ ≃≃≊ b-id univ ⟩□
   [ b-id ] ↑ b A ≊ ↑ a B  □
 
--- The right-to-left direction of ≃≃≊′ maps bi-invertible lenses to a
--- variant of their getter functions.
+-- The right-to-left direction of ≃≃≊′ maps bi-invertible lenses to
+-- variants of their getter functions.
 
 to-from-≃≃≊′≡get :
   {A : Type a} {B : Type b}
