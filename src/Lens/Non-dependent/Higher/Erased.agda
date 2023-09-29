@@ -1877,22 +1877,24 @@ Has-quasi-inverseᴱ≃Has-quasi-inverse l =
                                                       Has-quasi-inverseᴱ≃Has-quasi-inverse ⟩□
   (∃ λ (l : H.Lens A B) → HC.Has-quasi-inverse l)  □
 
-opaque
-  unfolding id
+-- Lenses with quasi-inverses can be converted to equivalences with
+-- erased proofs.
 
-  -- Lenses with quasi-inverses can be converted to equivalences with
-  -- erased proofs.
+≅ᴱ→≃ᴱ : A ≅ᴱ B → A ≃ᴱ B
+≅ᴱ→≃ᴱ
+  (l@(⟨ _ , _ , _ ⟩) , l⁻¹@(⟨ _ , _ , _ ⟩) , [ l∘l⁻¹≡id , l⁻¹∘l≡id ]) =
+  EEq.↔→≃ᴱ (get l) (get l⁻¹) lemma₁ lemma₂
+  where
+  open Lens
 
-  ≅ᴱ→≃ᴱ : A ≅ᴱ B → A ≃ᴱ B
-  ≅ᴱ→≃ᴱ
-    (l@(⟨ _ , _ , _ ⟩) , l⁻¹@(⟨ _ , _ , _ ⟩) , [ l∘l⁻¹≡id , l⁻¹∘l≡id ]) =
-    EEq.↔→≃ᴱ
-      (get l)
-      (get l⁻¹)
-      (λ b → cong (λ l → get l b) l∘l⁻¹≡id)
-      (λ a → cong (λ l → get l a) l⁻¹∘l≡id)
-    where
-    open Lens
+  opaque
+    unfolding id
+
+    @0 lemma₁ : ∀ b → get l (get l⁻¹ b) ≡ b
+    lemma₁ b = cong (λ l → get l b) l∘l⁻¹≡id
+
+    @0 lemma₂ : ∀ a → get l⁻¹ (get l a) ≡ a
+    lemma₂ a = cong (λ l → get l a) l⁻¹∘l≡id
 
 -- There is a logical equivalence between A ≅ᴱ B and A ≃ᴱ B.
 
@@ -1941,7 +1943,6 @@ opaque
         )
 
 opaque
-  unfolding ≅ᴱ→≃ᴱ
 
   -- In erased contexts the right-to-left direction of ≅ᴱ⇔≃ᴱ is a right
   -- inverse of the left-to-right direction.
@@ -2160,7 +2161,7 @@ opaque
       R-prop = Has-left-inverseᴱ→remainder-propositional l l-inv
 
     opaque
-      unfolding ≅ᴱ→≃ᴱ
+      unfolding id
 
       lemma₁ :
         ∀ (A≊ᴱB@(l , _) : A ≊ᴱ B) a →
@@ -2176,7 +2177,6 @@ opaque
         remainder l a                    ∎
 
     opaque
-      unfolding ≅ᴱ→≃ᴱ
 
       lemma₂ :
         ∀ (A≊ᴱB@(l , _) : A ≊ᴱ B) a →
@@ -2186,7 +2186,6 @@ opaque
         refl _
 
   opaque
-    unfolding ≅ᴱ→≃ᴱ
 
     @0 from∘to :
       (A≃B : A ≃ᴱ B) →
@@ -2195,7 +2194,6 @@ opaque
     from∘to _ = EEq.to≡to→≡ ext (refl _)
 
 opaque
-  unfolding ≅ᴱ→≃ᴱ
 
   -- The right-to-left direction of ≃ᴱ≃ᴱ≊ᴱ maps bi-invertible lenses to
   -- their getter functions.
@@ -2222,7 +2220,6 @@ opaque
   ↑ b A ≊ᴱ ↑ a B  □
 
 opaque
-  unfolding ≅ᴱ→≃ᴱ
 
   -- The right-to-left direction of ≃ᴱ≃ᴱ≊ᴱ′ maps bi-invertible lenses
   -- to variants of their getter functions.
@@ -2236,7 +2233,6 @@ opaque
     refl _
 
 opaque
-  unfolding ≅ᴱ→≃ᴱ
 
   -- The getter function of a bi-invertible lens is an equivalence
   -- with erased proofs.
