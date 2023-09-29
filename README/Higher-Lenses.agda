@@ -338,10 +338,6 @@ lemma-50-for-traditional = T.no-first-projection-lens
 _↠_ = Surjection._↠_
 
 -- Lemmas 55 and 56.
---
--- Lemma 55 takes an extra argument of type Unit, written as
--- Block "conversion". Some other definitions below also take such
--- arguments.
 
 lemma-55 = E.¬Lens↠Traditional-lens
 lemma-56 = E.Lens↔Traditional-lens
@@ -596,7 +592,7 @@ right-identity-stable = S.right-identity
 
 -- An unrestricted composition operator for Lensᴱ.
 
-∘-most-general′ = S.⟨_⟩_⊚_
+∘-most-general′ = S._⊚_
 
 -- This operator matches "∘-more-general" when all types have the same
 -- universe level and the view type of the resulting lens is stable.

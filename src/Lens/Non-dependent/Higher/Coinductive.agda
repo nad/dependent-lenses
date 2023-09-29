@@ -148,22 +148,23 @@ Coherently-constant′ :
   {A : Type a} {B : Type b} (f : A → B) → Type (a ⊔ b)
 Coherently-constant′ = Coherently Constant′ (λ _ → proj₁)
 
--- Coherently-constant and Coherently-constant′ are pointwise
--- equivalent.
+opaque
 
-Coherently-constant≃Coherently-constant′ :
-  Block "Coherently-constant≃Coherently-constant′" →
-  Coherently-constant f ≃ Coherently-constant′ f
-Coherently-constant≃Coherently-constant′ ⊠ =
-  Coherently-cong
-    Constant≃Constant′
-    (λ f c →
-       O.rec′ f (_≃_.from (Constant≃Constant′ f) c)   ≡⟨⟩
+  -- Coherently-constant and Coherently-constant′ are pointwise
+  -- equivalent.
 
-       proj₁ (_≃_.to (Constant≃Constant′ f)
-                (_≃_.from (Constant≃Constant′ f) c))  ≡⟨ cong proj₁ $
-                                                         _≃_.right-inverse-of (Constant≃Constant′ f) _ ⟩∎
-       proj₁ c                                        ∎)
+  Coherently-constant≃Coherently-constant′ :
+    Coherently-constant f ≃ Coherently-constant′ f
+  Coherently-constant≃Coherently-constant′ =
+    Coherently-cong
+      Constant≃Constant′
+      (λ f c →
+         O.rec′ f (_≃_.from (Constant≃Constant′ f) c)   ≡⟨⟩
+
+         proj₁ (_≃_.to (Constant≃Constant′ f)
+                  (_≃_.from (Constant≃Constant′ f) c))  ≡⟨ cong proj₁ $
+                                                           _≃_.right-inverse-of (Constant≃Constant′ f) _ ⟩∎
+         proj₁ c                                        ∎)
 
 private
 
@@ -362,85 +363,38 @@ private
                                                                                n x ⟩∎
            eq n x                                                         ∎)
 
--- Coherently-constant′ can be expressed in a different way.
+opaque
 
-Coherently-constant′≃ :
-  Block "Coherently-constant′≃" →
-  {f : A → B} →
-  Coherently-constant′ f
-    ≃
-  (∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
-     (∀ x → g 0 ∣ x ∣ ≡ f x) ×
-     (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x))
-Coherently-constant′≃ ⊠ {f = f} =
-  Eq.⟨ _
-     , Eq.drop-Σ-map-id _
-         (_≃_.is-equivalence Coherently-constant′≃-lemma)
-         f
-     ⟩
+  -- Coherently-constant′ can be expressed in a different way.
 
--- A "computation" rule for Coherently-constant′≃.
+  Coherently-constant′≃ :
+    {f : A → B} →
+    Coherently-constant′ f
+      ≃
+    (∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
+       (∀ x → g 0 ∣ x ∣ ≡ f x) ×
+       (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x))
+  Coherently-constant′≃ {f = f} =
+    Eq.⟨ _
+       , Eq.drop-Σ-map-id _
+           (_≃_.is-equivalence Coherently-constant′≃-lemma)
+           f
+       ⟩
 
-from-Coherently-constant′≃-property :
-  (bl : Block "Coherently-constant′≃") →
-  (f : A → B)
-  {c@(g , g₀ , _) :
-   ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
-     (∀ x → g 0 ∣ x ∣ ≡ f x) ×
-     (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x)} →
-  _≃_.from (Coherently-constant′≃ bl) c .property ≡ (g 0 , g₀)
-from-Coherently-constant′≃-property
-  {A = A} {B = B} ⊠ f {c = c@(g , g₀ , g₊)} =
+-- A lemma used in the implementation of
+-- from-Coherently-constant′≃-property.
 
-  _≃_.from (Coherently-constant′≃ ⊠) c .property                      ≡⟨⟩
+private
 
-  HA.inverse
-    (Eq.drop-Σ-map-id _
-       (_≃_.is-equivalence Coherently-constant′≃-lemma)
-       f)
-    c .property                                                       ≡⟨ cong (λ c → c .property) $
-                                                                         Eq.inverse-drop-Σ-map-id
-                                                                           {x = f} {eq = _≃_.is-equivalence Coherently-constant′≃-lemma} ⟩
-  subst Coherently-constant′
-    (cong proj₁ $
-     _≃_.right-inverse-of Coherently-constant′≃-lemma (f , c))
-    (proj₂ (_≃_.from Coherently-constant′≃-lemma (f , c)))
-    .property                                                         ≡⟨ subst-Coherently-property ⟩
-
-  subst Constant′
-    (cong proj₁ $
-     _≃_.right-inverse-of Coherently-constant′≃-lemma (f , c))
-    (proj₂ (_≃_.from Coherently-constant′≃-lemma (f , c)) .property)  ≡⟨⟩
-
-  subst Constant′
-    (cong proj₁ $
-     trans
-       (cong {B = ∃ λ (f : A → B) →
-                  ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
-                    (∀ x → g 0 ∣ x ∣ ≡ f x) ×
-                    (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x)}
-             (λ (f , eq) → f 0 , f ∘ suc , eq 0 , eq ∘ suc) $
-        _≃_.right-inverse-of ∃Coherently-constant′≃
-          (ℕ-case f g , ℕ-case g₀ g₊)) $
-     trans
-       (cong (λ (f , g , eq) → f , g , eq 0 , eq ∘ suc) $
-        cong {B = ∃ λ (f : A → B) →
-                  ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
-                    ∀ n x →
-                      g n ∣ n , x ∣-in-^ ≡
-                      ℕ-case {P = λ n → ∥ A ∥¹-in-^ n → B} f g n x}
-             {x = ℕ-case g₀ g₊}
-             {y = ℕ-case g₀ g₊}
-             (λ eq → f , g , eq) $
-        ⟨ext⟩ (ℕ-case (refl _) (λ _ → refl _))) $
-     cong (f ,_) (cong (g ,_) (refl _)))
-    (g 0 , g₀)                                                        ≡⟨ cong (flip (subst Constant′) _) lemma ⟩
-
-  subst Constant′ (refl _) (g 0 , g₀)                                 ≡⟨ subst-refl _ _ ⟩∎
-
-  g 0 , g₀                                                            ∎
-  where
-  lemma =
+  from-Coherently-constant′≃-property-lemma :
+    (f : A → B)
+    ((g , g₀ , _) :
+     ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
+       (∀ x → g 0 ∣ x ∣ ≡ f x) ×
+       (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x)) →
+    _
+  from-Coherently-constant′≃-property-lemma
+    {A = A} {B = B} f (g , g₀ , g₊) =
     (cong proj₁ $
      trans
        (cong {B = ∃ λ (f : A → B) →
@@ -497,6 +451,70 @@ from-Coherently-constant′≃-property
 
     refl _                                                             ∎
 
+opaque
+  unfolding Coherently-constant′≃
+
+  -- A "computation" rule for Coherently-constant′≃.
+
+  from-Coherently-constant′≃-property :
+    (f : A → B)
+    {c@(g , g₀ , _) :
+     ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
+       (∀ x → g 0 ∣ x ∣ ≡ f x) ×
+       (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x)} →
+    _≃_.from Coherently-constant′≃ c .property ≡ (g 0 , g₀)
+  from-Coherently-constant′≃-property
+    {A = A} {B = B} f {c = c@(g , g₀ , g₊)} =
+
+    _≃_.from Coherently-constant′≃ c .property                          ≡⟨⟩
+
+    HA.inverse
+      (Eq.drop-Σ-map-id _
+         (_≃_.is-equivalence Coherently-constant′≃-lemma)
+         f)
+      c .property                                                       ≡⟨ cong (λ c → c .property) $
+                                                                           Eq.inverse-drop-Σ-map-id
+                                                                             {x = f} {eq = _≃_.is-equivalence Coherently-constant′≃-lemma} ⟩
+    subst Coherently-constant′
+      (cong proj₁ $
+       _≃_.right-inverse-of Coherently-constant′≃-lemma (f , c))
+      (proj₂ (_≃_.from Coherently-constant′≃-lemma (f , c)))
+      .property                                                         ≡⟨ subst-Coherently-property ⟩
+
+    subst Constant′
+      (cong proj₁ $
+       _≃_.right-inverse-of Coherently-constant′≃-lemma (f , c))
+      (proj₂ (_≃_.from Coherently-constant′≃-lemma (f , c)) .property)  ≡⟨⟩
+
+    subst Constant′
+      (cong proj₁ $
+       trans
+         (cong {B = ∃ λ (f : A → B) →
+                    ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
+                      (∀ x → g 0 ∣ x ∣ ≡ f x) ×
+                      (∀ n x → g (suc n) ∣ n , x ∣-in-^ ≡ g n x)}
+               (λ (f , eq) → f 0 , f ∘ suc , eq 0 , eq ∘ suc) $
+          _≃_.right-inverse-of ∃Coherently-constant′≃
+            (ℕ-case f g , ℕ-case g₀ g₊)) $
+       trans
+         (cong (λ (f , g , eq) → f , g , eq 0 , eq ∘ suc) $
+          cong {B = ∃ λ (f : A → B) →
+                    ∃ λ (g : ∀ n → ∥ A ∥¹-in-^ (suc n) → B) →
+                      ∀ n x →
+                        g n ∣ n , x ∣-in-^ ≡
+                        ℕ-case {P = λ n → ∥ A ∥¹-in-^ n → B} f g n x}
+               {x = ℕ-case g₀ g₊}
+               {y = ℕ-case g₀ g₊}
+               (λ eq → f , g , eq) $
+          ⟨ext⟩ (ℕ-case (refl _) (λ _ → refl _))) $
+       cong (f ,_) (cong (g ,_) (refl _)))
+      (g 0 , g₀)                                                        ≡⟨ cong (flip (subst Constant′) _) $
+                                                                           from-Coherently-constant′≃-property-lemma _ _ ⟩
+
+    subst Constant′ (refl _) (g 0 , g₀)                                 ≡⟨ subst-refl _ _ ⟩∎
+
+    g 0 , g₀                                                            ∎
+
 -- Functions from ∥ A ∥ can be expressed as coherently constant
 -- functions from A.
 
@@ -520,7 +538,7 @@ from-Coherently-constant′≃-property
   (∃ λ (f : ∀ n → ∥ A ∥¹-in-^ n → B) →
      ∀ n x → f (suc n) ∣ n , x ∣-in-^ ≡ f n x)  ↝⟨ inverse ∃Coherently-constant′≃ ⟩
 
-  (∃ λ (f : A → B) → Coherently-constant′ f)    ↝⟨ (∃-cong λ _ → inverse $ Coherently-constant≃Coherently-constant′ ⊠) ⟩□
+  (∃ λ (f : A → B) → Coherently-constant′ f)    ↝⟨ (∃-cong λ _ → inverse Coherently-constant≃Coherently-constant′) ⟩□
 
   (∃ λ (f : A → B) → Coherently-constant f)     □
 
@@ -533,83 +551,88 @@ proj₁-to-∥∥→≃-constant f x y =
   f ∣ x ∣  ≡⟨ cong f (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ⟩∎
   f ∣ y ∣  ∎
 
--- A "computation rule" for ∥∥→≃.
+opaque
+  unfolding Coherently-constant≃Coherently-constant′
 
-proj₂-to-∥∥→≃-property≡ :
-  proj₂ (_≃_.to ∥∥→≃ f) .property ≡ proj₁-to-∥∥→≃-constant f
-proj₂-to-∥∥→≃-property≡ {f = f} = ⟨ext⟩ λ x → ⟨ext⟩ λ y →
+  -- A "computation rule" for ∥∥→≃.
 
-  let g , c = _≃_.to C.universal-property (f ∘ _≃_.to N.∥∥≃∥∥) in
+  proj₂-to-∥∥→≃-property≡ :
+    proj₂ (_≃_.to ∥∥→≃ f) .property ≡ proj₁-to-∥∥→≃-constant f
+  proj₂-to-∥∥→≃-property≡ {f = f} = ⟨ext⟩ λ x → ⟨ext⟩ λ y →
 
-  proj₂ (_≃_.to ∥∥→≃ f) .property x y                                    ≡⟨⟩
+    let g , c = _≃_.to C.universal-property (f ∘ _≃_.to N.∥∥≃∥∥) in
 
-  _≃_.from (Coherently-constant≃Coherently-constant′ ⊠)
-    (proj₂
-       (_≃_.from ∃Coherently-constant′≃
-          (Σ-map (λ g n → g n ∘ _≃_.from (oi n))
-                 (λ {g} c n x →
-                    ≡⇒→ (cong (λ y → g (suc n) y ≡
-                                     g n (_≃_.from (oi n) x))
-                           (sym $ O.∣,∣-in-^≡∣∣ n))
-                      (c n (_≃_.from (oi n) x)))
-             (_≃_.to C.universal-property (f ∘ _≃_.to N.∥∥≃∥∥)))))
-    .property x y                                                        ≡⟨⟩
+    proj₂ (_≃_.to ∥∥→≃ f) .property x y                                   ≡⟨⟩
 
-  _≃_.from (Constant≃Constant′ _)
-    (proj₂
-       (_≃_.from ∃Coherently-constant′≃
-          (Σ-map (λ g n → g n ∘ _≃_.from (oi n))
-                 (λ {g} c n x →
-                    ≡⇒→ (cong (λ y → g (suc n) y ≡
-                                     g n (_≃_.from (oi n) x))
-                           (sym $ O.∣,∣-in-^≡∣∣ n))
-                      (c n (_≃_.from (oi n) x)))
-             (_≃_.to C.universal-property (f ∘ _≃_.to N.∥∥≃∥∥))))
-       .property)
-     x y                                                                 ≡⟨⟩
+    _≃_.from Coherently-constant≃Coherently-constant′
+      (proj₂
+         (_≃_.from ∃Coherently-constant′≃
+            (Σ-map (λ g n → g n ∘ _≃_.from (oi n))
+                   (λ {g} c n x →
+                      ≡⇒→ (cong (λ y → g (suc n) y ≡
+                                       g n (_≃_.from (oi n) x))
+                             (sym $ O.∣,∣-in-^≡∣∣ n))
+                        (c n (_≃_.from (oi n) x)))
+               (_≃_.to C.universal-property (f ∘ _≃_.to N.∥∥≃∥∥)))))
+      .property x y                                                       ≡⟨⟩
 
-  _≃_.from (Constant≃Constant′ _)
-    ( g 1
-    , λ x → ≡⇒→ (cong (λ z → g 1 z ≡ g 0 x) (sym $ refl ∣ _ ∣)) (c 0 x)
-    ) x y                                                                ≡⟨⟩
+    _≃_.from (Constant≃Constant′ _)
+      (proj₂
+         (_≃_.from ∃Coherently-constant′≃
+            (Σ-map (λ g n → g n ∘ _≃_.from (oi n))
+                   (λ {g} c n x →
+                      ≡⇒→ (cong (λ y → g (suc n) y ≡
+                                       g n (_≃_.from (oi n) x))
+                             (sym $ O.∣,∣-in-^≡∣∣ n))
+                        (c n (_≃_.from (oi n) x)))
+               (_≃_.to C.universal-property (f ∘ _≃_.to N.∥∥≃∥∥))))
+         .property)
+       x y                                                                ≡⟨⟩
 
-  trans (sym (≡⇒→ (cong (λ z → g 1 z ≡ g 0 x) (sym $ refl ∣ _ ∣))
-                (c 0 x)))
-    (trans (cong (g 1) (O.∣∣-constant x y))
-       (≡⇒→ (cong (λ z → g 1 z ≡ g 0 y) (sym $ refl ∣ _ ∣)) (c 0 y)))    ≡⟨ cong₂ (λ p q → trans (sym p) (trans (cong (g 1) (O.∣∣-constant x y)) q))
-                                                                              (trans (cong (λ eq → ≡⇒→ (cong (λ z → g 1 z ≡ g 0 x) eq) (c 0 x))
-                                                                                      sym-refl) $
-                                                                               trans (cong (λ eq → ≡⇒→ eq (c 0 x)) $
-                                                                                      cong-refl _) $
-                                                                               cong (_$ c 0 x) ≡⇒→-refl)
-                                                                              (trans (cong (λ eq → ≡⇒→ (cong (λ z → g 1 z ≡ g 0 y) eq) (c 0 y))
-                                                                                      sym-refl) $
-                                                                               trans (cong (λ eq → ≡⇒→ eq (c 0 y)) $
-                                                                                      cong-refl _) $
-                                                                               cong (_$ c 0 y) ≡⇒→-refl) ⟩
-  trans (sym (c 0 x)) (trans (cong (g 1) (O.∣∣-constant x y)) (c 0 y))   ≡⟨⟩
+    _≃_.from (Constant≃Constant′ _)
+      ( g 1
+      , λ x →
+          ≡⇒→ (cong (λ z → g 1 z ≡ g 0 x) (sym $ refl ∣ _ ∣)) (c 0 x)
+      ) x y                                                               ≡⟨⟩
 
-  trans (sym (cong (f ∘ _≃_.to N.∥∥≃∥∥) (C.∣∣≡∣∣ x)))
-    (trans (cong (f ∘ _≃_.to N.∥∥≃∥∥ ∘ ∣_∣) (O.∣∣-constant x y))
-       (cong (f ∘ _≃_.to N.∥∥≃∥∥) (C.∣∣≡∣∣ y)))                          ≡⟨ cong₂ (λ p q → trans (sym p) q)
-                                                                              (sym $ cong-∘ _ _ _)
-                                                                              (cong₂ trans
-                                                                                 (sym $ cong-∘ _ _ _)
-                                                                                 (sym $ cong-∘ _ _ _)) ⟩
-  trans (sym (cong f (cong (_≃_.to N.∥∥≃∥∥) (C.∣∣≡∣∣ x))))
-    (trans (cong f (cong (_≃_.to N.∥∥≃∥∥ ∘ ∣_∣) (O.∣∣-constant x y)))
-       (cong f (cong (_≃_.to N.∥∥≃∥∥) (C.∣∣≡∣∣ y))))                     ≡⟨ trans (cong₂ trans
-                                                                                     (sym $ cong-sym _ _)
-                                                                                     (sym $ cong-trans _ _ _)) $
-                                                                            sym $ cong-trans _ _ _ ⟩
-  cong f
-    (trans (sym (cong (_≃_.to N.∥∥≃∥∥) (C.∣∣≡∣∣ x)))
-      (trans (cong (_≃_.to N.∥∥≃∥∥ ∘ ∣_∣) (O.∣∣-constant x y))
-         (cong (_≃_.to N.∥∥≃∥∥) (C.∣∣≡∣∣ y))))                           ≡⟨ cong (cong f) $
-                                                                            mono₁ 1 T.truncation-is-proposition _ _ ⟩∎
-  cong f (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)                       ∎
-  where
-  oi = O.∥∥¹-out-^≃∥∥¹-in-^
+    trans (sym (≡⇒→ (cong (λ z → g 1 z ≡ g 0 x) (sym $ refl ∣ _ ∣))
+                  (c 0 x)))
+      (trans (cong (g 1) (O.∣∣-constant x y))
+         (≡⇒→ (cong (λ z → g 1 z ≡ g 0 y) (sym $ refl ∣ _ ∣)) (c 0 y)))   ≡⟨ cong₂ (λ p q → trans (sym p) (trans (cong (g 1) (O.∣∣-constant x y)) q))
+                                                                               (trans (cong (λ eq → ≡⇒→ (cong (λ z → g 1 z ≡ g 0 x) eq) (c 0 x))
+                                                                                       sym-refl) $
+                                                                                trans (cong (λ eq → ≡⇒→ eq (c 0 x)) $
+                                                                                       cong-refl _) $
+                                                                                cong (_$ c 0 x) ≡⇒→-refl)
+                                                                               (trans (cong (λ eq → ≡⇒→ (cong (λ z → g 1 z ≡ g 0 y) eq) (c 0 y))
+                                                                                       sym-refl) $
+                                                                                trans (cong (λ eq → ≡⇒→ eq (c 0 y)) $
+                                                                                       cong-refl _) $
+                                                                                cong (_$ c 0 y) ≡⇒→-refl) ⟩
+    trans (sym (c 0 x)) (trans (cong (g 1) (O.∣∣-constant x y)) (c 0 y))  ≡⟨⟩
+
+    trans (sym (cong (f ∘ _≃_.to N.∥∥≃∥∥) (C.∣∣≡∣∣ x)))
+      (trans (cong (f ∘ _≃_.to N.∥∥≃∥∥ ∘ ∣_∣) (O.∣∣-constant x y))
+         (cong (f ∘ _≃_.to N.∥∥≃∥∥) (C.∣∣≡∣∣ y)))                         ≡⟨ cong₂ (λ p q → trans (sym p) q)
+                                                                               (sym $ cong-∘ _ _ _)
+                                                                               (cong₂ trans
+                                                                                  (sym $ cong-∘ _ _ _)
+                                                                                  (sym $ cong-∘ _ _ _)) ⟩
+    trans (sym (cong f (cong (_≃_.to N.∥∥≃∥∥) (C.∣∣≡∣∣ x))))
+      (trans (cong f (cong (_≃_.to N.∥∥≃∥∥ ∘ ∣_∣) (O.∣∣-constant x y)))
+         (cong f (cong (_≃_.to N.∥∥≃∥∥) (C.∣∣≡∣∣ y))))                    ≡⟨ trans (cong₂ trans
+                                                                                      (sym $ cong-sym _ _)
+                                                                                      (sym $ cong-trans _ _ _)) $
+                                                                             sym $ cong-trans _ _ _ ⟩
+    cong f
+      (trans (sym (cong (_≃_.to N.∥∥≃∥∥) (C.∣∣≡∣∣ x)))
+        (trans (cong (_≃_.to N.∥∥≃∥∥ ∘ ∣_∣) (O.∣∣-constant x y))
+           (cong (_≃_.to N.∥∥≃∥∥) (C.∣∣≡∣∣ y))))                          ≡⟨ cong (cong f) $
+                                                                             mono₁ 1 T.truncation-is-proposition _ _ ⟩∎
+    cong f (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)                      ∎
+    where
+    oi : ∀ n → ∥ A ∥¹-out-^ n ≃ ∥ A ∥¹-in-^ n
+    oi = O.∥∥¹-out-^≃∥∥¹-in-^
 
 -- Two variants of Coherently-constant are pointwise equivalent.
 
@@ -715,104 +738,107 @@ instance
     ; set = Lens.set
     }
 
--- Lens is pointwise equivalent to Higher.Lens.
+opaque
 
-Higher-lens≃Lens :
-  Block "Higher-lens≃Lens" →
-  Higher.Lens A B ≃ Lens A B
-Higher-lens≃Lens {A = A} {B = B} ⊠ =
-  Higher.Lens A B                                         ↔⟨⟩
-  (∃ λ (get : A → B) → CC.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ → Coherently-constant≃Coherently-constant) ⟩□
-  (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))     □
+  -- Lens is pointwise equivalent to Higher.Lens.
+
+  Higher-lens≃Lens :
+    Higher.Lens A B ≃ Lens A B
+  Higher-lens≃Lens {A = A} {B = B} =
+    Higher.Lens A B                                         ↔⟨⟩
+    (∃ λ (get : A → B) → CC.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ → Coherently-constant≃Coherently-constant) ⟩□
+    (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))     □
 
 -- The equivalence preserves getters and setters.
 
 Higher-lens≃Lens-preserves-getters-and-setters :
-  (bl : Block "Higher-lens≃Lens") →
   Preserves-getters-and-setters-⇔ A B
-    (_≃_.logical-equivalence (Higher-lens≃Lens bl))
-Higher-lens≃Lens-preserves-getters-and-setters {A = A} {B = B} bl =
+    (_≃_.logical-equivalence Higher-lens≃Lens)
+Higher-lens≃Lens-preserves-getters-and-setters {A = A} {B = B} =
   Preserves-getters-and-setters-→-↠-⇔
-    (_≃_.surjection (Higher-lens≃Lens bl))
-    (λ l → get-lemma bl l , set-lemma bl l)
+    (_≃_.surjection Higher-lens≃Lens)
+    (λ l → get-lemma l , set-lemma l)
   where
-  get-lemma :
-    ∀ bl (l : Higher.Lens A B) →
-    Lens.get (_≃_.to (Higher-lens≃Lens bl) l) ≡ Higher.Lens.get l
-  get-lemma ⊠ _ = refl _
+  opaque
+    unfolding Higher-lens≃Lens
 
-  set-lemma :
-    ∀ bl (l : Higher.Lens A B) →
-    Lens.set (_≃_.to (Higher-lens≃Lens bl) l) ≡ Higher.Lens.set l
-  set-lemma bl@⊠ l = ⟨ext⟩ λ a → ⟨ext⟩ λ b →
-    Lens.set (_≃_.to (Higher-lens≃Lens bl) l) a b                    ≡⟨⟩
+    get-lemma :
+      (l : Higher.Lens A B) →
+      Lens.get (_≃_.to Higher-lens≃Lens l) ≡ Higher.Lens.get l
+    get-lemma _ = refl _
 
-    proj₁ (≡⇒→ (≡⇒→ (cong Coherently-constant (sym get⁻¹-≡))
+    set-lemma :
+      (l : Higher.Lens A B) →
+      Lens.set (_≃_.to Higher-lens≃Lens l) ≡ Higher.Lens.set l
+    set-lemma l = ⟨ext⟩ λ a → ⟨ext⟩ λ b →
+      Lens.set (_≃_.to Higher-lens≃Lens l) a b                         ≡⟨⟩
+
+      proj₁ (≡⇒→ (≡⇒→ (cong Coherently-constant (sym get⁻¹-≡))
+                      (proj₂ (_≃_.to ∥∥→≃ H))
+                      .property (get a) b)
+                 (a , refl (get a)))                                   ≡⟨ cong (λ (c : Coherently-constant (get ⁻¹_)) →
+                                                                                  proj₁ (≡⇒→ (c .property (get a) b) (a , refl _))) $ sym $
+                                                                          subst-in-terms-of-≡⇒↝ equivalence _ _ _ ⟩
+      proj₁ (≡⇒→ (subst Coherently-constant (sym get⁻¹-≡)
                     (proj₂ (_≃_.to ∥∥→≃ H))
                     .property (get a) b)
-               (a , refl (get a)))                                   ≡⟨ cong (λ (c : Coherently-constant (get ⁻¹_)) →
-                                                                                proj₁ (≡⇒→ (c .property (get a) b) (a , refl _))) $ sym $
-                                                                        subst-in-terms-of-≡⇒↝ equivalence _ _ _ ⟩
-    proj₁ (≡⇒→ (subst Coherently-constant (sym get⁻¹-≡)
-                  (proj₂ (_≃_.to ∥∥→≃ H))
-                  .property (get a) b)
-               (a , refl (get a)))                                   ≡⟨ cong (λ (c : Constant (get ⁻¹_)) →
-                                                                                proj₁ (≡⇒→ (c (get a) b) (a , refl _)))
-                                                                        subst-Coherently-property ⟩
-    proj₁ (≡⇒→ (subst Constant (sym get⁻¹-≡)
-                  (proj₂ (_≃_.to ∥∥→≃ H) .property)
-                  (get a) b)
-               (a , refl (get a)))                                   ≡⟨ cong (λ c → proj₁ (≡⇒→ (subst Constant (sym get⁻¹-≡) c (get a) b)
-                                                                                             (a , refl _)))
-                                                                        proj₂-to-∥∥→≃-property≡ ⟩
-    proj₁ (≡⇒→ (subst Constant (sym get⁻¹-≡)
-                  (proj₁-to-∥∥→≃-constant H)
-                  (get a) b)
-               (a , refl (get a)))                                   ≡⟨ cong (λ eq → proj₁ (≡⇒→ eq (a , refl _))) $
-                                                                        trans (cong (_$ b) $ sym $
-                                                                               push-subst-application _ _) $
-                                                                        sym $ push-subst-application _ _ ⟩
-    proj₁ (≡⇒→ (subst (λ f → f (get a) ≡ f b) (sym get⁻¹-≡)
-                  (proj₁-to-∥∥→≃-constant H (get a) b))
-               (a , refl (get a)))                                   ≡⟨ cong (λ eq → proj₁ (≡⇒→ eq (a , refl _))) $
-                                                                        subst-in-terms-of-trans-and-cong ⟩
-    proj₁ (≡⇒→ (trans (sym (cong (_$ get a) (sym get⁻¹-≡)))
-                  (trans (proj₁-to-∥∥→≃-constant H (get a) b)
-                     (cong (_$ b) (sym get⁻¹-≡))))
-               (a , refl (get a)))                                   ≡⟨⟩
+                 (a , refl (get a)))                                   ≡⟨ cong (λ (c : Constant (get ⁻¹_)) →
+                                                                                  proj₁ (≡⇒→ (c (get a) b) (a , refl _)))
+                                                                          subst-Coherently-property ⟩
+      proj₁ (≡⇒→ (subst Constant (sym get⁻¹-≡)
+                    (proj₂ (_≃_.to ∥∥→≃ H) .property)
+                    (get a) b)
+                 (a , refl (get a)))                                   ≡⟨ cong (λ c → proj₁ (≡⇒→ (subst Constant (sym get⁻¹-≡) c (get a) b)
+                                                                                               (a , refl _)))
+                                                                          proj₂-to-∥∥→≃-property≡ ⟩
+      proj₁ (≡⇒→ (subst Constant (sym get⁻¹-≡)
+                    (proj₁-to-∥∥→≃-constant H)
+                    (get a) b)
+                 (a , refl (get a)))                                   ≡⟨ cong (λ eq → proj₁ (≡⇒→ eq (a , refl _))) $
+                                                                          trans (cong (_$ b) $ sym $
+                                                                                 push-subst-application _ _) $
+                                                                          sym $ push-subst-application _ _ ⟩
+      proj₁ (≡⇒→ (subst (λ f → f (get a) ≡ f b) (sym get⁻¹-≡)
+                    (proj₁-to-∥∥→≃-constant H (get a) b))
+                 (a , refl (get a)))                                   ≡⟨ cong (λ eq → proj₁ (≡⇒→ eq (a , refl _))) $
+                                                                          subst-in-terms-of-trans-and-cong ⟩
+      proj₁ (≡⇒→ (trans (sym (cong (_$ get a) (sym get⁻¹-≡)))
+                    (trans (proj₁-to-∥∥→≃-constant H (get a) b)
+                       (cong (_$ b) (sym get⁻¹-≡))))
+                 (a , refl (get a)))                                   ≡⟨⟩
 
-    proj₁ (≡⇒→ (trans (sym (cong (_$ get a) (sym get⁻¹-≡)))
-                  (trans (cong H (T.truncation-is-proposition _ _))
-                     (cong (_$ b) (sym get⁻¹-≡))))
-               (a , refl (get a)))                                   ≡⟨ cong (λ f → proj₁ (f (a , refl _))) $
-                                                                        ≡⇒↝-trans equivalence ⟩
-    proj₁ (≡⇒→ (trans (cong H (T.truncation-is-proposition _ _))
-                  (cong (_$ b) (sym get⁻¹-≡)))
-             (≡⇒→ (sym (cong (_$ get a) (sym get⁻¹-≡)))
-                (a , refl (get a))))                                 ≡⟨ cong (λ f → proj₁ (f (≡⇒→ (sym (cong (_$ get a) (sym get⁻¹-≡)))
-                                                                                                (a , refl _)))) $
-                                                                        ≡⇒↝-trans equivalence ⟩
-    proj₁ (≡⇒→ (cong (_$ b) (sym get⁻¹-≡))
-             (≡⇒→ (cong H (T.truncation-is-proposition _ _))
-                (≡⇒→ (sym (cong (_$ get a) (sym get⁻¹-≡)))
-                   (a , refl (get a)))))                             ≡⟨ cong₂ (λ p q → proj₁ (≡⇒→ p
-                                                                                                (≡⇒→ (cong H (T.truncation-is-proposition _ _))
-                                                                                                   (≡⇒→ q (a , refl _)))))
-                                                                          (cong-sym _ _)
-                                                                          (trans (cong sym $ cong-sym _ _) $
-                                                                           sym-sym _) ⟩
-    proj₁ (≡⇒→ (sym $ cong (_$ b) get⁻¹-≡)
-             (≡⇒→ (cong H (T.truncation-is-proposition _ _))
-                (≡⇒→ (cong (_$ get a) get⁻¹-≡)
-                   (a , refl (get a)))))                             ≡⟨ cong (λ f → proj₁ (f (≡⇒→ (cong H (T.truncation-is-proposition _ _))
-                                                                                                (≡⇒→ (cong (_$ get a) get⁻¹-≡)
-                                                                                                   (a , refl _))))) $
-                                                                        ≡⇒↝-sym equivalence ⟩
-    proj₁ (_≃_.from (≡⇒≃ (cong (_$ b) get⁻¹-≡))
-             (≡⇒→ (cong H (T.truncation-is-proposition _ _))
-                (≡⇒→ (cong (_$ get a) get⁻¹-≡)
-                   (a , refl (get a)))))                             ≡⟨⟩
+      proj₁ (≡⇒→ (trans (sym (cong (_$ get a) (sym get⁻¹-≡)))
+                    (trans (cong H (T.truncation-is-proposition _ _))
+                       (cong (_$ b) (sym get⁻¹-≡))))
+                 (a , refl (get a)))                                   ≡⟨ cong (λ f → proj₁ (f (a , refl _))) $
+                                                                          ≡⇒↝-trans equivalence ⟩
+      proj₁ (≡⇒→ (trans (cong H (T.truncation-is-proposition _ _))
+                    (cong (_$ b) (sym get⁻¹-≡)))
+               (≡⇒→ (sym (cong (_$ get a) (sym get⁻¹-≡)))
+                  (a , refl (get a))))                                 ≡⟨ cong (λ f → proj₁ (f (≡⇒→ (sym (cong (_$ get a) (sym get⁻¹-≡)))
+                                                                                                  (a , refl _)))) $
+                                                                          ≡⇒↝-trans equivalence ⟩
+      proj₁ (≡⇒→ (cong (_$ b) (sym get⁻¹-≡))
+               (≡⇒→ (cong H (T.truncation-is-proposition _ _))
+                  (≡⇒→ (sym (cong (_$ get a) (sym get⁻¹-≡)))
+                     (a , refl (get a)))))                             ≡⟨ cong₂ (λ p q → proj₁ (≡⇒→ p
+                                                                                                  (≡⇒→ (cong H (T.truncation-is-proposition _ _))
+                                                                                                     (≡⇒→ q (a , refl _)))))
+                                                                            (cong-sym _ _)
+                                                                            (trans (cong sym $ cong-sym _ _) $
+                                                                             sym-sym _) ⟩
+      proj₁ (≡⇒→ (sym $ cong (_$ b) get⁻¹-≡)
+               (≡⇒→ (cong H (T.truncation-is-proposition _ _))
+                  (≡⇒→ (cong (_$ get a) get⁻¹-≡)
+                     (a , refl (get a)))))                             ≡⟨ cong (λ f → proj₁ (f (≡⇒→ (cong H (T.truncation-is-proposition _ _))
+                                                                                                  (≡⇒→ (cong (_$ get a) get⁻¹-≡)
+                                                                                                     (a , refl _))))) $
+                                                                          ≡⇒↝-sym equivalence ⟩
+      proj₁ (_≃_.from (≡⇒≃ (cong (_$ b) get⁻¹-≡))
+               (≡⇒→ (cong H (T.truncation-is-proposition _ _))
+                  (≡⇒→ (cong (_$ get a) get⁻¹-≡)
+                     (a , refl (get a)))))                             ≡⟨⟩
 
-    set a b                                                          ∎
-    where
-    open Higher.Lens l
+      set a b                                                          ∎
+      where
+      open Higher.Lens l

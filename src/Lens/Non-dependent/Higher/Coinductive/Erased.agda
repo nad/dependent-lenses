@@ -53,7 +53,7 @@ private
 ------------------------------------------------------------------------
 -- The lemma ∥∥ᴱ→≃
 
-private
+private opaque
 
   -- A lemma used in the implementation of ∥∥ᴱ→≃.
   --
@@ -62,7 +62,6 @@ private
   -- constructor).
 
   @0 ∥∥ᴱ→≃-lemma :
-    Block "∥∥ᴱ→≃-lemma" →
     (f₀ : A → B) →
     (∃ λ (f₊ : ∀ n → ∥ A ∥¹-out-^ (1 + n) → B) →
        (∀ x → f₊ zero ∣ x ∣ ≡ f₀ x) ×
@@ -70,7 +69,7 @@ private
     (∃ λ (f₊ : ∀ n → ∥ A ∥¹-in-^ (1 + n) → B) →
        (∀ x → f₊ zero ∣ x ∣ ≡ f₀ x) ×
        (∀ n x → f₊ (suc n) ∣ n , x ∣-in-^ ≡ f₊ n x))
-  ∥∥ᴱ→≃-lemma ⊠ _ =
+  ∥∥ᴱ→≃-lemma _ =
     inverse $
     Σ-cong {k₁ = equivalence}
       (∀-cong ext λ n →
@@ -85,11 +84,10 @@ private
 -- functions from A with erased "proofs".
 
 ∥∥ᴱ→≃ :
-  Block "∥∥ᴱ→≃" →
   (∥ A ∥ᴱ → B)
     ≃
   (∃ λ (f : A → B) → Erased (C.Coherently-constant f))
-∥∥ᴱ→≃ {A = A} {B = B} bl =
+∥∥ᴱ→≃ {A = A} {B = B} =
   (∥ A ∥ᴱ → B)                                                 ↝⟨ →-cong ext T.∥∥ᴱ≃∥∥ᴱ F.id ⟩
 
   (N.∥ A ∥ᴱ → B)                                               ↝⟨ CS.universal-property ⟩
@@ -97,90 +95,93 @@ private
   (∃ λ (f₀ : A → B) →
      Erased (∃ λ (f₊ : ∀ n → ∥ A ∥¹-out-^ (1 + n) → B) →
                (∀ x → f₊ zero ∣ x ∣ ≡ f₀ x) ×
-               (∀ n x → f₊ (suc n) ∣ x ∣ ≡ f₊ n x)))           ↝⟨ ∃-cong (λ f → Erased-cong (∥∥ᴱ→≃-lemma bl f)) ⟩
+               (∀ n x → f₊ (suc n) ∣ x ∣ ≡ f₊ n x)))           ↝⟨ ∃-cong (λ f → Erased-cong (∥∥ᴱ→≃-lemma f)) ⟩
 
   (∃ λ (f₀ : A → B) →
      Erased (∃ λ (f₊ : ∀ n → ∥ A ∥¹-in-^ (1 + n) → B) →
                (∀ x → f₊ zero ∣ x ∣ ≡ f₀ x) ×
-               (∀ n x → f₊ (suc n) ∣ n , x ∣-in-^ ≡ f₊ n x)))  ↝⟨ ∃-cong (λ f → Erased-cong (inverse $
-                                                                  C.Coherently-constant′≃ bl)) ⟩
+               (∀ n x → f₊ (suc n) ∣ n , x ∣-in-^ ≡ f₊ n x)))  ↝⟨ ∃-cong (λ f → Erased-cong (inverse
+                                                                  C.Coherently-constant′≃)) ⟩
 
-  (∃ λ (f : A → B) → Erased (C.Coherently-constant′ f))        ↝⟨ ∃-cong (λ f → Erased-cong (inverse $
-                                                                  C.Coherently-constant≃Coherently-constant′ bl)) ⟩□
+  (∃ λ (f : A → B) → Erased (C.Coherently-constant′ f))        ↝⟨ ∃-cong (λ f → Erased-cong (inverse
+                                                                  C.Coherently-constant≃Coherently-constant′)) ⟩□
   (∃ λ (f : A → B) → Erased (C.Coherently-constant f))         □
 
 -- A "computation" rule for ∥∥ᴱ→≃.
 
 @0 cong-from-∥∥ᴱ→≃-truncation-is-proposition :
-  (bl : Block "∥∥ᴱ→≃")
   {f : A → B} {c : C.Coherently-constant f}
   {x y : A} {p : ∣ x ∣ ≡ ∣ y ∣} →
-  cong (_≃_.from (∥∥ᴱ→≃ bl) (f , [ c ])) p ≡
+  cong (_≃_.from ∥∥ᴱ→≃ (f , [ c ])) p ≡
   c .property x y
 cong-from-∥∥ᴱ→≃-truncation-is-proposition
-  {A = A} bl {f = f} {c = c} {x = x} {y = y} {p = p} =
-  cong (_≃_.from (∥∥ᴱ→≃ bl) (f , [ c ])) p                              ≡⟨⟩
+  {A = A} {f = f} {c = c} {x = x} {y = y} {p = p} =
+  cong (_≃_.from ∥∥ᴱ→≃ (f , [ c ])) p                                ≡⟨⟩
 
-  cong (_≃_.from CS.universal-property (f , [ g bl ]) ∘
+  cong (_≃_.from CS.universal-property (f , [ g ]) ∘
         _≃_.to T.∥∥ᴱ≃∥∥ᴱ)
-    p                                                                   ≡⟨ sym $ cong-∘ _ _ _ ⟩
+    p                                                                ≡⟨ sym $ cong-∘ _ _ _ ⟩
 
-  (cong (_≃_.from CS.universal-property (f , [ g bl ])) $
-   cong (_≃_.to T.∥∥ᴱ≃∥∥ᴱ) p)                                           ≡⟨ cong (cong _) $ mono₁ 1 N.∥∥ᴱ-proposition _ _ ⟩
+  (cong (_≃_.from CS.universal-property (f , [ g ])) $
+   cong (_≃_.to T.∥∥ᴱ≃∥∥ᴱ) p)                                        ≡⟨ cong (cong _) $ mono₁ 1 N.∥∥ᴱ-proposition _ _ ⟩
 
-  cong (_≃_.from CS.universal-property (f , [ g bl ]))
-    (N.∥∥ᴱ-proposition N.∣ x ∣ N.∣ y ∣)                                 ≡⟨⟩
+  cong (_≃_.from CS.universal-property (f , [ g ]))
+    (N.∥∥ᴱ-proposition N.∣ x ∣ N.∣ y ∣)                              ≡⟨⟩
 
-  cong (_≃_.from CS.universal-property (f , [ g bl ]))
+  cong (_≃_.from CS.universal-property (f , [ g ]))
     (trans (sym (CS.∣∣₊≡∣∣₀ x))
        (trans (cong CS.∣_∣₊ (O.∣∣-constant x y))
-          (CS.∣∣₊≡∣∣₀ y)))                                              ≡⟨ trans (cong-trans _ _ _) $
-                                                                           cong₂ trans
-                                                                             (cong-sym _ _)
-                                                                             (trans (cong-trans _ _ _) $
-                                                                              cong (flip trans _) $
-                                                                              cong-∘ _ _ _) ⟩
+          (CS.∣∣₊≡∣∣₀ y)))                                           ≡⟨ trans (cong-trans _ _ _) $
+                                                                        cong₂ trans
+                                                                          (cong-sym _ _)
+                                                                          (trans (cong-trans _ _ _) $
+                                                                           cong (flip trans _) $
+                                                                           cong-∘ _ _ _) ⟩
   trans
-    (sym $ cong (_≃_.from CS.universal-property (f , [ g bl ]))
+    (sym $ cong (_≃_.from CS.universal-property (f , [ g ]))
              (CS.∣∣₊≡∣∣₀ x))
     (trans
-       (cong (_≃_.from CS.universal-property (f , [ g bl ]) ∘ CS.∣_∣₊)
+       (cong (_≃_.from CS.universal-property (f , [ g ]) ∘ CS.∣_∣₊)
           (O.∣∣-constant x y))
-       (cong (_≃_.from CS.universal-property (f , [ g bl ]))
-          (CS.∣∣₊≡∣∣₀ y)))                                              ≡⟨ cong₂ trans
-                                                                             (cong sym CS.rec-∣∣₊≡∣∣₀)
-                                                                             (cong (trans _) CS.rec-∣∣₊≡∣∣₀) ⟩
-  trans (sym $ proj₁ (proj₂ (g bl)) x)
-    (trans (cong (proj₁ (g bl) 0) (O.∣∣-constant x y))
-       (proj₁ (proj₂ (g bl)) y))                                        ≡⟨ lemma bl ⟩∎
+       (cong (_≃_.from CS.universal-property (f , [ g ]))
+          (CS.∣∣₊≡∣∣₀ y)))                                           ≡⟨ cong₂ trans
+                                                                          (cong sym CS.rec-∣∣₊≡∣∣₀)
+                                                                          (cong (trans _) CS.rec-∣∣₊≡∣∣₀) ⟩
+  trans (sym $ proj₁ (proj₂ g) x)
+    (trans (cong (proj₁ g 0) (O.∣∣-constant x y))
+       (proj₁ (proj₂ g) y))                                          ≡⟨ lemma ⟩∎
 
-  c .property x y                                                       ∎
+  c .property x y                                                    ∎
   where
-  g : ∀ _ → _
-  g bl =
-    _≃_.from (∥∥ᴱ→≃-lemma bl _) $
-    _≃_.to (C.Coherently-constant′≃ bl) $
-    _≃_.to (C.Coherently-constant≃Coherently-constant′ bl) c
+  g =
+    _≃_.from (∥∥ᴱ→≃-lemma _) $
+    _≃_.to C.Coherently-constant′≃ $
+    _≃_.to C.Coherently-constant≃Coherently-constant′ c
 
-  lemma :
-    ∀ bl →
-    trans (sym $ proj₁ (proj₂ (g bl)) x)
-      (trans (cong (proj₁ (g bl) 0) (O.∣∣-constant x y))
-         (proj₁ (proj₂ (g bl)) y)) ≡
-    c .property x y
-  lemma bl@⊠ =
-    trans (sym $ proj₁ (proj₂ (g bl)) x)
-      (trans (cong (proj₁ (g bl) 0) (O.∣∣-constant x y))
-         (proj₁ (proj₂ (g bl)) y))                                ≡⟨⟩
+  opaque
+    unfolding
+      ∥∥ᴱ→≃-lemma
+      C.Coherently-constant′≃
+      C.Coherently-constant≃Coherently-constant′
 
-    trans (sym $ refl _)
-      (trans (cong (O.rec′ f (c .property)) (O.∣∣-constant x y))
-         (refl _))                                                ≡⟨ trans (cong₂ trans sym-refl (trans-reflʳ _)) $
-                                                                     trans-reflˡ _ ⟩
+    lemma :
+      trans (sym $ proj₁ (proj₂ g) x)
+        (trans (cong (proj₁ g 0) (O.∣∣-constant x y))
+           (proj₁ (proj₂ g) y)) ≡
+      c .property x y
+    lemma =
+      trans (sym $ proj₁ (proj₂ g) x)
+        (trans (cong (proj₁ g 0) (O.∣∣-constant x y))
+           (proj₁ (proj₂ g) y))                                     ≡⟨⟩
 
-    cong (O.rec′ f (c .property)) (O.∣∣-constant x y)             ≡⟨ O.rec-∣∣-constant ⟩∎
+      trans (sym $ refl _)
+        (trans (cong (O.rec′ f (c .property)) (O.∣∣-constant x y))
+           (refl _))                                                ≡⟨ trans (cong₂ trans sym-refl (trans-reflʳ _)) $
+                                                                       trans-reflˡ _ ⟩
 
-    c .property x y                                               ∎
+      cong (O.rec′ f (c .property)) (O.∣∣-constant x y)             ≡⟨ O.rec-∣∣-constant ⟩∎
+
+      c .property x y                                               ∎
 
 ------------------------------------------------------------------------
 -- Coherently-constant
@@ -201,66 +202,64 @@ Coherently-constant≃ᴱCoherently-constant :
   {P : A → Type p} →
   Coherently-constant P ≃ᴱ V.Coherently-constant P
 Coherently-constant≃ᴱCoherently-constant {A = A} {p = p} {P = P} =
-  block λ bl →
-
   Coherently-constant P                                                 ↔⟨⟩
 
   (∃ λ (P-const : ∀ x y → P x → P y) →
    Erased (
    ∃ λ (c : C.Coherently-constant P) →
    ∀ x y →
-   P-const x y ≡ subst id (c .property x y)))                           ↔⟨ (∃-cong λ P-const → Erased-cong (
-                                                                            ∃-cong λ c → ∀-cong ext λ x → ∀-cong ext λ y →
-                                                                            ≡⇒≃ $ cong (P-const x y ≡_) (
-      subst id (c .property x y)                                            ≡⟨ cong (subst id) $ sym $
-                                                                                 cong-from-∥∥ᴱ→≃-truncation-is-proposition bl ⟩
+   P-const x y ≡ subst id (c .property x y)))                   ↔⟨ (∃-cong λ P-const → Erased-cong (
+                                                                    ∃-cong λ c → ∀-cong ext λ x → ∀-cong ext λ y →
+                                                                    ≡⇒≃ $ cong (P-const x y ≡_) (
+      subst id (c .property x y)                                    ≡⟨ cong (subst id) $ sym
+                                                                       cong-from-∥∥ᴱ→≃-truncation-is-proposition ⟩
       subst id
-        (cong (_≃_.from (∥∥ᴱ→≃ bl) (P , [ c ]))
-           (T.truncation-is-proposition ∣ x ∣ ∣ y ∣))                       ≡⟨ (⟨ext⟩ λ _ → sym $
-                                                                                  subst-∘ _ _ _) ⟩∎
-      subst (_≃_.from (∥∥ᴱ→≃ bl) (P , [ c ]))
-        (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)                           ∎))) ⟩
+        (cong (_≃_.from ∥∥ᴱ→≃ (P , [ c ]))
+           (T.truncation-is-proposition ∣ x ∣ ∣ y ∣))               ≡⟨ (⟨ext⟩ λ _ → sym $
+                                                                        subst-∘ _ _ _) ⟩∎
+      subst (_≃_.from ∥∥ᴱ→≃ (P , [ c ]))
+        (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)                   ∎))) ⟩
 
   (∃ λ (P-const : ∀ x y → P x → P y) →
    Erased (
    ∃ λ (c : C.Coherently-constant P) →
    ∀ x y →
    P-const x y ≡
-   subst (_≃_.from (∥∥ᴱ→≃ bl) (P , [ c ]))
-     (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)))                        ↔⟨ (∃-cong λ _ → Erased-cong (∃-cong λ _ →
-                                                                            Eq.extensionality-isomorphism ext F.∘
-                                                                            (∀-cong ext λ _ → Eq.extensionality-isomorphism ext))) ⟩
+   subst (_≃_.from ∥∥ᴱ→≃ (P , [ c ]))
+     (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)))                ↔⟨ (∃-cong λ _ → Erased-cong (∃-cong λ _ →
+                                                                    Eq.extensionality-isomorphism ext F.∘
+                                                                    (∀-cong ext λ _ → Eq.extensionality-isomorphism ext))) ⟩
   (∃ λ (P-const : ∀ x y → P x → P y) →
    Erased (
    ∃ λ (c : C.Coherently-constant P) →
    P-const ≡
    λ x y →
-   subst (_≃_.from (∥∥ᴱ→≃ bl) (P , [ c ]))
-     (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)))                        ↔⟨ (∃-cong λ P-const → Erased-cong (
-                                                                            ∃-cong λ c → ≡⇒≃ $ cong (P-const ≡_) $ sym $
-                                                                            ⟨ext⟩ λ x → ⟨ext⟩ λ y →
-                                                                            cong₂ (λ (f : P y → P y) (g : P x → P x) →
-                                                                                     f ∘
-                                                                                     subst (_≃_.from (∥∥ᴱ→≃ bl) (P , [ c ]))
-                                                                                       (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ∘
-                                                                                     g)
-                                                                              (cong _≃_.to $
-                                                                               trans (cong ≡⇒≃ $ cong-refl (_$ y)) $
-                                                                               ≡⇒↝-refl)
-                                                                              (cong _≃_.from $
-                                                                               trans (cong ≡⇒≃ $ cong-refl (_$ x)) $
-                                                                               ≡⇒↝-refl))) ⟩
+   subst (_≃_.from ∥∥ᴱ→≃ (P , [ c ]))
+     (T.truncation-is-proposition ∣ x ∣ ∣ y ∣)))                ↔⟨ (∃-cong λ P-const → Erased-cong (
+                                                                    ∃-cong λ c → ≡⇒≃ $ cong (P-const ≡_) $ sym $
+                                                                    ⟨ext⟩ λ x → ⟨ext⟩ λ y →
+                                                                    cong₂ (λ (f : P y → P y) (g : P x → P x) →
+                                                                             f ∘
+                                                                             subst (_≃_.from ∥∥ᴱ→≃ (P , [ c ]))
+                                                                               (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ∘
+                                                                             g)
+                                                                      (cong _≃_.to $
+                                                                       trans (cong ≡⇒≃ $ cong-refl (_$ y)) $
+                                                                       ≡⇒↝-refl)
+                                                                      (cong _≃_.from $
+                                                                       trans (cong ≡⇒≃ $ cong-refl (_$ x)) $
+                                                                       ≡⇒↝-refl))) ⟩
   (∃ λ (P-const : ∀ x y → P x → P y) →
    Erased (
    ∃ λ (c : C.Coherently-constant P) →
    P-const ≡
    λ x y →
    ≡⇒→ (cong (_$ y) (refl P)) ∘
-   subst (_≃_.from (∥∥ᴱ→≃ bl) (P , [ c ]))
+   subst (_≃_.from ∥∥ᴱ→≃ (P , [ c ]))
      (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ∘
-   _≃_.from (≡⇒≃ (cong (_$ x) (refl P)))))                              ↝⟨ (∃-cong λ P-const → inverse $
-                                                                            EEq.drop-⊤-left-Σ-≃ᴱ-Erased
-                                                                              (EEq.other-singleton-with-Π-≃ᴱ-≃ᴱ-⊤ ext univ)) ⟩
+   _≃_.from (≡⇒≃ (cong (_$ x) (refl P)))))                      ↝⟨ (∃-cong λ P-const → inverse $
+                                                                    EEq.drop-⊤-left-Σ-≃ᴱ-Erased
+                                                                      (EEq.other-singleton-with-Π-≃ᴱ-≃ᴱ-⊤ ext univ)) ⟩
   (∃ λ (P-const : ∀ x y → P x → P y) →
    ∃ λ ((Q , P≃) : ∃ λ (Q : A → Type p) → ∀ x → P x ≃ᴱ Q x) →
    Erased (
@@ -268,13 +267,13 @@ Coherently-constant≃ᴱCoherently-constant {A = A} {p = p} {P = P} =
    P-const ≡
    λ x y →
    _≃ᴱ_.from (P≃ y) ∘
-   subst (_≃_.from (∥∥ᴱ→≃ bl) (Q , [ c ]))
+   subst (_≃_.from ∥∥ᴱ→≃ (Q , [ c ]))
      (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ∘
-   _≃ᴱ_.to (P≃ x)))                                                     ↔⟨ (∃-cong λ _ →
-                                                                            Σ-assoc F.∘
-                                                                            (∃-cong λ _ → ∃-comm) F.∘
-                                                                            inverse Σ-assoc F.∘
-                                                                            (∃-cong λ _ → Erased-Σ↔Σ)) ⟩
+   _≃ᴱ_.to (P≃ x)))                                             ↔⟨ (∃-cong λ _ →
+                                                                    Σ-assoc F.∘
+                                                                    (∃-cong λ _ → ∃-comm) F.∘
+                                                                    inverse Σ-assoc F.∘
+                                                                    (∃-cong λ _ → Erased-Σ↔Σ)) ⟩
   (∃ λ (P-const : ∀ x y → P x → P y) →
    ∃ λ ((Q , c) : ∃ λ (Q : A → Type p) →
                   Erased (C.Coherently-constant Q)) →
@@ -282,10 +281,10 @@ Coherently-constant≃ᴱCoherently-constant {A = A} {p = p} {P = P} =
    Erased (P-const ≡
            λ x y →
            _≃ᴱ_.from (P≃ y) ∘
-           subst (_≃_.from (∥∥ᴱ→≃ bl) (Q , c))
+           subst (_≃_.from ∥∥ᴱ→≃ (Q , c))
              (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ∘
-           _≃ᴱ_.to (P≃ x)))                                             ↔⟨ (∃-cong λ _ →
-                                                                            Σ-cong (inverse $ ∥∥ᴱ→≃ bl) λ _ → Eq.id) ⟩
+           _≃ᴱ_.to (P≃ x)))                                     ↔⟨ (∃-cong λ _ →
+                                                                    Σ-cong (inverse ∥∥ᴱ→≃) λ _ → Eq.id) ⟩
   (∃ λ (P-const : ∀ x y → P x → P y) →
    ∃ λ (Q : ∥ A ∥ᴱ → Type p) →
    ∃ λ (P≃ : ∀ x → P x ≃ᴱ Q ∣ x ∣) →
@@ -293,11 +292,11 @@ Coherently-constant≃ᴱCoherently-constant {A = A} {p = p} {P = P} =
            λ x y →
            _≃ᴱ_.from (P≃ y) ∘
            subst Q (T.truncation-is-proposition ∣ x ∣ ∣ y ∣) ∘
-           _≃ᴱ_.to (P≃ x)))                                             ↔⟨⟩
+           _≃ᴱ_.to (P≃ x)))                                     ↔⟨⟩
 
-  V.Coherently-constant′ P                                              ↝⟨ inverse V.Coherently-constant≃ᴱCoherently-constant′ ⟩□
+  V.Coherently-constant′ P                                      ↝⟨ inverse V.Coherently-constant≃ᴱCoherently-constant′ ⟩□
 
-  V.Coherently-constant P                                               □
+  V.Coherently-constant P                                       □
 
 ------------------------------------------------------------------------
 -- The lens type family
@@ -340,27 +339,29 @@ instance
     ; set = Lens.set
     }
 
--- Lens A B is equivalent to V.Lens A B (with erased proofs).
+opaque
 
-Lens≃ᴱLens :
-  Block "Lens≃ᴱLens" →
-  Lens A B ≃ᴱ V.Lens A B
-Lens≃ᴱLens {A = A} {B = B} ⊠ =
-  (∃ λ (get : A → B) → Coherently-constant (get ⁻¹ᴱ_))    ↝⟨ (∃-cong λ _ → Coherently-constant≃ᴱCoherently-constant) ⟩□
-  (∃ λ (get : A → B) → V.Coherently-constant (get ⁻¹ᴱ_))  □
+  -- Lens A B is equivalent to V.Lens A B (with erased proofs).
 
--- The right-to-left direction of the equivalence preserves getters
--- and setters.
+  Lens≃ᴱLens : Lens A B ≃ᴱ V.Lens A B
+  Lens≃ᴱLens {A = A} {B = B} =
+    (∃ λ (get : A → B) → Coherently-constant (get ⁻¹ᴱ_))    ↝⟨ (∃-cong λ _ → Coherently-constant≃ᴱCoherently-constant) ⟩□
+    (∃ λ (get : A → B) → V.Coherently-constant (get ⁻¹ᴱ_))  □
 
-from-Lens≃ᴱLens-preserves-getters-and-setters :
-  (bl : Block "Lens≃ᴱLens") →
-  Preserves-getters-and-setters-→ A B (_≃ᴱ_.from (Lens≃ᴱLens bl))
-from-Lens≃ᴱLens-preserves-getters-and-setters ⊠ l =
-    refl _
-  , ⟨ext⟩ λ a → ⟨ext⟩ λ b →
-    proj₁ (get⁻¹ᴱ-const (get a) b (a , [ refl (get a) ]))  ∎
-  where
-  open V.Lens l
+opaque
+  unfolding Lens≃ᴱLens
+
+  -- The right-to-left direction of the equivalence preserves getters
+  -- and setters.
+
+  from-Lens≃ᴱLens-preserves-getters-and-setters :
+    Preserves-getters-and-setters-→ A B (_≃ᴱ_.from Lens≃ᴱLens)
+  from-Lens≃ᴱLens-preserves-getters-and-setters l =
+      refl _
+    , ⟨ext⟩ λ a → ⟨ext⟩ λ b →
+      proj₁ (get⁻¹ᴱ-const (get a) b (a , [ refl (get a) ]))  ∎
+    where
+    open V.Lens l
 
 -- In erased contexts the equivalence preserves getters and setters.
 --
@@ -368,38 +369,34 @@ from-Lens≃ᴱLens-preserves-getters-and-setters ⊠ l =
 -- contexts.)
 
 @0 Lens≃ᴱLens-preserves-getters-and-setters :
-  (bl : Block "Lens≃ᴱLens") →
   Preserves-getters-and-setters-⇔ A B
-    (_≃ᴱ_.logical-equivalence (Lens≃ᴱLens bl))
-Lens≃ᴱLens-preserves-getters-and-setters bl =
+    (_≃ᴱ_.logical-equivalence Lens≃ᴱLens)
+Lens≃ᴱLens-preserves-getters-and-setters =
   Preserves-getters-and-setters-⇔-inverse
-    {f = _≃ᴱ_.logical-equivalence (inverse $ Lens≃ᴱLens bl)} $
+    {f = _≃ᴱ_.logical-equivalence (inverse Lens≃ᴱLens)} $
   Preserves-getters-and-setters-→-↠-⇔
-    (_≃_.surjection (EEq.≃ᴱ→≃ $ inverse $ Lens≃ᴱLens bl))
-    (from-Lens≃ᴱLens-preserves-getters-and-setters bl)
+    (_≃_.surjection (EEq.≃ᴱ→≃ $ inverse Lens≃ᴱLens))
+    from-Lens≃ᴱLens-preserves-getters-and-setters
 
 -- Lens A B is equivalent to Higher.Lens A B (with erased proofs).
 
-Lens≃ᴱHigher-lens :
-  Block "Lens≃ᴱHigher-Lens" →
-  Lens A B ≃ᴱ Higher.Lens A B
-Lens≃ᴱHigher-lens {A = A} {B = B} bl =
-  Lens A B         ↝⟨ Lens≃ᴱLens bl ⟩
-  V.Lens A B       ↝⟨ V.Lens≃ᴱHigher-lens bl ⟩□
+Lens≃ᴱHigher-lens : Lens A B ≃ᴱ Higher.Lens A B
+Lens≃ᴱHigher-lens {A = A} {B = B} =
+  Lens A B         ↝⟨ Lens≃ᴱLens ⟩
+  V.Lens A B       ↝⟨ V.Lens≃ᴱHigher-lens ⟩□
   Higher.Lens A B  □
 
 -- In erased contexts the equivalence preserves getters and setters.
 
 @0 Lens≃ᴱHigher-lens-preserves-getters-and-setters :
-  (bl : Block "Lens≃ᴱHigher-lens") →
   Preserves-getters-and-setters-⇔ A B
-    (_≃ᴱ_.logical-equivalence (Lens≃ᴱHigher-lens bl))
-Lens≃ᴱHigher-lens-preserves-getters-and-setters bl =
+    (_≃ᴱ_.logical-equivalence Lens≃ᴱHigher-lens)
+Lens≃ᴱHigher-lens-preserves-getters-and-setters =
   Preserves-getters-and-setters-⇔-∘
-    {f = _≃ᴱ_.logical-equivalence $ V.Lens≃ᴱHigher-lens bl}
-    {g = _≃ᴱ_.logical-equivalence $ Lens≃ᴱLens bl}
-    (V.Lens≃ᴱHigher-lens-preserves-getters-and-setters bl)
-    (Lens≃ᴱLens-preserves-getters-and-setters bl)
+    {f = _≃ᴱ_.logical-equivalence V.Lens≃ᴱHigher-lens}
+    {g = _≃ᴱ_.logical-equivalence Lens≃ᴱLens}
+    V.Lens≃ᴱHigher-lens-preserves-getters-and-setters
+    Lens≃ᴱLens-preserves-getters-and-setters
 
 ------------------------------------------------------------------------
 -- H-levels
@@ -446,7 +443,7 @@ lens-preserves-h-level n hA hB =
   ∀ n → Lens A B → A → H-level n A → H-level n B
 h-level-respects-lens-from-inhabited n =
   Higher.h-level-respects-lens-from-inhabited n ∘
-  _≃ᴱ_.to (Lens≃ᴱHigher-lens ⊠)
+  _≃ᴱ_.to Lens≃ᴱHigher-lens
 
 -- If A has positive h-level n, then Lens A B also has h-level n (in
 -- erased contexts).

@@ -94,12 +94,11 @@ Coherentlyᴱ⇔Coherently ._⇔_.to c .C.coherent =
     (_≃_.to (Coherentlyᴱ-cong′ O.∥∥¹ᴱ≃∥∥¹)
        (c .coherent))
 
-private
+private opaque
 
   -- A preservation lemma for Coherentlyᴱ.
 
   @0 Coherentlyᴱ-cong-≡ :
-    Block "Coherentlyᴱ-cong-≡" →
     {P₁ P₂ : {A : Type a} → (A → B) → Type p}
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
@@ -108,7 +107,7 @@ private
      step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x) →
     Coherentlyᴱ P₁ step₁ f P.≡ Coherentlyᴱ P₂ step₂ f
   Coherentlyᴱ-cong-≡
-    {a = a} {B = B} {p = p} {f = f} ⊠ {P₁ = P₁} {P₂ = P₂}
+    {a = a} {B = B} {p = p} {f = f} {P₁ = P₁} {P₂ = P₂}
     {step₁ = step₁} {step₂ = step₂} P₁≃P₂′ step₁≡step₂ =
 
     P.cong (λ ((P , step) :
@@ -169,10 +168,12 @@ private
       lemma : P.[ (λ i → P (p i)) ] y₁ ≡ y₂
       lemma = PB._↔_.from (P.heterogeneous↔homogeneous _) q
 
+private opaque
+  unfolding Coherentlyᴱ-cong-≡
+
   -- A "computation rule".
 
   to-Coherentlyᴱ-cong-≡-property :
-    (bl : Block "Coherentlyᴱ-cong-≡")
     {P₁ P₂ : {A : Type a} → (A → B) → Type p}
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
@@ -181,11 +182,11 @@ private
        {A : Type a} (f : A → B) (x : P₂ f) →
        step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x)
     (c : Coherentlyᴱ P₁ step₁ f) →
-    PU.≡⇒→ (Coherentlyᴱ-cong-≡ bl P₁≃P₂ step₁≡step₂) c .property
+    PU.≡⇒→ (Coherentlyᴱ-cong-≡ P₁≃P₂ step₁≡step₂) c .property
       P.≡
     _≃_.to (P₁≃P₂ f) (c .property)
   to-Coherentlyᴱ-cong-≡-property
-    {f = f} ⊠ {P₁ = P₁} {P₂ = P₂} P₁≃P₂ step₁≡step₂ c =
+    {f = f} {P₁ = P₁} {P₂ = P₂} P₁≃P₂ step₁≡step₂ c =
 
     P.transport (λ _ → P₂ f) P.0̲
       (_≃_.to (P₁≃P₂ f) (P.transport (λ _ → P₁ f) P.0̲ (c .property)))  P.≡⟨ P.cong (_$ _≃_.to (P₁≃P₂ f)
@@ -196,10 +197,12 @@ private
                                                                             P.transport-refl P.0̲ ⟩∎
     _≃_.to (P₁≃P₂ f) (c .property)                                     ∎
 
+private opaque
+  unfolding Coherentlyᴱ-cong-≡
+
   -- Another "computation rule".
 
   from-Coherentlyᴱ-cong-≡-property :
-    (bl : Block "Coherentlyᴱ-cong-≡")
     {P₁ P₂ : {A : Type a} → (A → B) → Type p}
     {step₁ : {A : Type a} (f : A → B) → P₁ f → ∥ A ∥¹ᴱ → B}
     {step₂ : {A : Type a} (f : A → B) → P₂ f → ∥ A ∥¹ᴱ → B}
@@ -209,11 +212,11 @@ private
        step₁ f (_≃_.from (P₁≃P₂ f) x) ≡ step₂ f x)
     (c : Coherentlyᴱ P₂ step₂ f) →
     PEq._≃_.from
-      (PU.≡⇒≃ (Coherentlyᴱ-cong-≡ bl {step₁ = step₁} P₁≃P₂ step₁≡step₂))
+      (PU.≡⇒≃ (Coherentlyᴱ-cong-≡ {step₁ = step₁} P₁≃P₂ step₁≡step₂))
       c .property P.≡
     _≃_.from (P₁≃P₂ f) (c .property)
   from-Coherentlyᴱ-cong-≡-property
-    {f = f} ⊠ {P₁ = P₁} {P₂ = P₂} P₁≃P₂ step₁≡step₂ c =
+    {f = f} {P₁ = P₁} {P₂ = P₂} P₁≃P₂ step₁≡step₂ c =
 
     P.transport (λ _ → P₁ f) P.0̲
       (_≃_.from (P₁≃P₂ f) (P.transport (λ _ → P₂ f) P.0̲ (c .property)))  P.≡⟨ P.cong (_$ _≃_.from (P₁≃P₂ f)
@@ -223,6 +226,8 @@ private
     _≃_.from (P₁≃P₂ f) (P.transport (λ _ → P₂ f) P.0̲ (c .property))      P.≡⟨ P.cong (λ g → _≃_.from (P₁≃P₂ f) (g (c .property))) $
                                                                               P.transport-refl P.0̲ ⟩∎
     _≃_.from (P₁≃P₂ f) (c .property)                                     ∎
+
+private
 
   -- A preservation lemma for Coherentlyᴱ.
   --
@@ -244,88 +249,77 @@ private
     {f = f} {P₁ = P₁} {P₂ = P₂} {step₁ = step₁} {step₂ = step₂}
     P₁≃P₂ step₁≡step₂ =
 
-    block λ bl →
     EEq.[≃]→≃ᴱ
       (EEq.[proofs]
          (Eq.with-other-inverse
-            (Eq.with-other-function
-               (equiv bl)
-               (to bl)
-               (_↔_.from ≡↔≡ ∘ ≡to bl))
-            (from bl)
-            (_↔_.from ≡↔≡ ∘ ≡from bl)))
+            (Eq.with-other-function equiv to (_↔_.from ≡↔≡ ∘ ≡to))
+            from
+            (_↔_.from ≡↔≡ ∘ ≡from)))
 
     where
 
-    @0 equiv :
-      Block "Coherentlyᴱ-cong-≡" →
-      Coherentlyᴱ P₁ step₁ f ≃ Coherentlyᴱ P₂ step₂ f
-    equiv bl =
+    @0 equiv : Coherentlyᴱ P₁ step₁ f ≃ Coherentlyᴱ P₂ step₂ f
+    equiv =
       _↔_.from ≃↔≃ $ PU.≡⇒≃ $
-      Coherentlyᴱ-cong-≡ bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂
+      Coherentlyᴱ-cong-≡ (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂
 
-    to :
-      Block "Coherentlyᴱ-cong-≡" →
-      Coherentlyᴱ P₁ step₁ f → Coherentlyᴱ P₂ step₂ f
-    to _  c .property = _≃ᴱ_.to (P₁≃P₂ f) (c .property)
-    to bl c .coherent =
+    to : Coherentlyᴱ P₁ step₁ f → Coherentlyᴱ P₂ step₂ f
+    to c .property = _≃ᴱ_.to (P₁≃P₂ f) (c .property)
+    to c .coherent =
       P.subst
         (Coherentlyᴱ P₂ step₂)
         (P.cong (step₂ f) $
          to-Coherentlyᴱ-cong-≡-property
-           bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c) $
-      _≃_.to (equiv bl) c .coherent
+           (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c) $
+      _≃_.to equiv c .coherent
 
-    @0 ≡to : ∀ bl c → _≃_.to (equiv bl) c P.≡ to bl c
-    ≡to bl c i .property = to-Coherentlyᴱ-cong-≡-property
-                             bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c i
-    ≡to bl c i .coherent = lemma i
+    @0 ≡to : ∀ c → _≃_.to equiv c P.≡ to c
+    ≡to c i .property = to-Coherentlyᴱ-cong-≡-property
+                          (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c i
+    ≡to c i .coherent = lemma i
       where
       lemma :
         P.[ (λ i → Coherentlyᴱ P₂ step₂
                      (step₂ f (to-Coherentlyᴱ-cong-≡-property
-                                 bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂)
+                                 (EEq.≃ᴱ→≃ ∘ P₁≃P₂)
                                  step₁≡step₂ c i))) ]
-          _≃_.to (equiv bl) c .coherent ≡
+          _≃_.to equiv c .coherent ≡
           P.subst
             (Coherentlyᴱ P₂ step₂)
             (P.cong (step₂ f) $
              to-Coherentlyᴱ-cong-≡-property
-               bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c)
-            (_≃_.to (equiv bl) c .coherent)
+               (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c)
+            (_≃_.to equiv c .coherent)
       lemma =
         PB._↔_.from (P.heterogeneous↔homogeneous _) P.refl
 
-    from :
-      Block "Coherentlyᴱ-cong-≡" →
-      Coherentlyᴱ P₂ step₂ f → Coherentlyᴱ P₁ step₁ f
-    from _  c .property = _≃ᴱ_.from (P₁≃P₂ f) (c .property)
-    from bl c .coherent =
+    from : Coherentlyᴱ P₂ step₂ f → Coherentlyᴱ P₁ step₁ f
+    from c .property = _≃ᴱ_.from (P₁≃P₂ f) (c .property)
+    from c .coherent =
       P.subst
         (Coherentlyᴱ P₁ step₁)
         (P.cong (step₁ f) $
          from-Coherentlyᴱ-cong-≡-property
-           bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c) $
-      _≃_.from (equiv bl) c .coherent
+           (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c) $
+      _≃_.from equiv c .coherent
 
-    @0 ≡from : ∀ bl c → _≃_.from (equiv bl) c P.≡ from bl c
-    ≡from bl c i .property = from-Coherentlyᴱ-cong-≡-property
-                               bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂)
-                               step₁≡step₂ c i
-    ≡from bl c i .coherent = lemma i
+    @0 ≡from : ∀ c → _≃_.from equiv c P.≡ from c
+    ≡from c i .property = from-Coherentlyᴱ-cong-≡-property
+                            (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c i
+    ≡from c i .coherent = lemma i
       where
       lemma :
         P.[ (λ i → Coherentlyᴱ P₁ step₁
                      (step₁ f (from-Coherentlyᴱ-cong-≡-property
-                                 bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂)
+                                 (EEq.≃ᴱ→≃ ∘ P₁≃P₂)
                                  step₁≡step₂ c i))) ]
-          _≃_.from (equiv bl) c .coherent ≡
+          _≃_.from equiv c .coherent ≡
           P.subst
             (Coherentlyᴱ P₁ step₁)
             (P.cong (step₁ f) $
              from-Coherentlyᴱ-cong-≡-property
-               bl (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c)
-            (_≃_.from (equiv bl) c .coherent)
+               (EEq.≃ᴱ→≃ ∘ P₁≃P₂) step₁≡step₂ c)
+            (_≃_.from equiv c .coherent)
       lemma =
         PB._↔_.from (P.heterogeneous↔homogeneous _) P.refl
 

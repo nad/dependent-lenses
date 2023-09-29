@@ -404,343 +404,353 @@ instance
 ------------------------------------------------------------------------
 -- Equality characterisation lemmas
 
--- An equality characterisation lemma.
+opaque
 
-@0 equality-characterisation₁ :
-  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
-  Block "equality-characterisation" →
-  let open Lens in
+  -- An equality characterisation lemma.
 
-  (l₁ ≡ l₂)
-    ≃
-  (∃ λ (g : get l₁ ≡ get l₂) →
-   ∃ λ (h : H l₁ ≡ H l₂) →
-     ∀ b p →
-     subst (_$ ∣ b ∣) h
-       (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym g) p)) ≡
-     _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)
-equality-characterisation₁
-  {a = a} {b = b} {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} ⊠ =
+  @0 equality-characterisation₁ :
+    {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
+    let open Lens in
 
-  l₁ ≡ l₂                                                              ↝⟨ inverse $ Eq.≃-≡ $ Eq.↔⇒≃ (Σ-assoc F.∘ ∃-cong λ _ → Σ-assoc) ⟩
+    (l₁ ≡ l₂)
+      ≃
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (h : H l₁ ≡ H l₂) →
+       ∀ b p →
+       subst (_$ ∣ b ∣) h
+         (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym g) p)) ≡
+       _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)
+  equality-characterisation₁
+    {a = a} {b = b} {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
 
-  ((get l₁ , H l₁ , get⁻¹ᴱ-≃ᴱ l₁) , _) ≡
-  ((get l₂ , H l₂ , get⁻¹ᴱ-≃ᴱ l₂) , _)                                 ↔⟨ inverse $ ignore-propositional-component $ mono₁ 0
-                                                                          Contractible-last-part-of-Coherently-constant ⟩
+    l₁ ≡ l₂                                                              ↝⟨ inverse $ Eq.≃-≡ $ Eq.↔⇒≃ (Σ-assoc F.∘ ∃-cong λ _ → Σ-assoc) ⟩
 
-  (get l₁ , H l₁ , get⁻¹ᴱ-≃ᴱ l₁) ≡ (get l₂ , H l₂ , get⁻¹ᴱ-≃ᴱ l₂)      ↝⟨ inverse $ Eq.≃-≡ $ Eq.↔⇒≃ Σ-assoc ⟩
+    ((get l₁ , H l₁ , get⁻¹ᴱ-≃ᴱ l₁) , _) ≡
+    ((get l₂ , H l₂ , get⁻¹ᴱ-≃ᴱ l₂) , _)                                 ↔⟨ inverse $ ignore-propositional-component $ mono₁ 0
+                                                                            Contractible-last-part-of-Coherently-constant ⟩
 
-  ((get l₁ , H l₁) , get⁻¹ᴱ-≃ᴱ l₁) ≡ ((get l₂ , H l₂) , get⁻¹ᴱ-≃ᴱ l₂)  ↔⟨ inverse B.Σ-≡,≡↔≡ ⟩
+    (get l₁ , H l₁ , get⁻¹ᴱ-≃ᴱ l₁) ≡ (get l₂ , H l₂ , get⁻¹ᴱ-≃ᴱ l₂)      ↝⟨ inverse $ Eq.≃-≡ $ Eq.↔⇒≃ Σ-assoc ⟩
 
-  (∃ λ (eq : (get l₁ , H l₁) ≡ (get l₂ , H l₂)) →
-     subst (λ (g , H) → ∀ b → g ⁻¹ᴱ b ≃ᴱ H ∣ b ∣) eq (get⁻¹ᴱ-≃ᴱ l₁) ≡
-     get⁻¹ᴱ-≃ᴱ l₂)                                                     ↝⟨ (Σ-cong-contra ≡×≡↔≡ λ _ → F.id) ⟩
+    ((get l₁ , H l₁) , get⁻¹ᴱ-≃ᴱ l₁) ≡ ((get l₂ , H l₂) , get⁻¹ᴱ-≃ᴱ l₂)  ↔⟨ inverse B.Σ-≡,≡↔≡ ⟩
 
-  (∃ λ ((g , h) : get l₁ ≡ get l₂ × H l₁ ≡ H l₂) →
-     subst (λ (g , H) → ∀ b → g ⁻¹ᴱ b ≃ᴱ H ∣ b ∣)
-       (cong₂ _,_ g h) (get⁻¹ᴱ-≃ᴱ l₁) ≡
-     get⁻¹ᴱ-≃ᴱ l₂)                                                     ↔⟨ inverse Σ-assoc ⟩
+    (∃ λ (eq : (get l₁ , H l₁) ≡ (get l₂ , H l₂)) →
+       subst (λ (g , H) → ∀ b → g ⁻¹ᴱ b ≃ᴱ H ∣ b ∣) eq (get⁻¹ᴱ-≃ᴱ l₁) ≡
+       get⁻¹ᴱ-≃ᴱ l₂)                                                     ↝⟨ (Σ-cong-contra ≡×≡↔≡ λ _ → F.id) ⟩
 
-  (∃ λ (g : get l₁ ≡ get l₂) →
-   ∃ λ (h : H l₁ ≡ H l₂) →
-     subst (λ (g , H) → ∀ b → g ⁻¹ᴱ b ≃ᴱ H ∣ b ∣)
-       (cong₂ _,_ g h) (get⁻¹ᴱ-≃ᴱ l₁) ≡
-     get⁻¹ᴱ-≃ᴱ l₂)                                                     ↝⟨ (∃-cong λ _ → ∃-cong λ _ → inverse $
-                                                                           Eq.extensionality-isomorphism ext) ⟩
-  (∃ λ (g : get l₁ ≡ get l₂) →
-   ∃ λ (h : H l₁ ≡ H l₂) →
-     ∀ b → subst (λ (g , H) → ∀ b → g ⁻¹ᴱ b ≃ᴱ H ∣ b ∣)
-             (cong₂ _,_ g h) (get⁻¹ᴱ-≃ᴱ l₁) b ≡
-           get⁻¹ᴱ-≃ᴱ l₂ b)                                             ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ≡⇒↝ _ $ cong (_≡ _) $ sym $
-                                                                           push-subst-application _ _) ⟩
-  (∃ λ (g : get l₁ ≡ get l₂) →
-   ∃ λ (h : H l₁ ≡ H l₂) →
-     ∀ b → subst (λ (g , H) → g ⁻¹ᴱ b ≃ᴱ H ∣ b ∣)
-             (cong₂ _,_ g h) (get⁻¹ᴱ-≃ᴱ l₁ b) ≡
-           get⁻¹ᴱ-≃ᴱ l₂ b)                                             ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → inverse $
-                                                                           EEq.to≡to≃≡ ext) ⟩
-  (∃ λ (g : get l₁ ≡ get l₂) →
-   ∃ λ (h : H l₁ ≡ H l₂) →
-     ∀ b p →
-     _≃ᴱ_.to (subst (λ (g , H) → g ⁻¹ᴱ b ≃ᴱ H ∣ b ∣)
-               (cong₂ _,_ g h) (get⁻¹ᴱ-≃ᴱ l₁ b)) p ≡
-     _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                       ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
-                                                                           ≡⇒↝ _ $ cong (_≡ _) $ lemma _ _ _ _) ⟩□
-  (∃ λ (g : get l₁ ≡ get l₂) →
-   ∃ λ (h : H l₁ ≡ H l₂) →
-     ∀ b p →
-     subst (_$ ∣ b ∣) h
-       (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym g) p)) ≡
-     _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                       □
+    (∃ λ ((g , h) : get l₁ ≡ get l₂ × H l₁ ≡ H l₂) →
+       subst (λ (g , H) → ∀ b → g ⁻¹ᴱ b ≃ᴱ H ∣ b ∣)
+         (cong₂ _,_ g h) (get⁻¹ᴱ-≃ᴱ l₁) ≡
+       get⁻¹ᴱ-≃ᴱ l₂)                                                     ↔⟨ inverse Σ-assoc ⟩
 
-  where
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (h : H l₁ ≡ H l₂) →
+       subst (λ (g , H) → ∀ b → g ⁻¹ᴱ b ≃ᴱ H ∣ b ∣)
+         (cong₂ _,_ g h) (get⁻¹ᴱ-≃ᴱ l₁) ≡
+       get⁻¹ᴱ-≃ᴱ l₂)                                                     ↝⟨ (∃-cong λ _ → ∃-cong λ _ → inverse $
+                                                                             Eq.extensionality-isomorphism ext) ⟩
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (h : H l₁ ≡ H l₂) →
+       ∀ b → subst (λ (g , H) → ∀ b → g ⁻¹ᴱ b ≃ᴱ H ∣ b ∣)
+               (cong₂ _,_ g h) (get⁻¹ᴱ-≃ᴱ l₁) b ≡
+             get⁻¹ᴱ-≃ᴱ l₂ b)                                             ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ≡⇒↝ _ $ cong (_≡ _) $ sym $
+                                                                             push-subst-application _ _) ⟩
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (h : H l₁ ≡ H l₂) →
+       ∀ b → subst (λ (g , H) → g ⁻¹ᴱ b ≃ᴱ H ∣ b ∣)
+               (cong₂ _,_ g h) (get⁻¹ᴱ-≃ᴱ l₁ b) ≡
+             get⁻¹ᴱ-≃ᴱ l₂ b)                                             ↔⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → inverse $
+                                                                             EEq.to≡to≃≡ ext) ⟩
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (h : H l₁ ≡ H l₂) →
+       ∀ b p →
+       _≃ᴱ_.to (subst (λ (g , H) → g ⁻¹ᴱ b ≃ᴱ H ∣ b ∣)
+                 (cong₂ _,_ g h) (get⁻¹ᴱ-≃ᴱ l₁ b)) p ≡
+       _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                       ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
+                                                                             ≡⇒↝ _ $ cong (_≡ _) $ lemma _ _ _ _) ⟩□
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (h : H l₁ ≡ H l₂) →
+       ∀ b p →
+       subst (_$ ∣ b ∣) h
+         (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym g) p)) ≡
+       _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                       □
 
-  open Lens
+    where
 
-  lemma : ∀ _ _ _ _ → _ ≡ _
-  lemma g h b p =
-    _≃ᴱ_.to (subst (λ (g , H) → g ⁻¹ᴱ b ≃ᴱ H ∣ b ∣)
-              (cong₂ _,_ g h) (get⁻¹ᴱ-≃ᴱ l₁ b)) p                ≡⟨ cong (_$ p) EEq.to-subst ⟩
+    open Lens
 
-    subst (λ (g , H) → g ⁻¹ᴱ b → H ∣ b ∣)
-      (cong₂ _,_ g h) (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b)) p               ≡⟨ subst-→ ⟩
+    lemma :
+      ∀ (g : get l₁ ≡ get l₂) (h : H l₁ ≡ H l₂) b p →
+      _≃ᴱ_.to
+        (subst (λ (g , H) → g ⁻¹ᴱ b ≃ᴱ H ∣ b ∣)
+           (cong₂ _,_ g h) (get⁻¹ᴱ-≃ᴱ l₁ b))
+        p ≡
+      subst (_$ ∣ b ∣) h
+        (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym g) p))
+    lemma g h b p =
+      _≃ᴱ_.to (subst (λ (g , H) → g ⁻¹ᴱ b ≃ᴱ H ∣ b ∣)
+                (cong₂ _,_ g h) (get⁻¹ᴱ-≃ᴱ l₁ b)) p                ≡⟨ cong (_$ p) EEq.to-subst ⟩
 
-    subst (λ (g , H) → H ∣ b ∣) (cong₂ _,_ g h)
-      (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b)
-         (subst (λ (g , H) → g ⁻¹ᴱ b) (sym $ cong₂ _,_ g h) p))  ≡⟨ subst-∘ _ _ _ ⟩
+      subst (λ (g , H) → g ⁻¹ᴱ b → H ∣ b ∣)
+        (cong₂ _,_ g h) (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b)) p               ≡⟨ subst-→ ⟩
 
-    subst (_$ ∣ b ∣) (cong proj₂ $ cong₂ _,_ g h)
-      (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b)
-         (subst (λ (g , H) → g ⁻¹ᴱ b) (sym $ cong₂ _,_ g h) p))  ≡⟨ cong₂ (λ p q → subst (λ (H : Pow a ∥ _ ∥ᴱ) → H ∣ b ∣)
-                                                                                     p (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) q))
-                                                                      (cong-proj₂-cong₂-, _ _)
-                                                                      (subst-∘ _ _ _) ⟩
-    subst (_$ ∣ b ∣) h
-      (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b)
-         (subst (_⁻¹ᴱ b) (cong proj₁ $ sym $ cong₂ _,_ g h) p))  ≡⟨ cong (λ eq → subst (_$ ∣ b ∣) h
-                                                                                   (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) eq p))) $
-                                                                    trans (cong-sym _ _) $
-                                                                    cong sym $ cong-proj₁-cong₂-, _ _ ⟩∎
-    subst (_$ ∣ b ∣) h
-      (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym g) p))      ∎
+      subst (λ (g , H) → H ∣ b ∣) (cong₂ _,_ g h)
+        (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b)
+           (subst (λ (g , H) → g ⁻¹ᴱ b) (sym $ cong₂ _,_ g h) p))  ≡⟨ subst-∘ _ _ _ ⟩
 
--- Another equality characterisation lemma.
+      subst (_$ ∣ b ∣) (cong proj₂ $ cong₂ _,_ g h)
+        (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b)
+           (subst (λ (g , H) → g ⁻¹ᴱ b) (sym $ cong₂ _,_ g h) p))  ≡⟨ cong₂ (λ p q → subst (λ (H : Pow a ∥ _ ∥ᴱ) → H ∣ b ∣)
+                                                                                       p (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) q))
+                                                                        (cong-proj₂-cong₂-, _ _)
+                                                                        (subst-∘ _ _ _) ⟩
+      subst (_$ ∣ b ∣) h
+        (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b)
+           (subst (_⁻¹ᴱ b) (cong proj₁ $ sym $ cong₂ _,_ g h) p))  ≡⟨ cong (λ eq → subst (_$ ∣ b ∣) h
+                                                                                     (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) eq p))) $
+                                                                      trans (cong-sym _ _) $
+                                                                      cong sym $ cong-proj₁-cong₂-, _ _ ⟩∎
+      subst (_$ ∣ b ∣) h
+        (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym g) p))      ∎
 
-@0 equality-characterisation₂ :
-  {l₁ l₂ : Lens A B} →
-  Block "equality-characterisation" →
-  let open Lens in
+opaque
 
-  (l₁ ≡ l₂)
-    ≃
-  (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
-   ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
-     ∀ b p →
-     subst id (h ∣ b ∣)
-       (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
-     _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)
-equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} ⊠ =
-  l₁ ≡ l₂                                                               ↝⟨ equality-characterisation₁ ⊠ ⟩
+  -- Another equality characterisation lemma.
 
-  (∃ λ (g : get l₁ ≡ get l₂) →
-   ∃ λ (h : H l₁ ≡ H l₂) →
-     ∀ b p →
-     subst (_$ ∣ b ∣) h
-       (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym g) p)) ≡
-     _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        ↝⟨ (Σ-cong-contra (Eq.extensionality-isomorphism ext) λ _ →
-                                                                            Σ-cong-contra (Eq.extensionality-isomorphism ext) λ _ →
-                                                                            F.id) ⟩
-  (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
-   ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
-     ∀ b p →
-     subst (_$ ∣ b ∣) (⟨ext⟩ h)
-       (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
-     _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
-                                                                            ≡⇒↝ _ $ cong (_≡ _) $
-                                                                            subst-ext ext) ⟩□
-  (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
-   ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
-     ∀ b p →
-     subst id (h ∣ b ∣)
-       (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
-     _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        □
-  where
-  open Lens
+  @0 equality-characterisation₂ :
+    {l₁ l₂ : Lens A B} →
+    let open Lens in
 
--- Yet another equality characterisation lemma.
+    (l₁ ≡ l₂)
+      ≃
+    (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
+     ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
+       ∀ b p →
+       subst id (h ∣ b ∣)
+         (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
+       _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)
+  equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} =
+    l₁ ≡ l₂                                                               ↝⟨ equality-characterisation₁ ⟩
 
-@0 equality-characterisation₃ :
-  {l₁ l₂ : Lens A B} →
-  Block "equality-characterisation" →
-  let open Lens in
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (h : H l₁ ≡ H l₂) →
+       ∀ b p →
+       subst (_$ ∣ b ∣) h
+         (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym g) p)) ≡
+       _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        ↝⟨ (Σ-cong-contra (Eq.extensionality-isomorphism ext) λ _ →
+                                                                              Σ-cong-contra (Eq.extensionality-isomorphism ext) λ _ →
+                                                                              F.id) ⟩
+    (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
+     ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
+       ∀ b p →
+       subst (_$ ∣ b ∣) (⟨ext⟩ h)
+         (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
+       _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
+                                                                              ≡⇒↝ _ $ cong (_≡ _) $
+                                                                              subst-ext ext) ⟩□
+    (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
+     ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
+       ∀ b p →
+       subst id (h ∣ b ∣)
+         (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
+       _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        □
+    where
+    open Lens
 
-  (l₁ ≡ l₂)
-    ≃
-  (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
-   ∃ λ (h : ∀ b → H l₁ b ≃ H l₂ b) →
-     ∀ b p →
-     _≃_.to (h ∣ b ∣)
-       (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
-     _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)
-equality-characterisation₃ {l₁ = l₁} {l₂ = l₂} ⊠ =
-  l₁ ≡ l₂                                                               ↝⟨ equality-characterisation₂ ⊠ ⟩
+opaque
 
-  (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
-   ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
-     ∀ b p →
-     subst id (h ∣ b ∣)
-       (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
-     _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        ↝⟨ (∃-cong λ _ →
-                                                                            Σ-cong-contra (∀-cong ext λ _ → inverse $ ≡≃≃ univ) λ _ → F.id) ⟩
-  (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
-   ∃ λ (h : ∀ b → H l₁ b ≃ H l₂ b) →
-     ∀ b p →
-     subst id (≃⇒≡ univ (h ∣ b ∣))
-       (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
-     _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
-                                                                            ≡⇒↝ _ $ cong (_≡ _) $
-                                                                            trans (subst-id-in-terms-of-≡⇒↝ equivalence) $
-                                                                            cong (λ eq → _≃_.to eq _) $
-                                                                            _≃_.right-inverse-of (≡≃≃ univ) _) ⟩□
-  (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
-   ∃ λ (h : ∀ b → H l₁ b ≃ H l₂ b) →
-     ∀ b p →
-     _≃_.to (h ∣ b ∣)
-       (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
-     _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        □
-  where
-  open Lens
+  -- Yet another equality characterisation lemma.
+
+  @0 equality-characterisation₃ :
+    {l₁ l₂ : Lens A B} →
+    let open Lens in
+
+    (l₁ ≡ l₂)
+      ≃
+    (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
+     ∃ λ (h : ∀ b → H l₁ b ≃ H l₂ b) →
+       ∀ b p →
+       _≃_.to (h ∣ b ∣)
+         (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
+       _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)
+  equality-characterisation₃ {l₁ = l₁} {l₂ = l₂} =
+    l₁ ≡ l₂                                                               ↝⟨ equality-characterisation₂ ⟩
+
+    (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
+     ∃ λ (h : ∀ b → H l₁ b ≡ H l₂ b) →
+       ∀ b p →
+       subst id (h ∣ b ∣)
+         (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
+       _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        ↝⟨ (∃-cong λ _ →
+                                                                              Σ-cong-contra (∀-cong ext λ _ → inverse $ ≡≃≃ univ) λ _ → F.id) ⟩
+    (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
+     ∃ λ (h : ∀ b → H l₁ b ≃ H l₂ b) →
+       ∀ b p →
+       subst id (≃⇒≡ univ (h ∣ b ∣))
+         (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
+       _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        ↝⟨ (∃-cong λ _ → ∃-cong λ _ → ∀-cong ext λ _ → ∀-cong ext λ _ →
+                                                                              ≡⇒↝ _ $ cong (_≡ _) $
+                                                                              trans (subst-id-in-terms-of-≡⇒↝ equivalence) $
+                                                                              cong (λ eq → _≃_.to eq _) $
+                                                                              _≃_.right-inverse-of (≡≃≃ univ) _) ⟩□
+    (∃ λ (g : ∀ a → get l₁ a ≡ get l₂ a) →
+     ∃ λ (h : ∀ b → H l₁ b ≃ H l₂ b) →
+       ∀ b p →
+       _≃_.to (h ∣ b ∣)
+         (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b) (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ g)) p)) ≡
+       _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                        □
+    where
+    open Lens
 
 ------------------------------------------------------------------------
 -- Conversion functions
 
--- The lenses defined above can be converted to and from the lenses
--- defined in Higher.
+opaque
 
-Lens⇔Higher-lens :
-  Block "conversion" →
-  Lens A B ⇔ Higher.Lens A B
-Lens⇔Higher-lens {A = A} {B = B} ⊠ = record
-  { to = λ l → let open Lens l in record
-      { R = Σ ∥ B ∥ᴱ H
+  -- The lenses defined above can be converted to and from the lenses
+  -- defined in Higher.
 
-      ; equiv =
-          A                                                      ↝⟨ (inverse $ drop-⊤-right λ _ → Erased-other-singleton≃ᴱ⊤) ⟩
-          (∃ λ (a : A) → ∃ λ (b : B) → Erased (get a ≡ b))       ↔⟨ ∃-comm ⟩
-          (∃ λ (b : B) → get ⁻¹ᴱ b)                              ↝⟨ ∃-cong get⁻¹ᴱ-≃ᴱ ⟩
-          (∃ λ (b : B) → H ∣ b ∣)                                ↝⟨ EEq.↔→≃ᴱ
-                                                                      (λ (b , h) → (∣ b ∣ , b) , h)
-                                                                      (λ ((∥b∥ , b) , h) → b , H→H ∥b∥ ∣ b ∣ h)
-                                                                      (λ ((∥b∥ , b) , h) →
-                                                                         Σ-≡,≡→≡ (cong (_, _) (T.truncation-is-proposition _ _)) (
-              subst (H ∘ proj₁)
-                (cong (_, _) (T.truncation-is-proposition _ _))
-                (H→H _ _ h)                                                ≡⟨ trans (subst-∘ _ _ _) $
-                                                                              trans (cong (flip (subst H) _) $ cong-∘ _ _ _) $
-                                                                              cong (flip (subst H) _) $ sym $ cong-id _ ⟩
-              subst H (T.truncation-is-proposition _ _)
-                (H→H _ _ h)                                                ≡⟨ cong (_$ _) $ sym H→H≡ ⟩
+  Lens⇔Higher-lens : Lens A B ⇔ Higher.Lens A B
+  Lens⇔Higher-lens {A = A} {B = B} = record
+    { to = λ l → let open Lens l in record
+        { R = Σ ∥ B ∥ᴱ H
 
-              H→H _ _ (H→H _ _ h)                                          ≡⟨ cong (_$ h) H→H-∘ ⟩
+        ; equiv =
+            A                                                      ↝⟨ (inverse $ drop-⊤-right λ _ → Erased-other-singleton≃ᴱ⊤) ⟩
+            (∃ λ (a : A) → ∃ λ (b : B) → Erased (get a ≡ b))       ↔⟨ ∃-comm ⟩
+            (∃ λ (b : B) → get ⁻¹ᴱ b)                              ↝⟨ ∃-cong get⁻¹ᴱ-≃ᴱ ⟩
+            (∃ λ (b : B) → H ∣ b ∣)                                ↝⟨ EEq.↔→≃ᴱ
+                                                                        (λ (b , h) → (∣ b ∣ , b) , h)
+                                                                        (λ ((∥b∥ , b) , h) → b , H→H ∥b∥ ∣ b ∣ h)
+                                                                        (λ ((∥b∥ , b) , h) →
+                                                                           Σ-≡,≡→≡ (cong (_, _) (T.truncation-is-proposition _ _)) (
+                subst (H ∘ proj₁)
+                  (cong (_, _) (T.truncation-is-proposition _ _))
+                  (H→H _ _ h)                                                ≡⟨ trans (subst-∘ _ _ _) $
+                                                                                trans (cong (flip (subst H) _) $ cong-∘ _ _ _) $
+                                                                                cong (flip (subst H) _) $ sym $ cong-id _ ⟩
+                subst H (T.truncation-is-proposition _ _)
+                  (H→H _ _ h)                                                ≡⟨ cong (_$ _) $ sym H→H≡ ⟩
 
-              H→H _ _ h                                                    ≡⟨ cong (_$ h) H→H-id ⟩∎
+                H→H _ _ (H→H _ _ h)                                          ≡⟨ cong (_$ h) H→H-∘ ⟩
 
-              h                                                            ∎))
-                                                                      (λ (b , h) → cong (_ ,_) (
-              H→H _ _ h                                                  ≡⟨ cong (_$ h) H→H-id ⟩∎
-              h                                                          ∎)) ⟩
+                H→H _ _ h                                                    ≡⟨ cong (_$ h) H→H-id ⟩∎
 
-          (∃ λ ((b , _) : ∥ B ∥ᴱ × B) → H b)                     ↔⟨ Σ-assoc F.∘
-                                                                    (∃-cong λ _ → ×-comm) F.∘
-                                                                    inverse Σ-assoc ⟩□
-          Σ ∥ B ∥ᴱ H × B                                         □
+                h                                                            ∎))
+                                                                        (λ (b , h) → cong (_ ,_) (
+                H→H _ _ h                                                  ≡⟨ cong (_$ h) H→H-id ⟩∎
+                h                                                          ∎)) ⟩
 
-      ; inhabited = _≃_.to PT.∥∥ᴱ≃∥∥ ∘ proj₁
-      }
-  ; from = λ l →
-        Higher.Lens.get l
-      , (λ _ → Higher.Lens.R l)
-      , (λ b → inverse (Higher.remainder≃ᴱget⁻¹ᴱ l b))
-      , (λ _ _ → id)
-      , [ (λ _ _ → ⟨ext⟩ λ r →
-             r                                    ≡⟨ sym $ subst-const _ ⟩∎
-             subst (const (Higher.Lens.R l)) _ r  ∎)
-        ]
-  }
+            (∃ λ ((b , _) : ∥ B ∥ᴱ × B) → H b)                     ↔⟨ Σ-assoc F.∘
+                                                                      (∃-cong λ _ → ×-comm) F.∘
+                                                                      inverse Σ-assoc ⟩□
+            Σ ∥ B ∥ᴱ H × B                                         □
 
--- The conversion preserves getters and setters.
+        ; inhabited = _≃_.to PT.∥∥ᴱ≃∥∥ ∘ proj₁
+        }
+    ; from = λ l →
+          Higher.Lens.get l
+        , (λ _ → Higher.Lens.R l)
+        , (λ b → inverse (Higher.remainder≃ᴱget⁻¹ᴱ l b))
+        , (λ _ _ → id)
+        , [ (λ _ _ → ⟨ext⟩ λ r →
+               r                                    ≡⟨ sym $ subst-const _ ⟩∎
+               subst (const (Higher.Lens.R l)) _ r  ∎)
+          ]
+    }
 
-Lens⇔Higher-lens-preserves-getters-and-setters :
-  (bl : Block "conversion") →
-  Preserves-getters-and-setters-⇔ A B (Lens⇔Higher-lens bl)
-Lens⇔Higher-lens-preserves-getters-and-setters ⊠ =
-    (λ _ → refl _ , refl _)
-  , (λ _ → refl _ , refl _)
+opaque
+  unfolding Lens⇔Higher-lens
+
+  -- The conversion preserves getters and setters.
+
+  Lens⇔Higher-lens-preserves-getters-and-setters :
+    Preserves-getters-and-setters-⇔ A B Lens⇔Higher-lens
+  Lens⇔Higher-lens-preserves-getters-and-setters =
+      (λ _ → refl _ , refl _)
+    , (λ _ → refl _ , refl _)
 
 -- Lens A B is equivalent to Higher.Lens A B (with erased proofs).
 
-Lens≃ᴱHigher-lens :
-  Block "conversion" →
-  Lens A B ≃ᴱ Higher.Lens A B
-Lens≃ᴱHigher-lens {A = A} {B = B} bl =
+Lens≃ᴱHigher-lens : Lens A B ≃ᴱ Higher.Lens A B
+Lens≃ᴱHigher-lens {A = A} {B = B} =
   EEq.↔→≃ᴱ
-    (_⇔_.to (Lens⇔Higher-lens bl))
-    (_⇔_.from (Lens⇔Higher-lens bl))
-    (to∘from bl)
-    (from∘to bl)
+    (_⇔_.to Lens⇔Higher-lens)
+    (_⇔_.from Lens⇔Higher-lens)
+    to∘from
+    from∘to
   where
-  @0 to∘from :
-    (bl : Block "conversion") →
-    ∀ l →
-    _⇔_.to (Lens⇔Higher-lens bl) (_⇔_.from (Lens⇔Higher-lens bl) l) ≡ l
-  to∘from ⊠ l = _↔_.from Higher.equality-characterisation₁
-    ( (∥ B ∥ᴱ × R  ↔⟨ (drop-⊤-left-× λ r → _⇔_.to contractible⇔↔⊤ $
-                       propositional⇒inhabited⇒contractible
-                         T.truncation-is-proposition
-                         (_≃_.from PT.∥∥ᴱ≃∥∥ (inhabited r))) ⟩□
-       R          □)
-    , (λ _ → refl _)
-    )
-    where
-    open Higher.Lens l
+  opaque
+    unfolding Lens⇔Higher-lens
 
-  @0 from∘to :
-    (bl : Block "conversion") →
-    ∀ l →
-    _⇔_.from (Lens⇔Higher-lens bl) (_⇔_.to (Lens⇔Higher-lens bl) l) ≡ l
-  from∘to bl@⊠ l = _≃_.from (equality-characterisation₃ ⊠)
-    ( (λ _ → refl _)
-    , Σ∥B∥ᴱH≃H
-    , (λ b p@(a , [ get-a≡b ]) →
-         _≃_.to (Σ∥B∥ᴱH≃H ∣ b ∣)
-           (_≃ᴱ_.from (Higher.remainder≃ᴱget⁻¹ᴱ
-                         (_⇔_.to (Lens⇔Higher-lens bl) l) b)
-              (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ λ _ → refl _)) p))       ≡⟨ cong (_≃_.to (Σ∥B∥ᴱH≃H ∣ b ∣) ∘
-                                                                            _≃ᴱ_.from (Higher.remainder≃ᴱget⁻¹ᴱ
-                                                                                         (_⇔_.to (Lens⇔Higher-lens bl) l) b)) $
-                                                                      trans (cong (flip (subst (_⁻¹ᴱ b)) p) $
-                                                                             trans (cong sym $ ext-refl ext) $
-                                                                             sym-refl) $
-                                                                      subst-refl _ _ ⟩
-         _≃_.to (Σ∥B∥ᴱH≃H ∣ b ∣)
-           (_≃ᴱ_.from (Higher.remainder≃ᴱget⁻¹ᴱ
-                         (_⇔_.to (Lens⇔Higher-lens bl) l) b)
-              p)                                                   ≡⟨⟩
+    @0 to∘from :
+      (l : Higher.Lens A B) →
+      _⇔_.to Lens⇔Higher-lens (_⇔_.from Lens⇔Higher-lens l) ≡ l
+    to∘from l = _↔_.from Higher.equality-characterisation₁
+      ( (∥ B ∥ᴱ × R  ↔⟨ (drop-⊤-left-× λ r → _⇔_.to contractible⇔↔⊤ $
+                         propositional⇒inhabited⇒contractible
+                           T.truncation-is-proposition
+                           (_≃_.from PT.∥∥ᴱ≃∥∥ (inhabited r))) ⟩□
+         R          □)
+      , (λ _ → refl _)
+      )
+      where
+      open Higher.Lens l
 
-         _≃_.to (Σ∥B∥ᴱH≃H ∣ b ∣)
-           (Higher.Lens.remainder
-              (_⇔_.to (Lens⇔Higher-lens bl) l) a)                  ≡⟨⟩
+    @0 from∘to :
+      (l : Lens A B) →
+      _⇔_.from Lens⇔Higher-lens (_⇔_.to Lens⇔Higher-lens l) ≡ l
+    from∘to l = _≃_.from equality-characterisation₃
+      ( (λ _ → refl _)
+      , Σ∥B∥ᴱH≃H
+      , (λ b p@(a , [ get-a≡b ]) →
+           _≃_.to (Σ∥B∥ᴱH≃H ∣ b ∣)
+             (_≃ᴱ_.from (Higher.remainder≃ᴱget⁻¹ᴱ
+                           (_⇔_.to Lens⇔Higher-lens l) b)
+                (subst (_⁻¹ᴱ b) (sym (⟨ext⟩ λ _ → refl _)) p))       ≡⟨ cong (_≃_.to (Σ∥B∥ᴱH≃H ∣ b ∣) ∘
+                                                                              _≃ᴱ_.from (Higher.remainder≃ᴱget⁻¹ᴱ
+                                                                                           (_⇔_.to Lens⇔Higher-lens l) b)) $
+                                                                        trans (cong (flip (subst (_⁻¹ᴱ b)) p) $
+                                                                               trans (cong sym $ ext-refl ext) $
+                                                                               sym-refl) $
+                                                                        subst-refl _ _ ⟩
+           _≃_.to (Σ∥B∥ᴱH≃H ∣ b ∣)
+             (_≃ᴱ_.from (Higher.remainder≃ᴱget⁻¹ᴱ
+                           (_⇔_.to Lens⇔Higher-lens l) b)
+                p)                                                   ≡⟨⟩
 
-         subst H _ (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a)) (a , [ refl _ ]))  ≡⟨ cong (λ eq → subst H eq (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a)) (a , [ refl _ ]))) $
-                                                                      mono₁ 1 T.truncation-is-proposition _ _ ⟩
-         subst H (cong ∣_∣ get-a≡b)
-           (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a)) (a , [ refl _ ]))          ≡⟨ elim¹
-                                                                        (λ {b} eq →
-                                                                           subst H (cong ∣_∣ eq)
-                                                                             (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a)) (a , [ refl _ ])) ≡
-                                                                           _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b) (a , [ eq ]))
-                                                                        (
-           subst H (cong ∣_∣ (refl _))
-             (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a)) (a , [ refl _ ]))              ≡⟨ trans (cong (flip (subst H) _) $ cong-refl _) $
-                                                                            subst-refl _ _ ⟩
-           _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a)) (a , [ refl _ ])                  ∎)
-                                                                        _ ⟩∎
-         _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b) p                                   ∎)
-    )
-    where
-    open Lens l
+           _≃_.to (Σ∥B∥ᴱH≃H ∣ b ∣)
+             (Higher.Lens.remainder (_⇔_.to Lens⇔Higher-lens l) a)   ≡⟨⟩
 
-    Σ∥B∥ᴱH≃H = λ b →
-      Σ ∥ B ∥ᴱ H  ↔⟨ (drop-⊤-left-Σ $ _⇔_.to contractible⇔↔⊤ $
-                      propositional⇒inhabited⇒contractible
-                        T.truncation-is-proposition b) ⟩□
-      H b         □
+           subst H _ (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a)) (a , [ refl _ ]))  ≡⟨ cong (λ eq → subst H eq (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a)) (a , [ refl _ ]))) $
+                                                                        mono₁ 1 T.truncation-is-proposition _ _ ⟩
+           subst H (cong ∣_∣ get-a≡b)
+             (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a)) (a , [ refl _ ]))          ≡⟨ elim¹
+                                                                          (λ {b} eq →
+                                                                             subst H (cong ∣_∣ eq)
+                                                                               (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a)) (a , [ refl _ ])) ≡
+                                                                             _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b) (a , [ eq ]))
+                                                                          (
+             subst H (cong ∣_∣ (refl _))
+               (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a)) (a , [ refl _ ]))              ≡⟨ trans (cong (flip (subst H) _) $ cong-refl _) $
+                                                                              subst-refl _ _ ⟩
+             _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a)) (a , [ refl _ ])                  ∎)
+                                                                          _ ⟩∎
+           _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b) p                                   ∎)
+      )
+      where
+      open Lens l
+
+      Σ∥B∥ᴱH≃H : ∀ b → Σ ∥ B ∥ᴱ H ≃ H b
+      Σ∥B∥ᴱH≃H b =
+        Σ ∥ B ∥ᴱ H  ↔⟨ (drop-⊤-left-Σ $ _⇔_.to contractible⇔↔⊤ $
+                        propositional⇒inhabited⇒contractible
+                          T.truncation-is-proposition b) ⟩□
+        H b         □
 
 -- The equivalence preserves getters and setters.
 
 Lens≃ᴱHigher-lens-preserves-getters-and-setters :
-  (bl : Block "conversion") →
   Preserves-getters-and-setters-⇔ A B
-    (_≃ᴱ_.logical-equivalence (Lens≃ᴱHigher-lens bl))
-Lens≃ᴱHigher-lens-preserves-getters-and-setters bl =
-  Lens⇔Higher-lens-preserves-getters-and-setters bl
+    (_≃ᴱ_.logical-equivalence Lens≃ᴱHigher-lens)
+Lens≃ᴱHigher-lens-preserves-getters-and-setters =
+  Lens⇔Higher-lens-preserves-getters-and-setters

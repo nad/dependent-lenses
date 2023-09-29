@@ -669,228 +669,240 @@ higher-lens-preserves-h-level-of-domain {A = A} {B = B} univ ∥B∥→B n =
   H-level (1 + n) (Lens A B)         ↝⟨ H-level.respects-surjection (↠higher univ ∥B∥→B) (1 + n) ⟩□
   H-level (1 + n) (Higher.Lens A B)  □
 
--- Traditional lenses that satisfy some coherence properties can be
--- translated to lenses of the kind defined above.
+opaque
 
-coherent→ :
-  Block "conversion" →
-  Traditional.Coherent-lens A B → Lens A B
-coherent→ ⊠ l = _≃_.from Lens-as-Σ′
-  ( get
-  , (λ b₁ b₂ →
-       Eq.↔→≃ (gg b₁ b₂) (gg b₂ b₁) (gg∘gg b₁ b₂) (gg∘gg b₂ b₁))
-  , (λ b₁ b₂ b₃ (a , _) →
-       Σ-≡,≡→≡
-         (set (set a b₂) b₃  ≡⟨ set-set a b₂ b₃ ⟩∎
-          set a b₃           ∎)
-         (subst (λ a → get a ≡ b₃) (set-set a b₂ b₃)
-            (get-set (set a b₂) b₃)                   ≡⟨ subst-∘ _ _ (set-set a b₂ b₃) ⟩
+  -- Traditional lenses that satisfy some coherence properties can be
+  -- translated to lenses of the kind defined above.
 
-          subst (_≡ b₃) (cong get (set-set a b₂ b₃))
-            (get-set (set a b₂) b₃)                   ≡⟨ subst-trans-sym {y≡x = cong get (set-set a b₂ b₃)} ⟩
+  coherent→ : Traditional.Coherent-lens A B → Lens A B
+  coherent→ l = _≃_.from Lens-as-Σ′
+    ( get
+    , (λ b₁ b₂ →
+         Eq.↔→≃ (gg b₁ b₂) (gg b₂ b₁) (gg∘gg b₁ b₂) (gg∘gg b₂ b₁))
+    , (λ b₁ b₂ b₃ (a , _) →
+         Σ-≡,≡→≡
+           (set (set a b₂) b₃  ≡⟨ set-set a b₂ b₃ ⟩∎
+            set a b₃           ∎)
+           (subst (λ a → get a ≡ b₃) (set-set a b₂ b₃)
+              (get-set (set a b₂) b₃)                   ≡⟨ subst-∘ _ _ (set-set a b₂ b₃) ⟩
 
-          trans (sym (cong get (set-set a b₂ b₃)))
-            (get-set (set a b₂) b₃)                   ≡⟨ get-set-set′ _ _ _ ⟩∎
+            subst (_≡ b₃) (cong get (set-set a b₂ b₃))
+              (get-set (set a b₂) b₃)                   ≡⟨ subst-trans-sym {y≡x = cong get (set-set a b₂ b₃)} ⟩
 
-          get-set a b₃                                ∎))
-  )
-  where
-  open Traditional.Coherent-lens l
+            trans (sym (cong get (set-set a b₂ b₃)))
+              (get-set (set a b₂) b₃)                   ≡⟨ get-set-set′ _ _ _ ⟩∎
 
-  get-set-set′ :
-    ∀ a b₁ b₂ →
-    trans (sym (cong get (set-set a b₁ b₂))) (get-set (set a b₁) b₂) ≡
-    get-set a b₂
-  get-set-set′ a b₁ b₂ =
-    trans (sym (cong get (set-set a b₁ b₂))) (get-set (set a b₁) b₂)  ≡⟨ cong (λ eq → trans (sym eq) (get-set _ _)) $
-                                                                         get-set-set _ _ _ ⟩
-    trans (sym (trans (get-set (set a b₁) b₂) (sym (get-set a b₂))))
-      (get-set (set a b₁) b₂)                                         ≡⟨ cong (flip trans (get-set _ _)) $
-                                                                         sym-trans _ (sym (get-set _ _)) ⟩
-    trans (trans (sym (sym (get-set a b₂)))
-             (sym (get-set (set a b₁) b₂)))
-      (get-set (set a b₁) b₂)                                         ≡⟨ trans-[trans-sym]- _ (get-set _ _) ⟩
-
-    sym (sym (get-set a b₂))                                          ≡⟨ sym-sym (get-set _ _) ⟩∎
-
-    get-set a b₂                                                      ∎
-
-  gg : ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂
-  gg b₁ b₂ (a , _) = set a b₂ , get-set a b₂
-
-  gg∘gg : ∀ b₁ b₂ p → gg b₁ b₂ (gg b₂ b₁ p) ≡ p
-  gg∘gg b₁ b₂ (a , get-a≡b₂) =
-    Σ-≡,≡→≡ eq₁
-      (subst (λ a → get a ≡ b₂) eq₁ (get-set (set a b₁) b₂)   ≡⟨ subst-∘ _ _ eq₁ ⟩
-
-       subst (_≡ b₂) (cong get eq₁) (get-set (set a b₁) b₂)   ≡⟨ subst-trans-sym {y≡x = cong get eq₁} ⟩
-
-       trans (sym (cong get eq₁)) (get-set (set a b₁) b₂)     ≡⟨ cong (flip trans (get-set (set a b₁) b₂))
-                                                                 lemma₂ ⟩
-       trans (trans (trans (sym (cong get (set-get a)))
-                       (cong (get ⊚ set a) get-a≡b₂))
-                (sym (cong get (set-set a b₁ b₂))))
-         (get-set (set a b₁) b₂)                              ≡⟨ trans-assoc _ _ (get-set (set a b₁) b₂) ⟩
-
-       trans (trans (sym (cong get (set-get a)))
-                (cong (get ⊚ set a) get-a≡b₂))
-         (trans (sym (cong get (set-set a b₁ b₂)))
-            (get-set (set a b₁) b₂))                          ≡⟨ trans-assoc _ _ (trans (sym (cong get (set-set a b₁ b₂)))
-                                                                                    (get-set (set a b₁) b₂)) ⟩
-       trans (sym (cong get (set-get a)))
-         (trans (cong (get ⊚ set a) get-a≡b₂)
-            (trans (sym (cong get (set-set a b₁ b₂)))
-               (get-set (set a b₁) b₂)))                      ≡⟨ cong₂ (λ p q → trans (sym p) (trans (cong (get ⊚ set a) get-a≡b₂) q))
-                                                                   (get-set-get _)
-                                                                   (get-set-set′ _ _ _) ⟩
-       trans (sym (get-set a (get a)))
-         (trans (cong (get ⊚ set a) get-a≡b₂)
-            (get-set a b₂))                                   ≡⟨ cong (λ eq → trans (sym (eq (get a)))
-                                                                                (trans (cong (get ⊚ set a) get-a≡b₂) (eq b₂))) $ sym $
-                                                                 _≃_.left-inverse-of (Eq.extensionality-isomorphism ext) _ ⟩
-       trans (sym (ext⁻¹ (⟨ext⟩ (get-set a)) (get a)))
-         (trans (cong (get ⊚ set a) get-a≡b₂)
-            (ext⁻¹ (⟨ext⟩ (get-set a)) b₂))                   ≡⟨ elim₁
-                                                                   (λ {f} gs →
-                                                                      trans (sym (ext⁻¹ gs (get a))) (trans (cong f get-a≡b₂) (ext⁻¹ gs b₂)) ≡
-                                                                      get-a≡b₂)
-                                                                   (
-          trans (sym (ext⁻¹ (refl id) (get a)))
-             (trans (cong id get-a≡b₂)
-                (ext⁻¹ (refl id) b₂))                               ≡⟨ cong₂ (λ p q → trans (sym p) (trans (cong id get-a≡b₂) q))
-                                                                         (ext⁻¹-refl _)
-                                                                         (ext⁻¹-refl _) ⟩
-          trans (sym (refl _))
-             (trans (cong id get-a≡b₂) (refl _))                    ≡⟨ cong₂ trans sym-refl (trans-reflʳ _) ⟩
-
-          trans (refl _) (cong id get-a≡b₂)                         ≡⟨ trans-reflˡ (cong id get-a≡b₂) ⟩
-
-          cong id get-a≡b₂                                          ≡⟨ sym $ cong-id get-a≡b₂ ⟩∎
-
-          get-a≡b₂                                                  ∎)
-                                                                 (⟨ext⟩ (get-set a)) ⟩
-       get-a≡b₂                                               ∎)
+            get-set a b₃                                ∎))
+    )
     where
-    eq₁ =
-      set (set a b₁) b₂  ≡⟨ set-set a b₁ b₂ ⟩
-      set a b₂           ≡⟨ cong (set a) (sym get-a≡b₂) ⟩
-      set a (get a)      ≡⟨ set-get a ⟩∎
-      a                  ∎
+    open Traditional.Coherent-lens l
 
-    lemma₁ =
-      sym (cong get (cong (set a) (sym get-a≡b₂)))  ≡⟨ cong sym $ cong-∘ _ _ (sym get-a≡b₂) ⟩
-      sym (cong (get ⊚ set a) (sym get-a≡b₂))       ≡⟨ sym $ cong-sym _ (sym get-a≡b₂) ⟩
-      cong (get ⊚ set a) (sym (sym get-a≡b₂))       ≡⟨ cong (cong (get ⊚ set a)) $ sym-sym get-a≡b₂ ⟩∎
-      cong (get ⊚ set a) get-a≡b₂                   ∎
+    get-set-set′ :
+      ∀ a b₁ b₂ →
+      trans (sym (cong get (set-set a b₁ b₂))) (get-set (set a b₁) b₂) ≡
+      get-set a b₂
+    get-set-set′ a b₁ b₂ =
+      trans (sym (cong get (set-set a b₁ b₂))) (get-set (set a b₁) b₂)  ≡⟨ cong (λ eq → trans (sym eq) (get-set _ _)) $
+                                                                           get-set-set _ _ _ ⟩
+      trans (sym (trans (get-set (set a b₁) b₂) (sym (get-set a b₂))))
+        (get-set (set a b₁) b₂)                                         ≡⟨ cong (flip trans (get-set _ _)) $
+                                                                           sym-trans _ (sym (get-set _ _)) ⟩
+      trans (trans (sym (sym (get-set a b₂)))
+               (sym (get-set (set a b₁) b₂)))
+        (get-set (set a b₁) b₂)                                         ≡⟨ trans-[trans-sym]- _ (get-set _ _) ⟩
 
-    lemma₂ =
-      sym (cong get eq₁)                                          ≡⟨⟩
+      sym (sym (get-set a b₂))                                          ≡⟨ sym-sym (get-set _ _) ⟩∎
 
-      sym (cong get
-             (trans (set-set a b₁ b₂)
-                (trans (cong (set a) (sym get-a≡b₂))
-                   (set-get a))))                                 ≡⟨ cong sym $
-                                                                     cong-trans _ _ (trans (cong (set a) (sym get-a≡b₂)) (set-get a)) ⟩
-      sym (trans (cong get (set-set a b₁ b₂))
-             (cong get (trans (cong (set a) (sym get-a≡b₂))
-                          (set-get a))))                          ≡⟨ cong (λ eq → sym (trans _ eq)) $
-                                                                     cong-trans _ _ (set-get a) ⟩
-      sym (trans (cong get (set-set a b₁ b₂))
-             (trans (cong get (cong (set a) (sym get-a≡b₂)))
-                (cong get (set-get a))))                          ≡⟨ sym-trans _ (trans (cong get (cong (set a) (sym get-a≡b₂)))
-                                                                                    (cong get (set-get a))) ⟩
-      trans (sym (trans (cong get (cong (set a) (sym get-a≡b₂)))
-                    (cong get (set-get a))))
-        (sym (cong get (set-set a b₁ b₂)))                        ≡⟨ cong (flip trans (sym (cong get (set-set a b₁ b₂)))) $
-                                                                     sym-trans _ (cong get (set-get a)) ⟩
-      trans (trans (sym (cong get (set-get a)))
-               (sym (cong get (cong (set a) (sym get-a≡b₂)))))
-        (sym (cong get (set-set a b₁ b₂)))                        ≡⟨ cong (λ eq → trans (trans (sym (cong get (set-get a))) eq)
-                                                                                    (sym (cong get (set-set a b₁ b₂))))
-                                                                     lemma₁ ⟩∎
-      trans (trans (sym (cong get (set-get a)))
-               (cong (get ⊚ set a) get-a≡b₂))
-        (sym (cong get (set-set a b₁ b₂)))                        ∎
+      get-set a b₂                                                      ∎
 
--- The conversion preserves getters and setters.
+    gg : ∀ b₁ b₂ → get ⁻¹ b₁ → get ⁻¹ b₂
+    gg b₁ b₂ (a , _) = set a b₂ , get-set a b₂
 
-coherent→-preserves-getters-and-setters :
-  (b : Block "conversion") →
-  Preserves-getters-and-setters-→ A B (coherent→ b)
-coherent→-preserves-getters-and-setters ⊠ _ =
-  refl _ , refl _
+    gg∘gg : ∀ b₁ b₂ p → gg b₁ b₂ (gg b₂ b₁ p) ≡ p
+    gg∘gg b₁ b₂ (a , get-a≡b₂) =
+      Σ-≡,≡→≡ eq₁
+        (subst (λ a → get a ≡ b₂) eq₁ (get-set (set a b₁) b₂)   ≡⟨ subst-∘ _ _ eq₁ ⟩
 
--- If A is a set, then Traditional.Lens A B is equivalent to Lens A B.
+         subst (_≡ b₂) (cong get eq₁) (get-set (set a b₁) b₂)   ≡⟨ subst-trans-sym {y≡x = cong get eq₁} ⟩
 
-traditional≃ :
-  Block "conversion" →
-  Is-set A → Traditional.Lens A B ≃ Lens A B
-traditional≃ {A = A} {B = B} b@⊠ A-set = Eq.↔→≃
-  (Traditional.Lens A B           ↔⟨ Traditional.≃coherent A-set ⟩
-   Traditional.Coherent-lens A B  ↝⟨ coherent→ b ⟩□
-   Lens A B                       □)
-  Lens.traditional-lens
-  (λ l → _≃_.from (equality-characterisation-for-sets A-set)
-     ( (λ _ → refl _)
-     , (λ b₁ b₂ p@(a , _) →
-          let l′ = traditional-lens l
-              l″ = coherent→ b (_≃_.to (Traditional.≃coherent A-set) l′)
-          in
-          proj₁ (get⁻¹-const l″ b₁ b₂
-                   (subst (_⁻¹ b₁) (sym $ ⟨ext⟩ λ _ → refl _) p))         ≡⟨ cong (λ eq →
-                                                                                     proj₁ (get⁻¹-const l″ b₁ b₂ (subst (_⁻¹ b₁) (sym eq) p))) $
-                                                                             ext-refl ext ⟩
+         trans (sym (cong get eq₁)) (get-set (set a b₁) b₂)     ≡⟨ cong (flip trans (get-set (set a b₁) b₂))
+                                                                   lemma₂ ⟩
+         trans (trans (trans (sym (cong get (set-get a)))
+                         (cong (get ⊚ set a) get-a≡b₂))
+                  (sym (cong get (set-set a b₁ b₂))))
+           (get-set (set a b₁) b₂)                              ≡⟨ trans-assoc _ _ (get-set (set a b₁) b₂) ⟩
 
-          proj₁ (get⁻¹-const l″ b₁ b₂ (subst (_⁻¹ b₁) (sym (refl _)) p))  ≡⟨ cong (λ eq → proj₁ (get⁻¹-const l″ b₁ b₂ (subst (_⁻¹ b₁) eq p)))
-                                                                             sym-refl ⟩
+         trans (trans (sym (cong get (set-get a)))
+                  (cong (get ⊚ set a) get-a≡b₂))
+           (trans (sym (cong get (set-set a b₁ b₂)))
+              (get-set (set a b₁) b₂))                          ≡⟨ trans-assoc _ _ (trans (sym (cong get (set-set a b₁ b₂)))
+                                                                                      (get-set (set a b₁) b₂)) ⟩
+         trans (sym (cong get (set-get a)))
+           (trans (cong (get ⊚ set a) get-a≡b₂)
+              (trans (sym (cong get (set-set a b₁ b₂)))
+                 (get-set (set a b₁) b₂)))                      ≡⟨ cong₂ (λ p q → trans (sym p) (trans (cong (get ⊚ set a) get-a≡b₂) q))
+                                                                     (get-set-get _)
+                                                                     (get-set-set′ _ _ _) ⟩
+         trans (sym (get-set a (get a)))
+           (trans (cong (get ⊚ set a) get-a≡b₂)
+              (get-set a b₂))                                   ≡⟨ cong (λ eq → trans (sym (eq (get a)))
+                                                                                  (trans (cong (get ⊚ set a) get-a≡b₂) (eq b₂))) $ sym $
+                                                                   _≃_.left-inverse-of (Eq.extensionality-isomorphism ext) _ ⟩
+         trans (sym (ext⁻¹ (⟨ext⟩ (get-set a)) (get a)))
+           (trans (cong (get ⊚ set a) get-a≡b₂)
+              (ext⁻¹ (⟨ext⟩ (get-set a)) b₂))                   ≡⟨ elim₁
+                                                                     (λ {f} gs →
+                                                                        trans (sym (ext⁻¹ gs (get a))) (trans (cong f get-a≡b₂) (ext⁻¹ gs b₂)) ≡
+                                                                        get-a≡b₂)
+                                                                     (
+            trans (sym (ext⁻¹ (refl id) (get a)))
+               (trans (cong id get-a≡b₂)
+                  (ext⁻¹ (refl id) b₂))                               ≡⟨ cong₂ (λ p q → trans (sym p) (trans (cong id get-a≡b₂) q))
+                                                                           (ext⁻¹-refl _)
+                                                                           (ext⁻¹-refl _) ⟩
+            trans (sym (refl _))
+               (trans (cong id get-a≡b₂) (refl _))                    ≡⟨ cong₂ trans sym-refl (trans-reflʳ _) ⟩
 
-          proj₁ (get⁻¹-const l″ b₁ b₂ (subst (_⁻¹ b₁) (refl _) p))        ≡⟨ cong (proj₁ ⊚ get⁻¹-const l″ b₁ b₂) $
-                                                                             subst-refl _ _ ⟩
+            trans (refl _) (cong id get-a≡b₂)                         ≡⟨ trans-reflˡ (cong id get-a≡b₂) ⟩
 
-          proj₁ (get⁻¹-const l″ b₁ b₂ p)                                  ≡⟨⟩
+            cong id get-a≡b₂                                          ≡⟨ sym $ cong-id get-a≡b₂ ⟩∎
 
-          set l (proj₁ p) b₂                                              ≡⟨⟩
+            get-a≡b₂                                                  ∎)
+                                                                   (⟨ext⟩ (get-set a)) ⟩
+         get-a≡b₂                                               ∎)
+      where
+      eq₁ : set (set a b₁) b₂ ≡ a
+      eq₁ =
+        set (set a b₁) b₂  ≡⟨ set-set a b₁ b₂ ⟩
+        set a b₂           ≡⟨ cong (set a) (sym get-a≡b₂) ⟩
+        set a (get a)      ≡⟨ set-get a ⟩∎
+        a                  ∎
 
-          proj₁ (get⁻¹-const l (get l a) b₂ (a , refl _))                 ≡⟨ elim¹
-                                                                               (λ {b} eq →
-                                                                                  proj₁ (get⁻¹-const l (get l a) b₂ (a , refl _)) ≡
-                                                                                  proj₁ (get⁻¹-const l b b₂ (a , eq)))
-                                                                               (refl _)
-                                                                               (proj₂ p) ⟩∎
-          proj₁ (get⁻¹-const l b₁ b₂ p)                                   ∎)
-     ))
-  (λ _ →
-     _↔_.from (Traditional.equality-characterisation-for-sets A-set)
-       (refl _))
-  where
-  open Lens
+      lemma₁ :
+        sym (cong get (cong (set a) (sym get-a≡b₂))) ≡
+        cong (get ⊚ set a) get-a≡b₂
+      lemma₁ =
+        sym (cong get (cong (set a) (sym get-a≡b₂)))  ≡⟨ cong sym $ cong-∘ _ _ (sym get-a≡b₂) ⟩
+        sym (cong (get ⊚ set a) (sym get-a≡b₂))       ≡⟨ sym $ cong-sym _ (sym get-a≡b₂) ⟩
+        cong (get ⊚ set a) (sym (sym get-a≡b₂))       ≡⟨ cong (cong (get ⊚ set a)) $ sym-sym get-a≡b₂ ⟩∎
+        cong (get ⊚ set a) get-a≡b₂                   ∎
 
-  B-set : Traditional.Lens A B → A → Is-set B
-  B-set l a =
-    Traditional.h-level-respects-lens-from-inhabited 2 l a A-set
+      lemma₂ :
+        sym (cong get eq₁) ≡
+        trans (trans (sym (cong get (set-get a)))
+                 (cong (get ⊚ set a) get-a≡b₂))
+          (sym (cong get (set-set a b₁ b₂)))
+      lemma₂ =
+        sym (cong get eq₁)                                          ≡⟨⟩
 
--- The equivalence preserves getters and setters.
+        sym (cong get
+               (trans (set-set a b₁ b₂)
+                  (trans (cong (set a) (sym get-a≡b₂))
+                     (set-get a))))                                 ≡⟨ cong sym $
+                                                                       cong-trans _ _ (trans (cong (set a) (sym get-a≡b₂)) (set-get a)) ⟩
+        sym (trans (cong get (set-set a b₁ b₂))
+               (cong get (trans (cong (set a) (sym get-a≡b₂))
+                            (set-get a))))                          ≡⟨ cong (λ eq → sym (trans _ eq)) $
+                                                                       cong-trans _ _ (set-get a) ⟩
+        sym (trans (cong get (set-set a b₁ b₂))
+               (trans (cong get (cong (set a) (sym get-a≡b₂)))
+                  (cong get (set-get a))))                          ≡⟨ sym-trans _ (trans (cong get (cong (set a) (sym get-a≡b₂)))
+                                                                                      (cong get (set-get a))) ⟩
+        trans (sym (trans (cong get (cong (set a) (sym get-a≡b₂)))
+                      (cong get (set-get a))))
+          (sym (cong get (set-set a b₁ b₂)))                        ≡⟨ cong (flip trans (sym (cong get (set-set a b₁ b₂)))) $
+                                                                       sym-trans _ (cong get (set-get a)) ⟩
+        trans (trans (sym (cong get (set-get a)))
+                 (sym (cong get (cong (set a) (sym get-a≡b₂)))))
+          (sym (cong get (set-set a b₁ b₂)))                        ≡⟨ cong (λ eq → trans (trans (sym (cong get (set-get a))) eq)
+                                                                                      (sym (cong get (set-set a b₁ b₂))))
+                                                                       lemma₁ ⟩∎
+        trans (trans (sym (cong get (set-get a)))
+                 (cong (get ⊚ set a) get-a≡b₂))
+          (sym (cong get (set-set a b₁ b₂)))                        ∎
 
-traditional≃-preserves-getters-and-setters :
-  {A : Type a}
-  (b : Block "conversion")
-  (s : Is-set A) →
-  Preserves-getters-and-setters-⇔ A B
-    (_≃_.logical-equivalence (traditional≃ b s))
-traditional≃-preserves-getters-and-setters ⊠ _ =
-    (λ _ → refl _ , refl _)
-  , (λ _ → refl _ , refl _)
+  -- The conversion preserves getters and setters.
+
+  coherent→-preserves-getters-and-setters :
+    Preserves-getters-and-setters-→ A B coherent→
+  coherent→-preserves-getters-and-setters _ =
+    refl _ , refl _
+
+opaque
+  unfolding coherent→
+
+  -- If A is a set, then Traditional.Lens A B is equivalent to
+  -- Lens A B.
+
+  traditional≃ : Is-set A → Traditional.Lens A B ≃ Lens A B
+  traditional≃ {A = A} {B = B} A-set = Eq.↔→≃
+    (Traditional.Lens A B           ↔⟨ Traditional.≃coherent A-set ⟩
+     Traditional.Coherent-lens A B  ↝⟨ coherent→ ⟩□
+     Lens A B                       □)
+    Lens.traditional-lens
+    (λ l → _≃_.from (equality-characterisation-for-sets A-set)
+       ( (λ _ → refl _)
+       , (λ b₁ b₂ p@(a , _) →
+            let l′ = traditional-lens l
+                l″ = coherent→ (_≃_.to (Traditional.≃coherent A-set) l′)
+            in
+            proj₁ (get⁻¹-const l″ b₁ b₂
+                     (subst (_⁻¹ b₁) (sym $ ⟨ext⟩ λ _ → refl _) p))     ≡⟨ cong (λ eq →
+                                                                                   proj₁ (get⁻¹-const l″ b₁ b₂ (subst (_⁻¹ b₁) (sym eq) p))) $
+                                                                           ext-refl ext ⟩
+
+            proj₁
+              (get⁻¹-const l″ b₁ b₂ (subst (_⁻¹ b₁) (sym (refl _)) p))  ≡⟨ cong (λ eq → proj₁ (get⁻¹-const l″ b₁ b₂ (subst (_⁻¹ b₁) eq p)))
+                                                                           sym-refl ⟩
+
+            proj₁ (get⁻¹-const l″ b₁ b₂ (subst (_⁻¹ b₁) (refl _) p))    ≡⟨ cong (proj₁ ⊚ get⁻¹-const l″ b₁ b₂) $
+                                                                           subst-refl _ _ ⟩
+
+            proj₁ (get⁻¹-const l″ b₁ b₂ p)                              ≡⟨⟩
+
+            set l (proj₁ p) b₂                                          ≡⟨⟩
+
+            proj₁ (get⁻¹-const l (get l a) b₂ (a , refl _))             ≡⟨ elim¹
+                                                                             (λ {b} eq →
+                                                                                proj₁ (get⁻¹-const l (get l a) b₂ (a , refl _)) ≡
+                                                                                proj₁ (get⁻¹-const l b b₂ (a , eq)))
+                                                                             (refl _)
+                                                                             (proj₂ p) ⟩∎
+            proj₁ (get⁻¹-const l b₁ b₂ p)                               ∎)
+       ))
+    (λ _ →
+       _↔_.from (Traditional.equality-characterisation-for-sets A-set)
+         (refl _))
+    where
+    open Lens
+
+    B-set : Traditional.Lens A B → A → Is-set B
+    B-set l a =
+      Traditional.h-level-respects-lens-from-inhabited 2 l a A-set
+
+opaque
+  unfolding traditional≃
+
+  -- The equivalence preserves getters and setters.
+
+  traditional≃-preserves-getters-and-setters :
+    {A : Type a}
+    (s : Is-set A) →
+    Preserves-getters-and-setters-⇔ A B
+      (_≃_.logical-equivalence (traditional≃ s))
+  traditional≃-preserves-getters-and-setters _ =
+      (λ _ → refl _ , refl _)
+    , (λ _ → refl _ , refl _)
 
 -- If B is inhabited when it is merely inhabited, then
 -- Traditional.Coherent-lens A B is logically equivalent to
 -- Higher.Lens A B.
 
 coherent⇔higher :
-  Block "conversion" →
   (∥ B ∥ → B) →
   Traditional.Coherent-lens A B ⇔ Higher.Lens A B
-coherent⇔higher {B = B} {A = A} b ∥B∥→B = record
-  { to   = Traditional.Coherent-lens A B  ↝⟨ coherent→ b ⟩
+coherent⇔higher {B = B} {A = A} ∥B∥→B = record
+  { to   = Traditional.Coherent-lens A B  ↝⟨ coherent→ ⟩
            Lens A B                       ↝⟨ →higher ∥B∥→B ⟩□
            Higher.Lens A B                □
   ; from = Higher.Lens.coherent-lens
@@ -900,15 +912,14 @@ coherent⇔higher {B = B} {A = A} b ∥B∥→B = record
 
 coherent⇔higher-preserves-getters-and-setters :
   {B : Type b}
-  (bc : Block "conversion")
   (∥B∥→B : ∥ B ∥ → B) →
-  Preserves-getters-and-setters-⇔ A B (coherent⇔higher bc ∥B∥→B)
-coherent⇔higher-preserves-getters-and-setters b ∥B∥→B =
+  Preserves-getters-and-setters-⇔ A B (coherent⇔higher ∥B∥→B)
+coherent⇔higher-preserves-getters-and-setters ∥B∥→B =
     Preserves-getters-and-setters-→-∘
       {f = →higher ∥B∥→B}
-      {g = coherent→ b}
+      {g = coherent→}
       (→higher-preserves-getters-and-setters ∥B∥→B)
-      (coherent→-preserves-getters-and-setters b)
+      coherent→-preserves-getters-and-setters
   , (λ _ → refl _ , refl _)
 
 -- If B is inhabited when it is merely inhabited, then there is a
@@ -917,16 +928,14 @@ coherent⇔higher-preserves-getters-and-setters b ∥B∥→B =
 
 coherent↠higher :
   {A : Type a} {B : Type b} →
-  Block "conversion" →
   Univalence (a ⊔ b) →
   (∥ B ∥ → B) →
   Traditional.Coherent-lens A B ↠ Higher.Lens A B
-coherent↠higher {A = A} {B = B} b univ ∥B∥→B = record
-  { logical-equivalence = coherent⇔higher b ∥B∥→B
+coherent↠higher {A = A} {B = B} univ ∥B∥→B = record
+  { logical-equivalence = coherent⇔higher ∥B∥→B
   ; right-inverse-of    = λ l →
       Higher.lenses-equal-if-setters-equal univ _ _ (λ _ → ∥B∥→B) $
-      proj₂ (proj₁ (coherent⇔higher-preserves-getters-and-setters
-                      b ∥B∥→B)
+      proj₂ (proj₁ (coherent⇔higher-preserves-getters-and-setters ∥B∥→B)
                _)
   }
 
@@ -934,103 +943,106 @@ coherent↠higher {A = A} {B = B} b univ ∥B∥→B = record
 
 coherent↠higher-preserves-getters-and-setters :
   {A : Type a} {B : Type b}
-  (bc : Block "conversion")
   (univ : Univalence (a ⊔ b))
   (∥B∥→B : ∥ B ∥ → B) →
   Preserves-getters-and-setters-⇔ A B
-    (_↠_.logical-equivalence (coherent↠higher bc univ ∥B∥→B))
-coherent↠higher-preserves-getters-and-setters b _ ∥B∥→B =
-  coherent⇔higher-preserves-getters-and-setters b ∥B∥→B
+    (_↠_.logical-equivalence (coherent↠higher univ ∥B∥→B))
+coherent↠higher-preserves-getters-and-setters _ ∥B∥→B =
+  coherent⇔higher-preserves-getters-and-setters ∥B∥→B
 
 ------------------------------------------------------------------------
 -- Composition
 
--- A lemma used to define composition.
+opaque
 
-∘⁻¹≃ :
-  Block "∘⁻¹≃" →
-  (f : B → C) (g : A → B) →
-  f ⊚ g ⁻¹ z ≃ ∃ λ ((y , _) : f ⁻¹ z) → g ⁻¹ y
-∘⁻¹≃ ⊠ = F.∘⁻¹≃
+  -- A lemma used to define composition.
+
+  ∘⁻¹≃ :
+    (f : B → C) (g : A → B) →
+    f ⊚ g ⁻¹ z ≃ ∃ λ ((y , _) : f ⁻¹ z) → g ⁻¹ y
+  ∘⁻¹≃ = F.∘⁻¹≃
 
 -- Composition.
 
 infixr 9 _∘_
 
 _∘_ : Lens B C → Lens A B → Lens A C
-l₁@(lens _ _ _ _) ∘ l₂@(lens _ _ _ _) = block λ b → _≃_.from Lens-as-Σ′
+l₁@(lens _ _ _ _) ∘ l₂@(lens _ _ _ _) = _≃_.from Lens-as-Σ′
   ( get l₁ ⊚ get l₂
   , (λ c₁ c₂ →
-       get l₁ ⊚ get l₂ ⁻¹ c₁                         ↝⟨ ∘⁻¹≃ b _ _ ⟩
+       get l₁ ⊚ get l₂ ⁻¹ c₁                         ↝⟨ ∘⁻¹≃ _ _ ⟩
        (∃ λ ((b , _) : get l₁ ⁻¹ c₁) → get l₂ ⁻¹ b)  ↝⟨ (Σ-cong (get⁻¹-constant l₁ c₁ c₂) λ p@(b , _) →
                                                          get⁻¹-constant l₂ b (proj₁ (get⁻¹-const l₁ c₁ c₂ p))) ⟩
-       (∃ λ ((b , _) : get l₁ ⁻¹ c₂) → get l₂ ⁻¹ b)  ↝⟨ inverse $ ∘⁻¹≃ b _ _ ⟩□
+       (∃ λ ((b , _) : get l₁ ⁻¹ c₂) → get l₂ ⁻¹ b)  ↝⟨ inverse $ ∘⁻¹≃ _ _ ⟩□
        get l₁ ⊚ get l₂ ⁻¹ c₂                         □)
   , (λ c₁ c₂ c₃ p →
-       _≃_.from (∘⁻¹≃ b _ _)
+       _≃_.from (∘⁻¹≃ _ _)
          (Σ-map (get⁻¹-const l₁ c₂ c₃)
             (λ {p@(b , _)} →
                get⁻¹-const l₂ b (proj₁ (get⁻¹-const l₁ c₂ c₃ p)))
-            (_≃_.to (∘⁻¹≃ b _ _)
-               (_≃_.from (∘⁻¹≃ b _ _)
+            (_≃_.to (∘⁻¹≃ _ _)
+               (_≃_.from (∘⁻¹≃ _ _)
                   (Σ-map (get⁻¹-const l₁ c₁ c₂)
                      (λ {p@(b , _)} →
                         get⁻¹-const l₂ b
                           (proj₁ (get⁻¹-const l₁ c₁ c₂ p)))
-                     (_≃_.to (∘⁻¹≃ b _ _) p)))))                      ≡⟨ cong (λ x → _≃_.from (∘⁻¹≃ b _ _)
+                     (_≃_.to (∘⁻¹≃ _ _) p)))))                        ≡⟨ cong (λ x → _≃_.from (∘⁻¹≃ _ _)
                                                                                        (Σ-map (get⁻¹-const l₁ c₂ c₃)
                                                                                           (λ {p@(b , _)} →
                                                                                              get⁻¹-const l₂ b
                                                                                                (proj₁ (get⁻¹-const l₁ c₂ c₃ p))) x)) $
-                                                                         _≃_.right-inverse-of (∘⁻¹≃ b _ _) _ ⟩
-       _≃_.from (∘⁻¹≃ b _ _)
+                                                                         _≃_.right-inverse-of (∘⁻¹≃ _ _) _ ⟩
+       _≃_.from (∘⁻¹≃ _ _)
          (Σ-map (get⁻¹-const l₁ c₂ c₃)
             (λ {p@(b , _)} →
                get⁻¹-const l₂ b (proj₁ (get⁻¹-const l₁ c₂ c₃ p)))
             (Σ-map (get⁻¹-const l₁ c₁ c₂)
                (λ {p@(b , _)} →
                   get⁻¹-const l₂ b (proj₁ (get⁻¹-const l₁ c₁ c₂ p)))
-               (_≃_.to (∘⁻¹≃ b _ _) p)))                              ≡⟨⟩
+               (_≃_.to (∘⁻¹≃ _ _) p)))                                ≡⟨⟩
 
-       _≃_.from (∘⁻¹≃ b _ _)
+       _≃_.from (∘⁻¹≃ _ _)
          (Σ-map (get⁻¹-const l₁ c₂ c₃ ⊚ get⁻¹-const l₁ c₁ c₂)
             (λ {p@(b , _)} →
                get⁻¹-const l₂ (proj₁ (get⁻¹-const l₁ c₁ c₂ p))
                  (proj₁ (get⁻¹-const l₁ c₂ c₃
                            (get⁻¹-const l₁ c₁ c₂ p))) ⊚
                get⁻¹-const l₂ b (proj₁ (get⁻¹-const l₁ c₁ c₂ p)))
-            (_≃_.to (∘⁻¹≃ b _ _) p))                                  ≡⟨ cong (λ f → _≃_.from (∘⁻¹≃ b _ _)
+            (_≃_.to (∘⁻¹≃ _ _) p))                                    ≡⟨ cong (λ f → _≃_.from (∘⁻¹≃ _ _)
                                                                                        (Σ-map (get⁻¹-const l₁ c₂ c₃ ⊚ get⁻¹-const l₁ c₁ c₂)
                                                                                           (λ {p} → f {p})
-                                                                                          (_≃_.to (∘⁻¹≃ b _ _) p))) $
+                                                                                          (_≃_.to (∘⁻¹≃ _ _) p))) $
                                                                          (implicit-extensionality ext λ p →
                                                                           ⟨ext⟩ (get⁻¹-const-∘ l₂ _ (proj₁ (get⁻¹-const l₁ c₁ c₂ p)) _)) ⟩
-       _≃_.from (∘⁻¹≃ b _ _)
+       _≃_.from (∘⁻¹≃ _ _)
          (Σ-map (get⁻¹-const l₁ c₂ c₃ ⊚ get⁻¹-const l₁ c₁ c₂)
             (λ {p@(b , _)} →
                get⁻¹-const l₂ b
                  (proj₁ (get⁻¹-const l₁ c₂ c₃
                            (get⁻¹-const l₁ c₁ c₂ p))))
-            (_≃_.to (∘⁻¹≃ b _ _) p))                                  ≡⟨ cong (λ f → _≃_.from (∘⁻¹≃ b _ _)
+            (_≃_.to (∘⁻¹≃ _ _) p))                                    ≡⟨ cong (λ f → _≃_.from (∘⁻¹≃ _ _)
                                                                                        (Σ-map f (λ {p@(b , _)} → get⁻¹-const l₂ b (proj₁ (f p)))
-                                                                                          (_≃_.to (∘⁻¹≃ b _ _) p))) $
+                                                                                          (_≃_.to (∘⁻¹≃ _ _) p))) $
                                                                          ⟨ext⟩ (get⁻¹-const-∘ l₁ _ _ _) ⟩∎
-       _≃_.from (∘⁻¹≃ b _ _)
+       _≃_.from (∘⁻¹≃ _ _)
          (Σ-map (get⁻¹-const l₁ c₁ c₃)
             (λ {p@(b , _)} →
                get⁻¹-const l₂ b (proj₁ (get⁻¹-const l₁ c₁ c₃ p)))
-            (_≃_.to (∘⁻¹≃ b _ _) p))                                  ∎)
+            (_≃_.to (∘⁻¹≃ _ _) p))                                    ∎)
   )
   where
   open Lens
 
--- The setter of the resulting lens is defined in the "right" way.
+opaque
+  unfolding ∘⁻¹≃
 
-set-∘≡ :
-  (l₁ : Lens B C) (l₂ : Lens A B) →
-  Lens.set (l₁ ∘ l₂) a c ≡
-  Lens.set l₂ a (Lens.set l₁ (Lens.get l₂ a) c)
-set-∘≡ (lens _ _ _ _) (lens _ _ _ _) = refl _
+  -- The setter of the resulting lens is defined in the "right" way.
+
+  set-∘≡ :
+    (l₁ : Lens B C) (l₂ : Lens A B) →
+    Lens.set (l₁ ∘ l₂) a c ≡
+    Lens.set l₂ a (Lens.set l₁ (Lens.get l₂ a) c)
+  set-∘≡ (lens _ _ _ _) (lens _ _ _ _) = refl _
 
 -- Composition for higher lenses, defined under the assumption that
 -- the resulting codomain is inhabited if it is merely inhabited.

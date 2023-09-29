@@ -12,7 +12,7 @@ module Lens.Non-dependent.Higher.Coinductive.Small
 open P.Derived-definitions-and-properties eq
 
 open import Logical-equivalence using (_⇔_)
-open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
+open import Prelude as P hiding (id) renaming (_∘_ to _⊙_)
 
 open import Bijection equality-with-J as B using (_↔_)
 import Coherently-constant eq as CC
@@ -23,7 +23,8 @@ open import Equality.Path.Isomorphisms.Univalence eq
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Extensionality equality-with-J
-open import Function-universe equality-with-J as F hiding (id; _∘_)
+open import Function-universe equality-with-J as F
+  hiding (id; _∘_; inverse)
 open import H-level equality-with-J as H-level
 open import H-level.Closure equality-with-J
 open import H-level.Truncation.Propositional eq using (∥_∥)
@@ -82,17 +83,113 @@ Constant-≃-get-⁻¹-≃⁻¹ :
   Constant-≃ (get ⁻¹_)
 Constant-≃-get-⁻¹-≃⁻¹ (_ , _ , eq) b₁ b₂ = Eq.⟨ _ , eq b₁ b₂ ⟩
 
+-- Some definitions used in the implementation of Constant-≃-get-⁻¹-≃.
+
+module Constant-≃-get-⁻¹-≃ {get : A → B} where
+
+  private
+
+    equiv₁ :
+      Constant-≃ (get ⁻¹_) ≃
+      (∃ λ (set : A → B → A) →
+       ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
+       ∀ b₁ b₂ →
+         Is-equivalence
+           ((λ (a , _) → set a b₂ , get-set a b₂) ⦂
+            (get ⁻¹ b₁ → get ⁻¹ b₂)))
+    equiv₁ =
+      Constant-≃ (get ⁻¹_)                                            ↔⟨⟩
+
+      (∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)                               ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ →
+                                                                          Eq.≃-as-Σ) ⟩
+      (∀ b₁ b₂ →
+       ∃ λ (f : get ⁻¹ b₁ → get ⁻¹ b₂) →
+       Is-equivalence f)                                              ↔⟨ Π-comm ⟩
+
+      (∀ b₂ b₁ →
+       ∃ λ (f : get ⁻¹ b₁ → get ⁻¹ b₂) →
+       Is-equivalence f)                                              ↝⟨ (∀-cong ext λ _ → ∀-cong ext λ _ →
+                                                                          Σ-cong-id currying) ⟩
+      (∀ b₂ b₁ →
+       ∃ λ (f : ∀ a → get a ≡ b₁ → get ⁻¹ b₂) →
+       Is-equivalence (uncurry f))                                    ↔⟨ (∀-cong ext λ _ →
+                                                                          ΠΣ-comm) ⟩
+      (∀ b₂ →
+       ∃ λ (f : ∀ b₁ a → get a ≡ b₁ → get ⁻¹ b₂) →
+       ∀ b₁ → Is-equivalence (uncurry (f b₁)))                        ↝⟨ (∀-cong ext λ _ →
+                                                                          Σ-cong-id Π-comm) ⟩
+      (∀ b₂ →
+       ∃ λ (f : ∀ a b₁ → get a ≡ b₁ → get ⁻¹ b₂) →
+       ∀ b₁ → Is-equivalence (uncurry (flip f b₁)))                   ↝⟨ (∀-cong ext λ _ →
+                                                                          Σ-cong (∀-cong ext λ _ → F.inverse $ ∀-intro _ {k = equivalence} ext)
+                                                                            λ f →
+                                                                          ∀-cong ext λ b₁ →
+                                                                          Is-equivalence-cong {k = equivalence} ext λ (a , eq) →
+          uncurry (f a) (b₁ , eq)                                           ≡⟨ cong (uncurry (f a)) $ sym $
+                                                                               proj₂ (other-singleton-contractible _) _ ⟩∎
+          uncurry (f a) (get a , refl _)                                    ∎) ⟩
+
+      (∀ b₂ →
+       ∃ λ (f : A → get ⁻¹ b₂) →
+       ∀ b₁ → Is-equivalence (f ⊙ proj₁))                             ↔⟨ ΠΣ-comm ⟩
+
+      (∃ λ (f : (b : B) → A → get ⁻¹ b) →
+       ∀ b₂ b₁ → Is-equivalence (f b₂ ⊙ proj₁))                       ↝⟨ Σ-cong-refl Π-comm (λ _ → Π-comm) ⟩
+
+      (∃ λ (f : A → (b : B) → get ⁻¹ b) →
+       ∀ b₁ b₂ → Is-equivalence ((_$ b₂) ⊙ f ⊙ proj₁))                ↝⟨ Σ-cong-refl (∀-cong ext λ _ → ΠΣ-comm) (λ _ → Eq.id) ⟩
+
+      (∃ λ (f : A → ∃ λ (set : B → A) → (b : B) → get (set b) ≡ b) →
+       ∀ b₁ b₂ → Is-equivalence (Σ-map (_$ b₂) (_$ b₂) ⊙ f ⊙ proj₁))  ↝⟨ Σ-cong-id ΠΣ-comm ⟩
+
+      (∃ λ ((set , get-set) :
+            ∃ λ (set : A → B → A) →
+              (a : A) (b : B) → get (set a b) ≡ b) →
+       ∀ b₁ b₂ → Is-equivalence λ (a , _) → set a b₂ , get-set a b₂)  ↔⟨ F.inverse Σ-assoc ⟩□
+
+      (∃ λ (set : A → B → A) →
+       ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
+       ∀ b₁ b₂ → Is-equivalence λ (a , _) → set a b₂ , get-set a b₂)  □
+
+    equiv₂ =
+      Eq.with-other-function
+        (F.inverse equiv₁)
+        Constant-≃-get-⁻¹-≃⁻¹
+        (λ (set , get-set , _) → ⟨ext⟩ λ b₁ → ⟨ext⟩ λ b₂ →
+           Eq.lift-equality ext $ ⟨ext⟩ λ (a , _) →
+             subst (λ _ → get ⁻¹ b₂) _ (set a b₂ , get-set a b₂)  ≡⟨ subst-const _ ⟩∎
+             (set a b₂ , get-set a b₂)                            ∎)
+
+  opaque
+
+    -- The function Constant-≃-get-⁻¹-≃⁻¹ {get = get} is an
+    -- equivalence.
+
+    is-equivalence : Is-equivalence (Constant-≃-get-⁻¹-≃⁻¹ {get = get})
+    is-equivalence = _≃_.is-equivalence equiv₂
+
+  -- An inverse of Constant-≃-get-⁻¹-≃ (defined below).
+
+  inverse :
+    (∃ λ (set : A → B → A) →
+       ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
+       ∀ b₁ b₂ →
+         Is-equivalence
+           ((λ (a , _) → set a b₂ , get-set a b₂) ⦂
+            (get ⁻¹ b₁ → get ⁻¹ b₂))) ≃
+    Constant-≃ (get ⁻¹_)
+  inverse = Eq.⟨ _≃_.to equiv₂ , is-equivalence ⟩
+
 -- Constant-≃ (get ⁻¹_) can be expressed in terms of a "setter" and a
 -- "get-set" law that form a family of equivalences in a certain way.
 --
 -- This lemma was suggested by Andrea Vezzosi when we discussed
 -- coinductive lenses with erased "proofs".
 --
--- The right-to-left direction of the lemma is not blocked, but the
--- rest is.
+-- The right-to-left direction of the lemma is not opaque, but (most
+-- of) the rest is.
 
 Constant-≃-get-⁻¹-≃ :
-  Block "Constant-≃-get-⁻¹-≃" →
   {get : A → B} →
   Constant-≃ (get ⁻¹_) ≃
   (∃ λ (set : A → B → A) →
@@ -102,82 +199,12 @@ Constant-≃-get-⁻¹-≃ :
        f = λ (a , _) → set a b₂ , get-set a b₂
    in
    Is-equivalence f)
-Constant-≃-get-⁻¹-≃ {A = A} {B = B} bl {get = get} =
-  inverse (equiv₃ bl)
-  where
-  equiv₁ =
-    Constant-≃ (get ⁻¹_)                                            ↔⟨⟩
-
-    (∀ b₁ b₂ → get ⁻¹ b₁ ≃ get ⁻¹ b₂)                               ↔⟨ (∀-cong ext λ _ → ∀-cong ext λ _ →
-                                                                        Eq.≃-as-Σ) ⟩
-    (∀ b₁ b₂ →
-     ∃ λ (f : get ⁻¹ b₁ → get ⁻¹ b₂) →
-     Is-equivalence f)                                              ↔⟨ Π-comm ⟩
-
-    (∀ b₂ b₁ →
-     ∃ λ (f : get ⁻¹ b₁ → get ⁻¹ b₂) →
-     Is-equivalence f)                                              ↝⟨ (∀-cong ext λ _ → ∀-cong ext λ _ →
-                                                                        Σ-cong-id currying) ⟩
-    (∀ b₂ b₁ →
-     ∃ λ (f : ∀ a → get a ≡ b₁ → get ⁻¹ b₂) →
-     Is-equivalence (uncurry f))                                    ↔⟨ (∀-cong ext λ _ →
-                                                                        ΠΣ-comm) ⟩
-    (∀ b₂ →
-     ∃ λ (f : ∀ b₁ a → get a ≡ b₁ → get ⁻¹ b₂) →
-     ∀ b₁ → Is-equivalence (uncurry (f b₁)))                        ↝⟨ (∀-cong ext λ _ →
-                                                                        Σ-cong-id Π-comm) ⟩
-    (∀ b₂ →
-     ∃ λ (f : ∀ a b₁ → get a ≡ b₁ → get ⁻¹ b₂) →
-     ∀ b₁ → Is-equivalence (uncurry (flip f b₁)))                   ↝⟨ (∀-cong ext λ _ →
-                                                                        Σ-cong (∀-cong ext λ _ → inverse $ ∀-intro _ {k = equivalence} ext) λ f →
-                                                                        ∀-cong ext λ b₁ →
-                                                                        Is-equivalence-cong {k = equivalence} ext λ (a , eq) →
-        uncurry (f a) (b₁ , eq)                                           ≡⟨ cong (uncurry (f a)) $ sym $
-                                                                             proj₂ (other-singleton-contractible _) _ ⟩∎
-        uncurry (f a) (get a , refl _)                                    ∎) ⟩
-
-    (∀ b₂ →
-     ∃ λ (f : A → get ⁻¹ b₂) →
-     ∀ b₁ → Is-equivalence (f ⊚ proj₁))                             ↔⟨ ΠΣ-comm ⟩
-
-    (∃ λ (f : (b : B) → A → get ⁻¹ b) →
-     ∀ b₂ b₁ → Is-equivalence (f b₂ ⊚ proj₁))                       ↝⟨ Σ-cong-refl Π-comm (λ _ → Π-comm) ⟩
-
-    (∃ λ (f : A → (b : B) → get ⁻¹ b) →
-     ∀ b₁ b₂ → Is-equivalence ((_$ b₂) ⊚ f ⊚ proj₁))                ↝⟨ Σ-cong-refl (∀-cong ext λ _ → ΠΣ-comm) (λ _ → Eq.id) ⟩
-
-    (∃ λ (f : A → ∃ λ (set : B → A) → (b : B) → get (set b) ≡ b) →
-     ∀ b₁ b₂ → Is-equivalence (Σ-map (_$ b₂) (_$ b₂) ⊚ f ⊚ proj₁))  ↝⟨ Σ-cong-id ΠΣ-comm ⟩
-
-    (∃ λ ((set , get-set) :
-          ∃ λ (set : A → B → A) →
-            (a : A) (b : B) → get (set a b) ≡ b) →
-     ∀ b₁ b₂ → Is-equivalence λ (a , _) → set a b₂ , get-set a b₂)  ↔⟨ inverse Σ-assoc ⟩□
-
-    (∃ λ (set : A → B → A) →
-     ∃ λ (get-set : (a : A) (b : B) → get (set a b) ≡ b) →
-     ∀ b₁ b₂ → Is-equivalence λ (a , _) → set a b₂ , get-set a b₂)  □
-
-  equiv₂ =
-    Eq.with-other-function
-      (inverse equiv₁)
-      Constant-≃-get-⁻¹-≃⁻¹
-      (λ (set , get-set , _) → ⟨ext⟩ λ b₁ → ⟨ext⟩ λ b₂ →
-         Eq.lift-equality ext $ ⟨ext⟩ λ (a , _) →
-           subst (λ _ → get ⁻¹ b₂) _ (set a b₂ , get-set a b₂)  ≡⟨ subst-const _ ⟩∎
-           (set a b₂ , get-set a b₂)                            ∎)
-
-  equiv₃ : Unit → _ ≃ _
-  equiv₃ bl = Eq.⟨ _≃_.to equiv₂ , is-equiv bl ⟩
-    where
-    is-equiv : Unit → _
-    is-equiv ⊠ = _≃_.is-equivalence equiv₂
+Constant-≃-get-⁻¹-≃ = F.inverse Constant-≃-get-⁻¹-≃.inverse
 
 -- Constant-≃-get-⁻¹-≃ computes in a certain way.
 
 _ :
-  ∀ {bl : Block "Constant-≃-get-⁻¹-≃"}
-    {get : A → B} {set : A → B → A}
+  ∀ {get : A → B} {set : A → B → A}
     {get-set : (a : A) (b : B) → get (set a b) ≡ b}
     {eq :
      ∀ b₁ b₂ →
@@ -186,7 +213,7 @@ _ :
      in
      Is-equivalence f}
     {b₁ b₂} →
-  _≃_.to (_≃_.from (Constant-≃-get-⁻¹-≃ bl) (set , get-set , eq) b₁ b₂) ≡
+  _≃_.to (_≃_.from Constant-≃-get-⁻¹-≃ (set , get-set , eq) b₁ b₂) ≡
   (λ (a , _) → set a b₂ , get-set a b₂)
 _ = refl _
 
@@ -229,7 +256,7 @@ Coherently-constant-map :
   (∀ x → P (f x) ≃ Q x) →
   Coherently-constant P → Coherently-constant Q
 Coherently-constant-map {P = P} {Q = Q} f P≃Q c .property x y =
-  Q x      ↝⟨ inverse $ P≃Q x ⟩
+  Q x      ↝⟨ F.inverse $ P≃Q x ⟩
   P (f x)  ↝⟨ c .property (f x) (f y) ⟩
   P (f y)  ↝⟨ P≃Q y ⟩□
   Q y      □
@@ -245,39 +272,39 @@ Coherently-constant-map {P = P} {Q = Q} f P≃Q c .coherent =
           subst (λ z → O.rec′ P g (O.∥∥¹-map f z) → O.rec′ Q h z)
             (O.∣∣-constant x y) (_≃_.to (P≃Q x))                         ≡⟨ (⟨ext⟩ λ _ → subst-→) ⟩
 
-          subst (O.rec′ Q h) (O.∣∣-constant x y) ⊚
-          _≃_.to (P≃Q x) ⊚
-          subst (O.rec′ P g ⊚ O.∥∥¹-map f) (sym (O.∣∣-constant x y))     ≡⟨ cong₂ (λ f g → f ⊚ _≃_.to (P≃Q x) ⊚ g)
+          subst (O.rec′ Q h) (O.∣∣-constant x y) ⊙
+          _≃_.to (P≃Q x) ⊙
+          subst (O.rec′ P g ⊙ O.∥∥¹-map f) (sym (O.∣∣-constant x y))     ≡⟨ cong₂ (λ f g → f ⊙ _≃_.to (P≃Q x) ⊙ g)
                                                                               (⟨ext⟩ λ q → subst-∘ P.id (O.rec′ Q h) (O.∣∣-constant x y) {p = q})
                                                                               (⟨ext⟩ λ p →
-                                                                               trans (subst-∘ P.id (O.rec′ P g ⊚ O.∥∥¹-map f)
+                                                                               trans (subst-∘ P.id (O.rec′ P g ⊙ O.∥∥¹-map f)
                                                                                         (sym (O.∣∣-constant x y)) {p = p}) $
                                                                                cong (λ eq → subst P.id eq p) $
                                                                                trans (cong-sym _ _) $
                                                                                cong sym $ sym $ cong-∘ _ _ _) ⟩
-          subst P.id (cong (O.rec′ Q h) (O.∣∣-constant x y)) ⊚
-          _≃_.to (P≃Q x) ⊚
+          subst P.id (cong (O.rec′ Q h) (O.∣∣-constant x y)) ⊙
+          _≃_.to (P≃Q x) ⊙
           subst P.id (sym (cong (O.rec′ P g)
-                             (cong (O.∥∥¹-map f) (O.∣∣-constant x y))))  ≡⟨ cong₂ (λ p q → subst P.id p ⊚ _≃_.to (P≃Q x) ⊚ subst P.id (sym q))
+                             (cong (O.∥∥¹-map f) (O.∣∣-constant x y))))  ≡⟨ cong₂ (λ p q → subst P.id p ⊙ _≃_.to (P≃Q x) ⊙ subst P.id (sym q))
                                                                               O.rec-∣∣-constant
                                                                               (trans (cong (cong (O.rec′ P g)) O.rec-∣∣-constant) $
                                                                                O.rec-∣∣-constant) ⟩
 
-          subst P.id (h x y) ⊚
-          _≃_.to (P≃Q x) ⊚
-          subst P.id (sym (g (f x) (f y)))                               ≡⟨ cong₂ (λ p q → p ⊚ _≃_.to (P≃Q x) ⊚ q)
+          subst P.id (h x y) ⊙
+          _≃_.to (P≃Q x) ⊙
+          subst P.id (sym (g (f x) (f y)))                               ≡⟨ cong₂ (λ p q → p ⊙ _≃_.to (P≃Q x) ⊙ q)
                                                                               (trans (⟨ext⟩ λ _ → subst-id-in-terms-of-≡⇒↝ equivalence) $
                                                                                cong _≃_.to $ _≃_.right-inverse-of (≡≃≃ univ) _)
                                                                               (trans (⟨ext⟩ λ _ → subst-id-in-terms-of-inverse∘≡⇒↝ equivalence) $
                                                                                cong _≃_.from $ _≃_.right-inverse-of (≡≃≃ univ) _) ⟩
-          _≃_.to (P≃Q y) ⊚
-          _≃_.to (c .property (f x) (f y)) ⊚
-          _≃_.from (P≃Q x) ⊚
-          _≃_.to (P≃Q x) ⊚
-          _≃_.from (c .property (f x) (f y))                             ≡⟨ (⟨ext⟩ λ _ → cong (_≃_.to (P≃Q y) ⊚ _≃_.to (c .property (f x) (f y))) $
+          _≃_.to (P≃Q y) ⊙
+          _≃_.to (c .property (f x) (f y)) ⊙
+          _≃_.from (P≃Q x) ⊙
+          _≃_.to (P≃Q x) ⊙
+          _≃_.from (c .property (f x) (f y))                             ≡⟨ (⟨ext⟩ λ _ → cong (_≃_.to (P≃Q y) ⊙ _≃_.to (c .property (f x) (f y))) $
                                                                             _≃_.left-inverse-of (P≃Q x) _) ⟩
-          _≃_.to (P≃Q y) ⊚
-          _≃_.to (c .property (f x) (f y)) ⊚
+          _≃_.to (P≃Q y) ⊙
+          _≃_.to (c .property (f x) (f y)) ⊙
           _≃_.from (c .property (f x) (f y))                             ≡⟨ (⟨ext⟩ λ _ → cong (_≃_.to (P≃Q y)) $
                                                                              _≃_.right-inverse-of (c .property (f x) (f y)) _) ⟩∎
           _≃_.to (P≃Q y)                                                 ∎))
@@ -285,7 +312,7 @@ Coherently-constant-map {P = P} {Q = Q} f P≃Q c .coherent =
   where
   g = λ x y → ≃⇒≡ univ (c .property x y)
   h = λ x y → ≃⇒≡ univ ((P≃Q y F.∘ c .property (f x) (f y)) F.∘
-                        inverse (P≃Q x))
+                        F.inverse (P≃Q x))
 
 private
 
@@ -379,7 +406,7 @@ private
                      (subst-refl _ _))
               (trans (cong (O.∣∣ʳ e x)
                         (sym (subst-refl _ _)))
-                 (cong (O.∣∣ʳ e x ⊚ flip (subst P) _)
+                 (cong (O.∣∣ʳ e x ⊙ flip (subst P) _)
                     (sym sym-refl)))))
         (cong (_$ subst P (refl _) p) (subst-refl _ _))            ≡⟨ sym $
                                                                       cong₂ (λ eq₁ eq₂ → trans
@@ -435,7 +462,7 @@ Coherently-constant-Σ =
 
     R x                          ↝⟨ R≃ _ ⟩
     (∃ λ (p : P x) → Q (x , p))  ↝⟨ (Σ-cong (c₁ .property _ _) λ _ → c₂ .property _ _) ⟩
-    (∃ λ (p : P y) → Q (y , p))  ↝⟨ inverse $ R≃ _ ⟩□
+    (∃ λ (p : P y) → Q (y , p))  ↝⟨ F.inverse $ R≃ _ ⟩□
     R y                          □
 
   Coherently-constant-Σ′ {P = P} {Q = Q} {R = R} R≃ c₁ c₂ .coherent =
@@ -634,7 +661,7 @@ Coherently-constant-Σ =
     mutual
 
       P′ = O.rec′ P (λ x y → ≃⇒≡ univ (c₁ .property x y))
-      Q′ = O.rec′ Q (λ x y → ≃⇒≡ univ (c₂ .property x y)) ⊚ f
+      Q′ = O.rec′ Q (λ x y → ≃⇒≡ univ (c₂ .property x y)) ⊙ f
 
       e = λ where
         .O.Elim.∣∣ʳ x p → ∣ x , p ∣
@@ -650,7 +677,7 @@ Coherently-constant-Σ =
 
     pr : ∀ _ _ → _
     pr x y =
-      (inverse (R≃ y) F.∘
+      (F.inverse (R≃ y) F.∘
        (Σ-cong (c₁ .property _ _) λ _ → c₂ .property _ _)) F.∘
       R≃ x
 
@@ -676,7 +703,7 @@ Coherently-constant-Σ′ :
   Coherently-constant (λ x → ∃ λ (y : P x) → Q (x , y))
 Coherently-constant-Σ′ {P = P} {Q = Q} =
   curry
-    (Coherently-constant P × Coherently-constant Q             ↔⟨ inverse
+    (Coherently-constant P × Coherently-constant Q             ↔⟨ F.inverse
                                                                     (Coherently-constant≃Coherently-constant ×-cong
                                                                      Coherently-constant≃Coherently-constant) ⟩
      CC.Coherently-constant P × CC.Coherently-constant Q       ↝⟨ uncurry Capriotti.Coherently-constant-Σ ⟩
@@ -710,12 +737,13 @@ record Lens (A : Type a) (B : Type b) : Type (a ⊔ b) where
     get ⁻¹ b                   ↝⟨ proj₁ ⟩□
     A                          □
 
-  -- The setter could have been defined using Constant-≃-get-⁻¹-≃.
+  opaque
+    unfolding Constant-≃-get-⁻¹-≃.is-equivalence
 
-  set≡ :
-    ∀ bl →
-    set ≡ proj₁ (_≃_.to (Constant-≃-get-⁻¹-≃ bl) get⁻¹-constant)
-  set≡ ⊠ = refl _
+    -- The setter could have been defined using Constant-≃-get-⁻¹-≃.
+
+    set≡ : set ≡ proj₁ (_≃_.to Constant-≃-get-⁻¹-≃ get⁻¹-constant)
+    set≡ = refl _
 
 instance
 
@@ -738,79 +766,66 @@ Lens-as-Σ = Eq.↔→≃
   refl
   refl
 
--- Lens is pointwise equivalent to Coinductive.Lens.
+opaque
 
-Coinductive-lens≃Lens :
-  Block "Coinductive-lens≃Lens" →
-  Coinductive.Lens A B ≃ Lens A B
-Coinductive-lens≃Lens {A = A} {B = B} ⊠ =
-  Coinductive.Lens A B                                             ↔⟨⟩
-  (∃ λ (get : A → B) → Coinductive.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ → Coinductive-coherently-constant≃Coherently-constant) ⟩
-  (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))              ↝⟨ inverse Lens-as-Σ ⟩□
-  Lens A B                                                         □
+  -- Lens is pointwise equivalent to Coinductive.Lens.
 
--- The equivalence preserves getters and setters.
+  Coinductive-lens≃Lens :
+    Coinductive.Lens A B ≃ Lens A B
+  Coinductive-lens≃Lens {A = A} {B = B} =
+    Coinductive.Lens A B                                             ↔⟨⟩
+    (∃ λ (get : A → B) → Coinductive.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ → Coinductive-coherently-constant≃Coherently-constant) ⟩
+    (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))              ↝⟨ F.inverse Lens-as-Σ ⟩□
+    Lens A B                                                         □
 
-Coinductive-lens≃Lens-preserves-getters-and-setters :
-  (bl : Block "Coinductive-lens≃Lens") →
-  Preserves-getters-and-setters-⇔ A B
-    (_≃_.logical-equivalence (Coinductive-lens≃Lens bl))
-Coinductive-lens≃Lens-preserves-getters-and-setters ⊠ =
-  Preserves-getters-and-setters-→-↠-⇔
-    (_≃_.surjection (Coinductive-lens≃Lens ⊠))
-    (λ _ → refl _ , refl _)
+opaque
+  unfolding Coinductive-lens≃Lens
 
-private
+  -- The equivalence preserves getters and setters.
 
-  -- A lemma used to implement Higher-lens≃Lens and
-  -- Higher-lens≃Lens-preserves-getters-and-setters.
+  Coinductive-lens≃Lens-preserves-getters-and-setters :
+    Preserves-getters-and-setters-⇔ A B
+      (_≃_.logical-equivalence Coinductive-lens≃Lens)
+  Coinductive-lens≃Lens-preserves-getters-and-setters =
+    Preserves-getters-and-setters-→-↠-⇔
+      (_≃_.surjection Coinductive-lens≃Lens)
+      (λ _ → refl _ , refl _)
 
-  Higher-lens≃Lens′ :
-    Block "Higher-lens≃Lens" →
-    {A : Type a} {B : Type b} →
-    ∃ λ (eq : Higher.Lens A B ≃ Lens A B) →
-    Preserves-getters-and-setters-⇔ A B (_≃_.logical-equivalence eq)
-  Higher-lens≃Lens′ ⊠ {A = A} {B = B} =
-    block λ b →
+opaque
 
-      (Higher.Lens A B       ↝⟨ inverse $ Capriotti.Lens≃Higher-lens b univ ⟩
-       Capriotti.Lens A B    ↝⟨ Coinductive.Higher-lens≃Lens b ⟩
-       Coinductive.Lens A B  ↝⟨ Coinductive-lens≃Lens b ⟩□
-       Lens A B              □)
-    , Preserves-getters-and-setters-⇔-∘
-        {f = _≃_.logical-equivalence (Coinductive-lens≃Lens b) F.∘
-             _≃_.logical-equivalence (Coinductive.Higher-lens≃Lens b)}
-        {g = inverse $ _≃_.logical-equivalence $
-             Capriotti.Lens≃Higher-lens b univ}
-        (Preserves-getters-and-setters-⇔-∘
-           {f = _≃_.logical-equivalence (Coinductive-lens≃Lens b)}
-           {g = _≃_.logical-equivalence
-                  (Coinductive.Higher-lens≃Lens b)}
-           (Coinductive-lens≃Lens-preserves-getters-and-setters b)
-           (Coinductive.Higher-lens≃Lens-preserves-getters-and-setters
-              b))
-        (Preserves-getters-and-setters-⇔-inverse
-           {f = _≃_.logical-equivalence
-                  (Capriotti.Lens≃Higher-lens b univ)} $
-         Capriotti.Lens≃Higher-lens-preserves-getters-and-setters
-           b univ)
+  -- Lens is pointwise equivalent to Higher.Lens.
 
--- Lens is pointwise equivalent to Higher.Lens.
+  Higher-lens≃Lens : Higher.Lens A B ≃ Lens A B
+  Higher-lens≃Lens {A = A} {B = B} =
+    Higher.Lens A B       ↝⟨ F.inverse $ Capriotti.Lens≃Higher-lens univ ⟩
+    Capriotti.Lens A B    ↝⟨ Coinductive.Higher-lens≃Lens ⟩
+    Coinductive.Lens A B  ↝⟨ Coinductive-lens≃Lens ⟩□
+    Lens A B              □
 
-Higher-lens≃Lens :
-  Block "Higher-lens≃Lens" →
-  Higher.Lens A B ≃ Lens A B
-Higher-lens≃Lens b =
-  proj₁ $ Higher-lens≃Lens′ b
+opaque
+  unfolding Higher-lens≃Lens
 
--- The equivalence preserves getters and setters.
+  -- The equivalence preserves getters and setters.
 
-Higher-lens≃Lens-preserves-getters-and-setters :
-  (bl : Block "Higher-lens≃Lens") →
-  Preserves-getters-and-setters-⇔ A B
-    (_≃_.logical-equivalence (Higher-lens≃Lens bl))
-Higher-lens≃Lens-preserves-getters-and-setters b =
-  proj₂ $ Higher-lens≃Lens′ b
+  Higher-lens≃Lens-preserves-getters-and-setters :
+    Preserves-getters-and-setters-⇔ A B
+      (_≃_.logical-equivalence Higher-lens≃Lens)
+  Higher-lens≃Lens-preserves-getters-and-setters =
+    Preserves-getters-and-setters-⇔-∘
+      {f = _≃_.logical-equivalence Coinductive-lens≃Lens F.∘
+           _≃_.logical-equivalence Coinductive.Higher-lens≃Lens}
+      {g = F.inverse $ _≃_.logical-equivalence $
+           Capriotti.Lens≃Higher-lens univ}
+      (Preserves-getters-and-setters-⇔-∘
+         {f = _≃_.logical-equivalence Coinductive-lens≃Lens}
+         {g = _≃_.logical-equivalence
+                Coinductive.Higher-lens≃Lens}
+         Coinductive-lens≃Lens-preserves-getters-and-setters
+         Coinductive.Higher-lens≃Lens-preserves-getters-and-setters)
+      (Preserves-getters-and-setters-⇔-inverse
+         {f = _≃_.logical-equivalence
+                (Capriotti.Lens≃Higher-lens univ)} $
+       Capriotti.Lens≃Higher-lens-preserves-getters-and-setters univ)
 
 -- Lenses with stable view types are equal if their setters are equal.
 
@@ -820,18 +835,15 @@ lenses-equal-if-setters-equal :
   Lens.set l₁ ≡ Lens.set l₂ →
   l₁ ≡ l₂
 lenses-equal-if-setters-equal l₁ l₂ stable =
-  block λ bl →
-  let equiv = Higher-lens≃Lens bl in
+  Lens.set l₁ ≡ Lens.set l₂                                    ↔⟨ ≡⇒≃ $ sym $ cong₂ _≡_
+                                                                    (proj₂ $ proj₂ Higher-lens≃Lens-preserves-getters-and-setters l₁)
+                                                                    (proj₂ $ proj₂ Higher-lens≃Lens-preserves-getters-and-setters l₂) ⟩
+  Higher.Lens.set (_≃_.from Higher-lens≃Lens l₁) ≡
+  Higher.Lens.set (_≃_.from Higher-lens≃Lens l₂)               ↝⟨ Higher.lenses-equal-if-setters-equal univ _ _ (λ _ → stable) ⟩
 
-  Lens.set l₁ ≡ Lens.set l₂              ↔⟨ ≡⇒≃ $ sym $ cong₂ _≡_
-                                              (proj₂ $ proj₂ (Higher-lens≃Lens-preserves-getters-and-setters bl) l₁)
-                                              (proj₂ $ proj₂ (Higher-lens≃Lens-preserves-getters-and-setters bl) l₂) ⟩
-  Higher.Lens.set (_≃_.from equiv l₁) ≡
-  Higher.Lens.set (_≃_.from equiv l₂)    ↝⟨ Higher.lenses-equal-if-setters-equal univ _ _ (λ _ → stable) ⟩
+  _≃_.from Higher-lens≃Lens l₁ ≡ _≃_.from Higher-lens≃Lens l₂  ↔⟨ Eq.≃-≡ (F.inverse Higher-lens≃Lens) ⟩□
 
-  _≃_.from equiv l₁ ≡ _≃_.from equiv l₂  ↔⟨ Eq.≃-≡ (inverse equiv) ⟩□
-
-  l₁ ≡ l₂                                □
+  l₁ ≡ l₂                                                      □
 
 ------------------------------------------------------------------------
 -- Identity
@@ -843,7 +855,7 @@ id .Lens.get                       = P.id
 id .Lens.get⁻¹-coherently-constant =
   coherently-constant λ x →
                               $⟨ Preimage.id⁻¹-contractible x ⟩
-    Contractible (P.id ⁻¹ x)  ↝⟨ Eq.↔⇒≃ ⊚ _⇔_.to contractible⇔↔⊤ ⟩□
+    Contractible (P.id ⁻¹ x)  ↝⟨ Eq.↔⇒≃ ⊙ _⇔_.to contractible⇔↔⊤ ⟩□
     P.id ⁻¹ x ≃ ⊤             □
   where
   coherently-constant :
@@ -851,7 +863,7 @@ id .Lens.get⁻¹-coherently-constant =
     Coherently-constant P
   coherently-constant {P = P} P≃⊤ .property x y =
     P x  ↝⟨ P≃⊤ x ⟩
-    ⊤    ↝⟨ inverse $ P≃⊤ y ⟩□
+    ⊤    ↝⟨ F.inverse $ P≃⊤ y ⟩□
     P y  □
   coherently-constant P≃⊤ .coherent =
     coherently-constant
@@ -873,7 +885,7 @@ id .Lens.get⁻¹-coherently-constant =
 infixr 9 _∘_
 
 _∘_ : Lens B C → Lens A B → Lens A C
-(l₁ ∘ l₂) .Lens.get = get l₁ ⊚ get l₂
+(l₁ ∘ l₂) .Lens.get = get l₁ ⊙ get l₂
   where
   open Lens
 (l₁ ∘ l₂) .Lens.get⁻¹-coherently-constant =
@@ -882,12 +894,12 @@ _∘_ : Lens B C → Lens A B → Lens A C
                                                             {Q = λ (_ , b , _) → get l₂ ⁻¹ b}
                                                             (get⁻¹-coherently-constant l₁)
                                                             (Coherently-constant-map
-                                                               (proj₁ ⊚ proj₂) (λ _ → F.id)
+                                                               (proj₁ ⊙ proj₂) (λ _ → F.id)
                                                                (get⁻¹-coherently-constant l₂)) ⟩
   Coherently-constant
     (λ c → ∃ λ ((b , _) : get l₁ ⁻¹ c) → get l₂ ⁻¹ b)  ↝⟨ Coherently-constant-map P.id
-                                                            (λ _ → inverse $ ∘⁻¹≃ (get l₁) (get l₂)) ⟩□
-  Coherently-constant ((get l₁ ⊚ get l₂) ⁻¹_)          □
+                                                            (λ _ → F.inverse $ ∘⁻¹≃ (get l₁) (get l₂)) ⟩□
+  Coherently-constant ((get l₁ ⊙ get l₂) ⁻¹_)          □
   where
   open Lens
 
@@ -932,53 +944,50 @@ right-identity stable l =
 
 -- An unrestricted composition operator for Higher.Lens.
 
-infix 9 ⟨_⟩_⊚_
+infix 9 _⊚_
 
-⟨_⟩_⊚_ :
-  Block "Higher-lens≃Lens" →
-  Higher.Lens B C → Higher.Lens A B → Higher.Lens A C
-⟨_⟩_⊚_ b l₁ l₂ =
-  _≃_.from (Higher-lens≃Lens b)
-    (_≃_.to (Higher-lens≃Lens b) l₁ ∘
-     _≃_.to (Higher-lens≃Lens b) l₂)
+_⊚_ : Higher.Lens B C → Higher.Lens A B → Higher.Lens A C
+l₁ ⊚ l₂ =
+  _≃_.from Higher-lens≃Lens
+    (_≃_.to Higher-lens≃Lens l₁ ∘
+     _≃_.to Higher-lens≃Lens l₂)
 
 -- The setter of a lens formed using composition is defined in the
 -- "right" way.
 
 set-⊚ :
-  (b : Block "Higher-lens≃Lens") →
   ∀ (l₁ : Higher.Lens B C) (l₂ : Higher.Lens A B) a c →
-  Higher.Lens.set (⟨ b ⟩ l₁ ⊚ l₂) a c ≡
+  Higher.Lens.set (l₁ ⊚ l₂) a c ≡
   Higher.Lens.set l₂ a (Higher.Lens.set l₁ (Higher.Lens.get l₂ a) c)
-set-⊚ b l₁ l₂ a c =
+set-⊚ l₁ l₂ a c =
   Higher.Lens.set
-    (_≃_.from (Higher-lens≃Lens b)
-       (_≃_.to (Higher-lens≃Lens b) l₁ ∘
-        _≃_.to (Higher-lens≃Lens b) l₂))
+    (_≃_.from Higher-lens≃Lens
+       (_≃_.to Higher-lens≃Lens l₁ ∘
+        _≃_.to Higher-lens≃Lens l₂))
     a c                                                                ≡⟨ cong (λ f → f a c) $
                                                                           proj₂ $
-                                                                          proj₂ (Higher-lens≃Lens-preserves-getters-and-setters b)
-                                                                            (_≃_.to (Higher-lens≃Lens b) l₁ ∘
-                                                                             _≃_.to (Higher-lens≃Lens b) l₂) ⟩
+                                                                          proj₂ Higher-lens≃Lens-preserves-getters-and-setters
+                                                                            (_≃_.to Higher-lens≃Lens l₁ ∘
+                                                                             _≃_.to Higher-lens≃Lens l₂) ⟩
   Lens.set
-    (_≃_.to (Higher-lens≃Lens b) l₁ ∘ _≃_.to (Higher-lens≃Lens b) l₂)
+    (_≃_.to Higher-lens≃Lens l₁ ∘ _≃_.to Higher-lens≃Lens l₂)
     a c                                                                ≡⟨⟩
 
-  Lens.set (_≃_.to (Higher-lens≃Lens b) l₂)
+  Lens.set (_≃_.to Higher-lens≃Lens l₂)
     a
-    (Lens.set (_≃_.to (Higher-lens≃Lens b) l₁)
-       (Lens.get (_≃_.to (Higher-lens≃Lens b) l₂) a) c)                ≡⟨ cong (λ f →
-                                                                                  f a (Lens.set (_≃_.to (Higher-lens≃Lens b) l₁)
-                                                                                         (Lens.get (_≃_.to (Higher-lens≃Lens b) l₂) a)
+    (Lens.set (_≃_.to Higher-lens≃Lens l₁)
+       (Lens.get (_≃_.to Higher-lens≃Lens l₂) a) c)                    ≡⟨ cong (λ f →
+                                                                                  f a (Lens.set (_≃_.to Higher-lens≃Lens l₁)
+                                                                                         (Lens.get (_≃_.to Higher-lens≃Lens l₂) a)
                                                                                          c)) $
-                                                                          proj₂ $ proj₁ (Higher-lens≃Lens-preserves-getters-and-setters b) l₂ ⟩
+                                                                          proj₂ $ proj₁ Higher-lens≃Lens-preserves-getters-and-setters l₂ ⟩
   Higher.Lens.set l₂
     a
-    (Lens.set (_≃_.to (Higher-lens≃Lens b) l₁)
-       (Lens.get (_≃_.to (Higher-lens≃Lens b) l₂) a) c)                ≡⟨ cong (Higher.Lens.set l₂ a) $
+    (Lens.set (_≃_.to Higher-lens≃Lens l₁)
+       (Lens.get (_≃_.to Higher-lens≃Lens l₂) a) c)                    ≡⟨ cong (Higher.Lens.set l₂ a) $
                                                                           cong₂ (λ f g → f (g a) c)
-                                                                            (proj₂ $ proj₁ (Higher-lens≃Lens-preserves-getters-and-setters b) l₁)
-                                                                            (proj₁ $ proj₁ (Higher-lens≃Lens-preserves-getters-and-setters b) l₂) ⟩∎
+                                                                            (proj₂ $ proj₁ Higher-lens≃Lens-preserves-getters-and-setters l₁)
+                                                                            (proj₁ $ proj₁ Higher-lens≃Lens-preserves-getters-and-setters l₂) ⟩∎
   Higher.Lens.set l₂ a (Higher.Lens.set l₁ (Higher.Lens.get l₂ a) c)   ∎
 
 -- If the view type of the resulting lens is stable, then the
@@ -986,14 +995,13 @@ set-⊚ b l₁ l₂ a c =
 -- applicable).
 
 ⊚≡∘ :
-  (bl : Block "Higher-lens≃Lens") →
   ∀ a b {A : Type (a ⊔ b ⊔ c)} {B : Type (b ⊔ c)} {C : Type c}
   (l₁ : Higher.Lens B C) (l₂ : Higher.Lens A B) →
   (∥ C ∥ → C) →
-  ⟨ bl ⟩ l₁ ⊚ l₂ ≡ HC.⟨ a , b ⟩ l₁ ∘ l₂
-⊚≡∘ bl a b l₁ l₂ stable =
+  l₁ ⊚ l₂ ≡ HC.⟨ a , b ⟩ l₁ ∘ l₂
+⊚≡∘ a b l₁ l₂ stable =
   cong (λ f → f l₁ l₂) $
-  HC.composition≡∘ a b univ stable ⟨ bl ⟩_⊚_ (set-⊚ bl)
+  HC.composition≡∘ a b univ stable _⊚_ set-⊚
 
 ------------------------------------------------------------------------
 -- An alternative definition that does not make use of coinduction
@@ -1015,8 +1023,8 @@ Not-coinductive-lens A B =
 
 Not-coinductive-lens≃Lens : Not-coinductive-lens A B ≃ Lens A B
 Not-coinductive-lens≃Lens {A = A} {B = B} =
-  Not-coinductive-lens A B                             ↝⟨ (∃-cong λ _ → inverse $ Coherently≃Not-coinductive-coherently) ⟩
-  (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))  ↝⟨ inverse Lens-as-Σ ⟩□
+  Not-coinductive-lens A B                             ↝⟨ (∃-cong λ _ → F.inverse $ Coherently≃Not-coinductive-coherently) ⟩
+  (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))  ↝⟨ F.inverse Lens-as-Σ ⟩□
   Lens A B                                             □
 
 ------------------------------------------------------------------------
@@ -1053,7 +1061,7 @@ H-level-Coinductive-Coherently-constant :
   H-level n (Coinductive.Coherently-constant P)
 H-level-Coinductive-Coherently-constant {n = n} {P = P} =
   (∀ a → H-level n (P a))                        ↝⟨ H-level-Coherently-constant ⟩
-  H-level n (Coherently-constant P)              ↝⟨ H-level-cong _ n (inverse $ Coinductive-coherently-constant≃Coherently-constant) ⟩□
+  H-level n (Coherently-constant P)              ↝⟨ H-level-cong _ n (F.inverse $ Coinductive-coherently-constant≃Coherently-constant) ⟩□
   H-level n (Coinductive.Coherently-constant P)  □
 
 -- If A and B have h-level n given the assumption that the other type
@@ -1068,7 +1076,7 @@ lens-preserves-h-level :
   ∀ n → (B → H-level n A) → (A → H-level n B) →
   H-level n (Lens A B)
 lens-preserves-h-level n hA hB =
-  H-level-cong _ n (inverse Lens-as-Σ) $
+  H-level-cong _ n (F.inverse Lens-as-Σ) $
   Σ-closure n
     (Π-closure ext n λ a →
      hB a) λ _ →
@@ -1082,8 +1090,8 @@ lens-preserves-h-level n hA hB =
 h-level-respects-lens-from-inhabited :
   ∀ n → Lens A B → A → H-level n A → H-level n B
 h-level-respects-lens-from-inhabited n =
-  Higher.h-level-respects-lens-from-inhabited n ⊚
-  _≃_.from (Higher-lens≃Lens ⊠)
+  Higher.h-level-respects-lens-from-inhabited n ⊙
+  _≃_.from Higher-lens≃Lens
 
 -- If A has positive h-level n, then Lens A B also has h-level n.
 

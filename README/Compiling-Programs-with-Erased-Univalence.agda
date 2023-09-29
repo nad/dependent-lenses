@@ -233,11 +233,6 @@ Lens^CE = Lens.Non-dependent.Higher.Coinductive.Small.Erased.Lens
 
 -- Lemma 65 (or rather its inverse), and a proof (in an erased
 -- context) showing that Lemma 65 preserves getters and setters.
---
--- Lemma 65 and some other lemmas use arguments of type Block s (for
--- some string s). This type is equivalent to the unit type. These
--- arguments are used to block definitions from being unfolded by the
--- type-checker.
 
 Lemma-65 =
   Lens.Non-dependent.Higher.Coinductive.Small.Erased.Lens≃ᴱLensᴱ

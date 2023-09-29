@@ -551,150 +551,151 @@ remainder≃∃get⁻¹ {B = B} l ∥B∥→B =
 ------------------------------------------------------------------------
 -- Equality characterisations for lenses
 
--- An equality characterisation lemma.
+opaque
 
-equality-characterisation₀ :
-  let open Lens in
-  {l₁ l₂ : Lens A B} →
-  Block "equality-characterisation" →
-  l₁ ≡ l₂
-    ↔
-  ∃ λ (p : R l₁ ≡ R l₂) →
-    subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂
-equality-characterisation₀ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} ⊠ =
-  l₁ ≡ l₂                                                     ↔⟨ inverse $ Eq.≃-≡ Lens-as-Σ ⟩
+  -- An equality characterisation lemma.
 
-  l₁′ ≡ l₂′                                                   ↝⟨ inverse Bij.Σ-≡,≡↔≡ ⟩
+  equality-characterisation₀ :
+    let open Lens in
+    {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
+    l₁ ≡ l₂
+      ↔
+    ∃ λ (p : R l₁ ≡ R l₂) →
+      subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂
+  equality-characterisation₀
+    {a = a} {b = b} {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
+    l₁ ≡ l₂                                                     ↔⟨ inverse $ Eq.≃-≡ Lens-as-Σ ⟩
 
-  (∃ λ (p : R l₁ ≡ R l₂) →
-     subst (λ R → A ≃ (R × B) × (R → ∥ B ∥)) p (proj₂ l₁′) ≡
-     proj₂ l₂′)                                               ↝⟨ (∃-cong λ _ → inverse $
-                                                                    ignore-propositional-component
-                                                                      (Π-closure ext 1 λ _ →
-                                                                       truncation-is-proposition)) ⟩
-  (∃ λ (p : R l₁ ≡ R l₂) →
-     proj₁ (subst (λ R → A ≃ (R × B) × (R → ∥ B ∥))
-                  p
-                  (proj₂ l₁′)) ≡
-     equiv l₂)                                                ↔⟨ (∃-cong λ _ → ≡⇒≃ $ cong (λ (eq , _) → eq ≡ _) $
-                                                                  push-subst-, _ _) ⟩□
-  (∃ λ (p : R l₁ ≡ R l₂) →
-     subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂)       □
-  where
-  open Lens
+    l₁′ ≡ l₂′                                                   ↝⟨ inverse Bij.Σ-≡,≡↔≡ ⟩
 
-  l₁′ = _≃_.to Lens-as-Σ l₁
-  l₂′ = _≃_.to Lens-as-Σ l₂
+    (∃ λ (p : R l₁ ≡ R l₂) →
+       subst (λ R → A ≃ (R × B) × (R → ∥ B ∥)) p (proj₂ l₁′) ≡
+       proj₂ l₂′)                                               ↝⟨ (∃-cong λ _ → inverse $
+                                                                      ignore-propositional-component
+                                                                        (Π-closure ext 1 λ _ →
+                                                                         truncation-is-proposition)) ⟩
+    (∃ λ (p : R l₁ ≡ R l₂) →
+       proj₁ (subst (λ R → A ≃ (R × B) × (R → ∥ B ∥))
+                    p
+                    (proj₂ l₁′)) ≡
+       equiv l₂)                                                ↔⟨ (∃-cong λ _ → ≡⇒≃ $ cong (λ (eq , _) → eq ≡ _) $
+                                                                    push-subst-, _ _) ⟩□
+    (∃ λ (p : R l₁ ≡ R l₂) →
+       subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂)       □
+    where
+    open Lens
 
--- A "computation" rule.
+    l₁′ l₂′ : ∃ λ (R : Type (a ⊔ b)) → (A ≃ (R × B)) × (R → ∥ B ∥)
+    l₁′ = _≃_.to Lens-as-Σ l₁
+    l₂′ = _≃_.to Lens-as-Σ l₂
 
-from-equality-characterisation₀ :
-  let open Lens in
-  {l₁ l₂ : Lens A B}
-  (b : Block "equality-characterisation") →
-  {p : R l₁ ≡ R l₂}
-  {q : subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂} →
-  _↔_.from (equality-characterisation₀ {l₁ = l₁} {l₂ = l₂} b) (p , q) ≡
-  trans (sym (η l₁))
-    (trans (cong (_≃_.from Lens-as-Σ)
-              (Σ-≡,≡→≡ p
-                 (Σ-≡,≡→≡ (≡⇒→ (cong (λ (eq , _) → eq ≡ _)
-                                  (sym (push-subst-, _ _)))
-                             q)
-                    (proj₁ (+⇒≡ (Π-closure ext 1 λ _ →
-                                 truncation-is-proposition))))))
-       (η l₂))
-from-equality-characterisation₀ ⊠ {p = p} {q = q} =
-  trans (sym (_≃_.left-inverse-of Lens-as-Σ _))
-    (trans (cong (_≃_.from Lens-as-Σ)
-              (Σ-≡,≡→≡ p
-                 (_↔_.to (ignore-propositional-component
-                            (Π-closure ext 1 λ _ →
-                             truncation-is-proposition))
-                    (_≃_.from (≡⇒≃ (cong (λ (eq , _) → eq ≡ _)
-                                      (push-subst-, _ _)))
-                       q))))
-       (_≃_.left-inverse-of Lens-as-Σ _))                         ≡⟨ cong (λ eq →
-                                                                             trans (sym (_≃_.left-inverse-of Lens-as-Σ _))
-                                                                               (trans (cong (_≃_.from Lens-as-Σ)
-                                                                                         (Σ-≡,≡→≡ p
-                                                                                            (_↔_.to (ignore-propositional-component
-                                                                                                       (Π-closure ext 1 λ _ →
-                                                                                                        truncation-is-proposition))
-                                                                                               (_≃_.to eq q))))
-                                                                                  (_≃_.left-inverse-of Lens-as-Σ _))) $
-                                                                     trans (sym $ ≡⇒≃-sym ext _) $
-                                                                     cong ≡⇒≃ $ sym $ cong-sym _ _ ⟩
-  trans (sym (_≃_.left-inverse-of Lens-as-Σ _))
-    (trans (cong (_≃_.from Lens-as-Σ)
-              (Σ-≡,≡→≡ p
-                 (_↔_.to (ignore-propositional-component
-                            (Π-closure ext 1 λ _ →
-                             truncation-is-proposition))
-                    (≡⇒→ (cong (λ (eq , _) → eq ≡ _)
-                            (sym (push-subst-, _ _)))
-                       q))))
-       (_≃_.left-inverse-of Lens-as-Σ _))                         ≡⟨⟩
+  -- A "computation" rule.
 
-  trans (sym (_≃_.left-inverse-of Lens-as-Σ _))
-    (trans (cong (_≃_.from Lens-as-Σ)
-              (Σ-≡,≡→≡ p
-                 (Σ-≡,≡→≡ (≡⇒→ (cong (λ (eq , _) → eq ≡ _)
-                                  (sym (push-subst-, _ _)))
-                             q)
-                    (proj₁ (+⇒≡ (Π-closure ext 1 λ _ →
-                                 truncation-is-proposition))))))
-       (_≃_.left-inverse-of Lens-as-Σ _))                         ≡⟨ cong₂ (λ eq₁ eq₂ →
-                                                                              trans (sym eq₁)
-                                                                                (trans (cong (_≃_.from Lens-as-Σ)
-                                                                                          (Σ-≡,≡→≡ p
-                                                                                             (Σ-≡,≡→≡ (≡⇒→ (cong (λ (eq , _) → eq ≡ _)
-                                                                                                              (sym (push-subst-, _ _)))
-                                                                                                         q)
-                                                                                                (proj₁ (+⇒≡ (Π-closure ext 1 λ _ →
-                                                                                                             truncation-is-proposition))))))
-                                                                                   eq₂))
-                                                                       (left-inverse-of-Lens-as-Σ _)
-                                                                       (left-inverse-of-Lens-as-Σ _) ⟩
-  trans (sym (η _))
-    (trans (cong (_≃_.from Lens-as-Σ)
-              (Σ-≡,≡→≡ p
-                 (Σ-≡,≡→≡ (≡⇒→ (cong (λ (eq , _) → eq ≡ _)
-                                  (sym (push-subst-, _ _)))
-                             q)
-                    (proj₁ (+⇒≡ (Π-closure ext 1 λ _ →
-                                 truncation-is-proposition))))))
-       (η _))                                                     ∎
+  from-equality-characterisation₀ :
+    let open Lens in
+    {l₁ l₂ : Lens A B}
+    {p : R l₁ ≡ R l₂}
+    {q : subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂} →
+    _↔_.from (equality-characterisation₀ {l₁ = l₁} {l₂ = l₂}) (p , q) ≡
+    trans (sym (η l₁))
+      (trans (cong (_≃_.from Lens-as-Σ)
+                (Σ-≡,≡→≡ p
+                   (Σ-≡,≡→≡ (≡⇒→ (cong (λ (eq , _) → eq ≡ _)
+                                    (sym (push-subst-, _ _)))
+                               q)
+                      (proj₁ (+⇒≡ (Π-closure ext 1 λ _ →
+                                   truncation-is-proposition))))))
+         (η l₂))
+  from-equality-characterisation₀ {p = p} {q = q} =
+    trans (sym (_≃_.left-inverse-of Lens-as-Σ _))
+      (trans (cong (_≃_.from Lens-as-Σ)
+                (Σ-≡,≡→≡ p
+                   (_↔_.to (ignore-propositional-component
+                              (Π-closure ext 1 λ _ →
+                               truncation-is-proposition))
+                      (_≃_.from (≡⇒≃ (cong (λ (eq , _) → eq ≡ _)
+                                        (push-subst-, _ _)))
+                         q))))
+         (_≃_.left-inverse-of Lens-as-Σ _))                         ≡⟨ cong (λ eq →
+                                                                               trans (sym (_≃_.left-inverse-of Lens-as-Σ _))
+                                                                                 (trans (cong (_≃_.from Lens-as-Σ)
+                                                                                           (Σ-≡,≡→≡ p
+                                                                                              (_↔_.to (ignore-propositional-component
+                                                                                                         (Π-closure ext 1 λ _ →
+                                                                                                          truncation-is-proposition))
+                                                                                                 (_≃_.to eq q))))
+                                                                                    (_≃_.left-inverse-of Lens-as-Σ _))) $
+                                                                       trans (sym $ ≡⇒≃-sym ext _) $
+                                                                       cong ≡⇒≃ $ sym $ cong-sym _ _ ⟩
+    trans (sym (_≃_.left-inverse-of Lens-as-Σ _))
+      (trans (cong (_≃_.from Lens-as-Σ)
+                (Σ-≡,≡→≡ p
+                   (_↔_.to (ignore-propositional-component
+                              (Π-closure ext 1 λ _ →
+                               truncation-is-proposition))
+                      (≡⇒→ (cong (λ (eq , _) → eq ≡ _)
+                              (sym (push-subst-, _ _)))
+                         q))))
+         (_≃_.left-inverse-of Lens-as-Σ _))                         ≡⟨⟩
+
+    trans (sym (_≃_.left-inverse-of Lens-as-Σ _))
+      (trans (cong (_≃_.from Lens-as-Σ)
+                (Σ-≡,≡→≡ p
+                   (Σ-≡,≡→≡ (≡⇒→ (cong (λ (eq , _) → eq ≡ _)
+                                    (sym (push-subst-, _ _)))
+                               q)
+                      (proj₁ (+⇒≡ (Π-closure ext 1 λ _ →
+                                   truncation-is-proposition))))))
+         (_≃_.left-inverse-of Lens-as-Σ _))                         ≡⟨ cong₂ (λ eq₁ eq₂ →
+                                                                                trans (sym eq₁)
+                                                                                  (trans (cong (_≃_.from Lens-as-Σ)
+                                                                                            (Σ-≡,≡→≡ p
+                                                                                               (Σ-≡,≡→≡ (≡⇒→ (cong (λ (eq , _) → eq ≡ _)
+                                                                                                                (sym (push-subst-, _ _)))
+                                                                                                           q)
+                                                                                                  (proj₁ (+⇒≡ (Π-closure ext 1 λ _ →
+                                                                                                               truncation-is-proposition))))))
+                                                                                     eq₂))
+                                                                         (left-inverse-of-Lens-as-Σ _)
+                                                                         (left-inverse-of-Lens-as-Σ _) ⟩
+    trans (sym (η _))
+      (trans (cong (_≃_.from Lens-as-Σ)
+                (Σ-≡,≡→≡ p
+                   (Σ-≡,≡→≡ (≡⇒→ (cong (λ (eq , _) → eq ≡ _)
+                                    (sym (push-subst-, _ _)))
+                               q)
+                      (proj₁ (+⇒≡ (Π-closure ext 1 λ _ →
+                                   truncation-is-proposition))))))
+         (η _))                                                     ∎
 
 -- A variant of the computation rule above.
 
 cong-set-from-equality-characterisation₀ :
   let open Lens in
   {l₁ l₂ : Lens A B}
-  (b : Block "equality-characterisation") →
   {p : R l₁ ≡ R l₂}
   {q : subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂} →
-  cong set (_↔_.from (equality-characterisation₀ {l₁ = l₁} {l₂ = l₂} b)
+  cong set (_↔_.from (equality-characterisation₀ {l₁ = l₁} {l₂ = l₂})
               (p , q)) ≡
   cong (λ (_ , equiv) a b → _≃_.from equiv (proj₁ (_≃_.to equiv a) , b))
     (Σ-≡,≡→≡ p q)
 cong-set-from-equality-characterisation₀
   {B = B} {l₁ = l₁@(⟨ _ , _ , _ ⟩)} {l₂ = l₂@(⟨ _ , _ , _ ⟩)}
-  b {p = p} {q = q} =
+  {p = p} {q = q} =
   elim₁
     (λ {R₁} p → ∀ equiv₁ inhabited₁ q →
        cong set
          (_↔_.from (equality-characterisation₀
                      {l₁ = ⟨ R₁ , equiv₁ , inhabited₁ ⟩}
-                     {l₂ = l₂} b)
+                     {l₂ = l₂})
             (p , q)) ≡
        cong (λ (_ , equiv) a b →
                _≃_.from equiv (proj₁ (_≃_.to equiv a) , b))
          (Σ-≡,≡→≡ p q))
     (λ equiv₁ inhabited₁ q →
        cong set
-         (_↔_.from (equality-characterisation₀ b) (refl _ , q))           ≡⟨ cong (cong set) $
-                                                                             from-equality-characterisation₀ b ⟩
+         (_↔_.from equality-characterisation₀ (refl _ , q))               ≡⟨ cong (cong set)
+                                                                             from-equality-characterisation₀ ⟩
        cong set
          (trans (sym (refl _))
             (trans (cong (_≃_.from Lens-as-Σ)
@@ -817,61 +818,119 @@ cong-set-from-equality-characterisation₀
   where
   open Lens
 
--- An equality characterisation lemma.
+opaque
 
-equality-characterisation₀₁ :
-  let open Lens in
-  {l₁ l₂ : Lens A B} →
-  Block "equality-characterisation" →
-  (l₁ ≡ l₂)
-    ≃
-  ∃ λ (p : R l₁ ≡ R l₂) →
-    ∀ a → (subst id p (remainder l₁ a) , get l₁ a) ≡
-          _≃_.to (equiv l₂) a
-equality-characterisation₀₁ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} ⊠ =
-  l₁ ≡ l₂                                                       ↔⟨ equality-characterisation₀ ⊠ ⟩
+  -- An equality characterisation lemma.
 
-  (∃ λ (p : R l₁ ≡ R l₂) →
-     subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂)         ↝⟨ (∃-cong λ _ → inverse $ ≃-to-≡≃≡ ext ext) ⟩
+  equality-characterisation₀₁ :
+    let open Lens in
+    {l₁ l₂ : Lens A B} →
+    (l₁ ≡ l₂)
+      ≃
+    ∃ λ (p : R l₁ ≡ R l₂) →
+      ∀ a → (subst id p (remainder l₁ a) , get l₁ a) ≡
+            _≃_.to (equiv l₂) a
+  equality-characterisation₀₁ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
+    l₁ ≡ l₂                                                       ↔⟨ equality-characterisation₀ ⟩
 
-  (∃ λ (p : R l₁ ≡ R l₂) →
-     ∀ a → _≃_.to (subst (λ R → A ≃ (R × B)) p (equiv l₁)) a ≡
-           _≃_.to (equiv l₂) a)                                 ↝⟨ (∃-cong λ _ → ∀-cong ext λ _ →
-                                                                    ≡⇒≃ $ cong (_≡ _) $
-                                                                    trans (cong (_$ _) $ Eq.to-subst) $
-                                                                    trans (sym $ push-subst-application _ _) $
-                                                                    trans (push-subst-, _ _) $
-                                                                    cong (subst id _ _ ,_) $ subst-const _) ⟩□
-  (∃ λ (p : R l₁ ≡ R l₂) →
-     ∀ a → (subst id p (remainder l₁ a) , get l₁ a) ≡
-           _≃_.to (equiv l₂) a)                                 □
-  where
-  open Lens
+    (∃ λ (p : R l₁ ≡ R l₂) →
+       subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂)         ↝⟨ (∃-cong λ _ → inverse $ ≃-to-≡≃≡ ext ext) ⟩
 
-private
+    (∃ λ (p : R l₁ ≡ R l₂) →
+       ∀ a → _≃_.to (subst (λ R → A ≃ (R × B)) p (equiv l₁)) a ≡
+             _≃_.to (equiv l₂) a)                                 ↝⟨ (∃-cong λ _ → ∀-cong ext λ _ →
+                                                                      ≡⇒≃ $ cong (_≡ _) $
+                                                                      trans (cong (_$ _) $ Eq.to-subst) $
+                                                                      trans (sym $ push-subst-application _ _) $
+                                                                      trans (push-subst-, _ _) $
+                                                                      cong (subst id _ _ ,_) $ subst-const _) ⟩□
+    (∃ λ (p : R l₁ ≡ R l₂) →
+       ∀ a → (subst id p (remainder l₁ a) , get l₁ a) ≡
+             _≃_.to (equiv l₂) a)                                 □
+    where
+    open Lens
 
-  -- An equality characterisation lemma with a "computation" rule.
+opaque
 
-  equality-characterisation₁′ :
+  -- An equality characterisation lemma.
+
+  equality-characterisation₁ :
+    let open Lens in
+    {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
+    Univalence (a ⊔ b) →
+    l₁ ≡ l₂
+      ↔
+    ∃ λ (p : R l₁ ≃ R l₂) →
+      ∀ a → (_≃_.to p (remainder l₁ a) , get l₁ a) ≡
+            _≃_.to (equiv l₂) a
+  equality-characterisation₁ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} univ =
+    l₁ ≡ l₂                                                            ↝⟨ equality-characterisation₀ ⟩
+
+    (∃ λ (p : R l₁ ≡ R l₂) →
+       subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂)              ↝⟨ inverse $ Σ-cong (inverse $ ≡≃≃ univ) (λ _ → F.id) ⟩
+
+    (∃ λ (p : R l₁ ≃ R l₂) →
+       subst (λ R → A ≃ (R × B)) (≃⇒≡ univ p) (equiv l₁) ≡ equiv l₂)   ↔⟨ (∃-cong λ _ → inverse $ ≃-to-≡≃≡ ext ext) ⟩
+
+    (∃ λ (p : R l₁ ≃ R l₂) →
+       ∀ a →
+       _≃_.to (subst (λ R → A ≃ (R × B)) (≃⇒≡ univ p) (equiv l₁)) a ≡
+       _≃_.to (equiv l₂) a)                                            ↔⟨ (∃-cong λ p → ∀-cong ext λ a → inverse $ ≡⇒≃ $
+                                                                           cong (_≡ _) $ sym $ cong (_$ a) $
+                                                                           ≃-elim¹ univ
+                                                                             (λ {R} p →
+                                                                                _≃_.to (subst (λ R → A ≃ (R × B)) (≃⇒≡ univ p) (equiv l₁)) ≡
+                                                                                (λ a → _≃_.to p (remainder l₁ a) , get l₁ a))
+                                                                             (
+        _≃_.to (subst (λ R → A ≃ (R × B))
+                  (≃⇒≡ univ Eq.id) (equiv l₁))                                ≡⟨ cong (λ eq → _≃_.to (subst (λ R → A ≃ (R × B)) eq (equiv l₁))) $
+                                                                                 ≃⇒≡-id univ ⟩
+
+        _≃_.to (subst (λ R → A ≃ (R × B)) (refl _) (equiv l₁))                ≡⟨ cong _≃_.to $ subst-refl _ _ ⟩∎
+
+        _≃_.to (equiv l₁)                                                     ∎)
+                                                                             p) ⟩□
+    (∃ λ (p : R l₁ ≃ R l₂) →
+       ∀ a → (_≃_.to p (remainder l₁ a) , get l₁ a) ≡
+             _≃_.to (equiv l₂) a)                                      □
+    where
+    open Lens
+
+  -- A "computation" rule.
+
+  from-equality-characterisation₁ :
     let open Lens in
     {A : Type a} {B : Type b} {l₁ l₂ : Lens A B}
-    (bl : Block "equality-characterisation₀") →
-    Block "equality-characterisation₁" →
-    (univ : Univalence (a ⊔ b)) →
-    ∃ λ (eq : l₁ ≡ l₂
-                ↔
-              ∃ λ (p : R l₁ ≃ R l₂) →
-                ∀ a → (_≃_.to p (remainder l₁ a) , get l₁ a) ≡
-                      _≃_.to (equiv l₂) a) →
-      (p : R l₁ ≃ R l₂)
-      (q : ∀ a → (_≃_.to p (remainder l₁ a) , get l₁ a) ≡
-                      _≃_.to (equiv l₂) a) →
-      _↔_.from eq (p , q) ≡
-      _↔_.from (equality-characterisation₀ bl)
-        ( ≃⇒≡ univ p
-        , Eq.lift-equality ext
-            (trans
-               (≃-elim¹ univ
+    (univ : Univalence (a ⊔ b))
+    (p : R l₁ ≃ R l₂)
+    (q : ∀ a → (_≃_.to p (remainder l₁ a) , get l₁ a) ≡
+               _≃_.to (equiv l₂) a) →
+    _↔_.from (equality-characterisation₁ {l₁ = l₁} {l₂ = l₂} univ)
+      (p , q) ≡
+    _↔_.from equality-characterisation₀
+      ( ≃⇒≡ univ p
+      , Eq.lift-equality ext
+          (trans
+             (≃-elim¹ univ
+                (λ {R} p →
+                   _≃_.to (subst (λ R → A ≃ (R × B))
+                             (≃⇒≡ univ p) (equiv l₁)) ≡
+                   (λ a → _≃_.to p (remainder l₁ a) , get l₁ a))
+                (trans
+                   (cong (λ eq → _≃_.to (subst (λ R → A ≃ (R × B))
+                                           eq (equiv l₁)))
+                      (≃⇒≡-id univ))
+                   (cong _≃_.to $ subst-refl _ _))
+                p)
+             (⟨ext⟩ q))
+      )
+  from-equality-characterisation₁ {A = A} {B = B} {l₁ = l₁} univ p q =
+    _↔_.from equality-characterisation₀
+      ( ≃⇒≡ univ p
+      , Eq.lift-equality ext
+          (⟨ext⟩ λ a →
+           ≡⇒→ (cong (_≡ _) $ sym $ cong (_$ a) $
+                ≃-elim¹ univ
                   (λ {R} p →
                      _≃_.to (subst (λ R → A ≃ (R × B))
                                (≃⇒≡ univ p) (equiv l₁)) ≡
@@ -882,258 +941,135 @@ private
                         (≃⇒≡-id univ))
                      (cong _≃_.to $ subst-refl _ _))
                   p)
-               (⟨ext⟩ q))
-        )
-  equality-characterisation₁′ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂}
-                              b ⊠ univ =
-      (l₁ ≡ l₂                                                            ↝⟨ equality-characterisation₀ b ⟩
-
-       (∃ λ (p : R l₁ ≡ R l₂) →
-          subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂)              ↝⟨ inverse $ Σ-cong (inverse $ ≡≃≃ univ) (λ _ → F.id) ⟩
-
-       (∃ λ (p : R l₁ ≃ R l₂) →
-          subst (λ R → A ≃ (R × B)) (≃⇒≡ univ p) (equiv l₁) ≡ equiv l₂)   ↔⟨ (∃-cong λ _ → inverse $ ≃-to-≡≃≡ ext ext) ⟩
-
-       (∃ λ (p : R l₁ ≃ R l₂) →
-          ∀ a →
-          _≃_.to (subst (λ R → A ≃ (R × B)) (≃⇒≡ univ p) (equiv l₁)) a ≡
-          _≃_.to (equiv l₂) a)                                            ↔⟨ (∃-cong λ p → ∀-cong ext λ a → inverse $ ≡⇒≃ $
-                                                                              cong (_≡ _) $ sym $ cong (_$ a) $
-                                                                              ≃-elim¹ univ
-                                                                                (λ {R} p →
-                                                                                   _≃_.to (subst (λ R → A ≃ (R × B)) (≃⇒≡ univ p) (equiv l₁)) ≡
-                                                                                   (λ a → _≃_.to p (remainder l₁ a) , get l₁ a))
-                                                                                (
-           _≃_.to (subst (λ R → A ≃ (R × B))
-                     (≃⇒≡ univ Eq.id) (equiv l₁))                                ≡⟨ cong (λ eq → _≃_.to (subst (λ R → A ≃ (R × B)) eq (equiv l₁))) $
-                                                                                    ≃⇒≡-id univ ⟩
-
-           _≃_.to (subst (λ R → A ≃ (R × B)) (refl _) (equiv l₁))                ≡⟨ cong _≃_.to $ subst-refl _ _ ⟩∎
-
-           _≃_.to (equiv l₁)                                                     ∎)
-                                                                                p) ⟩□
-       (∃ λ (p : R l₁ ≃ R l₂) →
-          ∀ a → (_≃_.to p (remainder l₁ a) , get l₁ a) ≡
-                _≃_.to (equiv l₂) a)                                      □)
-    , λ p q →
-        _↔_.from (equality-characterisation₀ b)
-          ( ≃⇒≡ univ p
-          , Eq.lift-equality ext
-              (⟨ext⟩ λ a →
-               ≡⇒→ (cong (_≡ _) $ sym $ cong (_$ a) $
-                    ≃-elim¹ univ
-                      (λ {R} p →
-                         _≃_.to (subst (λ R → A ≃ (R × B))
-                                   (≃⇒≡ univ p) (equiv l₁)) ≡
-                         (λ a → _≃_.to p (remainder l₁ a) , get l₁ a))
-                      (trans
-                         (cong (λ eq → _≃_.to (subst (λ R → A ≃ (R × B))
-                                                 eq (equiv l₁)))
-                            (≃⇒≡-id univ))
-                         (cong _≃_.to $ subst-refl _ _))
-                      p)
-                 (q a))
-          )                                                               ≡⟨ (cong (λ eq → _↔_.from (equality-characterisation₀ b)
-                                                                                             (≃⇒≡ univ p , Eq.lift-equality ext (⟨ext⟩ eq))) $
-                                                                              ⟨ext⟩ λ a →
-                                                                              trans (sym $ subst-in-terms-of-≡⇒↝ equivalence _ _ _) $
-                                                                              subst-trans _) ⟩
-        _↔_.from (equality-characterisation₀ b)
-          ( ≃⇒≡ univ p
-          , Eq.lift-equality ext
-              (⟨ext⟩ λ a →
-               trans
-                 (cong (_$ a) $
-                  ≃-elim¹ univ
-                    (λ {R} p →
-                       _≃_.to (subst (λ R → A ≃ (R × B))
-                                 (≃⇒≡ univ p) (equiv l₁)) ≡
-                       (λ a → _≃_.to p (remainder l₁ a) , get l₁ a))
-                    (trans
-                       (cong (λ eq → _≃_.to (subst (λ R → A ≃ (R × B))
-                                               eq (equiv l₁)))
-                          (≃⇒≡-id univ))
-                       (cong _≃_.to $ subst-refl _ _))
-                    p)
-                 (q a))
-          )                                                               ≡⟨ cong (λ eq → _↔_.from (equality-characterisation₀ b)
-                                                                                            (≃⇒≡ univ p , Eq.lift-equality ext eq)) $
-                                                                             trans (ext-trans ext) $
-                                                                             cong (flip trans _) $
-                                                                             _≃_.right-inverse-of (Eq.extensionality-isomorphism ext) _ ⟩
-        _↔_.from (equality-characterisation₀ b)
-          ( ≃⇒≡ univ p
-          , Eq.lift-equality ext
-              (trans
-                 (≃-elim¹ univ
-                    (λ {R} p →
-                       _≃_.to (subst (λ R → A ≃ (R × B))
-                                 (≃⇒≡ univ p) (equiv l₁)) ≡
-                       (λ a → _≃_.to p (remainder l₁ a) , get l₁ a))
-                    (trans
-                       (cong (λ eq → _≃_.to (subst (λ R → A ≃ (R × B))
-                                               eq (equiv l₁)))
-                          (≃⇒≡-id univ))
-                       (cong _≃_.to $ subst-refl _ _))
-                    p)
-                 (⟨ext⟩ q))
-          )                                                               ∎
+             (q a))
+      )                                                               ≡⟨ (cong (λ eq → _↔_.from equality-characterisation₀
+                                                                                         (≃⇒≡ univ p , Eq.lift-equality ext (⟨ext⟩ eq))) $
+                                                                          ⟨ext⟩ λ a →
+                                                                          trans (sym $ subst-in-terms-of-≡⇒↝ equivalence _ _ _) $
+                                                                          subst-trans _) ⟩
+    _↔_.from equality-characterisation₀
+      ( ≃⇒≡ univ p
+      , Eq.lift-equality ext
+          (⟨ext⟩ λ a →
+           trans
+             (cong (_$ a) $
+              ≃-elim¹ univ
+                (λ {R} p →
+                   _≃_.to (subst (λ R → A ≃ (R × B))
+                             (≃⇒≡ univ p) (equiv l₁)) ≡
+                   (λ a → _≃_.to p (remainder l₁ a) , get l₁ a))
+                (trans
+                   (cong (λ eq → _≃_.to (subst (λ R → A ≃ (R × B))
+                                           eq (equiv l₁)))
+                      (≃⇒≡-id univ))
+                   (cong _≃_.to $ subst-refl _ _))
+                p)
+             (q a))
+      )                                                               ≡⟨ cong (λ eq → _↔_.from equality-characterisation₀
+                                                                                        (≃⇒≡ univ p , Eq.lift-equality ext eq)) $
+                                                                         trans (ext-trans ext) $
+                                                                         cong (flip trans _) $
+                                                                         _≃_.right-inverse-of (Eq.extensionality-isomorphism ext) _ ⟩
+    _↔_.from equality-characterisation₀
+      ( ≃⇒≡ univ p
+      , Eq.lift-equality ext
+          (trans
+             (≃-elim¹ univ
+                (λ {R} p →
+                   _≃_.to (subst (λ R → A ≃ (R × B))
+                             (≃⇒≡ univ p) (equiv l₁)) ≡
+                   (λ a → _≃_.to p (remainder l₁ a) , get l₁ a))
+                (trans
+                   (cong (λ eq → _≃_.to (subst (λ R → A ≃ (R × B))
+                                           eq (equiv l₁)))
+                      (≃⇒≡-id univ))
+                   (cong _≃_.to $ subst-refl _ _))
+                p)
+             (⟨ext⟩ q))
+      )                                                               ∎
     where
     open Lens
 
--- An equality characterisation lemma.
+opaque
 
-equality-characterisation₁ :
-  let open Lens in
-  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
-  Block "equality-characterisation" →
-  Univalence (a ⊔ b) →
-  l₁ ≡ l₂
-    ↔
-  ∃ λ (p : R l₁ ≃ R l₂) →
-    ∀ a → (_≃_.to p (remainder l₁ a) , get l₁ a) ≡
-          _≃_.to (equiv l₂) a
-equality-characterisation₁ b univ =
-  proj₁ (equality-characterisation₁′ b b univ)
+  -- An equality characterisation lemma.
 
--- A "computation" rule.
+  equality-characterisation₀₂ :
+    let open Lens in
+    {l₁ l₂ : Lens A B} →
+    (l₁ ≡ l₂)
+      ≃
+    ∃ λ (p : R l₁ ≡ R l₂) →
+      (∀ a → subst id p (remainder l₁ a) ≡ remainder l₂ a) ×
+      (∀ a → get l₁ a ≡ get l₂ a)
+  equality-characterisation₀₂ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} =
+    l₁ ≡ l₂                                                      ↝⟨ equality-characterisation₀₁ ⟩
 
-from-equality-characterisation₁ :
-  let open Lens in
-  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B}
-  (bl : Block "equality-characterisation") →
-  (univ : Univalence (a ⊔ b))
-  (p : R l₁ ≃ R l₂)
-  (q : ∀ a → (_≃_.to p (remainder l₁ a) , get l₁ a) ≡
-             _≃_.to (equiv l₂) a) →
-  _↔_.from (equality-characterisation₁ {l₁ = l₁} {l₂ = l₂} bl univ)
-    (p , q) ≡
-  _↔_.from (equality-characterisation₀ bl)
-    ( ≃⇒≡ univ p
-    , Eq.lift-equality ext
-        (trans
-           (≃-elim¹ univ
-              (λ {R} p →
-                 _≃_.to (subst (λ R → A ≃ (R × B))
-                           (≃⇒≡ univ p) (equiv l₁)) ≡
-                 (λ a → _≃_.to p (remainder l₁ a) , get l₁ a))
-              (trans
-                 (cong (λ eq → _≃_.to (subst (λ R → A ≃ (R × B))
-                                         eq (equiv l₁)))
-                    (≃⇒≡-id univ))
-                 (cong _≃_.to $ subst-refl _ _))
-              p)
-           (⟨ext⟩ q))
-    )
-from-equality-characterisation₁ b univ _ _ =
-  proj₂ (equality-characterisation₁′ b b univ) _ _
+    (∃ λ (p : R l₁ ≡ R l₂) →
+       ∀ a → (subst id p (remainder l₁ a) , get l₁ a) ≡
+             _≃_.to (equiv l₂) a)                                ↔⟨⟩
 
--- An equality characterisation lemma.
+    (∃ λ (p : R l₁ ≡ R l₂) →
+       ∀ a → (subst id p (remainder l₁ a) , get l₁ a) ≡
+             (remainder l₂ a , get l₂ a))                        ↔⟨ (∃-cong λ _ → ∀-cong ext λ _ → inverse ≡×≡↔≡) ⟩
 
-equality-characterisation₀₂ :
-  let open Lens in
-  {l₁ l₂ : Lens A B} →
-  Block "equality-characterisation" →
-  (l₁ ≡ l₂)
-    ≃
-  ∃ λ (p : R l₁ ≡ R l₂) →
-    (∀ a → subst id p (remainder l₁ a) ≡ remainder l₂ a) ×
-    (∀ a → get l₁ a ≡ get l₂ a)
-equality-characterisation₀₂ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} ⊠ =
-  l₁ ≡ l₂                                                      ↝⟨ equality-characterisation₀₁ ⊠ ⟩
+    (∃ λ (p : R l₁ ≡ R l₂) →
+       ∀ a → subst id p (remainder l₁ a) ≡ remainder l₂ a ×
+             get l₁ a ≡ get l₂ a)                                ↔⟨ (∃-cong λ _ → ΠΣ-comm) ⟩□
 
-  (∃ λ (p : R l₁ ≡ R l₂) →
-     ∀ a → (subst id p (remainder l₁ a) , get l₁ a) ≡
-           _≃_.to (equiv l₂) a)                                ↔⟨⟩
+    (∃ λ (p : R l₁ ≡ R l₂) →
+       (∀ a → subst id p (remainder l₁ a) ≡ remainder l₂ a) ×
+       (∀ a → get l₁ a ≡ get l₂ a))                              □
+    where
+    open Lens
 
-  (∃ λ (p : R l₁ ≡ R l₂) →
-     ∀ a → (subst id p (remainder l₁ a) , get l₁ a) ≡
-           (remainder l₂ a , get l₂ a))                        ↔⟨ (∃-cong λ _ → ∀-cong ext λ _ → inverse ≡×≡↔≡) ⟩
+opaque
 
-  (∃ λ (p : R l₁ ≡ R l₂) →
-     ∀ a → subst id p (remainder l₁ a) ≡ remainder l₂ a ×
-           get l₁ a ≡ get l₂ a)                                ↔⟨ (∃-cong λ _ → ΠΣ-comm) ⟩□
+  -- An equality characterisation lemma.
 
-  (∃ λ (p : R l₁ ≡ R l₂) →
-     (∀ a → subst id p (remainder l₁ a) ≡ remainder l₂ a) ×
-     (∀ a → get l₁ a ≡ get l₂ a))                              □
-  where
-  open Lens
-
-private
-
-  -- An equality characterisation lemma with a "computation" rule.
-
-  equality-characterisation₂′ :
+  equality-characterisation₂ :
     {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
     let open Lens in
-    (bl : Block "equality-characterisation₁") →
-    Block "equality-characterisation₂" →
-    (univ : Univalence (a ⊔ b)) →
-    ∃ λ (eq : l₁ ≡ l₂
-                ↔
-              ∃ λ (r : R l₁ ≃ R l₂) →
-                (∀ x → _≃_.to r (remainder l₁ x) ≡ remainder l₂ x)
-                  ×
-                (∀ x → get l₁ x ≡ get l₂ x)) →
-      (r₁ : R l₁ ≃ R l₂)
-      (r₂ : ∀ x → _≃_.to r₁ (remainder l₁ x) ≡ remainder l₂ x)
-      (g : ∀ x → get l₁ x ≡ get l₂ x) →
-      _↔_.from eq (r₁ , r₂ , g) ≡
-      _↔_.from (equality-characterisation₁ bl univ)
-        (r₁ , λ a → cong₂ _,_ (r₂ a) (g a))
-  equality-characterisation₂′ {l₁ = l₁} {l₂ = l₂} bl ⊠ univ =
-      (l₁ ≡ l₂                                                 ↝⟨ equality-characterisation₁ bl univ ⟩
+    Univalence (a ⊔ b) →
+    l₁ ≡ l₂
+      ↔
+    ∃ λ (eq : R l₁ ≃ R l₂) →
+      (∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x)
+        ×
+      (∀ x → get l₁ x ≡ get l₂ x)
+  equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} univ =
+    l₁ ≡ l₂                                                 ↝⟨ equality-characterisation₁ univ ⟩
 
-       (∃ λ (eq : R l₁ ≃ R l₂) →
-          ∀ x → (_≃_.to eq (remainder l₁ x) , get l₁ x) ≡
-                _≃_.to (equiv l₂) x)                           ↝⟨ (∃-cong λ _ → ∀-cong ext λ _ → inverse ≡×≡↔≡) ⟩
+    (∃ λ (eq : R l₁ ≃ R l₂) →
+       ∀ x → (_≃_.to eq (remainder l₁ x) , get l₁ x) ≡
+             _≃_.to (equiv l₂) x)                           ↝⟨ (∃-cong λ _ → ∀-cong ext λ _ → inverse ≡×≡↔≡) ⟩
 
-       (∃ λ (eq : R l₁ ≃ R l₂) →
-          ∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x
-                  ×
-                get l₁ x ≡ get l₂ x)                           ↝⟨ (∃-cong λ _ → ΠΣ-comm) ⟩□
+    (∃ λ (eq : R l₁ ≃ R l₂) →
+       ∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x
+               ×
+             get l₁ x ≡ get l₂ x)                           ↝⟨ (∃-cong λ _ → ΠΣ-comm) ⟩□
 
-       (∃ λ (eq : R l₁ ≃ R l₂) →
-          (∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x)
-            ×
-          (∀ x → get l₁ x ≡ get l₂ x))                         □)
-    , λ _ _ _ → refl _
+    (∃ λ (eq : R l₁ ≃ R l₂) →
+       (∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x)
+         ×
+       (∀ x → get l₁ x ≡ get l₂ x))                         □
     where
     open Lens
 
--- An equality characterisation lemma.
+  -- A "computation" rule.
 
-equality-characterisation₂ :
-  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
-  let open Lens in
-  Block "equality-characterisation" →
-  Univalence (a ⊔ b) →
-  l₁ ≡ l₂
-    ↔
-  ∃ λ (eq : R l₁ ≃ R l₂) →
-    (∀ x → _≃_.to eq (remainder l₁ x) ≡ remainder l₂ x)
-      ×
-    (∀ x → get l₁ x ≡ get l₂ x)
-equality-characterisation₂ bl univ =
-  proj₁ (equality-characterisation₂′ bl bl univ)
-
--- A "computation" rule.
-
-from-equality-characterisation₂ :
-  let open Lens in
-  {A : Type a} {B : Type b} {l₁ l₂ : Lens A B}
-  (bl : Block "equality-characterisation") →
-  (univ : Univalence (a ⊔ b))
-  (r₁ : R l₁ ≃ R l₂)
-  (r₂ : ∀ x → _≃_.to r₁ (remainder l₁ x) ≡ remainder l₂ x)
-  (g : ∀ x → get l₁ x ≡ get l₂ x) →
-  _↔_.from (equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} bl univ)
-    (r₁ , r₂ , g) ≡
-  _↔_.from (equality-characterisation₁ bl univ)
-    (r₁ , λ a → cong₂ _,_ (r₂ a) (g a))
-from-equality-characterisation₂ bl univ =
-  proj₂ (equality-characterisation₂′ bl bl univ)
+  from-equality-characterisation₂ :
+    let open Lens in
+    {A : Type a} {B : Type b} {l₁ l₂ : Lens A B}
+    (univ : Univalence (a ⊔ b))
+    (r₁ : R l₁ ≃ R l₂)
+    (r₂ : ∀ x → _≃_.to r₁ (remainder l₁ x) ≡ remainder l₂ x)
+    (g : ∀ x → get l₁ x ≡ get l₂ x) →
+    _↔_.from (equality-characterisation₂ {l₁ = l₁} {l₂ = l₂} univ)
+      (r₁ , r₂ , g) ≡
+    _↔_.from (equality-characterisation₁ univ)
+      (r₁ , λ a → cong₂ _,_ (r₂ a) (g a))
+  from-equality-characterisation₂ _ _ _ _ = refl _
 
 -- An equality characterisation lemma.
 
@@ -1147,7 +1083,7 @@ equality-characterisation₃ :
     ∀ p → _≃_.from (equiv l₁) (_≃_.from eq (proj₁ p) , proj₂ p) ≡
           _≃_.from (equiv l₂) p
 equality-characterisation₃ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} univ =
-  l₁ ≡ l₂                                                            ↝⟨ equality-characterisation₀ ⊠ ⟩
+  l₁ ≡ l₂                                                            ↝⟨ equality-characterisation₀ ⟩
 
   (∃ λ (p : R l₁ ≡ R l₂) →
      subst (λ R → A ≃ (R × B)) p (equiv l₁) ≡ equiv l₂)              ↝⟨ inverse $ Σ-cong (inverse $ ≡≃≃ univ) (λ _ → F.id) ⟩
@@ -1174,7 +1110,6 @@ equality-characterisation₃ {A = A} {B = B} {l₁ = l₁} {l₂ = l₂} univ =
 equality-characterisation₄ :
   {A : Type a} {B : Type b} {l₁ l₂ : Lens A B} →
   let open Lens in
-  Block "equality-characterisation" →
   Univalence (a ⊔ b) →
   (b : B) →
   (l₁ ≡ l₂)
@@ -1184,8 +1119,8 @@ equality-characterisation₄ :
             (set l₂ a b , get-set l₂ a b))
        ×
      (∀ a → get l₁ a ≡ get l₂ a))
-equality-characterisation₄ {l₁ = l₁} {l₂ = l₂} bl univ b =
-  l₁ ≡ l₂                                                          ↔⟨ equality-characterisation₂ bl univ ⟩
+equality-characterisation₄ {l₁ = l₁} {l₂ = l₂} univ b =
+  l₁ ≡ l₂                                                          ↔⟨ equality-characterisation₂ univ ⟩
 
   (∃ λ (eq : R l₁ ≃ R l₂) →
      (∀ a → _≃_.to eq (remainder l₁ a) ≡ remainder l₂ a)
@@ -1269,7 +1204,7 @@ lenses-with-inhabited-codomains-equal-if-setters-equal :
   l₁ ≡ l₂
 lenses-with-inhabited-codomains-equal-if-setters-equal
   {B = B} univ l₁ l₂ b setters-equal =
-  _↔_.from (equality-characterisation₂ ⊠ univ)
+  _↔_.from (equality-characterisation₂ univ)
     ( R≃R
     , (λ a →
          remainder l₂ (set l₁ a b)  ≡⟨ cong (λ f → remainder l₂ (f a b)) setters-equal ⟩
@@ -1308,7 +1243,7 @@ lenses-equal-if-setters-equal′
   {A = A} {B = B} univ l₁ l₂
   f ∃≡f f-remainder≡remainder setters-equal =
 
-  _↔_.from (equality-characterisation₂ ⊠ univ)
+  _↔_.from (equality-characterisation₂ univ)
     ( R≃R
     , f-remainder≡remainder
     , ext⁻¹ (getters-equal-if-setters-equal l₁ l₂ setters-equal)
@@ -1542,7 +1477,7 @@ lenses-equal-if-setters-equal→constant→coherently-constant
       lenses-equal-if-setters-equal l₁ l₂
         (⟨ext⟩ λ p → ⟨ext⟩ λ c → setters-equal p c)
 
-    l₁≡l₂′ = _≃_.to (equality-characterisation₀₂ ⊠) l₁≡l₂
+    l₁≡l₂′ = _≃_.to equality-characterisation₀₂ l₁≡l₂
 
     A≃B′ : A ≃ B
     A≃B′ = ≡⇒≃ $ proj₁ l₁≡l₂′
@@ -1581,7 +1516,7 @@ lenses-equal-if-setters-equal→constant→coherently-constant
   Univalence a →
   (A≃B : A ≃ B) → ≃→lens A≃B ≡ ≃→lens′ A≃B
 ≃→lens≡≃→lens′ {B = B} univ A≃B =
-  _↔_.from (equality-characterisation₂ ⊠ univ)
+  _↔_.from (equality-characterisation₂ univ)
     ( (∥ ↑ _ B ∥  ↔⟨ ∥∥-cong Bij.↑↔ ⟩□
        ∥ B ∥      □)
     , (λ _ → refl _)
@@ -1751,7 +1686,7 @@ lens-to-proposition≃get {b = b} {A = A} {B = B} univ prop = Eq.↔→≃
                           (inhabited l r)) ⟩□
            R l      □
      in
-     _↔_.from (equality-characterisation₁ ⊠ univ)
+     _↔_.from (equality-characterisation₁ univ)
         (lemma , λ _ → refl _))
   where
   open Lens
@@ -1839,7 +1774,7 @@ lens-from-⊥↔⊤ {B = B} univ =
     isomorphism-to-lens
       (⊥      ↝⟨ inverse ×-left-zero ⟩□
        ⊥ × B  □) ,
-    λ l → _↔_.from (equality-characterisation₁ ⊠ univ)
+    λ l → _↔_.from (equality-characterisation₁ univ)
             ( (⊥ × ∥ B ∥  ↔⟨ ×-left-zero ⟩
                ⊥₀         ↔⟨ lemma l ⟩□
                R l        □)
@@ -1921,24 +1856,31 @@ to-from-≃-≃-Σ-Lens-Is-equivalence-get≡get _ _ = refl _
   ⊥                                                                      □
 
 -- Some lemmas used in Lens↠Traditional-lens and Lens↔Traditional-lens
--- below.
+-- below, defined under the assumption that the domain A is a set.
 
-private
+module Lens↔Traditional-lens
+  {A : Type a} {B : Type b}
+  (A-set : Is-set A)
+  where
 
-  module Lens↔Traditional-lens
-    {A : Type a} {B : Type b}
-    (A-set : Is-set A)
-    where
+  opaque
 
-    from : Block "conversion" → Traditional.Lens A B → Lens A B
-    from ⊠ l = isomorphism-to-lens
+    -- A right inverse of Lens.traditional-lens.
+
+    from : Traditional.Lens A B → Lens A B
+    from l = isomorphism-to-lens
       (A                                     ↔⟨ Traditional.≃Σ∥set⁻¹∥× A-set l ⟩□
        (∃ λ (f : B → A) → ∥ set ⁻¹ f ∥) × B  □)
       where
       open Traditional.Lens l
 
-    to∘from : ∀ bc l → Lens.traditional-lens (from bc l) ≡ l
-    to∘from ⊠ l = Traditional.equal-laws→≡
+  opaque
+    unfolding from
+
+    -- The function from is a right inverse of Lens.traditional-lens.
+
+    right-inverse-of : ∀ l → Lens.traditional-lens (from l) ≡ l
+    right-inverse-of l = Traditional.equal-laws→≡
       (λ a _ → B-set a _ _)
       (λ _ → A-set _ _)
       (λ _ _ _ → A-set _ _)
@@ -1949,11 +1891,17 @@ private
       B-set a =
         Traditional.h-level-respects-lens-from-inhabited 2 l a A-set
 
-    from∘to :
+  opaque
+    unfolding from
+
+    -- The function from is a left inverse of Lens.traditional-lens
+    -- (assuming univalence).
+
+    left-inverse-of :
       Univalence (a ⊔ b) →
-      ∀ bc l → from bc (Lens.traditional-lens l) ≡ l
-    from∘to univ ⊠ l′ =
-      _↔_.from (equality-characterisation₁ ⊠ univ)
+      ∀ l → from (Lens.traditional-lens l) ≡ l
+    left-inverse-of univ l′ =
+      _↔_.from (equality-characterisation₁ univ)
         ( ((∃ λ (f : B → A) → ∥ set ⁻¹ f ∥) × ∥ B ∥  ↝⟨ (×-cong₁ lemma₃) ⟩
            (∥ B ∥ → R) × ∥ B ∥                       ↝⟨ lemma₂ ⟩□
            R                                         □)
@@ -2001,6 +1949,7 @@ private
            flip ∥∥-map ∥b∥ λ b →
            f b , ⟨ext⟩ (hyp b))
         where
+        prop : Is-proposition (∀ b b′ → set (f b) b′ ≡ f b′)
         prop =
           Π-closure ext 1 λ _ →
           Π-closure ext 1 λ _ →
@@ -2017,7 +1966,8 @@ private
               f ∥b∥′  ∎)
            (truncation-is-proposition _ _))
 
-      lemma₃ = λ ∥b∥ →
+      lemma₃ : ∥ B ∥ → (∃ λ (f : B → A) → ∥ set ⁻¹ f ∥) ≃ (∥ B ∥ → R)
+      lemma₃ ∥b∥ =
         (∃ λ (f : B → A) → ∥ set ⁻¹ f ∥)                                ↝⟨ ∃-cong (lemma₁ ∥b∥) ⟩
 
         (∃ λ (f : B → A) → ∀ b b′ → set (f b) b′ ≡ f b′)                ↝⟨ (Σ-cong (→-cong ext F.id l) λ f →
@@ -2054,67 +2004,68 @@ private
 
         (∥ B ∥ → R)                                                     □
 
-    iso :
-      Block "conversion" →
-      Univalence (a ⊔ b) →
-      Lens A B ↔ Traditional.Lens A B
-    iso bc univ = record
-      { surjection = record
-        { logical-equivalence = record { from = from bc }
-        ; right-inverse-of    = to∘from bc
-        }
-      ; left-inverse-of = from∘to univ bc
+  -- The types Lens A B and Traditional.Lens A B are in bijective
+  -- correspondence (assuming univalence).
+
+  Lens↔Traditional-lens :
+    Univalence (a ⊔ b) →
+    Lens A B ↔ Traditional.Lens A B
+  Lens↔Traditional-lens univ = record
+    { surjection = record
+      { logical-equivalence = record { from = from }
+      ; right-inverse-of    = right-inverse-of
       }
+    ; left-inverse-of = left-inverse-of univ
+    }
 
 -- If the domain A is a set, then there is a split surjection from
 -- Lens A B to Traditional.Lens A B.
 
 Lens↠Traditional-lens :
-  Block "conversion" →
   Is-set A →
   Lens A B ↠ Traditional.Lens A B
-Lens↠Traditional-lens {A = A} {B = B} bc A-set = record
+Lens↠Traditional-lens A-set = record
   { logical-equivalence = record
     { to   = Lens.traditional-lens
-    ; from = Lens↔Traditional-lens.from A-set bc
+    ; from = Lens↔Traditional-lens.from A-set
     }
-  ; right-inverse-of = Lens↔Traditional-lens.to∘from A-set bc
+  ; right-inverse-of = Lens↔Traditional-lens.right-inverse-of A-set
   }
 
--- The split surjection above preserves getters and setters.
+opaque
+  unfolding Lens↔Traditional-lens.from
 
-Lens↠Traditional-lens-preserves-getters-and-setters :
-  {A : Type a}
-  (b : Block "conversion")
-  (s : Is-set A) →
-  Preserves-getters-and-setters-⇔ A B
-    (_↠_.logical-equivalence (Lens↠Traditional-lens b s))
-Lens↠Traditional-lens-preserves-getters-and-setters ⊠ _ =
-  (λ _ → refl _ , refl _) , (λ _ → refl _ , refl _)
+  -- The split surjection above preserves getters and setters.
+
+  Lens↠Traditional-lens-preserves-getters-and-setters :
+    {A : Type a}
+    (s : Is-set A) →
+    Preserves-getters-and-setters-⇔ A B
+      (_↠_.logical-equivalence (Lens↠Traditional-lens s))
+  Lens↠Traditional-lens-preserves-getters-and-setters _ =
+    (λ _ → refl _ , refl _) , (λ _ → refl _ , refl _)
 
 -- If the domain A is a set, then Traditional.Lens A B and Lens A B
 -- are isomorphic (assuming univalence).
 
 Lens↔Traditional-lens :
   {A : Type a} {B : Type b} →
-  Block "conversion" →
   Univalence (a ⊔ b) →
   Is-set A →
   Lens A B ↔ Traditional.Lens A B
-Lens↔Traditional-lens bc univ A-set =
-  Lens↔Traditional-lens.iso A-set bc univ
+Lens↔Traditional-lens univ A-set =
+  Lens↔Traditional-lens.Lens↔Traditional-lens A-set univ
 
 -- The isomorphism preserves getters and setters.
 
 Lens↔Traditional-lens-preserves-getters-and-setters :
   {A : Type a} {B : Type b}
-  (bc : Block "conversion")
   (univ : Univalence (a ⊔ b))
   (s : Is-set A) →
   Preserves-getters-and-setters-⇔ A B
-    (_↔_.logical-equivalence (Lens↔Traditional-lens bc univ s))
-Lens↔Traditional-lens-preserves-getters-and-setters bc _ =
-  Lens↠Traditional-lens-preserves-getters-and-setters bc
+    (_↔_.logical-equivalence (Lens↔Traditional-lens univ s))
+Lens↔Traditional-lens-preserves-getters-and-setters _ =
+  Lens↠Traditional-lens-preserves-getters-and-setters
 
 -- If the codomain B is an inhabited set, then Lens A B and
 -- Traditional.Lens A B are logically equivalent.
@@ -2366,7 +2317,7 @@ Is-proposition-closed-domain′ :
 Is-proposition-closed-domain′ {A = A} {B} univ A-prop =
                                          $⟨ Traditional.lens-preserves-h-level-of-domain 0 A-prop ⟩
   Is-proposition (Traditional.Lens A B)  ↝⟨ H-level.respects-surjection
-                                              (_↔_.surjection $ inverse $ Lens↔Traditional-lens ⊠ univ (mono₁ 1 A-prop))
+                                              (_↔_.surjection $ inverse $ Lens↔Traditional-lens univ (mono₁ 1 A-prop))
                                               1 ⟩□
   Is-proposition (Lens A B)              □
 
@@ -2383,7 +2334,7 @@ Is-set-closed-domain :
 Is-set-closed-domain {A = A} {B} univ A-set =
                                  $⟨ (λ {_ _} → Traditional.lens-preserves-h-level-of-domain 1 A-set) ⟩
   Is-set (Traditional.Lens A B)  ↝⟨ H-level.respects-surjection
-                                      (_↔_.surjection $ inverse $ Lens↔Traditional-lens ⊠ univ A-set)
+                                      (_↔_.surjection $ inverse $ Lens↔Traditional-lens univ A-set)
                                       2 ⟩□
   Is-set (Lens A B)              □
 

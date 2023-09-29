@@ -1260,7 +1260,7 @@ module No-fully-general-composition-operator
     open _≃_
 
     idL : ND.Lens Bool Bool
-    idL = NDC.id ⊠
+    idL = NDC.id
 
     swapL : ND.Lens Bool Bool
     swapL = ND.isomorphism-to-lens
@@ -1277,9 +1277,12 @@ module No-fully-general-composition-operator
     l₃ : ND.Lens Bool Bool
     l₃ = proj₁ (comp l₁ l₂)
 
-    get-constant : ∀ b → get l₃ b ≡ true
-    get-constant true  = proj₂ (comp l₁ l₂) _
-    get-constant false = proj₂ (comp l₁ l₂) _
+    opaque
+      unfolding NDC.id
+
+      get-constant : ∀ b → get l₃ b ≡ true
+      get-constant true  = proj₂ (comp l₁ l₂) _
+      get-constant false = proj₂ (comp l₁ l₂) _
 
     contradiction : ⊥
     contradiction = Bool.true≢false (

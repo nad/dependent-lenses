@@ -30,7 +30,7 @@ private
 -- of static functions are normalised by (at least) the GHC backend.
 
 Lens→Lens : E.Lens A B → S.Lens A B
-Lens→Lens = _≃ᴱ_.from (S.Lens≃ᴱLensᴱ ⊠)
+Lens→Lens = _≃ᴱ_.from S.Lens≃ᴱLensᴱ
 
 {-# STATIC Lens→Lens #-}
 
@@ -73,5 +73,5 @@ snd =
     (Lens→Lens E.snd)
     (λ { (x , _) y → (x , y) })
     ((λ (x , _) y → (x , y))       ≡⟨⟩
-     E.Lens.set E.snd              ≡⟨ sym $ proj₂ $ proj₂ (S.Lens≃ᴱLensᴱ-preserves-getters-and-setters ⊠) E.snd ⟩∎
+     E.Lens.set E.snd              ≡⟨ sym $ proj₂ $ proj₂ S.Lens≃ᴱLensᴱ-preserves-getters-and-setters E.snd ⟩∎
      S.Lens.set (Lens→Lens E.snd)  ∎)

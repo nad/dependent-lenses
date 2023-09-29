@@ -365,83 +365,83 @@ Variant-coherently-constant≃Coherently-constant
   (∃ λ (H : ∥ A ∥ → Type p) → P ≡ H ∘ ∣_∣)          ↔⟨⟩
   Coherently-constant P                             □
 
--- The lenses defined above are equivalent to those defined in Variant
--- (assuming univalence).
+opaque
 
-Variant-lens≃Lens :
-  {A : Type a} {B : Type b} →
-  Block "conversion" →
-  Univalence (a ⊔ b) →
-  Variant.Lens A B ≃ Lens A B
-Variant-lens≃Lens {a = a} {A = A} {B = B} ⊠ univ =
-  Variant.Lens A B                                             ↔⟨⟩
-  (∃ λ (get : A → B) → Variant.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ → Variant-coherently-constant≃Coherently-constant univ) ⟩
-  (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))          ↔⟨⟩
-  Lens A B                                                     □
+  -- The lenses defined above are equivalent to those defined in
+  -- Variant (assuming univalence).
 
--- The conversion preserves getters and setters.
+  Variant-lens≃Lens :
+    {A : Type a} {B : Type b} →
+    Univalence (a ⊔ b) →
+    Variant.Lens A B ≃ Lens A B
+  Variant-lens≃Lens {a = a} {A = A} {B = B} univ =
+    Variant.Lens A B                                             ↔⟨⟩
+    (∃ λ (get : A → B) → Variant.Coherently-constant (get ⁻¹_))  ↝⟨ (∃-cong λ _ → Variant-coherently-constant≃Coherently-constant univ) ⟩
+    (∃ λ (get : A → B) → Coherently-constant (get ⁻¹_))          ↔⟨⟩
+    Lens A B                                                     □
 
-Variant-lens≃Lens-preserves-getters-and-setters :
-  {A : Type a} {B : Type b}
-  (bc : Block "conversion")
-  (univ : Univalence (a ⊔ b)) →
-  Preserves-getters-and-setters-⇔ A B
-    (_≃_.logical-equivalence (Variant-lens≃Lens bc univ))
-Variant-lens≃Lens-preserves-getters-and-setters
-  {A = A} {B = B} bc@⊠ univ =
-  Preserves-getters-and-setters-→-↠-⇔
-    (_≃_.surjection (Variant-lens≃Lens bc univ)) λ l →
-      refl _
-    , ⟨ext⟩ λ a → ⟨ext⟩ λ b →
-      (let eq₁ = cong (H l) $
-                   T.truncation-is-proposition ∣ get l a ∣ ∣ b ∣
-           eq₂ = ⟨ext⟩ (≃⇒≡ univ ∘ get⁻¹-≃ l)
-       in
-       proj₁ (_≃_.from (≡⇒≃ (cong (_$ b) eq₂))
-                (≡⇒→ eq₁ (≡⇒→ (cong (_$ get l a) eq₂) (a , refl _))))   ≡⟨ cong₂ (λ p q → proj₁ (_≃_.from p (≡⇒→ eq₁ (_≃_.to q (a , refl _)))))
-                                                                             (lemma l _)
-                                                                             (lemma l _) ⟩∎
-       proj₁ (_≃_.from (get⁻¹-≃ l b)
-                (≡⇒→ eq₁ (_≃_.to (get⁻¹-≃ l (get l a)) (a , refl _))))  ∎)
-  where
-  open Variant.Lens
+opaque
+  unfolding Variant-lens≃Lens
 
-  lemma :
-    ∀ (l : Variant.Lens A B) b →
-    ≡⇒≃ (cong (_$ b) (⟨ext⟩ (≃⇒≡ univ ∘ get⁻¹-≃ l))) ≡ get⁻¹-≃ l b
-  lemma l b =
-    ≡⇒≃ (cong (_$ b) (⟨ext⟩ (≃⇒≡ univ ∘ get⁻¹-≃ l)))  ≡⟨ cong ≡⇒≃ $ cong-ext {f≡g = ≃⇒≡ univ ∘ get⁻¹-≃ l} ext ⟩
-    ≡⇒≃ (≃⇒≡ univ (get⁻¹-≃ l b))                      ≡⟨ _≃_.right-inverse-of (≡≃≃ univ) _ ⟩∎
-    get⁻¹-≃ l b                                       ∎
+  -- The conversion preserves getters and setters.
+
+  Variant-lens≃Lens-preserves-getters-and-setters :
+    {A : Type a} {B : Type b}
+    (univ : Univalence (a ⊔ b)) →
+    Preserves-getters-and-setters-⇔ A B
+      (_≃_.logical-equivalence (Variant-lens≃Lens univ))
+  Variant-lens≃Lens-preserves-getters-and-setters {A = A} {B = B} univ =
+    Preserves-getters-and-setters-→-↠-⇔
+      (_≃_.surjection (Variant-lens≃Lens univ)) λ l →
+        refl _
+      , ⟨ext⟩ λ a → ⟨ext⟩ λ b →
+        (let eq₁ = cong (H l) $
+                     T.truncation-is-proposition ∣ get l a ∣ ∣ b ∣
+             eq₂ = ⟨ext⟩ (≃⇒≡ univ ∘ get⁻¹-≃ l)
+         in
+         proj₁ (_≃_.from (≡⇒≃ (cong (_$ b) eq₂))
+                  (≡⇒→ eq₁ (≡⇒→ (cong (_$ get l a) eq₂) (a , refl _))))   ≡⟨ cong₂ (λ p q → proj₁ (_≃_.from p (≡⇒→ eq₁ (_≃_.to q (a , refl _)))))
+                                                                               (lemma l _)
+                                                                               (lemma l _) ⟩∎
+         proj₁ (_≃_.from (get⁻¹-≃ l b)
+                  (≡⇒→ eq₁ (_≃_.to (get⁻¹-≃ l (get l a)) (a , refl _))))  ∎)
+    where
+    open Variant.Lens
+
+    lemma :
+      ∀ (l : Variant.Lens A B) b →
+      ≡⇒≃ (cong (_$ b) (⟨ext⟩ (≃⇒≡ univ ∘ get⁻¹-≃ l))) ≡ get⁻¹-≃ l b
+    lemma l b =
+      ≡⇒≃ (cong (_$ b) (⟨ext⟩ (≃⇒≡ univ ∘ get⁻¹-≃ l)))  ≡⟨ cong ≡⇒≃ $ cong-ext {f≡g = ≃⇒≡ univ ∘ get⁻¹-≃ l} ext ⟩
+      ≡⇒≃ (≃⇒≡ univ (get⁻¹-≃ l b))                      ≡⟨ _≃_.right-inverse-of (≡≃≃ univ) _ ⟩∎
+      get⁻¹-≃ l b                                       ∎
 
 -- The lenses defined above are equivalent to those defined in Higher
 -- (assuming univalence).
 
 Lens≃Higher-lens :
   {A : Type a} {B : Type b} →
-  Block "conversion" →
   Univalence (a ⊔ b) →
   Lens A B ≃ Higher.Lens A B
-Lens≃Higher-lens {A = A} {B = B} bc univ =
-  Lens A B          ↝⟨ inverse $ Variant-lens≃Lens bc univ ⟩
-  Variant.Lens A B  ↝⟨ Variant.Lens≃Higher-lens bc univ ⟩□
+Lens≃Higher-lens {A = A} {B = B} univ =
+  Lens A B          ↝⟨ inverse $ Variant-lens≃Lens univ ⟩
+  Variant.Lens A B  ↝⟨ Variant.Lens≃Higher-lens univ ⟩□
   Higher.Lens A B   □
 
 -- The conversion preserves getters and setters.
 
 Lens≃Higher-lens-preserves-getters-and-setters :
   {A : Type a} {B : Type b}
-  (bc : Block "conversion")
   (univ : Univalence (a ⊔ b)) →
   Preserves-getters-and-setters-⇔ A B
-    (_≃_.logical-equivalence (Lens≃Higher-lens bc univ))
-Lens≃Higher-lens-preserves-getters-and-setters bc univ =
+    (_≃_.logical-equivalence (Lens≃Higher-lens univ))
+Lens≃Higher-lens-preserves-getters-and-setters univ =
   Preserves-getters-and-setters-⇔-∘
-    {f = _≃_.logical-equivalence $ Variant.Lens≃Higher-lens bc univ}
-    (Variant.Lens≃Higher-lens-preserves-getters-and-setters bc univ)
+    {f = _≃_.logical-equivalence $ Variant.Lens≃Higher-lens univ}
+    (Variant.Lens≃Higher-lens-preserves-getters-and-setters univ)
     (Preserves-getters-and-setters-⇔-inverse
-       {f = _≃_.logical-equivalence $ Variant-lens≃Lens bc univ}
-       (Variant-lens≃Lens-preserves-getters-and-setters bc univ))
+       {f = _≃_.logical-equivalence $ Variant-lens≃Lens univ}
+       (Variant-lens≃Lens-preserves-getters-and-setters univ))
 
 -- An alternative proof showing that Lens A B is equivalent to
 -- Higher.Lens A B (assuming univalence).
@@ -554,29 +554,26 @@ Lens≃Higher-lens′ {a = a} {b = b} {A = A} {B = B} univ =
 
 Lens↔Traditional-lens :
   {A : Type a} {B : Type b} →
-  Block "conversion" →
   Univalence (a ⊔ b) →
   Is-set A →
   Lens A B ↔ Traditional.Lens A B
-Lens↔Traditional-lens {A = A} {B} bc univ A-set =
-  Lens A B              ↔⟨ Lens≃Higher-lens bc univ ⟩
-  Higher.Lens A B       ↝⟨ Higher.Lens↔Traditional-lens bc univ A-set ⟩□
+Lens↔Traditional-lens {A = A} {B} univ A-set =
+  Lens A B              ↔⟨ Lens≃Higher-lens univ ⟩
+  Higher.Lens A B       ↝⟨ Higher.Lens↔Traditional-lens univ A-set ⟩□
   Traditional.Lens A B  □
 
 -- The isomorphism preserves getters and setters.
 
 Lens↔Traditional-lens-preserves-getters-and-setters :
   {A : Type a} {B : Type b}
-  (bc : Block "conversion")
   (univ : Univalence (a ⊔ b))
   (s : Is-set A) →
   Preserves-getters-and-setters-⇔ A B
-    (_↔_.logical-equivalence (Lens↔Traditional-lens bc univ s))
-Lens↔Traditional-lens-preserves-getters-and-setters bc univ s =
+    (_↔_.logical-equivalence (Lens↔Traditional-lens univ s))
+Lens↔Traditional-lens-preserves-getters-and-setters univ s =
   Preserves-getters-and-setters-⇔-∘
     {f = _↔_.logical-equivalence $
-           Higher.Lens↔Traditional-lens bc univ s}
-    {g = _≃_.logical-equivalence $ Lens≃Higher-lens bc univ}
-    (Higher.Lens↔Traditional-lens-preserves-getters-and-setters
-       bc univ s)
-    (Lens≃Higher-lens-preserves-getters-and-setters bc univ)
+           Higher.Lens↔Traditional-lens univ s}
+    {g = _≃_.logical-equivalence $ Lens≃Higher-lens univ}
+    (Higher.Lens↔Traditional-lens-preserves-getters-and-setters univ s)
+    (Lens≃Higher-lens-preserves-getters-and-setters univ)
