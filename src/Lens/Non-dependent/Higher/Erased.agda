@@ -20,8 +20,7 @@ open import Circle.Erased eq as CE using (𝕊¹ᴱ)
 open import Equality.Decidable-UIP equality-with-J
 open import Equality.Decision-procedures equality-with-J
 open import Equality.Path.Isomorphisms eq
-open import Equality.Path.Isomorphisms.Univalence eq
-  using () renaming (opaque-univ to univ)
+open import Equality.Path.Isomorphisms.Univalence eq using (univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Equivalence.Erased equality-with-J as EEq
@@ -103,7 +102,7 @@ Lens-as-Σ = Eq.↔→≃
      ; equiv     = equiv
      ; inhabited = inhabited
      })
-  refl
+  (λ { (_ , _ , [ _ ]) → refl _ })
   η
   where
   open Temporarily-private.Lens
@@ -861,6 +860,8 @@ module Lens≃ᴱTraditional-lens
 
     right-inverse-of : ∀ l → Lens.traditional-lens (from l) ≡ l
     right-inverse-of l = Traditionalᴱ.equal-laws→≡
+      (_↔_.to Traditionalᴱ.Lens-as-Σ _ .proj₂ .proj₂)
+      (_↔_.to Traditionalᴱ.Lens-as-Σ _ .proj₂ .proj₂)
       (λ a _ → B-set a _ _)
       (λ _ → A-set _ _)
       (λ _ _ _ → A-set _ _)
@@ -1278,105 +1279,118 @@ remainder≃ᴱget⁻¹ᴱ l b = EEq.↔→≃ᴱ
            b                                                ∎
          ])
   (λ (a , _) → remainder a)
-  (λ (a , [ get-a≡b ]) →
-     let lemma₁ =
-           cong get
-             (trans (cong (set a) (sym get-a≡b))
-                (_≃ᴱ_.left-inverse-of equiv _))                           ≡⟨ cong-trans _ _ (_≃ᴱ_.left-inverse-of equiv _) ⟩
+  (λ @0 where
+     (a , [ get-a≡b ]) →
+       let lemma₁ =
+             cong get
+               (trans (cong (set a) (sym get-a≡b))
+                  (_≃ᴱ_.left-inverse-of equiv _))                        ≡⟨ cong-trans _ _ (_≃ᴱ_.left-inverse-of equiv _) ⟩
 
-           trans (cong get (cong (set a) (sym get-a≡b)))
-             (cong get (_≃ᴱ_.left-inverse-of equiv _))                    ≡⟨ cong₂ trans
+             trans (cong get (cong (set a) (sym get-a≡b)))
+               (cong get (_≃ᴱ_.left-inverse-of equiv _))                 ≡⟨ cong₂ trans
                                                                               (cong-∘ _ _ (sym get-a≡b))
                                                                               (sym $ cong-∘ _ _ (_≃ᴱ_.left-inverse-of equiv _)) ⟩
-           trans (cong (get ⊚ set a) (sym get-a≡b))
-             (cong proj₂ (cong (_≃ᴱ_.to equiv)
-                            (_≃ᴱ_.left-inverse-of equiv _)))              ≡⟨ cong₂ (λ p q → trans p (cong proj₂ q))
+             trans (cong (get ⊚ set a) (sym get-a≡b))
+               (cong proj₂ (cong (_≃ᴱ_.to equiv)
+                              (_≃ᴱ_.left-inverse-of equiv _)))           ≡⟨ cong₂ (λ p q → trans p (cong proj₂ q))
                                                                               (cong-sym _ get-a≡b)
                                                                               (_≃ᴱ_.left-right-lemma equiv _) ⟩
-           trans (sym (cong (get ⊚ set a) get-a≡b))
-             (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _))                 ≡⟨ sym $ sym-sym _ ⟩
+             trans (sym (cong (get ⊚ set a) get-a≡b))
+               (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _))              ≡⟨ sym $ sym-sym _ ⟩
 
-           sym (sym (trans (sym (cong (get ⊚ set a) get-a≡b))
-                       (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _))))     ≡⟨ cong sym $
+             sym (sym (trans (sym (cong (get ⊚ set a) get-a≡b))
+                         (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _))))  ≡⟨ cong sym $
                                                                             sym-trans _ (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)) ⟩
-           sym (trans (sym (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)))
-                  (sym (sym (cong (get ⊚ set a) get-a≡b))))              ≡⟨ cong (λ eq → sym (trans (sym (cong proj₂
+             sym (trans
+                    (sym (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)))
+                    (sym (sym (cong (get ⊚ set a) get-a≡b))))            ≡⟨ cong (λ eq → sym (trans (sym (cong proj₂
                                                                                                             (_≃ᴱ_.right-inverse-of equiv _)))
                                                                                                 eq)) $
                                                                             sym-sym (cong (get ⊚ set a) get-a≡b) ⟩∎
-           sym (trans (sym (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)))
-                  (cong (get ⊚ set a) get-a≡b))                          ∎
+             sym (trans
+                    (sym (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)))
+                    (cong (get ⊚ set a) get-a≡b))                        ∎
 
-         lemma₂ =
-           subst (λ a → get a ≡ b)
-             (trans (cong (set a) (sym get-a≡b)) (set-get a))
-             (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv (remainder a , b))     ≡⟨⟩
+           lemma₂ =
+             subst (λ a → get a ≡ b)
+               (trans (cong (set a) (sym get-a≡b)) (set-get a))
+               (cong proj₂ $
+                _≃ᴱ_.right-inverse-of equiv (remainder a , b))                  ≡⟨⟩
 
-           subst (λ a → get a ≡ b)
-             (trans (cong (set a) (sym get-a≡b))
-                (_≃ᴱ_.left-inverse-of equiv _))
-             (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _)                     ≡⟨ subst-∘ _ _ (trans _ (_≃ᴱ_.left-inverse-of equiv _)) ⟩
+             subst (λ a → get a ≡ b)
+               (trans (cong (set a) (sym get-a≡b))
+                  (_≃ᴱ_.left-inverse-of equiv _))
+               (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _)                     ≡⟨ subst-∘ _ _ (trans _ (_≃ᴱ_.left-inverse-of equiv _)) ⟩
 
-            subst (_≡ b)
-              (cong get
-                 (trans (cong (set a) (sym get-a≡b))
-                    (_≃ᴱ_.left-inverse-of equiv _)))
-              (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _)                    ≡⟨ cong (λ eq → subst (_≡ b) eq
-                                                                                                (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _))
-                                                                                 lemma₁ ⟩
-            subst (_≡ b)
-              (sym (trans (sym (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)))
-                      (cong (get ⊚ set a) get-a≡b)))
-              (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _)                    ≡⟨ subst-trans (trans _ (cong (get ⊚ set a) get-a≡b)) ⟩
+              subst (_≡ b)
+                (cong get
+                   (trans (cong (set a) (sym get-a≡b))
+                      (_≃ᴱ_.left-inverse-of equiv _)))
+                (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _)            ≡⟨ cong (λ eq → subst (_≡ b) eq
+                                                                                          (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _))
+                                                                           lemma₁ ⟩
+              subst (_≡ b)
+                (sym $
+                 trans
+                   (sym (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)))
+                   (cong (get ⊚ set a) get-a≡b))
+                (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _)            ≡⟨ subst-trans (trans _ (cong (get ⊚ set a) get-a≡b)) ⟩
 
-            trans
-              (trans (sym (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)))
-                 (cong (get ⊚ set a) get-a≡b))
-              (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _)                    ≡⟨ elim¹
-                                                                                   (λ eq →
-                                                                                      trans
-                                                                                        (trans (sym (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)))
-                                                                                           (cong (get ⊚ set a) eq))
-                                                                                        (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _) ≡
-                                                                                      eq)
-                                                                                   (
-                trans
-                  (trans (sym (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)))
-                     (cong (get ⊚ set a) (refl _)))
-                  (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _)                      ≡⟨ cong
-                                                                                         (λ eq → trans
-                                                                                                   (trans (sym (cong proj₂
-                                                                                                                  (_≃ᴱ_.right-inverse-of equiv _)))
-                                                                                                      eq)
-                                                                                                   (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _)) $
-                                                                                      cong-refl _ ⟩
-                trans
-                  (trans (sym (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)))
-                     (refl _))
-                  (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _)                      ≡⟨ cong (flip trans _) $ trans-reflʳ _ ⟩
+              trans
+                (trans
+                   (sym (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)))
+                   (cong (get ⊚ set a) get-a≡b))
+                (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _)            ≡⟨ elim¹
+                                                                             (λ eq →
+                                                                                trans
+                                                                                  (trans (sym (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)))
+                                                                                     (cong (get ⊚ set a) eq))
+                                                                                  (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _) ≡
+                                                                                eq)
+                                                                             (
+                  trans
+                    (trans
+                       (sym $
+                        cong proj₂ (_≃ᴱ_.right-inverse-of equiv _))
+                       (cong (get ⊚ set a) (refl _)))
+                    (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _)              ≡⟨ cong
+                                                                                   (λ eq → trans
+                                                                                             (trans (sym (cong proj₂
+                                                                                                            (_≃ᴱ_.right-inverse-of equiv _)))
+                                                                                                eq)
+                                                                                             (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _)) $
+                                                                                cong-refl _ ⟩
+                  trans
+                    (trans
+                       (sym $
+                        cong proj₂ (_≃ᴱ_.right-inverse-of equiv _))
+                       (refl _))
+                    (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _)              ≡⟨ cong (flip trans _) $ trans-reflʳ _ ⟩
 
-                trans (sym (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)))
-                  (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _)                      ≡⟨ trans-symˡ (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)) ⟩∎
+                  trans
+                    (sym (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)))
+                    (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv _)              ≡⟨ trans-symˡ (cong proj₂ (_≃ᴱ_.right-inverse-of equiv _)) ⟩∎
 
-                refl _                                                              ∎)
-                                                                                   get-a≡b ⟩∎
-            get-a≡b                                                           ∎
-     in
-     Σ-≡,≡→≡
-       (_≃ᴱ_.from equiv (remainder a , b)  ≡⟨⟩
-        set a b                            ≡⟨ cong (set a) (sym get-a≡b) ⟩
-        set a (get a)                      ≡⟨ set-get a ⟩∎
-        a                                  ∎)
-       (subst (λ a → Erased (get a ≡ b))
-          (trans (cong (set a) (sym get-a≡b)) (set-get a))
-          [ cong proj₂ $ _≃ᴱ_.right-inverse-of equiv (remainder a , b) ]  ≡⟨ push-subst-[] ⟩
+                  refl _                                                      ∎)
+                                                                             get-a≡b ⟩∎
+              get-a≡b                                                   ∎
+       in
+       Σ-≡,≡→≡
+         (_≃ᴱ_.from equiv (remainder a , b)  ≡⟨⟩
+          set a b                            ≡⟨ cong (set a) (sym get-a≡b) ⟩
+          set a (get a)                      ≡⟨ set-get a ⟩∎
+          a                                  ∎)
+         (subst (λ a → Erased (get a ≡ b))
+            (trans (cong (set a) (sym get-a≡b)) (set-get a))
+            [ cong proj₂ $
+              _≃ᴱ_.right-inverse-of equiv (remainder a , b) ]             ≡⟨ push-subst-[] ⟩
 
-        [ subst (λ a → get a ≡ b)
-          (trans (cong (set a) (sym get-a≡b)) (set-get a))
-          (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv (remainder a , b))
-        ]                                                                 ≡⟨ []-cong [ lemma₂ ] ⟩∎
+          [ subst (λ a → get a ≡ b)
+            (trans (cong (set a) (sym get-a≡b)) (set-get a))
+            (cong proj₂ $ _≃ᴱ_.right-inverse-of equiv (remainder a , b))
+          ]                                                               ≡⟨ []-cong [ lemma₂ ] ⟩∎
 
-        [ get-a≡b ]                                                       ∎))
+          [ get-a≡b ]                                                     ∎))
   (λ r →
      remainder (_≃ᴱ_.from equiv (r , b))              ≡⟨⟩
      proj₁ (_≃ᴱ_.to equiv (_≃ᴱ_.from equiv (r , b)))  ≡⟨ cong proj₁ $ _≃ᴱ_.right-inverse-of equiv _ ⟩∎
@@ -1755,8 +1769,8 @@ module Lens-combinators where
             }
           ; right-inverse-of = λ _ → refl _
           }
-        ; left-inverse-of = λ (r , _) →
-            cong (r ,_) $ []-cong [ truncation-is-proposition _ _ ]
+        ; left-inverse-of = λ { (r , [ _ ]) →
+            cong (r ,_) $ []-cong [ truncation-is-proposition _ _ ] }
         }
 
   opaque
@@ -1787,8 +1801,8 @@ module Lens-combinators where
             }
           ; right-inverse-of = λ _ → refl _
           }
-        ; left-inverse-of = λ (_ , r) →
-            cong (_, r) $ []-cong [ truncation-is-proposition _ _ ]
+        ; left-inverse-of = λ { ([ _ ] , r) →
+            cong (_, r) $ []-cong [ truncation-is-proposition _ _ ] }
         }
 
 open Lens-combinators
@@ -2169,7 +2183,7 @@ opaque
       lemma₁
         ( l@(⟨ _ , _ , _ ⟩)
         , (l⁻¹@(⟨ _ , _ , _ ⟩) , [ l⁻¹∘l≡id ])
-        , (⟨ _ , _ , _ ⟩ , _)
+        , (⟨ _ , _ , _ ⟩ , [ _ ])
         ) a =
         remainder l (get l⁻¹ (get l a))  ≡⟨⟩
         remainder l (get (l⁻¹ ∘ l) a)    ≡⟨ cong (λ l′ → remainder l (get l′ a)) l⁻¹∘l≡id ⟩
@@ -2182,7 +2196,10 @@ opaque
         ∀ (A≊ᴱB@(l , _) : A ≊ᴱ B) a →
         get (l′ A≊ᴱB) a ≡ get l a
       lemma₂
-        (⟨ _ , _ , _ ⟩ , (⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) _ =
+        (⟨ _ , _ , _ ⟩ ,
+         (⟨ _ , _ , _ ⟩ , [ _ ]) ,
+         (⟨ _ , _ , _ ⟩ , [ _ ]))
+        _ =
         refl _
 
   opaque
@@ -2202,7 +2219,9 @@ opaque
     (A≊ᴱB@(l , _) : A ≊ᴱ B) →
     _≃ᴱ_.to (_≃ᴱ_.from ≃ᴱ≃ᴱ≊ᴱ A≊ᴱB) ≡ Lens.get l
   to-from-≃ᴱ≃ᴱ≊ᴱ≡get
-    (⟨ _ , _ , _ ⟩ , (⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
+    (⟨ _ , _ , _ ⟩ ,
+     (⟨ _ , _ , _ ⟩ , [ _ ]) ,
+     (⟨ _ , _ , _ ⟩ , [ _ ])) =
     refl _
 
 -- A variant of ≃ᴱ≃ᴱ≊ᴱ that works even if A and B live in different
@@ -2229,7 +2248,9 @@ opaque
     _≃ᴱ_.to (_≃ᴱ_.from ≃ᴱ≃ᴱ≊ᴱ′ A≊ᴱB) ≡
     lower ⊚ Lens.get l ⊚ lift
   to-from-≃ᴱ≃ᴱ≊ᴱ′≡get
-    (⟨ _ , _ , _ ⟩ , (⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
+    (⟨ _ , _ , _ ⟩ ,
+     (⟨ _ , _ , _ ⟩ , [ _ ]) ,
+     (⟨ _ , _ , _ ⟩ , [ _ ])) =
     refl _
 
 opaque
@@ -2242,7 +2263,7 @@ opaque
     Is-bi-invertibleᴱ l → Is-equivalenceᴱ (Lens.get l)
   Is-bi-invertibleᴱ→Is-equivalenceᴱ-get
     l@(⟨ _ , _ , _ ⟩)
-    is-bi-inv@((⟨ _ , _ , _ ⟩ , _) , (⟨ _ , _ , _ ⟩ , _)) =
+    is-bi-inv@((⟨ _ , _ , _ ⟩ , [ _ ]) , (⟨ _ , _ , _ ⟩ , [ _ ])) =
     _≃ᴱ_.is-equivalence (_≃ᴱ_.from ≃ᴱ≃ᴱ≊ᴱ (l , is-bi-inv))
 
 -- If l is a lens between types in the same universe, then there is an

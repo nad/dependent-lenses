@@ -25,8 +25,7 @@ open import Container.Indexed.Coalgebra equality-with-J
 open import Container.Indexed.M.Codata eq
 import Container.Indexed.M.Function equality-with-J as F
 open import Equality.Path.Isomorphisms eq
-open import Equality.Path.Isomorphisms.Univalence eq
-  using () renaming (opaque-univ to univ)
+open import Equality.Path.Isomorphisms.Univalence eq using (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
 import Equivalence P.equality-with-J as PEq
 import Extensionality P.equality-with-J as PExt

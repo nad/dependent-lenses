@@ -17,8 +17,7 @@ open import Prelude
 import Colimit.Sequential.Very-erased eq as CS
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq
-open import Equality.Path.Isomorphisms.Univalence eq
-  using () renaming (opaque-univ to univ)
+open import Equality.Path.Isomorphisms.Univalence eq using (univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Equivalence.Erased.Cubical eq as EEq using (_≃ᴱ_)

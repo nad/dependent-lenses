@@ -17,8 +17,7 @@ open import Prelude
 
 open import Bijection equality-with-J as B using (_↔_)
 open import Equality.Path.Isomorphisms eq
-open import Equality.Path.Isomorphisms.Univalence eq
-  using () renaming (opaque-univ to univ)
+open import Equality.Path.Isomorphisms.Univalence eq using (univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Equivalence.Erased.Cubical eq as EEq using (_≃ᴱ_)
@@ -166,7 +165,7 @@ Coherently-constant≃ᴱCoherently-constant′ {P = P} =
              Q→Q x y ≡ subst Q (T.truncation-is-proposition x y)))        ↔⟨ (∀-cong ext λ _ → ∃-cong λ _ → Erased-cong (from-equivalence $
                                                                               Eq.extensionality-isomorphism ext)) F.∘
                                                                              inverse ΠΣ-comm F.∘
-                                                                             (∃-cong λ _ → Erased-Π↔Π) ⟩
+                                                                             (∃-cong λ _ → Erased-Π↔Π ext) ⟩
     (∀ x →
      ∃ λ (Q→Q : ∀ y → Q x → Q y) →
      Erased (Q→Q ≡ λ y → subst Q (T.truncation-is-proposition x y)))      ↔⟨ (∀-cong ext λ _ →
@@ -176,7 +175,7 @@ Coherently-constant≃ᴱCoherently-constant′ {P = P} =
      Erased (Q→Q ≡ λ y → subst Q (T.truncation-is-proposition x ∣ y ∣)))  ↔⟨ (∃-cong λ _ →
                                                                               (Erased-cong (from-equivalence $
                                                                                Eq.extensionality-isomorphism ext)) F.∘
-                                                                              inverse Erased-Π↔Π) F.∘
+                                                                              inverse (Erased-Π↔Π ext)) F.∘
                                                                              ΠΣ-comm ⟩
     (∃ λ (Q→Q : ∀ x y → Q x → Q ∣ y ∣) →
      Erased (Q→Q ≡
@@ -188,8 +187,8 @@ Coherently-constant≃ᴱCoherently-constant′ {P = P} =
                                                                               ΠΣ-comm F.∘
                                                                               (∀-cong ext λ _ → ΠΣ-comm)) F.∘
                                                                              (∃-cong λ _ →
-                                                                              ((∀-cong ext λ _ → Erased-Π↔Π) F.∘
-                                                                               Erased-Π↔Π) F.∘
+                                                                              ((∀-cong ext λ _ → Erased-Π↔Π ext) F.∘
+                                                                               Erased-Π↔Π ext) F.∘
                                                                               Erased-cong (from-equivalence $ inverse $
                                                                               Eq.extensionality-isomorphism ext F.∘
                                                                               (∀-cong ext λ _ → Eq.extensionality-isomorphism ext))) ⟩
@@ -210,8 +209,8 @@ Coherently-constant≃ᴱCoherently-constant′ {P = P} =
                                                                               (∀-cong ext λ _ → Eq.extensionality-isomorphism ext))) F.∘
                                                                              (∃-cong λ _ →
                                                                               inverse $
-                                                                              (∀-cong ext λ _ → Erased-Π↔Π) F.∘
-                                                                              Erased-Π↔Π) F.∘
+                                                                              (∀-cong ext λ _ → Erased-Π↔Π ext) F.∘
+                                                                              Erased-Π↔Π ext) F.∘
                                                                              ΠΣ-comm F.∘
                                                                              (∀-cong ext λ _ → ΠΣ-comm) ⟩□
     (∃ λ (P→P : ∀ x y → P x → P y) →
@@ -380,8 +379,8 @@ module Lens {A : Type a} {B : Type b} (l : Lens A B) where
                                                                               proj₁ (get⁻¹ᴱ-const b b₂ (set a b₁ , [ eq ])))
                                                                            (refl _)
                                                                            (get-set a b₁) ⟩
-    proj₁ (get⁻¹ᴱ-const b₁ b₂ (set a b₁ , [ get-set a b₁ ]))          ≡⟨⟩
-
+    proj₁ (get⁻¹ᴱ-const b₁ b₂ (set a b₁ , [ get-set a b₁ ]))          ≡⟨ cong (proj₁ ∘ get⁻¹ᴱ-const _ _ ∘ (_ ,_))
+                                                                         Erased-η ⟩
     proj₁ (get⁻¹ᴱ-const b₁ b₂
              (get⁻¹ᴱ-const (get a) b₁ (a , [ refl _ ])))              ≡⟨ cong proj₁ $ cong (_$ a , [ refl _ ]) get⁻¹ᴱ-const-∘ ⟩∎
 
@@ -734,7 +733,10 @@ Lens≃ᴱHigher-lens {A = A} {B = B} =
                (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a)) (a , [ refl _ ]))              ≡⟨ trans (cong (flip (subst H) _) $ cong-refl _) $
                                                                               subst-refl _ _ ⟩
              _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a)) (a , [ refl _ ])                  ∎)
-                                                                          _ ⟩∎
+                                                                          _ ⟩
+
+           _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b) (a , [ get-a≡b ])                   ≡⟨ cong (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ _) ∘ (_ ,_))
+                                                                        Erased-η ⟩∎
            _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b) p                                   ∎)
       )
       where

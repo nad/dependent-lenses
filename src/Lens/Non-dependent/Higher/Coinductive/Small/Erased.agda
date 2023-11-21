@@ -17,8 +17,7 @@ open import Prelude as P hiding (id) renaming (_∘_ to _⊚_)
 open import Bijection equality-with-J as B using (_↔_)
 open import Equality.Decidable-UIP equality-with-J using (Constant)
 open import Equality.Path.Isomorphisms eq
-open import Equality.Path.Isomorphisms.Univalence eq
-  using () renaming (opaque-univ to univ)
+open import Equality.Path.Isomorphisms.Univalence eq using (univ)
 open import Equivalence equality-with-J as Eq
   using (_≃_; Is-equivalence)
 open import Equivalence.Erased.Cubical eq as EEq using (_≃ᴱ_)
@@ -177,8 +176,8 @@ opaque
      ∃ λ (f : ∀ b₁ → get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
      ∀ b₁ →
      Erased
-       (Is-equivalence (Σ-map P.id erased ⊚ f b₁ ⊚ Σ-map P.id [_]→)))    ↔⟨ (∀-cong ext λ _ → ∃-cong λ _ → inverse Erased-Π↔Π) ⟩
-
+       (Is-equivalence (Σ-map P.id erased ⊚ f b₁ ⊚ Σ-map P.id [_]→)))    ↔⟨ (∀-cong ext λ _ → ∃-cong λ _ → inverse $
+                                                                             Erased-Π↔Π {k = equivalence} ext) ⟩
     (∀ b₂ →
      ∃ λ (f : ∀ b₁ → get ⁻¹ᴱ b₁ → get ⁻¹ᴱ b₂) →
      Erased
@@ -226,8 +225,8 @@ opaque
              let g : get ⁻¹ b₁ → get ⁻¹ b₂
                  g = λ (a , _) → Σ-map P.id erased (f b₂ a)
              in
-             Is-equivalence g))                                          ↔⟨ (∃-cong λ _ → inverse Erased-Π↔Π) ⟩
-
+             Is-equivalence g))                                          ↔⟨ (∃-cong λ _ → inverse $
+                                                                             Erased-Π↔Π {k = equivalence} ext) ⟩
     (∃ λ (f : ∀ b → A → get ⁻¹ᴱ b) →
      Erased (∀ b₂ b₁ →
              let g : get ⁻¹ b₁ → get ⁻¹ b₂
@@ -250,7 +249,8 @@ opaque
                        proj₁ (f a) b₂ , erased (proj₂ (f a) b₂)
              in
              Is-equivalence g))                                          ↔⟨ Σ-cong
-                                                                              (∀-cong ext λ _ → ∃-cong λ _ → inverse Erased-Π↔Π)
+                                                                              (∀-cong ext λ _ → ∃-cong λ _ → inverse $
+                                                                               Erased-Π↔Π {k = equivalence} ext)
                                                                               (λ _ → Eq.id) ⟩
     (∃ λ (f : A → ∃ λ (set : B → A) →
                   Erased (∀ b → get (set b) ≡ b)) →
@@ -268,8 +268,9 @@ opaque
              let f : get ⁻¹ b₁ → get ⁻¹ b₂
                  f = λ (a , _) → set a b₂ , erased (get-set a) b₂
              in
-             Is-equivalence f))                                          ↔⟨ Σ-cong (∃-cong λ _ → inverse Erased-Π↔Π) (λ _ → Eq.id) ⟩
-
+             Is-equivalence f))                                          ↔⟨ Σ-cong
+                                                                              (∃-cong λ _ → inverse $ Erased-Π↔Π {k = equivalence} ext)
+                                                                              (λ _ → Eq.id) ⟩
     (∃ λ ((set , [ get-set ]) :
           ∃ λ (set : A → B → A) →
           Erased (∀ a b → get (set a b) ≡ b)) →
@@ -728,7 +729,12 @@ Lens-as-Σ :
 Lens-as-Σ =
   Eq.↔→≃
     (λ l → Lens.get l , Lens.coherently-constant-fibres-get l)
-    _ refl refl
+    (λ (_ , _ , [ (cc , eq) ]) → record
+       { get⁻¹-coherently-constant = cc
+       ; set≡set                   = eq
+       })
+    (λ { (_ , _ , [ _ ]) → refl _ })
+    refl
 
 opaque
 

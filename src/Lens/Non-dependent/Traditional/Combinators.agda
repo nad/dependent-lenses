@@ -1228,7 +1228,7 @@ Has-quasi-inverse-id-not-proposition _ =
   X      = Erased (proj₁ Circle.¬-type-of-refl-propositional)
   ¬-prop =
     E.Stable-¬
-      [ Is-proposition ((x : X) → x ≡ x)       ↝⟨ H-level-cong _ 1 (Π-cong ext (E.erased E.Erased↔) λ _ → inverse E.≡≃[]≡[]) ⟩
+      [ Is-proposition ((x : X) → x ≡ x)       ↝⟨ H-level-cong _ 1 (Π-cong ext (E.erased E.Erased↔) λ _ → E.≡≃erased≡erased) ⟩
         Is-proposition ((x : ↑ _ 𝕊¹) → x ≡ x)  ↝⟨ proj₂ Circle.¬-type-of-refl-propositional ⟩□
         ⊥                                      □
       ]

@@ -15,8 +15,7 @@ open import Prelude
 
 open import Bijection equality-with-J using (_↔_)
 open import Equality.Path.Isomorphisms eq
-open import Equality.Path.Isomorphisms.Univalence eq
-  using () renaming (opaque-univ to univ)
+open import Equality.Path.Isomorphisms.Univalence eq using (univ)
 open import Equivalence equality-with-J as Eq using (_≃_)
 open import Equivalence.Erased.Cubical eq as EEq using (_≃ᴱ_)
 open import Equivalence.Erased.Contractible-preimages.Cubical eq as ECP
@@ -173,8 +172,9 @@ module Lens {A : Type a} {B : Type b} (l : Lens A B) where
                                                                               proj₁ (get⁻¹ᴱ-const b b₂ (set a b₁ , [ eq ])))
                                                                            (refl _)
                                                                            (get-set a b₁) ⟩
-    proj₁ (get⁻¹ᴱ-const b₁ b₂ (set a b₁ , [ get-set a b₁ ]))          ≡⟨⟩
 
+    proj₁ (get⁻¹ᴱ-const b₁ b₂ (set a b₁ , [ get-set a b₁ ]))          ≡⟨ cong (proj₁ ∘ get⁻¹ᴱ-const b₁ b₂ ∘ (_ ,_)) $
+                                                                         Erased-η ⟩
     proj₁ (get⁻¹ᴱ-const b₁ b₂
              (get⁻¹ᴱ-const (get a) b₁ (a , [ refl _ ])))              ≡⟨ cong proj₁ $ get⁻¹ᴱ-const-∘ _ _ _ _ ⟩∎
 
@@ -244,8 +244,19 @@ opaque
        Σ-map id erased (subst (_⁻¹ᴱ b) (sym g) (Σ-map id [_]→ p))            ≡⟨⟩
 
        _≃_.from ECP.⁻¹≃⁻¹ᴱ
-         (subst (_⁻¹ᴱ b) (sym g) (_≃_.to ECP.⁻¹≃⁻¹ᴱ p))                      ∎)) ⟩□
+         (subst (_⁻¹ᴱ b) (sym g) (_≃_.to ECP.⁻¹≃⁻¹ᴱ p))                      ∎)) ⟩
 
+    (∃ λ (g : get l₁ ≡ get l₂) →
+     ∃ λ (h : H l₁ ≡ H l₂) →
+       ∀ b p →
+       subst (_$ ∣ b ∣) h
+         (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ b)
+            ( proj₁ (subst (_⁻¹ᴱ b) (sym g) p)
+            , [ erased (proj₂ (subst (_⁻¹ᴱ b) (sym g) p)) ]
+            )) ≡
+       _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₂ b) p)                                    ↝⟨ (∃-cong λ _ → ∃-cong λ h → ∀-cong ext λ _ → ∀-cong ext λ _ → ≡⇒↝ _ $
+                                                                          cong ((_≡ _) ∘ subst (_$ ∣ _ ∣) h ∘ _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ l₁ _) ∘ (_ ,_)) $
+                                                                          Erased-η) ⟩□
     (∃ λ (g : get l₁ ≡ get l₂) →
      ∃ λ (h : H l₁ ≡ H l₂) →
        ∀ b p →
@@ -530,7 +541,10 @@ Lens≃ᴱHigher-lens {A = A} {B = B} =
                (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a)) (a , [ refl _ ]))              ≡⟨ trans (cong (flip (subst H) _) $ cong-refl _) $
                                                                               subst-refl _ _ ⟩
              _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ (get a)) (a , [ refl _ ])                  ∎)
-                                                                          _ ⟩∎
+                                                                          _ ⟩
+
+           _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b) (p .proj₁ , [ erased (p .proj₂) ])  ≡⟨ cong (_≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ _) ∘ (_ ,_))
+                                                                        Erased-η ⟩∎
            _≃ᴱ_.to (get⁻¹ᴱ-≃ᴱ b) p                                   ∎)
       )
       where
