@@ -859,9 +859,10 @@ module Lens≃ᴱTraditional-lens
     -- The function from is a right inverse of Lens.traditional-lens.
 
     right-inverse-of : ∀ l → Lens.traditional-lens (from l) ≡ l
-    right-inverse-of l = Traditionalᴱ.equal-laws→≡
-      (_↔_.to Traditionalᴱ.Lens-as-Σ _ .proj₂ .proj₂)
-      (_↔_.to Traditionalᴱ.Lens-as-Σ _ .proj₂ .proj₂)
+    right-inverse-of l@(record {}) = Traditionalᴱ.equal-laws→≡
+      (_↔_.to Traditionalᴱ.Lens-as-Σ (Lens.traditional-lens (from l))
+         .proj₂ .proj₂)
+      (_↔_.to Traditionalᴱ.Lens-as-Σ l .proj₂ .proj₂)
       (λ a _ → B-set a _ _)
       (λ _ → A-set _ _)
       (λ _ _ _ → A-set _ _)

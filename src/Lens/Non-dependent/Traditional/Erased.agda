@@ -54,6 +54,8 @@ private
 -- Lenses with erased lens laws.
 
 record Lens (A : Type a) (B : Type b) : Type (a ⊔ b) where
+  no-eta-equality
+  pattern
   field
     -- Getter and setter.
     get : A → B
@@ -105,7 +107,7 @@ Lens-as-Σ = record
       }
     ; right-inverse-of = λ { (_ , _ , [ _ ]) → refl _ }
     }
-  ; left-inverse-of = refl
+  ; left-inverse-of = λ { (record {}) → refl _ }
   }
   where
   open Lens
@@ -154,6 +156,8 @@ private
 -- coherence properties (that are also erased).
 
 record Coherent-lens (A : Type a) (B : Type b) : Type (a ⊔ b) where
+  no-eta-equality
+  pattern
   field
     lens : Lens A B
 
@@ -196,7 +200,7 @@ Coherent-lens-as-Σ = Eq.↔→≃
      ; get-set-set = get-set-set
      })
   (λ { (_ , [ _ ]) → refl _ })
-  refl
+  (λ { (record {}) → refl _ })
   where
   open Coherent-lens
 
@@ -576,7 +580,8 @@ opaque
                         (set-set l₁ a b₁ b₂) ≡
                       set-set l₂ a b₁ b₂))
 
-  equality-characterisation₁ {l₁ = l₁} {l₂ = l₂} =
+  equality-characterisation₁
+    {l₁ = l₁@(record {})} {l₂ = l₂@(record {})} =
     let l₁′ = _↔_.to Lens-as-Σ l₁
         l₂′ = _↔_.to Lens-as-Σ l₂
     in
@@ -1723,8 +1728,8 @@ module Lens-combinators where
 
   ∘≡∘′ : l₁ ∘ l₂ ≡ l₁ ∘′ l₂
   ∘≡∘′ {l₁ = l₁} {l₂ = l₂} = equal-laws→≡
-    (_↔_.to Lens-as-Σ _ .proj₂ .proj₂)
-    (_↔_.to Lens-as-Σ _ .proj₂ .proj₂)
+    (_↔_.to Lens-as-Σ (l₁ ∘  l₂) .proj₂ .proj₂)
+    (_↔_.to Lens-as-Σ (l₁ ∘′ l₂) .proj₂ .proj₂)
     (λ _ _ → refl _)
     (λ _ → refl _)
     (λ a c₁ c₂ →
@@ -1774,8 +1779,8 @@ module Lens-combinators where
 
   ∘≡∘″ : l₁ ∘ l₂ ≡ l₁ ∘″ l₂
   ∘≡∘″ {l₁ = l₁} {l₂ = l₂} = equal-laws→≡
-    (_↔_.to Lens-as-Σ _ .proj₂ .proj₂)
-    (_↔_.to Lens-as-Σ _ .proj₂ .proj₂)
+    (_↔_.to Lens-as-Σ (l₁ ∘  l₂) .proj₂ .proj₂)
+    (_↔_.to Lens-as-Σ (l₁ ∘″ l₂) .proj₂ .proj₂)
     (λ _ _ → refl _)
     (λ _ → refl _)
     (λ a c₁ c₂ →
@@ -1822,9 +1827,9 @@ module Lens-combinators where
   -- id is a left identity of _∘_.
 
   left-identity : (l : Lens A B) → id ∘ l ≡ l
-  left-identity l = equal-laws→≡
-    (_↔_.to Lens-as-Σ _ .proj₂ .proj₂)
-    (_↔_.to Lens-as-Σ _ .proj₂ .proj₂)
+  left-identity l@(record {}) = equal-laws→≡
+    (_↔_.to Lens-as-Σ (id ∘ l) .proj₂ .proj₂)
+    (_↔_.to Lens-as-Σ l        .proj₂ .proj₂)
     (λ a b →
        trans (cong P.id (get-set a b)) (refl _)  ≡⟨ trans-reflʳ _ ⟩
        cong P.id (get-set a b)                   ≡⟨ sym $ cong-id _ ⟩∎
@@ -1849,9 +1854,9 @@ module Lens-combinators where
   -- id is a right identity of _∘_.
 
   right-identity : (l : Lens A B) → l ∘ id ≡ l
-  right-identity l = equal-laws→≡
-    (_↔_.to Lens-as-Σ _ .proj₂ .proj₂)
-    (_↔_.to Lens-as-Σ _ .proj₂ .proj₂)
+  right-identity l@(record {}) = equal-laws→≡
+    (_↔_.to Lens-as-Σ (l ∘ id) .proj₂ .proj₂)
+    (_↔_.to Lens-as-Σ l        .proj₂ .proj₂)
     (λ a b →
        trans (cong get (refl _)) (get-set a b)  ≡⟨ cong (flip trans _) $ cong-refl _ ⟩
        trans (refl _) (get-set a b)             ≡⟨ trans-reflˡ _ ⟩∎
@@ -1880,8 +1885,8 @@ module Lens-combinators where
     (l₁ : Lens C D) (l₂ : Lens B C) (l₃ : Lens A B) →
     l₁ ∘ (l₂ ∘ l₃) ≡ (l₁ ∘ l₂) ∘ l₃
   associativity l₁ l₂ l₃ = equal-laws→≡
-    (_↔_.to Lens-as-Σ _ .proj₂ .proj₂)
-    (_↔_.to Lens-as-Σ _ .proj₂ .proj₂)
+    (_↔_.to Lens-as-Σ (l₁ ∘ (l₂ ∘ l₃)) .proj₂ .proj₂)
+    (_↔_.to Lens-as-Σ ((l₁ ∘ l₂) ∘ l₃) .proj₂ .proj₂)
     lemma₁ lemma₂ lemma₃
     where
     open Lens
@@ -2295,7 +2300,7 @@ module Lens-combinators where
   @0 getter-equivalence→lens≡ :
     ∀ (l : Lens A B) is-equiv →
     getter-equivalence→lens l is-equiv ≡ l
-  getter-equivalence→lens≡ l is-equiv =                     $⟨ TC.getter-equivalence→lens≡ (trad l) is-equiv′ ⟩
+  getter-equivalence→lens≡ l@(record {}) is-equiv =         $⟨ TC.getter-equivalence→lens≡ (trad l) is-equiv′ ⟩
     TC.getter-equivalence→lens (trad l) is-equiv′ ≡ trad l  ↝⟨ cong Traditional-lens→Lens ⟩□
     getter-equivalence→lens l is-equiv ≡ l                  □
     where
@@ -2758,8 +2763,8 @@ equality-characterisation-for-sets-≅ᴱ
   let open Lens-combinators in
   proj₁ (_⇔_.to ≃ᴱ⇔≅ᴱ F.id) ≡ id {A = A}
 ≃ᴱ⇔≅ᴱ-id≡id = equal-laws→≡
-  (_↔_.to Lens-as-Σ _ .proj₂ .proj₂)
-  (_↔_.to Lens-as-Σ _ .proj₂ .proj₂)
+  (_↔_.to Lens-as-Σ (proj₁ (_⇔_.to ≃ᴱ⇔≅ᴱ F.id)) .proj₂ .proj₂)
+  (_↔_.to Lens-as-Σ id                          .proj₂ .proj₂)
   (λ _ _ → refl _)
   (λ a →
      _≃ᴱ_.left-inverse-of F.id a               ≡⟨ sym $ _≃ᴱ_.right-left-lemma F.id _ ⟩
@@ -2973,8 +2978,8 @@ equality-characterisation-for-sets-≊ᴱ
   let open Lens-combinators in
   proj₁ (_⇔_.to ≃ᴱ⇔≊ᴱ F.id) ≡ id {A = A}
 ≃ᴱ⇔≊ᴱ-id≡id = equal-laws→≡
-  (_↔_.to Lens-as-Σ _ .proj₂ .proj₂)
-  (_↔_.to Lens-as-Σ _ .proj₂ .proj₂)
+  (_↔_.to Lens-as-Σ (proj₁ (_⇔_.to ≃ᴱ⇔≊ᴱ F.id)) .proj₂ .proj₂)
+  (_↔_.to Lens-as-Σ id                          .proj₂ .proj₂)
   (λ _ _ → refl _)
   (λ a →
      _≃ᴱ_.left-inverse-of F.id a               ≡⟨ sym $ _≃ᴱ_.right-left-lemma F.id _ ⟩
@@ -3077,7 +3082,7 @@ Is-equivalenceᴱ-get→Is-bi-invertibleᴱ {A = A} {B = B} l′ is-equiv =
 
     @0 l∘l⁻¹≡id : l ∘ l⁻¹ ≡ id
     l∘l⁻¹≡id = constant-setter→≡id
-      (_ , _ , _↔_.to Lens-as-Σ _ .proj₂ .proj₂)
+      (_ , _ , _↔_.to Lens-as-Σ (l ∘ l⁻¹) .proj₂ .proj₂)
       ( right-inverse-of
       , right-inverse-of
       , [ (λ b₁ b₂ →
@@ -3190,7 +3195,7 @@ Is-equivalenceᴱ-get→Is-bi-invertibleᴱ {A = A} {B = B} l′ is-equiv =
 
     @0 l⁻¹∘l≡id : l⁻¹ ∘ l ≡ id
     l⁻¹∘l≡id = constant-setter→≡id
-      (_ , _ , _↔_.to Lens-as-Σ _ .proj₂ .proj₂)
+      (_ , _ , _↔_.to Lens-as-Σ (l⁻¹ ∘ l) .proj₂ .proj₂)
       ( left-inverse-of
       , left-inverse-of
       , [ (λ a₁ a₂ →

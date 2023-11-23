@@ -676,6 +676,8 @@ Coherently-constant-fibres≃Coherently-constant-⁻¹
 -- setter.
 
 record Lens (A : Type a) (B : Type b) : Type (a ⊔ b) where
+  no-eta-equality
+  pattern
   field
 
     -- A getter.
@@ -734,7 +736,7 @@ Lens-as-Σ =
        ; set≡set                   = eq
        })
     (λ { (_ , _ , [ _ ]) → refl _ })
-    refl
+    (λ { (record {}) → refl _ })
 
 opaque
 
@@ -1060,6 +1062,7 @@ with-other-setter≡ l set p =
 record Erased-proofs
          {A : Type a} {B : Type b}
          (get : A → B) (set : A → B → A) : Type (a ⊔ b) where
+  no-eta-equality
   field
     @0 get⁻¹-coherently-constant : S.Coherently-constant (get ⁻¹_)
 
@@ -1097,12 +1100,13 @@ Erased-proofs→Lens :
   {A : Type a} {B : Type b} {get : A → B} {set : A → B → A} →
   @0 Erased-proofs get set →
   Lens A B
-Erased-proofs→Lens {get = get} {set = set} ep = λ where
-  .Lens.get                       → get
-  .Lens.set                       → set
-  .Lens.get⁻¹-coherently-constant →
-    Erased-proofs.get⁻¹-coherently-constant ep
-  .Lens.set≡set → Erased-proofs.set≡set ep
+Erased-proofs→Lens {get = get} {set = set} ep = record
+  { get                       = get
+  ; set                       = set
+  ; get⁻¹-coherently-constant =
+      Erased-proofs.get⁻¹-coherently-constant ep
+  ; set≡set = Erased-proofs.set≡set ep
+  }
 
 ------------------------------------------------------------------------
 -- Identity and composition
