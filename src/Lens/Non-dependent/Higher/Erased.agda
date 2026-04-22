@@ -2285,8 +2285,8 @@ Is-bi-invertibleᴱ≃ᴱIs-equivalenceᴱ-get l = EEq.⇔→≃ᴱ
      let l′ = ≃ᴱ→Lens′ EEq.⟨ get l , is-equiv ⟩ in
 
                            $⟨ proj₂ (_≃ᴱ_.to ≃ᴱ≃ᴱ≊ᴱ EEq.⟨ _ , is-equiv ⟩) ⟩
-     Is-bi-invertibleᴱ l′  ↝⟨ subst (λ ([ l ]) → Is-bi-invertibleᴱ l) $ sym $
-                              []-cong [ get-equivalence→≡≃ᴱ→Lens′ l is-equiv ] ⟩□
+     Is-bi-invertibleᴱ l′  ↝⟨ substᴱ Is-bi-invertibleᴱ
+                                (sym (get-equivalence→≡≃ᴱ→Lens′ l is-equiv)) ⟩□
      Is-bi-invertibleᴱ l   □)
   where
   open Lens
