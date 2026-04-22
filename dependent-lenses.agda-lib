@@ -6,3 +6,4 @@ flags:
   --safe
   --no-import-sorts
   --erasure
+  --warning=noShouldBeEtaRecordPattern
