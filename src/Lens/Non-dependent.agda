@@ -2,6 +2,8 @@
 -- Representation-independent results for non-dependent lenses
 ------------------------------------------------------------------------
 
+{-# OPTIONS --erased-cubical #-}
+
 import Equality.Path as P
 
 module Lens.Non-dependent

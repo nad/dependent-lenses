@@ -2,6 +2,8 @@
 -- Identity and composition for traditional non-dependent lenses
 ------------------------------------------------------------------------
 
+{-# OPTIONS --erased-cubical #-}
+
 import Equality.Path as P
 
 module Lens.Non-dependent.Traditional.Combinators

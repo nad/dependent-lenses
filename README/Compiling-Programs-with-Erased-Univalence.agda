@@ -31,7 +31,7 @@
 -- not know what the rules of a fixed version of Agda would be I do
 -- not know if any changes to the code would be required.
 
-{-# OPTIONS --guardedness #-}
+{-# OPTIONS --erased-cubical --guardedness #-}
 
 module README.Compiling-Programs-with-Erased-Univalence where
 

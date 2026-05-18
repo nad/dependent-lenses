@@ -6,7 +6,7 @@
 -- of functions, and it is not parametrised by a notion of equality,
 -- it uses path equality.
 
-{-# OPTIONS --guardedness #-}
+{-# OPTIONS --erased-cubical --guardedness #-}
 
 module README.Fst-snd where
 

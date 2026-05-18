@@ -2,7 +2,7 @@
 -- Coinductive higher lenses with erased "proofs"
 ------------------------------------------------------------------------
 
-{-# OPTIONS --guardedness #-}
+{-# OPTIONS --erased-cubical --guardedness #-}
 
 import Equality.Path as P
 

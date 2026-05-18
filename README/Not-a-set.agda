@@ -3,6 +3,8 @@
 -- necessarily be sets
 ------------------------------------------------------------------------
 
+{-# OPTIONS --erased-cubical #-}
+
 -- If lenses are only used in programs, and types used in programs are
 -- always sets, then higher lenses might be pointless.
 

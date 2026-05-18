@@ -2,6 +2,8 @@
 -- Higher lenses with erased proofs
 ------------------------------------------------------------------------
 
+{-# OPTIONS --erased-cubical #-}
+
 import Equality.Path as P
 
 module Lens.Non-dependent.Higher.Erased

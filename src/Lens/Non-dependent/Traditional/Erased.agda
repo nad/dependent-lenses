@@ -2,6 +2,8 @@
 -- Traditional non-dependent lenses with erased lens laws
 ------------------------------------------------------------------------
 
+{-# OPTIONS --erased-cubical #-}
+
 import Equality.Path as P
 
 module Lens.Non-dependent.Traditional.Erased

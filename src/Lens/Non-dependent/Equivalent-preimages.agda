@@ -3,6 +3,8 @@
 -- getter's "preimages", and a coherence property
 ------------------------------------------------------------------------
 
+{-# OPTIONS --erased-cubical #-}
+
 import Equality.Path as P
 
 module Lens.Non-dependent.Equivalent-preimages
